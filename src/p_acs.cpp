@@ -3935,7 +3935,7 @@ do_count:
 				if ( actor->player && (actor->player->bSpectating || actor->player->bDeadSpectator) )
 					continue;
 
-				if (actor->Sector->tag == tag || tag == -1)
+				if (actor->Sector->HasTag(tag) || tag == -1)
 				{
 					// Don't count items in somebody's inventory
 					if (!actor->IsKindOf (RUNTIME_CLASS(AInventory)) ||
@@ -3961,7 +3961,7 @@ do_count:
 				if ( actor->player && (actor->player->bSpectating || actor->player->bDeadSpectator) )
 					continue;
 
-				if (actor->Sector->tag == tag || tag == -1)
+				if (actor->Sector->HasTag(tag) || tag == -1)
 				{
 					// Don't count items in somebody's inventory
 					if (!actor->IsKindOf (RUNTIME_CLASS(AInventory)) ||

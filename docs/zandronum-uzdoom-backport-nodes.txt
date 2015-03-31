@@ -576,3 +576,54 @@ in 6ab480e89424b624c2b65cc3607f9c14dd6305ff (from gzdoom-hg-mirror) that Zandron
  	if(thing->flags5 & MF5_BRIGHT) vis->renderflags |= RF_FULLBRIGHT; // kg3D
  	vis->Style.RenderStyle = thing->RenderStyle;
  	vis->FillColor = thing->fillcolor;
+
+===============================================================================================================
+Git hash: 238046655c13329a150d65e27d344bf93f38792c
+Mercurial hash: 5004c657ffec525bf20042df06daf3d3be5f1574
+- wrapped all accesses to the sector tag into accessor functions, as preparation for allowing multiple tags per sector.
+
+Reason for documentation: Zandronum doesn't have, or use, "src/fragglescript/t_func.cpp".
+===============================================================================================================
+
+--- src/fragglescript/t_func.cpp
++++ src/fragglescript/t_func.cpp
+@@ -1158,7 +1158,7 @@
+ 	}
+ 
+ 	t_return.type = svt_int;
+-	t_return.value.i = mo ? mo->Sector->tag : 0; // nullptr check
++	t_return.value.i = mo ? mo->Sector->GetTag() : 0; // nullptr check
+ }
+ 
+ //==========================================================================
+@@ -4291,7 +4291,7 @@
+ 
+ 		while ((mo=it.Next()))
+ 		{
+-			if (mo->flags3&MF3_ISMONSTER && mo->Sector->tag==tag) P_DamageMobj(mo, NULL, NULL, 1000000, NAME_Massacre);
++			if (mo->flags3&MF3_ISMONSTER && mo->Sector->HasTag(tag)) P_DamageMobj(mo, NULL, NULL, 1000000, NAME_Massacre);
+ 		}
+ 	}
+ }
+@@ -4388,19 +4388,9 @@
+ 	{
+ 		for (int secnum = -1; (secnum = P_FindSectorFromTag (t_argv[0].value.i, secnum)) >= 0; ) 
+ 		{
+-			sectors[secnum].tag=t_argv[1].value.i;
++			sectors[secnum].SetTag(t_argv[1].value.i);
+ 		}
+-
+-		// Recreate the hash tables
+-		int i;
+-
+-		for (i=numsectors; --i>=0; ) sectors[i].firsttag = -1;
+-		for (i=numsectors; --i>=0; )
+-		{
+-			int j = (unsigned) sectors[i].tag % (unsigned) numsectors;
+-			sectors[i].nexttag = sectors[j].firsttag;
+-			sectors[j].firsttag = i;
+-		}
++		sector_t::HashTags();
+ 	}
+ }
+ 
