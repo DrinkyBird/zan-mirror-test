@@ -1959,7 +1959,7 @@ DPlaneWatcher::DPlaneWatcher (AActor *it, line_t *line, int lineSide, bool ceili
 {
 	int secnum;
 
-	secnum = P_FindSectorFromTag (tag, -1);
+	secnum = P_FindFirstSectorFromTag (tag);
 	if (secnum >= 0)
 	{
 		secplane_t plane;
@@ -3998,7 +3998,8 @@ void DLevelScript::ChangeFlat (int tag, int name, bool floorOrCeiling)
 
 	flat = TexMan.GetTexture (flatname, FTexture::TEX_Flat, FTextureManager::TEXMAN_Overridable);
 
-	while ((secnum = P_FindSectorFromTag (tag, secnum)) >= 0)
+	FSectorTagIterator it(tag);
+	while ((secnum = it.Next()) >= 0)
 	{
 		int pos = floorOrCeiling? sector_t::ceiling : sector_t::floor;
 		sectors[secnum].SetTexture(pos, flat);
@@ -5941,10 +5942,10 @@ int DLevelScript::CallFunction(int argCount, int funcIndex, SDWORD *args, struct
 			return 0;	// Not implemented yet
 
 		case ACSF_GetSectorUDMFInt:
-			return GetUDMFInt(UDMF_Sector, P_FindSectorFromTag(args[0], -1), FBehavior::StaticLookupString(args[1]));
+			return GetUDMFInt(UDMF_Sector, P_FindFirstSectorFromTag(args[0]), FBehavior::StaticLookupString(args[1]));
 
 		case ACSF_GetSectorUDMFFixed:
-			return GetUDMFFixed(UDMF_Sector, P_FindSectorFromTag(args[0], -1), FBehavior::StaticLookupString(args[1]));
+			return GetUDMFFixed(UDMF_Sector, P_FindFirstSectorFromTag(args[0]), FBehavior::StaticLookupString(args[1]));
 
 		case ACSF_GetSideUDMFInt:
 			return GetUDMFInt(UDMF_Side, SideFromID(args[0], args[1]), FBehavior::StaticLookupString(args[2]));
@@ -6272,11 +6273,11 @@ int DLevelScript::CallFunction(int argCount, int funcIndex, SDWORD *args, struct
 				int space = args[2] < CHAN_FLOOR || args[2] > CHAN_INTERIOR ? CHAN_FULLHEIGHT : args[2];
 				if (seqname != NULL)
 				{
-					int secnum = -1;
-
-					while ((secnum = P_FindSectorFromTag(args[0], secnum)) >= 0)
+					FSectorTagIterator it(args[0]);
+					int s;
+					while ((s = it.Next()) >= 0)
 					{
-						SN_StartSequence(&sectors[secnum], args[2], seqname, 0);
+						SN_StartSequence(&sectors[s], args[2], seqname, 0);
 					}
 				}
 			}
@@ -9237,11 +9238,13 @@ int DLevelScript::RunScript ()
 		// Wait for tagged sector(s) to go inactive, then enter
 		// state running
 	{
-		int secnum = -1;
-
-		while ((secnum = P_FindSectorFromTag (statedata, secnum)) >= 0)
+		int secnum;
+		FSectorTagIterator it(statedata);
+		while ((secnum = it.Next()) >= 0)
+		{
 			if (sectors[secnum].floordata || sectors[secnum].ceilingdata)
 				return resultValue;
+		}
 
 		// If we got here, none of the tagged sectors were busy
 		state = SCRIPT_Running;
@@ -12137,7 +12140,7 @@ scriptwait:
 				fixed_t z = 0;
 
 				if (tag != 0)
-					secnum = P_FindSectorFromTag (tag, -1);
+					secnum = P_FindFirstSectorFromTag (tag);
 				else
 					secnum = int(P_PointInSector (x, y) - sectors);
 
@@ -12159,7 +12162,7 @@ scriptwait:
 
 		case PCD_GETSECTORLIGHTLEVEL:
 			{
-				int secnum = P_FindSectorFromTag (STACK(1), -1);
+				int secnum = P_FindFirstSectorFromTag (STACK(1));
 				int z = -1;
 
 				if (secnum >= 0)

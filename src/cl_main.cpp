@@ -6847,9 +6847,10 @@ void ServerCommands::SetSectorColor::Execute()
 //
 void ServerCommands::SetSectorColorByTag::Execute()
 {
-	int secnum = -1;
+	int secnum;
+	FSectorTagIterator itr( tag );
 
-	while (( secnum = P_FindSectorFromTag( tag, secnum )) >= 0 )
+	while (( secnum = itr.Next( )) >= 0 )
 		sectors[secnum].SetColor( red, green, blue, desaturate, false, true );
 }
 
@@ -6864,9 +6865,10 @@ void ServerCommands::SetSectorFade::Execute()
 //
 void ServerCommands::SetSectorFadeByTag::Execute()
 {
-	int secnum = -1;
+	int secnum;
+	FSectorTagIterator itr( tag );
 
-	while (( secnum = P_FindSectorFromTag( tag, secnum )) >= 0 )
+	while (( secnum = itr.Next( )) >= 0 )
 		sectors[secnum].SetFade( red, green, blue, false, true );
 }
 
@@ -6905,9 +6907,10 @@ void ServerCommands::SetSectorRotation::Execute()
 //
 void ServerCommands::SetSectorRotationByTag::Execute()
 {
-	int secnum = -1;
+	int secnum;
+	FSectorTagIterator itr( tag );
 
-	while (( secnum = P_FindSectorFromTag( tag, secnum )) >= 0 )
+	while (( secnum = itr.Next( )) >= 0 )
 	{
 		sectors[secnum].SetAngle( sector_t::floor, floorRotation * ANGLE_1 );
 		sectors[secnum].SetAngle( sector_t::ceiling, ceilingRotation * ANGLE_1 );
