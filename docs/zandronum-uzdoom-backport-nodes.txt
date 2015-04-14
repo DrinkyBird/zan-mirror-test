@@ -922,3 +922,76 @@ Reason for documentation: Zandronum doesn't have "src/fragglescript/t_func.cpp" 
  			{
  				sector_t *sec = &sectors[secnum];
  				if(sec->floordata || sec->ceilingdata || sec->lightingdata)
+
+===============================================================================================================
+Git hash: 47543bb7669b6791a98b6f195fd98afa1d539829
+Mercurial hash: 472187423b34abc239a722ddb2d3bcb0a7002124
+- while we're at it, let's also wrap line ID searches in an iterator class so that we can do multiple IDs per line later as well.
+
+Reason for documentation: Zandronum doesn't have, or use, "src/fragglescript/t_func.cpp".
+===============================================================================================================
+
+--- src/fragglescript/t_func.cpp
++++ src/fragglescript/t_func.cpp
+@@ -2297,9 +2297,11 @@
+ 		{
+ 			blocking=blocks[blocking];
+ 			int tag=intvalue(t_argv[0]);
+-			for (int i = -1; (i = P_FindLineFromID(tag, i)) >= 0;) 
++			FLineIdIterator itr(tag);
++			int i;
++			while ((i = itr.Next()) >= 0)
+ 			{
+-				lines[i].flags = (lines[i].flags & ~(ML_BLOCKING|ML_BLOCKEVERYTHING)) | blocking;
++				lines[i].flags = (lines[i].flags & ~(ML_BLOCKING | ML_BLOCKEVERYTHING)) | blocking;
+ 			}
+ 		}
+ 	}
+@@ -2318,7 +2320,9 @@
+ 		int blocking = intvalue(t_argv[1]) ? ML_BLOCKMONSTERS : 0;
+ 		int tag=intvalue(t_argv[0]);
+ 
+-		for (int i = -1; (i = P_FindLineFromID(tag, i)) >= 0;) 
++		FLineIdIterator itr(tag);
++		int i;
++		while ((i = itr.Next()) >= 0)
+ 		{
+ 			lines[i].flags = (lines[i].flags & ~ML_BLOCKMONSTERS) | blocking;
+ 		}
+@@ -2373,12 +2377,13 @@
+ 			texture = stringvalue(t_argv[3]);
+ 			texturenum = TexMan.GetTexture(texture, FTexture::TEX_Wall, FTextureManager::TEXMAN_Overridable);
+ 			
+-			for (i = -1; (i = P_FindLineFromID(tag, i)) >= 0;) 
++			FLineIdIterator itr(tag);
++			while ((i = itr.Next()) >= 0)
+ 			{
+ 				// bad sidedef, Hexen just SEGV'd here!
+-				if(lines[i].sidedef[side] != NULL)
++				if (lines[i].sidedef[side] != NULL)
+ 				{
+-					if (position >=0 && position <=2)
++					if (position >= 0 && position <= 2)
+ 					{
+ 						lines[i].sidedef[side]->SetTexture(position, texturenum);
+ 					}
+@@ -2392,7 +2397,8 @@
+ 			int sections = intvalue(t_argv[3]); 
+ 			
+ 			// set all sectors with tag 
+-			for (i = -1; (i = P_FindLineFromID(tag, i)) >= 0;) 
++			FLineIdIterator itr(tag);
++			while ((i = itr.Next()) >= 0)
+ 			{ 
+ 				side_t *sided = lines[i].sidedef[side];
+ 				if(sided != NULL)
+@@ -4373,7 +4379,8 @@
+ 		id=intvalue(t_argv[0]);
+ 		spec=intvalue(t_argv[1]);
+ 		if (t_argc>2) tag=intvalue(t_argv[2]);
+-		for (i = -1; (i = P_FindLineFromID (id, i)) >= 0; )
++		FLineIdIterator itr(id);
++		while ((i = itr.Next()) >= 0)
+ 		{
+ 			if (t_argc==2) tag=lines[i].id;
+ 			maplinedef_t mld;
