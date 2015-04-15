@@ -1081,6 +1081,12 @@ struct line_t
 	DWORD		SavedFlags;
 	fixed_t		SavedAlpha;
 
+
+	void SetMainId(int newid);
+	int GetMainId() const;
+	void ClearIds();
+	bool HasId(int id) const;
+	static void HashIds();
 };
 
 // phares 3/14/98

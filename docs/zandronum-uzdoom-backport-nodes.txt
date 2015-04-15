@@ -995,3 +995,40 @@ Reason for documentation: Zandronum doesn't have, or use, "src/fragglescript/t_f
  		{
  			if (t_argc==2) tag=lines[i].id;
  			maplinedef_t mld;
+
+===============================================================================================================
+Git hash: 902593198b3b8f7cb5314375707085d483b9e85b
+Mercurial hash: 28e0072e05f5a4a6e0b1db917ef93fb7133e3a27
+- wrapped all line ID accesss just like sector tags
+
+Reason for documentation: Zandronum doesn't have, or use, "src/fragglescript/t_func.cpp".
+===============================================================================================================
+
+--- src/fragglescript/t_func.cpp
++++ src/fragglescript/t_func.cpp
+@@ -4382,16 +4382,17 @@
+ 		FLineIdIterator itr(id);
+ 		while ((i = itr.Next()) >= 0)
+ 		{
+-			if (t_argc==2) tag=lines[i].id;
++			if (t_argc == 2) tag = lines[i].GetMainId();
+ 			maplinedef_t mld;
+-			mld.special=spec;
+-			mld.tag=tag;
+-			mld.flags=0;
++			mld.special = spec;
++			mld.tag = tag;
++			mld.flags = 0;
+ 			int f = lines[i].flags;
+-			P_TranslateLineDef(&lines[i], &mld);	
+-			lines[i].id=tag;
+-			lines[i].flags = (lines[i].flags & (ML_MONSTERSCANACTIVATE|ML_REPEAT_SPECIAL|ML_SPAC_MASK|ML_FIRSTSIDEONLY)) |
+-										(f & ~(ML_MONSTERSCANACTIVATE|ML_REPEAT_SPECIAL|ML_SPAC_MASK|ML_FIRSTSIDEONLY));
++			P_TranslateLineDef(&lines[i], &mld);
++			lines[i].ClearIds();
++			lines[i].SetMainId(tag);
++			lines[i].flags = (lines[i].flags & (ML_MONSTERSCANACTIVATE | ML_REPEAT_SPECIAL | ML_SPAC_MASK | ML_FIRSTSIDEONLY)) |
++				(f & ~(ML_MONSTERSCANACTIVATE | ML_REPEAT_SPECIAL | ML_SPAC_MASK | ML_FIRSTSIDEONLY));
+ 
+ 		}
+ 	}
