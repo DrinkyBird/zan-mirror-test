@@ -873,6 +873,11 @@ bool sector_t::HasTag(int checktag) const
 	return tag == checktag;
 }
 
+bool sector_t::HasTags() const
+{
+	return tag != 0;
+}
+
 void sector_t::SetMainTag(int tagnum)
 {
 	tag = tagnum;
@@ -905,11 +910,6 @@ void sector_t::HashTags()
 void line_t::SetMainId(int newid)
 {
 	id = newid;
-}
-
-int line_t::GetMainId() const
-{
-	return id;
 }
 
 void line_t::ClearIds()

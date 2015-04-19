@@ -687,6 +687,7 @@ struct sector_t
 	}
 
 	bool HasTag(int checktag) const;
+	bool HasTags() const;
 	void SetMainTag(int tagnum);
 	int GetMainTag() const;
 	void ClearTags();
@@ -1083,7 +1084,6 @@ struct line_t
 
 
 	void SetMainId(int newid);
-	int GetMainId() const;
 	void ClearIds();
 	bool HasId(int id) const;
 	static void HashIds();
