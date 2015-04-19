@@ -1121,3 +1121,35 @@ Reason for documentation: Zandronum doesn't have, or use, "src/fragglescript/t_f
  }
  
  
+
+===============================================================================================================
+Git hash: b921157f57783003a82842d689c099029320bcc1
+Mercurial hash: d4c5868bb639d23dd2cbcf27368d1795da02b753
+- uncouple sector tag storage from the sector data to allow multiple tags per sector.
+
+Tags are now handled by a tag manager class which stores sector/tag pairs. This way multiple entries can be added per sector.
+Since UDMF does not have any arrays the additional tags are stored as a space separated string as 'MoreIDs'.
+
+Reason for documentation: Zandronum doesn't have, or use, "src/fragglescript/t_func.cpp".
+===============================================================================================================
+
+--- src/fragglescript/t_func.cpp
++++ src/fragglescript/t_func.cpp
+@@ -1165,7 +1165,7 @@
+ 	}
+ 
+ 	t_return.type = svt_int;
+-	t_return.value.i = mo ? mo->Sector->GetMainTag() : 0; // nullptr check
++	t_return.value.i = mo ? tagManager.GetFirstSectorTag(mo->Sector) : 0; // nullptr check
+ }
+ 
+ //==========================================================================
+@@ -4312,7 +4312,7 @@
+ 
+ 		while ((mo=it.Next()))
+ 		{
+-			if (mo->flags3&MF3_ISMONSTER && mo->Sector->HasTag(tag)) P_DamageMobj(mo, NULL, NULL, 1000000, NAME_Massacre);
++			if (mo->flags3&MF3_ISMONSTER && tagManager.SectorHasTag(mo->Sector, tag)) P_DamageMobj(mo, NULL, NULL, 1000000, NAME_Massacre);
+ 		}
+ 	}
+ }

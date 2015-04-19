@@ -391,9 +391,13 @@ void P_SerializeWorld (FArchive &arc)
 		{
 			arc << sec->lightlevel;
 		}
-		arc << sec->special
-			<< sec->tag
-			<< sec->soundtraversed
+		arc << sec->special;
+		if (SaveVersion < 4523)
+		{
+			short tag;
+			arc << tag;
+		}
+		arc	<< sec->soundtraversed
 			<< sec->seqType
 			<< sec->friction
 			<< sec->movefactor
