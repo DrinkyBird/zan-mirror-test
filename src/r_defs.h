@@ -1053,11 +1053,8 @@ struct line_t
 	DWORD		activation;	// activation type
 	int			special;
 	fixed_t		Alpha;		// <--- translucency (0=invisibile, FRACUNIT=opaque)
-	int			id;			// <--- same as tag or set with Line_SetIdentification
 	int			args[5];	// <--- hexen-style arguments (expanded to ZDoom's full width)
-	int			firstid, nextid;
 	side_t		*sidedef[2];
-	//DWORD		sidenum[2];	// sidenum[1] will be NO_SIDE if one sided
 	fixed_t		bbox[4];	// bounding box, for the extent of the LineDef.
 	slopetype_t	slopetype;	// To aid move clipping.
 	sector_t	*frontsector, *backsector;
@@ -1072,12 +1069,6 @@ struct line_t
 	int			SavedArgs[5];
 	DWORD		SavedFlags;
 	fixed_t		SavedAlpha;
-
-
-	void SetMainId(int newid);
-	void ClearIds();
-	bool HasId(int id) const;
-	static void HashIds();
 };
 
 // phares 3/14/98
