@@ -1212,6 +1212,7 @@ add_executable( zdoom WIN32
 	p_spec.cpp
 	p_states.cpp
 	p_switch.cpp
+	p_tags.cpp
 	p_teleport.cpp
 	p_terrain.cpp
 	p_things.cpp
