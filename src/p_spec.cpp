@@ -812,12 +812,6 @@ void P_GiveSecret(AActor *actor, bool printmessage, bool playsound, bool allowcl
 
 void P_PlayerOnSpecialFlat (player_t *player, int floorType)
 {
-	if (player->mo->z > player->mo->Sector->floorplane.ZatPoint (
-		player->mo->x, player->mo->y) &&
-		!player->mo->waterlevel)
-	{ // Player is not touching the floor
-		return;
-	}
 	if (Terrains[floorType].DamageAmount &&
 		!(level.time & Terrains[floorType].DamageTimeMask))
 	{
