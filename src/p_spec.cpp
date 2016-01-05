@@ -649,7 +649,7 @@ void P_PlayerInSpecialSector (player_t *player, sector_t * sector)
 	{
 		if (level.time % sector->damageinterval == 0 && (ironfeet == NULL || pr_playerinspecialsector() < sector->leakydamage))
 		{
-			P_DamageMobj (player->mo, NULL, NULL, sector->damageamount, MODtoDamageType (sector->damagemod));
+			P_DamageMobj (player->mo, NULL, NULL, sector->damageamount, sector->damagetype);
 		}
 	}
 
@@ -1690,7 +1690,7 @@ void P_SpawnSpecials (void)
 					{
 						sector_t *sec = &sectors[s];
 						sec->damageamount = damage;
-						sec->damagemod = 0;//MOD_UNKNOWN;
+						sec->damagetype = NAME_None;
 						if (sec->damageamount < 20)
 						{
 							sec->leakydamage = 0;
@@ -1767,7 +1767,7 @@ void P_SpawnSpecials (void)
 		sectors[i].SavedGravity = sectors[i].gravity;
 		sectors[i].SavedSpecial = sectors[i].special;
 		sectors[i].SavedDamageAmount = sectors[i].damageamount;
-		sectors[i].SavedDamageMOD = sectors[i].damagemod;
+		sectors[i].SavedDamageType = sectors[i].damagetype;
 		sectors[i].SavedDamageInterval = sectors[i].damageinterval;
 		sectors[i].SavedLeakyDamage = sectors[i].leakydamage;
 		sectors[i].SavedCeilingReflect = sectors[i].reflect[sector_t::ceiling];

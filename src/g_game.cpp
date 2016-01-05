@@ -3772,12 +3772,12 @@ void GAME_ResetMap( bool bRunEnterScripts )
 		}
 
 		if (( sectors[ulIdx].SavedDamageAmount != sectors[ulIdx].damageamount ) ||
-			( sectors[ulIdx].SavedDamageMOD != sectors[ulIdx].damagemod ) ||
+			( sectors[ulIdx].SavedDamageType != sectors[ulIdx].damagetype ) ||
 			( sectors[ulIdx].SavedDamageInterval != sectors[ulIdx].damageinterval ) ||
 			( sectors[ulIdx].SavedLeakyDamage != sectors[ulIdx].leakydamage ))
 		{
 			sectors[ulIdx].damageamount = sectors[ulIdx].SavedDamageAmount;
-			sectors[ulIdx].damagemod = sectors[ulIdx].SavedDamageMOD;
+			sectors[ulIdx].damagetype = sectors[ulIdx].SavedDamageType;
 			sectors[ulIdx].damageinterval = sectors[ulIdx].SavedDamageInterval;
 			sectors[ulIdx].leakydamage = sectors[ulIdx].SavedLeakyDamage;
 
