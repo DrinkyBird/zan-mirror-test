@@ -1214,3 +1214,33 @@ pasted into "src/p_acs.cpp".
  				{
  					// Don't count items in somebody's inventory
  					if (actor->IsMapActor())
+
+===============================================================================================================
+Git hash: d432df55e9be1d56f98a1b3e8b5966aeecae4e3a
+Mercurial hash: da3d5b4e2886ef1835ab2f59feb18ee2f9c7a85f
+- changed Sector_SetDamage so that it can explicitly set the damage interval and the leakiness probability, instead of hardcoding it to fixed damage ranges.
+- fixed: FCajunMaster::IsDangerous did not check for Heretic's sludge type.
+
+Reason for documentation: Zandronum doesn't use Cajun bots, nor does it have or use "src/b_move.cpp". The same
+kind of changes were made in "botpath.cpp" instead.
+===============================================================================================================
+
+--- src/b_move.cpp
++++ src/b_move.cpp
+@@ -357,7 +357,7 @@
+ 	int special;
+ 
+ 	return
+-		   sec->damage
++		   sec->damageamount
+ 		|| sec->special & DAMAGE_MASK
+ 		|| (special = sec->special & 0xff, special == dLight_Strobe_Hurt)
+ 		|| special == dDamage_Hellslime
+@@ -367,6 +367,7 @@
+ 		|| special == dDamage_LavaWimpy
+ 		|| special == dDamage_LavaHefty
+ 		|| special == dScroll_EastLavaDamage
++		|| special == hDamage_Sludge
+ 		|| special == sLight_Strobe_Hurt
+ 		|| special == Damage_InstantDeath
+ 		|| special == sDamage_SuperHellslime;

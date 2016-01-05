@@ -4132,7 +4132,7 @@ void P_PlayerThink (player_t *player)
 	if ( CLIENT_PREDICT_IsPredicting( ) == false )
 	{
 		P_PlayerOnSpecial3DFloor (player);
-		if (player->mo->Sector->special || player->mo->Sector->damage)
+		if (player->mo->Sector->special || player->mo->Sector->damageamount != 0)
 		{
 			P_PlayerInSpecialSector (player);
 		}

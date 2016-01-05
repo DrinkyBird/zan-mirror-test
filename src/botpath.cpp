@@ -678,6 +678,7 @@ ULONG BOTPATH_TryWalk( AActor *pActor, fixed_t StartX, fixed_t StartY, fixed_t S
 				case dDamage_LavaWimpy:
 				case dScroll_EastLavaDamage:
 				case dDamage_LavaHefty:
+				case hDamage_Sludge:
 
 					ulFlags |= BOTPATH_DAMAGINGSECTOR;
 					break;
@@ -686,7 +687,7 @@ ULONG BOTPATH_TryWalk( AActor *pActor, fixed_t StartX, fixed_t StartY, fixed_t S
 					break;
 				}
 
-				if ( pBackSector->damage > 0 )
+				if ( pBackSector->damageamount > 0 )
 					ulFlags |= BOTPATH_DAMAGINGSECTOR;
 
 				switch ( pLine->special )

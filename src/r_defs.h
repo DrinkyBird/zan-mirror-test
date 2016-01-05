@@ -753,9 +753,11 @@ struct sector_t
 	// thinglist is a subset of touching_thinglist
 	struct msecnode_t *touching_thinglist;				// phares 3/14/98
 
-	float gravity;		// [RH] Sector gravity (1.0 is normal)
-	short damage;		// [RH] Damage to do while standing on floor
-	short mod;			// [RH] Means-of-death for applied damage
+	float gravity;			// [RH] Sector gravity (1.0 is normal)
+	short damageamount;			// [RH] Damage to do while standing on floor
+	short damagemod;		// [RH] Means-of-death for applied damage
+	short damageinterval;	// Interval for damage application
+	short leakydamage;		// chance of leaking through radiation suit
 
 	WORD ZoneNumber;	// [RH] Zone this sector belongs to
 	WORD MoreFlags;		// [RH] Internal sector flags
@@ -846,8 +848,10 @@ struct sector_t
 	fixed_t				SavedFriction;
 	fixed_t				SavedMoveFactor;
 	short				SavedSpecial;
-	short				SavedDamage;
-	short				SavedMOD;
+	short				SavedDamageAmount;
+	short				SavedDamageMOD;
+	short				SavedDamageInterval;
+	short				SavedLeakyDamage;
 	float				SavedCeilingReflect;
 	float				SavedFloorReflect;
 

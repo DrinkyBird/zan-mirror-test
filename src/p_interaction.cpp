@@ -3547,7 +3547,7 @@ bool PLAYER_CanRespawnWhereDied( player_t *pPlayer )
 	AActor *mo = pPlayer->pCorpse ? pPlayer->pCorpse : pPlayer->mo;
 
 	// [AK] The player shouldn't respawn in any sectors that have damaging floors.
-	if (( mo->Sector->damage > 0 ) || ( Terrains[P_GetThingFloorType( mo )].DamageAmount > 0 ))
+	if (( mo->Sector->damageamount > 0 ) || ( Terrains[P_GetThingFloorType( mo )].DamageAmount > 0 ))
 		return false;
 
 	switch ( mo->Sector->special )

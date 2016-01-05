@@ -3771,11 +3771,15 @@ void GAME_ResetMap( bool bRunEnterScripts )
 				SERVERCOMMANDS_SetSectorSpecial( ulIdx );
 		}
 
-		if (( sectors[ulIdx].SavedDamage != sectors[ulIdx].damage ) ||
-			( sectors[ulIdx].SavedMOD != sectors[ulIdx].mod ))
+		if (( sectors[ulIdx].SavedDamageAmount != sectors[ulIdx].damageamount ) ||
+			( sectors[ulIdx].SavedDamageMOD != sectors[ulIdx].damagemod ) ||
+			( sectors[ulIdx].SavedDamageInterval != sectors[ulIdx].damageinterval ) ||
+			( sectors[ulIdx].SavedLeakyDamage != sectors[ulIdx].leakydamage ))
 		{
-			sectors[ulIdx].damage = sectors[ulIdx].SavedDamage;
-			sectors[ulIdx].mod = sectors[ulIdx].SavedMOD;
+			sectors[ulIdx].damageamount = sectors[ulIdx].SavedDamageAmount;
+			sectors[ulIdx].damagemod = sectors[ulIdx].SavedDamageMOD;
+			sectors[ulIdx].damageinterval = sectors[ulIdx].SavedDamageInterval;
+			sectors[ulIdx].leakydamage = sectors[ulIdx].SavedLeakyDamage;
 
 			// No client update necessary here.
 		}
