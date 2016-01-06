@@ -242,7 +242,7 @@ void DFloor::Tick ()
 				case donutRaise:
 				case genFloorChgT:
 				case genFloorChg0:
-					m_Sector->GetSpecial(&m_NewSpecial);
+					m_Sector->SetSpecial(&m_NewSpecial);
 					//fall thru
 				case genFloorChg:
 					m_Sector->SetTexture(sector_t::floor, m_Texture);
@@ -265,7 +265,7 @@ void DFloor::Tick ()
 				case floorLowerAndChange:
 				case genFloorChgT:
 				case genFloorChg0:
-					m_Sector->GetSpecial(&m_NewSpecial);
+					m_Sector->SetSpecial(&m_NewSpecial);
 					//fall thru
 				case genFloorChg:
 					m_Sector->SetTexture(sector_t::floor, m_Texture);
