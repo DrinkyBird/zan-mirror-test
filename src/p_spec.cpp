@@ -1364,9 +1364,13 @@ void P_SpawnSpecials (void)
 		if (sector->special & SECRET_MASK)
 		{
 			sector->Flags |= SECF_SECRET | SECF_WASSECRET;
-			sector->special &= ~SECRET_MASK;
 			level.total_secrets++;
 		}
+		if (sector->special & FRICTION_MASK)
+		{
+			sector->Flags |= SECF_FRICTION;
+		}
+		sector->special &= ~(SECRET_MASK|FRICTION_MASK);
 
 		switch (sector->special & 0xff)
 		{
@@ -1473,7 +1477,7 @@ void P_SpawnSpecials (void)
 			sector->friction = FRICTION_LOW;
 			sector->movefactor = 0x269;
 			sector->special &= 0xff00;
-			sector->special |= FRICTION_MASK;
+			sector->Flags |= SECF_FRICTION;
 			break;
 
 		  // [RH] Hexen-like phased lighting
@@ -2433,11 +2437,11 @@ void P_SetSectorFriction (int tag, int amount, bool alterFlag)
 			// can be enabled and disabled at will.
 			if (friction == ORIG_FRICTION)
 			{
-				sectors[s].special &= ~FRICTION_MASK;
+				sectors[s].Flags &= ~SECF_FRICTION;
 			}
 			else
 			{
-				sectors[s].special |= FRICTION_MASK;
+				sectors[s].Flags |= SECF_FRICTION;
 			}
 
 			// [BC] If we're the server, update clients about this friction change.

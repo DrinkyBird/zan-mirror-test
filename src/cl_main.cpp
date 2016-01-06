@@ -6942,10 +6942,10 @@ void ServerCommands::SetSectorFriction::Execute()
 	sector->movefactor = moveFactor;
 
 	// I'm not sure if we need to do this, but let's do it anyway.
-	if ( friction == ORIG_FRICTION )
-		sector->special &= ~FRICTION_MASK;
+	if ( friction == ORIG_FRICTION)
+		sector->Flags &= ~SECF_FRICTION;
 	else
-		sector->special |= FRICTION_MASK;
+		sector->Flags |= SECF_FRICTION;
 }
 
 //*****************************************************************************

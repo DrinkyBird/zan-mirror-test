@@ -3546,7 +3546,7 @@ void SERVER_UpdateSectors( ULONG ulClient )
 
 		// Update the sector's friction.
 		if (( pSector->SavedFriction != pSector->friction || pSector->SavedMoveFactor != pSector->movefactor ) &&
-			( pSector->special & FRICTION_MASK ))
+			( pSector->Flags & SECF_FRICTION ))
 		{
 			SERVERCOMMANDS_SetSectorFriction( ulIdx, ulClient, SVCF_ONLYTHISCLIENT );
 		}
