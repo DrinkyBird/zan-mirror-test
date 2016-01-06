@@ -242,7 +242,7 @@ void DFloor::Tick ()
 				case donutRaise:
 				case genFloorChgT:
 				case genFloorChg0:
-					m_Sector->xspecial = m_Sector->xspecial | m_NewSpecial;
+					m_Sector->GetSpecial(&m_NewSpecial);
 					//fall thru
 				case genFloorChg:
 					m_Sector->SetTexture(sector_t::floor, m_Texture);
@@ -265,7 +265,7 @@ void DFloor::Tick ()
 				case floorLowerAndChange:
 				case genFloorChgT:
 				case genFloorChg0:
-					m_Sector->xspecial = m_Sector->xspecial | m_NewSpecial;
+					m_Sector->GetSpecial(&m_NewSpecial);
 					//fall thru
 				case genFloorChg:
 					m_Sector->SetTexture(sector_t::floor, m_Texture);
@@ -343,14 +343,14 @@ void DFloor::SetFloorChangeType (sector_t *sec, int change)
 	switch (change & 3)
 	{
 	case 1:
-		m_NewSpecial = 0;
+		m_NewSpecial.Clear();
 		m_Type = DFloor::genFloorChg0;
 		break;
 	case 2:
 		m_Type = DFloor::genFloorChg;
 		break;
 	case 3:
-		m_NewSpecial = sec->xspecial;
+		sec->GetSpecial(&m_NewSpecial);
 		m_Type = DFloor::genFloorChgT;
 		break;
 	}
@@ -696,11 +696,11 @@ bool EV_DoFloor (DFloor::EFloor floortype, line_t *line, int tag,
 				// [BC] Also, mark this sector as having its flat changed.
 				sec->bFlatChange = true;
 
-				sec->xspecial = line->frontsector->xspecial;
+				sec->TransferSpecial(line->frontsector);
 			}
 			else
 			{
-				sec->xspecial = 0;
+				sec->ClearSpecial();
 			}
 			break;
 		  
@@ -711,8 +711,7 @@ bool EV_DoFloor (DFloor::EFloor floortype, line_t *line, int tag,
 			floor->m_Texture = sec->GetTexture(sector_t::floor);
 			// jff 1/24/98 make sure floor->m_NewSpecial gets initialized
 			// in case no surrounding sector is at floordestheight
-			// --> should not affect compatibility <--
-			floor->m_NewSpecial = sec->xspecial; 
+			sec->GetSpecial(&floor->m_NewSpecial);
 
 			//jff 5/23/98 use model subroutine to unify fixes and handling
 			sector_t *modelsec;
@@ -720,7 +719,7 @@ bool EV_DoFloor (DFloor::EFloor floortype, line_t *line, int tag,
 			if (modelsec != NULL)
 			{
 				floor->m_Texture = modelsec->GetTexture(sector_t::floor);
-				floor->m_NewSpecial = modelsec->xspecial;
+				modelsec->GetSpecial(&floor->m_NewSpecial);
 
 				// [BC] Update clients about this flat change.
 				if ( NETWORK_GetState( ) == NETSTATE_SERVER )
@@ -1110,7 +1109,7 @@ bool EV_DoDonut (int tag, line_t *line, fixed_t pillarspeed, fixed_t slimespeed)
 			floor->m_Sector = s2;
 			floor->m_Speed = slimespeed;
 			floor->m_Texture = s3->GetTexture(sector_t::floor);
-			floor->m_NewSpecial = 0;
+			floor->m_NewSpecial.Clear();
 			height = s3->FindHighestFloorPoint (&spot);
 			floor->m_FloorDestDist = s2->floorplane.PointToDist (spot, height);
 			floor->StartFloorSound ();
@@ -1470,7 +1469,7 @@ bool EV_DoChange (line_t *line, EChange changetype, int tag)
 			if (line)
 			{ // [RH] if no line, no change
 				sec->SetTexture(sector_t::floor, line->frontsector->GetTexture(sector_t::floor));
-				sec->xspecial = line->frontsector->xspecial;
+				sec->TransferSpecial(line->frontsector);
 
 				// [BC] Update clients about this flat change.
 				if ( NETWORK_GetState( ) == NETSTATE_SERVER )
@@ -1485,7 +1484,7 @@ bool EV_DoChange (line_t *line, EChange changetype, int tag)
 			if (secm)
 			{ // if no model, no change
 				sec->SetTexture(sector_t::floor, secm->GetTexture(sector_t::floor));
-				sec->xspecial = secm->xspecial;
+				sec->TransferSpecial(secm);
 
 				// [BC] Update clients about this flat change.
 				if ( NETWORK_GetState( ) == NETSTATE_SERVER )

@@ -482,8 +482,7 @@ bool EV_DoPlat (int tag, line_t *line, DPlat::EPlatType type, int height,
 				// [BC] Also, mark this sector as having its flat changed.
 				sec->bFlatChange = true;
 			}
-			if (change == 1)
-				sec->xspecial = 0;	// Stop damage and other stuff, if any
+			if (change == 1) sec->ClearSpecial();
 		}
 
 		switch (type)
@@ -495,7 +494,7 @@ bool EV_DoPlat (int tag, line_t *line, DPlat::EPlatType type, int height,
 			plat->m_Low = sec->floorplane.d;
 			plat->m_Status = DPlat::up;
 			plat->PlayPlatSound ("Floor");
-			sec->xspecial = 0;		// NO MORE DAMAGE, IF APPLICABLE
+			sec->ClearSpecial();
 			break;
 
 		case DPlat::platUpByValue:
