@@ -1267,7 +1267,7 @@ static void P_SetupSectorDamage(sector_t *sector, int damage, int interval, int 
 // ('fromload' is necessary to allow conversion upon savegame load.)
 //
 
-void P_InitSectorSpecial(sector_t *sector, int special)
+void P_InitSectorSpecial(sector_t *sector, int special, bool nothinkers)
 {
 	// [RH] All secret sectors are marked with a BOOM-ish bitfield
 	if (sector->special & SECRET_MASK)
@@ -1305,7 +1305,9 @@ void P_InitSectorSpecial(sector_t *sector, int special)
 		// [BC] In client mode, light specials may have been shut off by the server.
 		// Therefore, we can't spawn them on our end.
 		if (NETWORK_InClientMode() == false)
-			new DPhased (sector, 48, 63 - (sector->lightlevel & 63));
+		{
+			if (!nothinkers) new DPhased (sector, 48, 63 - (sector->lightlevel & 63));
+		}
 		break;
 
 		// [RH] Hexen-like phased lighting
@@ -1313,28 +1315,36 @@ void P_InitSectorSpecial(sector_t *sector, int special)
 		// [BC] In client mode, light specials may have been shut off by the server.
 		// Therefore, we can't spawn them on our end.
 		if (NETWORK_InClientMode() == false)
-			new DPhased (sector);
+		{
+			if (!nothinkers) new DPhased (sector);
+		}
 		break;
 
 	case dLight_Flicker:
 		// [BC] In client mode, light specials may have been shut off by the server.
 		// Therefore, we can't spawn them on our end.
 		if (NETWORK_InClientMode() == false)
-			new DLightFlash (sector);
+		{
+			if (!nothinkers) new DLightFlash (sector);
+		}
 		break;
 
 	case dLight_StrobeFast:
 		// [BC] In client mode, light specials may have been shut off by the server.
 		// Therefore, we can't spawn them on our end.
 		if (NETWORK_InClientMode() == false)
-			new DStrobe (sector, STROBEBRIGHT, FASTDARK, false);
+		{
+			if (!nothinkers) new DStrobe (sector, STROBEBRIGHT, FASTDARK, false);
+		}
 		break;
 			
 	case dLight_StrobeSlow:
 		// [BC] In client mode, light specials may have been shut off by the server.
 		// Therefore, we can't spawn them on our end.
 		if (NETWORK_InClientMode() == false)
-			new DStrobe (sector, STROBEBRIGHT, SLOWDARK, false);
+		{
+			if (!nothinkers) new DStrobe (sector, STROBEBRIGHT, SLOWDARK, false);
+		}
 		break;
 
 	case dLight_Strobe_Hurt:
@@ -1342,7 +1352,7 @@ void P_InitSectorSpecial(sector_t *sector, int special)
 		if (NETWORK_InClientMode())
 			break;
 
-		new DStrobe (sector, STROBEBRIGHT, FASTDARK, false);
+		if (!nothinkers) new DStrobe (sector, STROBEBRIGHT, FASTDARK, false);
 		P_SetupSectorDamage(sector, 20, 32, 5, NAME_Slime, 0);
 		break;
 
@@ -1358,7 +1368,9 @@ void P_InitSectorSpecial(sector_t *sector, int special)
 		// [BC] In client mode, light specials may have been shut off by the server.
 		// Therefore, we can't spawn them on our end.
 		if (NETWORK_InClientMode() == false)
-			new DGlow (sector);
+		{
+			if (!nothinkers) new DGlow (sector);
+		}
 		break;
 			
 	case dSector_DoorCloseIn30:
@@ -1373,14 +1385,18 @@ void P_InitSectorSpecial(sector_t *sector, int special)
 		// [BC] In client mode, light specials may have been shut off by the server.
 		// Therefore, we can't spawn them on our end.
 		if (NETWORK_InClientMode() == false)
-			new DStrobe (sector, STROBEBRIGHT, SLOWDARK, true);
+		{
+			if (!nothinkers) new DStrobe (sector, STROBEBRIGHT, SLOWDARK, true);
+		}
 		break;
 
 	case dLight_StrobeFastSync:
 		// [BC] In client mode, light specials may have been shut off by the server.
 		// Therefore, we can't spawn them on our end.
 		if (NETWORK_InClientMode() == false)
-			new DStrobe (sector, STROBEBRIGHT, FASTDARK, true);
+		{
+			if (!nothinkers) new DStrobe (sector, STROBEBRIGHT, FASTDARK, true);
+		}
 		break;
 
 	case dSector_DoorRaiseIn5Mins:
@@ -1401,7 +1417,9 @@ void P_InitSectorSpecial(sector_t *sector, int special)
 		// [BC] In client mode, light specials may have been shut off by the server.
 		// Therefore, we can't spawn them on our end.
 		if (NETWORK_InClientMode() == false)
-			new DFireFlicker (sector);
+		{
+			if (!nothinkers) new DFireFlicker (sector);
+		}
 		break;
 
 	case dDamage_LavaWimpy:
@@ -1418,9 +1436,12 @@ void P_InitSectorSpecial(sector_t *sector, int special)
 			break;
 
 		P_SetupSectorDamage(sector, 5, 32, 256, NAME_Fire, SECF_DMGTERRAINFX);
-		new DStrobe (sector, STROBEBRIGHT, FASTDARK, false);
-		new DScroller (DScroller::sc_floor, (-FRACUNIT/2)<<3,
-			0, -1, int(sector-sectors), 0);
+		if (!nothinkers)
+		{
+			new DStrobe(sector, STROBEBRIGHT, FASTDARK, false);
+			new DScroller(DScroller::sc_floor, (-FRACUNIT / 2) << 3,
+				0, -1, int(sector - sectors), 0);
+		}
 		break;
 
 	case hDamage_Sludge:
@@ -1433,7 +1454,7 @@ void P_InitSectorSpecial(sector_t *sector, int special)
 			break;
 
 		P_SetupSectorDamage(sector, 5, 32, 0, NAME_Slime, 0);
-		new DStrobe (sector, STROBEBRIGHT, FASTDARK, false);
+		if (!nothinkers) new DStrobe (sector, STROBEBRIGHT, FASTDARK, false);
 		break;
 
 	case sDamage_Hellslime:
@@ -1482,16 +1503,17 @@ void P_InitSectorSpecial(sector_t *sector, int special)
 				{  1, -1 }, {  2, -2 }, {  4, -4 }
 			};
 
+			
 			int i = (sector->special & 0xff) - Scroll_North_Slow;
 			fixed_t dx = hexenScrollies[i][0] * (FRACUNIT/2);
 			fixed_t dy = hexenScrollies[i][1] * (FRACUNIT/2);
-			new DScroller (DScroller::sc_floor, dx, dy, -1, int(sector-sectors), 0);
+			if (!nothinkers) new DScroller (DScroller::sc_floor, dx, dy, -1, int(sector-sectors), 0);
 		}
 		else if (sector->special >= Carry_East5 &&
 					sector->special <= Carry_East35)
 		{ // Heretic scroll special
 			// Only east scrollers also scroll the texture
-			new DScroller (DScroller::sc_floor,
+			if (!nothinkers) new DScroller (DScroller::sc_floor,
 				(-FRACUNIT/2)<<((sector->special & 0xff) - Carry_East5),
 				0, -1, int(sector-sectors), 0);
 		}
@@ -1521,7 +1543,7 @@ void P_SpawnSpecials (void)
 		if (sector->special == 0)
 			continue;
 
-		P_InitSectorSpecial(sector, sector->special);
+		P_InitSectorSpecial(sector, sector->special, false);
 	}
 	
 	// Init other misc stuff
