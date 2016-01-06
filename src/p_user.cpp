@@ -451,6 +451,7 @@ player_t &player_t::operator=(const player_t &p)
 	damagecount = p.damagecount;
 	bonuscount = p.bonuscount;
 	hazardcount = p.hazardcount;
+	hazardtype = p.hazardtype;
 	poisoncount = p.poisoncount;
 	poisontype = p.poisontype;
 	poisonpaintype = p.poisonpaintype;
@@ -4197,7 +4198,7 @@ void P_PlayerThink (player_t *player)
 			if ( NETWORK_InClientMode() == false )
 			{
 				if (!(level.time & 31) && player->hazardcount > 16*TICRATE)
-					P_DamageMobj (player->mo, NULL, NULL, 5, NAME_Slime);
+					P_DamageMobj (player->mo, NULL, NULL, 5, player->hazardtype);
 			}
 		}
 
@@ -4522,8 +4523,12 @@ void player_t::Serialize (FArchive &arc)
 		<< respawn_time
 		<< air_finished
 		<< turnticks
-		<< oldbuttons
-		<< BlendR
+		<< oldbuttons;
+	if (SaveVersion >= 4929)
+	{
+		arc << hazardtype;
+	}
+	arc << BlendR
 		<< BlendG
 		<< BlendB
 		<< BlendA
