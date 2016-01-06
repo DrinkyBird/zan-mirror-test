@@ -668,25 +668,6 @@ ULONG BOTPATH_TryWalk( AActor *pActor, fixed_t StartX, fixed_t StartY, fixed_t S
 					}
 				}
 
-				switch ( pBackSector->special )
-				{
-				case dDamage_End:
-				case dDamage_Hellslime:
-				case dDamage_SuperHellslime:
-				case dLight_Strobe_Hurt:
-				case dDamage_Nukage:
-				case dDamage_LavaWimpy:
-				case dScroll_EastLavaDamage:
-				case dDamage_LavaHefty:
-				case hDamage_Sludge:
-
-					ulFlags |= BOTPATH_DAMAGINGSECTOR;
-					break;
-				default:
-
-					break;
-				}
-
 				if ( pBackSector->damageamount > 0 )
 					ulFlags |= BOTPATH_DAMAGINGSECTOR;
 

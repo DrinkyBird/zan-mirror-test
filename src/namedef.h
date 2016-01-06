@@ -507,6 +507,8 @@ xx(damageamount)
 xx(damagetype)
 xx(damageinterval)
 xx(leakiness)
+xx(damageterraineffect)
+xx(damagehazard)
 
 // USDF keywords
 xx(Amount)

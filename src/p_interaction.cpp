@@ -1504,11 +1504,9 @@ thrust:
 		ApplyCoopDamagefactor(damage, source);
 
 		// end of game hell hack
-		if ((target->Sector->special & 255) == dDamage_End
-			&& damage >= target->health
-			// [BB] A player who tries to exit a map in a competitive game mode when DF_NO_EXIT is set,
-			// should not be saved by the hack, but killed.
-			&& MeansOfDeath != NAME_Exit)
+		// [BB] A player who tries to exit a map in a competitive game mode when DF_NO_EXIT is set,
+		// should not be saved by the hack, but killed.
+		if ((target->Sector->Flags & SECF_ENDLEVEL) && damage >= target->health && MeansOfDeath != NAME_Exit)
 		{
 			damage = target->health - 1;
 		}
@@ -3548,27 +3546,6 @@ bool PLAYER_CanRespawnWhereDied( player_t *pPlayer )
 
 	// [AK] The player shouldn't respawn in any sectors that have damaging floors.
 	if (( mo->Sector->damageamount > 0 ) || ( Terrains[P_GetThingFloorType( mo )].DamageAmount > 0 ))
-		return false;
-
-	switch ( mo->Sector->special )
-	{
-		case dLight_Strobe_Hurt:
-		case dDamage_Hellslime:
-		case dDamage_Nukage:
-		case dDamage_End:
-		case dDamage_SuperHellslime:
-		case dDamage_LavaWimpy:
-		case dDamage_LavaHefty:
-		case dScroll_EastLavaDamage:
-		case hDamage_Sludge:
-		case sLight_Strobe_Hurt:
-		case sDamage_Hellslime:
-		case sDamage_SuperHellslime:
-			return false;
-	}
-
-	// [AK] Also handle extended sector damage types.
-	if ( mo->Sector->special & DAMAGE_MASK )
 		return false;
 
 	// [AK] Don't respawn the player in an instant death sector. Taken directly from P_PlayerSpawn.

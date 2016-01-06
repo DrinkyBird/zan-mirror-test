@@ -1244,3 +1244,92 @@ kind of changes were made in "botpath.cpp" instead.
  		|| special == sLight_Strobe_Hurt
  		|| special == Damage_InstantDeath
  		|| special == sDamage_SuperHellslime;
+
+===============================================================================================================
+Git hash: 5474e01de8c1153c25c7d9968e4d435c54933ad9
+Mercurial hash: 97a96869ed9ed24aa0452af7be443669d75fde0b
+- removed FraggleScript's 'sectortype' function. This was GZDoom exclusive and never documented so it got no public exposure. Since this is incompatible with the damage related changes, it has no more use.
+- major overhaul of the static sector damage system:
+
+* consolidated special based damage, Sector_SetDamage and UDMF properties into one set of damage properties. The parallel handling that could lead to double damage infliction was removed. This also means that damage through sector specials can be retroactively changed through Sector_SetDamage.
+* all special cases were turned into flags. The new system can switch between Strife's delayed damage and regular damage, and it can also set whether terrain splashes are used or not. It also has access to the special properties of the end-level type (i.e. switching off god mode and ending the level.)
+* the damage related flags are accessible through Sector_ChangeFlags, not the damage functions themselves.
+
+Reason for documentation: Zandronum doesn't use Cajun bots, nor does it have or use "src/b_move.cpp". The same
+kind of changes were made in "botpath.cpp" instead. Zandronum also doesn't have "src/fragglescript/t_func.cpp".
+===============================================================================================================
+
+--- src/b_move.cpp
++++ src/b_move.cpp
+@@ -354,21 +354,5 @@
+ //Checks if a sector is dangerous.
+ bool FCajunMaster::IsDangerous (sector_t *sec)
+ {
+-	int special;
+-
+-	return
+-		   sec->damageamount
+-		|| sec->special & DAMAGE_MASK
+-		|| (special = sec->special & 0xff, special == dLight_Strobe_Hurt)
+-		|| special == dDamage_Hellslime
+-		|| special == dDamage_Nukage
+-		|| special == dDamage_End
+-		|| special == dDamage_SuperHellslime
+-		|| special == dDamage_LavaWimpy
+-		|| special == dDamage_LavaHefty
+-		|| special == dScroll_EastLavaDamage
+-		|| special == hDamage_Sludge
+-		|| special == sLight_Strobe_Hurt
+-		|| special == Damage_InstantDeath
+-		|| special == sDamage_SuperHellslime;
++	return sec->damageamount > 0;
+ }
+
+--- src/fragglescript/t_func.cpp
++++ src/fragglescript/t_func.cpp
+@@ -4323,44 +4323,12 @@
+ //==========================================================================
+ //
+ // new for GZDoom: Sets a sector's type
+-// (Sure, this is not particularly useful. But having it made it possible
+-//  to fix a few annoying bugs in some old maps ;) )
+ //
+ //==========================================================================
+ 
+ void FParser::SF_SectorType(void)
+ {
+-	int tagnum, secnum;
+-	sector_t *sector;
+-	
+-	if (CheckArgs(1))
+-	{
+-		tagnum = intvalue(t_argv[0]);
+-		
+-		// argv is sector tag
+-		secnum = T_FindFirstSectorFromTag(tagnum);
+-		
+-		if(secnum < 0)
+-		{ script_error("sector not found with tagnum %i\n", tagnum); return;}
+-		
+-		sector = &sectors[secnum];
+-		
+-		if(t_argc > 1)
+-		{
+-			int i = -1;
+-			int spec = intvalue(t_argv[1]);
+-			
+-			// set all sectors with tag
+-			FSSectorTagIterator itr(tagnum);
+-			while ((i = itr.Next()) >= 0)
+-			{
+-				sectors[i].special = spec;
+-			}
+-		}
+-		
+-		t_return.type = svt_int;
+-		t_return.value.i = sector->special;
+-	}
++	// I don't think this was ever used publicly so I'm not going to bother fixing it.
+ }
+ 
+ //==========================================================================
