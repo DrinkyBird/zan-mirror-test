@@ -4234,7 +4234,7 @@ void AActor::Tick ()
 
 				if (player != NULL)
 				{
-					int scrolltype = sec->special & 0xff;
+					int scrolltype = sec->special;
 
 					if (scrolltype >= Scroll_North_Slow &&
 						scrolltype <= Scroll_SouthWest_Fast)

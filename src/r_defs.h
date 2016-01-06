@@ -782,7 +782,7 @@ struct sector_t
 
 	float gravity;			// [RH] Sector gravity (1.0 is normal)
 	FNameNoInit damagetype;		// [RH] Means-of-death for applied damage
-	short damageamount;			// [RH] Damage to do while standing on floor
+	int damageamount;			// [RH] Damage to do while standing on floor
 	short damageinterval;	// Interval for damage application
 	short leakydamage;		// chance of leaking through radiation suit
 
@@ -874,7 +874,7 @@ struct sector_t
 	fixed_t				SavedFriction;
 	fixed_t				SavedMoveFactor;
 	short				SavedSpecial;
-	short				SavedDamageAmount;
+	int					SavedDamageAmount;
 	FNameNoInit			SavedDamageType;
 	short				SavedDamageInterval;
 	short				SavedLeakyDamage;

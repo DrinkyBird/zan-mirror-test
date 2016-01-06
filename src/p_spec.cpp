@@ -483,7 +483,6 @@ void P_PlayerInSpecialSector (player_t *player, sector_t * sector)
 		sector = player->mo->Sector;
 		bSectorWasNull = true;
 	}
-	int special = sector->special;
 
 	// [BC] Sector specials are server-side.
 	if ( NETWORK_InClientMode() )
@@ -1442,6 +1441,7 @@ void P_InitSectorSpecial(sector_t *sector, int special, bool nothinkers)
 			new DScroller(DScroller::sc_floor, (-FRACUNIT / 2) << 3,
 				0, -1, int(sector - sectors), 0);
 		}
+		keepspecial = true;
 		break;
 
 	case hDamage_Sludge:
@@ -1504,7 +1504,7 @@ void P_InitSectorSpecial(sector_t *sector, int special, bool nothinkers)
 			};
 
 			
-			int i = (sector->special & 0xff) - Scroll_North_Slow;
+			int i = sector->special - Scroll_North_Slow;
 			fixed_t dx = hexenScrollies[i][0] * (FRACUNIT/2);
 			fixed_t dy = hexenScrollies[i][1] * (FRACUNIT/2);
 			if (!nothinkers) new DScroller (DScroller::sc_floor, dx, dy, -1, int(sector-sectors), 0);
@@ -1514,10 +1514,10 @@ void P_InitSectorSpecial(sector_t *sector, int special, bool nothinkers)
 		{ // Heretic scroll special
 			// Only east scrollers also scroll the texture
 			if (!nothinkers) new DScroller (DScroller::sc_floor,
-				(-FRACUNIT/2)<<((sector->special & 0xff) - Carry_East5),
+				(-FRACUNIT/2)<<(sector->special - Carry_East5),
 				0, -1, int(sector-sectors), 0);
 		}
-		else keepspecial = true;
+		keepspecial = true;
 		break;
 	}
 	if (!keepspecial) sector->special = 0;

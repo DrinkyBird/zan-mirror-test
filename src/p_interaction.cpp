@@ -3549,7 +3549,7 @@ bool PLAYER_CanRespawnWhereDied( player_t *pPlayer )
 		return false;
 
 	// [AK] Don't respawn the player in an instant death sector. Taken directly from P_PlayerSpawn.
-	if (( mo->Sector->Flags & SECF_NORESPAWN ) || (( mo->Sector->special & 255 ) == Damage_InstantDeath ))
+	if (( mo->Sector->Flags & SECF_NORESPAWN ) || ( mo->Sector->damageamount >= TELEFRAG_DAMAGE ))
 		return false;
 
 	// [AK] Make sure they're not going to be blocked by anything upon respawning where they died.
