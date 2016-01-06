@@ -4856,7 +4856,7 @@ void ServerCommands::SecretFound::Execute()
 //
 void ServerCommands::SecretMarkSectorFound::Execute()
 {
-	sector->special &= ~SECRET_MASK;
+	sector->ClearSecret( );
 }
 
 //*****************************************************************************

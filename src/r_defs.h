@@ -396,6 +396,12 @@ enum
 	SECF_NOFALLINGDAMAGE= 2,	// No falling damage in this sector
 	SECF_FLOORDROP		= 4,	// all actors standing on this floor will remain on it when it lowers very fast.
 	SECF_NORESPAWN		= 8,	// players can not respawn in this sector
+
+
+	SECF_WASSECRET		= 1 << 30,	// a secret that was discovered
+	SECF_SECRET			= 1 << 31,	// a secret sector
+
+	SECF_NOMODIFY = SECF_SECRET|SECF_WASSECRET	// not modifiable by Sector_ChangeFlags
 };
 
 enum
@@ -686,6 +692,20 @@ struct sector_t
 		return pos == floor? floorplane:ceilingplane;
 	}
 
+	bool isSecret() const
+	{
+		return !!(Flags & SECF_SECRET);
+	}
+
+	bool wasSecret() const
+	{
+		return !!(Flags & SECF_WASSECRET);
+	}
+
+	void ClearSecret()
+	{
+		Flags &= ~SECF_SECRET;
+	}
 
 	bool PlaneMoving(int pos);
 
@@ -773,7 +793,6 @@ struct sector_t
 	// regular sky.
 	TObjPtr<ASkyViewpoint> FloorSkyBox, CeilingSkyBox;
 
-	short						secretsector;		//jff 2/16/98 remembers if sector WAS secret (automap)
 	int							sectornum;			// for comparing sector copies
 
 	extsector_t	*				e;		// This stores data that requires construction/destruction. Such data must not be copied by R_FakeFlat.

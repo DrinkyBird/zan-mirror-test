@@ -3576,7 +3576,7 @@ void SERVER_UpdateSectors( ULONG ulClient )
 		}
 
 		// Tell client to mark all discovered secret sectors.
-		if ((pSector->special & SECRET_MASK) == 0 && pSector->secretsector)
+		if (( pSector->isSecret( ) == false ) && ( pSector->wasSecret( )))
 			SERVERCOMMANDS_SecretMarkSectorFound( pSector, ulClient, SVCF_ONLYTHISCLIENT );
 	}
 

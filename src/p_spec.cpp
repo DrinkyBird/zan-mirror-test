@@ -483,7 +483,7 @@ void P_PlayerInSpecialSector (player_t *player, sector_t * sector)
 		sector = player->mo->Sector;
 		bSectorWasNull = true;
 	}
-	int special = sector->special & ~SECRET_MASK;
+	int special = sector->special;
 
 	// [BC] Sector specials are server-side.
 	if ( NETWORK_InClientMode() )
@@ -653,9 +653,9 @@ void P_PlayerInSpecialSector (player_t *player, sector_t * sector)
 		}
 	}
 
-	if (sector->special & SECRET_MASK)
+	if (sector->isSecret())
 	{
-		sector->special &= ~SECRET_MASK;
+		sector->ClearSecret();
 		P_GiveSecret(player->mo, true, true);
 	}
 }
@@ -774,7 +774,7 @@ void P_GiveSecret(AActor *actor, bool printmessage, bool playsound, bool allowcl
 			// by picking up +COUNTSECRET actors in a secret sector
 			// as the client-side reaction is a no-op if client
 			// already knows that the sector was discovered.
-			if ( actor->Sector != NULL && (actor->Sector->special & SECRET_MASK) == 0 && actor->Sector->secretsector)
+			if ( actor->Sector != NULL && actor->Sector->isSecret( ) == false && actor->Sector->wasSecret( ))
 				SERVERCOMMANDS_SecretMarkSectorFound( actor->Sector );
 			SERVERCOMMANDS_SecretFound( actor, secretFlags );
 		}
@@ -1362,7 +1362,11 @@ void P_SpawnSpecials (void)
 
 		// [RH] All secret sectors are marked with a BOOM-ish bitfield
 		if (sector->special & SECRET_MASK)
+		{
+			sector->Flags |= SECF_SECRET | SECF_WASSECRET;
+			sector->special &= ~SECRET_MASK;
 			level.total_secrets++;
+		}
 
 		switch (sector->special & 0xff)
 		{

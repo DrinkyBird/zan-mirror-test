@@ -481,7 +481,7 @@ bool EV_DoPlat (int tag, line_t *line, DPlat::EPlatType type, int height,
 				sec->bFlatChange = true;
 			}
 			if (change == 1)
-				sec->special &= SECRET_MASK;	// Stop damage and other stuff, if any
+				sec->special = 0;	// Stop damage and other stuff, if any
 		}
 
 		switch (type)
@@ -493,7 +493,7 @@ bool EV_DoPlat (int tag, line_t *line, DPlat::EPlatType type, int height,
 			plat->m_Low = sec->floorplane.d;
 			plat->m_Status = DPlat::up;
 			plat->PlayPlatSound ("Floor");
-			sec->special &= SECRET_MASK;		// NO MORE DAMAGE, IF APPLICABLE
+			sec->special = 0;		// NO MORE DAMAGE, IF APPLICABLE
 			break;
 
 		case DPlat::platUpByValue:

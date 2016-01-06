@@ -4132,10 +4132,8 @@ void P_PlayerThink (player_t *player)
 	if ( CLIENT_PREDICT_IsPredicting( ) == false )
 	{
 		P_PlayerOnSpecial3DFloor (player);
-		if (player->mo->Sector->special || player->mo->Sector->damageamount != 0)
-		{
-			P_PlayerInSpecialSector (player);
-		}
+		P_PlayerInSpecialSector (player);
+
 		if (player->mo->z <= player->mo->Sector->floorplane.ZatPoint(
 			player->mo->x, player->mo->y) ||
 			player->mo->waterlevel)
