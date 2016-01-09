@@ -287,6 +287,7 @@ struct FLineOpening
 	sector_t		*topsec;
 	FTextureID		ceilingpic;
 	FTextureID		floorpic;
+	int				floorterrain;
 	bool			touchmidtex;
 	bool			abovemidtex;
 };
@@ -402,6 +403,7 @@ struct FCheckPosition
 	fixed_t			ceilingz;
 	fixed_t			dropoffz;
 	FTextureID		floorpic;
+	int				floorterrain;
 	sector_t		*floorsector;
 	FTextureID		ceilingpic;
 	sector_t		*ceilingsector;

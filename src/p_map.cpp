@@ -218,6 +218,7 @@ void P_GetFloorCeilingZ(FCheckPosition &tmf, int flags)
 		tmf.floorz = tmf.dropoffz = sec->floorplane.ZatPoint(tmf.x, tmf.y);
 		tmf.ceilingz = sec->ceilingplane.ZatPoint(tmf.x, tmf.y);
 		tmf.floorpic = sec->GetTexture(sector_t::floor);
+		tmf.floorterrain = sec->GetTerrain(sector_t::floor);
 		tmf.ceilingpic = sec->GetTexture(sector_t::ceiling);
 	}
 	else
@@ -242,6 +243,7 @@ void P_GetFloorCeilingZ(FCheckPosition &tmf, int flags)
 			{
 				tmf.dropoffz = tmf.floorz = ff_top;
 				tmf.floorpic = *rover->top.texture;
+				tmf.floorterrain = rover->model->GetTerrain(rover->top.isceiling);
 			}
 		}
 		if (ff_bottom <= tmf.ceilingz && ff_bottom > tmf.z + tmf.thing->height)
@@ -283,6 +285,7 @@ void P_FindFloorCeiling(AActor *actor, int flags)
 		tmf.floorz = tmf.dropoffz = actor->floorz;
 		tmf.ceilingz = actor->ceilingz;
 		tmf.floorpic = actor->floorpic;
+		tmf.floorterrain = actor->floorterrain;
 		tmf.ceilingpic = actor->ceilingpic;
 		P_GetFloorCeilingZ(tmf, flags);
 	}
@@ -290,6 +293,7 @@ void P_FindFloorCeiling(AActor *actor, int flags)
 	actor->dropoffz = tmf.dropoffz;
 	actor->ceilingz = tmf.ceilingz;
 	actor->floorpic = tmf.floorpic;
+	actor->floorterrain = tmf.floorterrain;
 	actor->floorsector = tmf.floorsector;
 	actor->ceilingpic = tmf.ceilingpic;
 	actor->ceilingsector = tmf.ceilingsector;
@@ -316,6 +320,7 @@ void P_FindFloorCeiling(AActor *actor, int flags)
 		actor->dropoffz = tmf.dropoffz;
 		actor->ceilingz = tmf.ceilingz;
 		actor->floorpic = tmf.floorpic;
+		actor->floorterrain = tmf.floorterrain;
 		actor->floorsector = tmf.floorsector;
 		actor->ceilingpic = tmf.ceilingpic;
 		actor->ceilingsector = tmf.ceilingsector;
@@ -327,6 +332,7 @@ void P_FindFloorCeiling(AActor *actor, int flags)
 		if (actor->Sector != NULL)
 		{
 			actor->floorpic = actor->Sector->GetTexture(sector_t::floor);
+			actor->floorterrain = actor->Sector->GetTerrain(sector_t::floor);
 			actor->ceilingpic = actor->Sector->GetTexture(sector_t::ceiling);
 		}
 	}
@@ -444,6 +450,7 @@ bool P_TeleportMove(AActor *thing, fixed_t x, fixed_t y, fixed_t z, bool telefra
 	thing->ceilingz = tmf.ceilingz;
 	thing->floorsector = tmf.floorsector;
 	thing->floorpic = tmf.floorpic;
+	thing->floorterrain = tmf.floorterrain;
 	thing->ceilingsector = tmf.ceilingsector;
 	thing->ceilingpic = tmf.ceilingpic;
 	thing->dropoffz = tmf.dropoffz;        // killough 11/98
@@ -526,14 +533,14 @@ void P_PlayerStartStomp(AActor *actor)
 inline fixed_t secfriction(const sector_t *sec, int plane = sector_t::floor)
 {
 	if (sec->Flags & SECF_FRICTION) return sec->friction;
-	fixed_t friction = Terrains[TerrainTypes[sec->GetTexture(plane)]].Friction;
+	fixed_t friction = Terrains[sec->GetTerrain(plane)].Friction;
 	return friction != 0 ? friction : ORIG_FRICTION;
 }
 
 inline fixed_t secmovefac(const sector_t *sec, int plane = sector_t::floor)
 {
 	if (sec->Flags & SECF_FRICTION) return sec->friction;
-	fixed_t movefactor = Terrains[TerrainTypes[sec->GetTexture(plane)]].MoveFactor;
+	fixed_t movefactor = Terrains[sec->GetTerrain(plane)].MoveFactor;
 	return movefactor != 0 ? movefactor : ORIG_FRICTION_FACTOR;
 }
 
@@ -631,7 +638,7 @@ int P_GetFriction(const AActor *mo, int *frictionfactor)
 #endif
 
 			if (!(sec->Flags & SECF_FRICTION) &&
-				Terrains[TerrainTypes[sec->GetTexture(sector_t::floor)]].Friction == 0)
+				Terrains[sec->GetTerrain(sector_t::floor)].Friction == 0)
 			{
 				continue;
 			}
@@ -906,6 +913,7 @@ bool PIT_CheckLine(line_t *ld, const FBoundingBox &box, FCheckPosition &tm)
 		tm.floorz = open.bottom;
 		tm.floorsector = open.bottomsec;
 		tm.floorpic = open.floorpic;
+		tm.floorterrain = open.floorterrain;
 		tm.touchmidtex = open.touchmidtex;
 		tm.abovemidtex = open.abovemidtex;
 		tm.thing->BlockingLine = ld;
@@ -1484,6 +1492,7 @@ bool P_CheckPosition(AActor *thing, fixed_t x, fixed_t y, FCheckPosition &tm, bo
 	tm.floorz = tm.dropoffz = newsec->floorplane.ZatPoint(x, y);
 	tm.ceilingz = newsec->ceilingplane.ZatPoint(x, y);
 	tm.floorpic = newsec->GetTexture(sector_t::floor);
+	tm.floorterrain = newsec->GetTerrain(sector_t::floor);
 	tm.floorsector = newsec;
 	tm.ceilingpic = newsec->GetTexture(sector_t::ceiling);
 	tm.ceilingsector = newsec;
@@ -1517,6 +1526,7 @@ bool P_CheckPosition(AActor *thing, fixed_t x, fixed_t y, FCheckPosition &tm, bo
 			{
 				tm.floorz = tm.dropoffz = ff_top;
 				tm.floorpic = *rover->top.texture;
+				tm.floorterrain = rover->model->GetTerrain(rover->top.isceiling);
 			}
 			if (ff_bottom < tm.ceilingz && abs(delta1) >= abs(delta2))
 			{
@@ -2186,6 +2196,7 @@ bool P_TryMove(AActor *thing, fixed_t x, fixed_t y,
 	thing->ceilingz = tm.ceilingz;
 	thing->dropoffz = tm.dropoffz;		// killough 11/98: keep track of dropoffs
 	thing->floorpic = tm.floorpic;
+	thing->floorterrain = tm.floorterrain;
 	thing->floorsector = tm.floorsector;
 	thing->ceilingpic = tm.ceilingpic;
 	thing->ceilingsector = tm.ceilingsector;
@@ -6068,6 +6079,7 @@ bool P_AdjustFloorCeil(AActor *thing, FChangePosition *cpos)
 	thing->ceilingz = tm.ceilingz;
 	thing->dropoffz = tm.dropoffz;		// killough 11/98: remember dropoffs
 	thing->floorpic = tm.floorpic;
+	thing->floorterrain = tm.floorterrain;
 	thing->floorsector = tm.floorsector;
 	thing->ceilingpic = tm.ceilingpic;
 	thing->ceilingsector = tm.ceilingsector;

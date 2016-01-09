@@ -237,6 +237,10 @@ void AActor::Serialize (FArchive &arc)
 		<< tics
 		<< state
 		<< Damage;
+	if (SaveVersion >= 4530)
+	{
+		arc << floorterrain;
+	}
 	if (SaveVersion >= 3227)
 	{
 		arc << projectileKickback;
@@ -4971,6 +4975,7 @@ AActor *AActor::StaticSpawn (const PClass *type, fixed_t ix, fixed_t iy, fixed_t
 		{
 			actor->floorsector = actor->Sector;
 			actor->floorpic = actor->floorsector->GetTexture(sector_t::floor);
+			actor->floorterrain = actor->floorsector->GetTerrain(sector_t::floor);
 			actor->ceilingsector = actor->Sector;
 			actor->ceilingpic = actor->ceilingsector->GetTexture(sector_t::ceiling);
 		}
@@ -4982,6 +4987,7 @@ AActor *AActor::StaticSpawn (const PClass *type, fixed_t ix, fixed_t iy, fixed_t
 	else
 	{
 		actor->floorpic = actor->Sector->GetTexture(sector_t::floor);
+		actor->floorterrain = actor->Sector->GetTerrain(sector_t::floor);
 		actor->floorsector = actor->Sector;
 		actor->ceilingpic = actor->Sector->GetTexture(sector_t::ceiling);
 		actor->ceilingsector = actor->Sector;
@@ -5360,7 +5366,7 @@ void AActor::AdjustFloorClip ()
 		sector_t *hsec = m->m_sector->GetHeightSec();
 		if (hsec == NULL && m->m_sector->floorplane.ZatPoint (x, y) == z)
 		{
-			fixed_t clip = Terrains[TerrainTypes[m->m_sector->GetTexture(sector_t::floor)]].FootClip;
+			fixed_t clip = Terrains[m->m_sector->GetTerrain(sector_t::floor)].FootClip;
 			if (clip < shallowestclip)
 			{
 				shallowestclip = clip;
@@ -6799,13 +6805,13 @@ void P_RipperBlood (AActor *mo, AActor *bleeder)
 
 int P_GetThingFloorType (AActor *thing)
 {
-	if (thing->floorpic.isValid())
+	if (thing->floorterrain >= 0)
 	{		
-		return TerrainTypes[thing->floorpic];
+		return thing->floorterrain;
 	}
 	else
 	{
-		return TerrainTypes[thing->Sector->GetTexture(sector_t::floor)];
+		return thing->Sector->GetTerrain(sector_t::floor);
 	}
 }
 
@@ -6867,6 +6873,7 @@ bool P_HitWater (AActor * thing, sector_t * sec, fixed_t x, fixed_t y, fixed_t z
 #endif
 
 #ifdef _3DFLOORS
+	// 'force' means, we want this sector's terrain, no matter what.
 	if (!force)
 	{
 		for (unsigned int i = 0; i<sec->e->XFloor.ffloors.Size(); i++)
@@ -6878,7 +6885,7 @@ bool P_HitWater (AActor * thing, sector_t * sec, fixed_t x, fixed_t y, fixed_t z
 			{
 				if (rover->flags & (FF_SOLID | FF_SWIMMABLE))
 				{
-					terrainnum = TerrainTypes[*rover->top.texture];
+					terrainnum = rover->model->GetTerrain(rover->top.isceiling);
 					goto foundone;
 				}
 			}
@@ -6890,11 +6897,11 @@ bool P_HitWater (AActor * thing, sector_t * sec, fixed_t x, fixed_t y, fixed_t z
 	hsec = sec->GetHeightSec();
 	if (force || hsec == NULL || !(hsec->MoreFlags & SECF_CLIPFAKEPLANES))
 	{
-		terrainnum = TerrainTypes[sec->GetTexture(sector_t::floor)];
+		terrainnum = sec->GetTerrain(sector_t::floor);
 	}
 	else
 	{
-		terrainnum = TerrainTypes[hsec->GetTexture(sector_t::floor)];
+		terrainnum = hsec->GetTerrain(sector_t::floor);
 	}
 #ifdef _3DFLOORS
 foundone:

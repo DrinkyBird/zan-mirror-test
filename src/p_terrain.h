@@ -114,4 +114,6 @@ struct FTerrainDef
 extern TArray<FSplashDef> Splashes;
 extern TArray<FTerrainDef> Terrains;
 
+int P_FindTerrain(FName name);
+
 #endif //__P_TERRAIN_H__
