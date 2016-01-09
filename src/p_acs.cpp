@@ -75,6 +75,7 @@
 #include "actorptrselect.h"
 #include "farchive.h"
 #include "decallib.h"
+#include "p_terrain.h"
 // [BB] New #includes.
 #include "announcer.h"
 #include "deathmatch.h"
@@ -5481,6 +5482,7 @@ enum EACSFunctions
 
 	// [AK] Out-of-order backport from UZDoom.
 	ACSF_SetSectorDamage = 94,
+	ACSF_SetSectorTerrain,
 
 	/* Zandronum's - these must be skipped when we reach 99!
 	-100:ResetMap(0),
@@ -7166,6 +7168,18 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 				}
 			}
 			break;
+
+		case ACSF_SetSectorTerrain:
+			if (argCount >= 3)
+			{
+				int terrain = P_FindTerrain(FBehavior::StaticLookupString(args[2]));
+				FSectorTagIterator it(args[0]);
+				int s;
+				while ((s = it.Next()) >= 0)
+				{
+					sectors[s].terrainnum[args[1]] = terrain;
+				}
+			}
 
 		// [BL] Skulltag function
 		case ACSF_AnnouncerSound:
