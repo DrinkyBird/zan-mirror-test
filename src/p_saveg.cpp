@@ -52,6 +52,7 @@
 #include "farchive.h"
 #include "p_lnspec.h"
 #include "p_acs.h"
+#include "p_terrain.h"
 // [BB] New #includes.
 #include "deathmatch.h"
 #include "cl_demo.h"
@@ -414,7 +415,8 @@ void P_SerializeWorld (FArchive &arc)
 			<< sec->gravity;
 		if (SaveVersion >= 4530)
 		{
-			arc << sec->terrainnum[0] << sec->terrainnum[1];
+			P_SerializeTerrain(arc, sec->terrainnum[0]);
+			P_SerializeTerrain(arc, sec->terrainnum[1]);
 		}
 		if (SaveVersion >= 4529)
 		{
