@@ -112,7 +112,7 @@ WORD MirrorFlags;
 seg_t *ActiveWallMirror;
 TArray<size_t> WallMirrors;
 
-static subsector_t *InSubsector;
+subsector_t *InSubsector;
 
 CVAR (Bool, r_drawflat, false, 0)		// [RH] Don't texture segs?
 

@@ -94,6 +94,8 @@ static void R_ShutdownRenderer();
 extern short *openings;
 extern bool r_fakingunderwater;
 extern "C" int fuzzviewheight;
+extern subsector_t *InSubsector;
+extern bool r_showviewer;
 
 
 // PRIVATE DATA DECLARATIONS -----------------------------------------------
@@ -102,7 +104,6 @@ static float CurrentVisibility = 8.f;
 static fixed_t MaxVisForWall;
 static fixed_t MaxVisForFloor;
 static bool polyclipped;
-extern bool r_showviewer;
 bool r_dontmaplines;
 
 // PUBLIC DATA DEFINITIONS -------------------------------------------------
@@ -719,6 +720,7 @@ void R_EnterMirror (drawseg_t *ds, int depth)
 	WindowRight = ds->x2;
 	MirrorFlags = (depth + 1) & 1;
 
+	InSubsector = NULL;
 	R_RenderBSPNode (nodes + numnodes - 1);
 	R_3D_ResetClip(); // reset clips (floor/ceiling)
 
@@ -841,6 +843,7 @@ void R_RenderActorView (AActor *actor, bool dontmaplines)
 	}
 	// Link the polyobjects right before drawing the scene to reduce the amounts of calls to this function
 	PO_LinkToSubsectors();
+	InSubsector = NULL;
 	if (r_polymost < 2)
 	{
 		R_RenderBSPNode (nodes + numnodes - 1);	// The head node is the last node output.
