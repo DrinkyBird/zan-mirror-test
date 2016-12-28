@@ -650,7 +650,9 @@ FArchive &operator<< (FArchive &arc, sector_t::splane &p)
 {
 	arc << p.xform.xoffs << p.xform.yoffs << p.xform.xscale << p.xform.yscale 
 		<< p.xform.angle << p.xform.base_yoffs << p.xform.base_angle
-		<< p.Flags << p.Light << p.Texture << p.TexZ << p.alpha;
+		<< p.Flags << p.Light << p.Texture << p.TexZ << p.alpha
+		// [AK] Out-of-order backport from UZDoom.
+		<< p.GlowColor << p.GlowHeight;
 	return arc;
 }
 

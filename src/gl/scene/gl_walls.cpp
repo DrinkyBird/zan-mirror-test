@@ -65,35 +65,6 @@
 
 //==========================================================================
 //
-// Checks whether a wall should glow
-//
-//==========================================================================
-void GLWall::CheckGlowing()
-{
-	bottomglowcolor[3] = topglowcolor[3] = 0;
-	if (!gl_isFullbright(Colormap.LightColor, lightlevel) && gl_GlowActive())
-	{
-		FTexture *tex = TexMan[topflat];
-		if (tex != NULL && tex->isGlowing())
-		{
-			flags |= GLWall::GLWF_GLOW;
-			tex->GetGlowColor(topglowcolor);
-			topglowcolor[3] = tex->gl_info.GlowHeight;
-		}
-
-		tex = TexMan[bottomflat];
-		if (tex != NULL && tex->isGlowing())
-		{
-			flags |= GLWall::GLWF_GLOW;
-			tex->GetGlowColor(bottomglowcolor);
-			bottomglowcolor[3] = tex->gl_info.GlowHeight;
-		}
-	}
-}
-
-
-//==========================================================================
-//
 // 
 //
 //==========================================================================
@@ -135,8 +106,7 @@ void GLWall::PutWall(bool translucent)
 
 		Colormap.GetFixedColormap();
 	}
-
-	CheckGlowing();
+	if (gl_isFullbright(Colormap.LightColor, lightlevel)) flags &= ~GLWF_GLOW;
 
 	if (translucent) // translucent walls
 	{
@@ -1549,8 +1519,8 @@ void GLWall::Process(seg_t *seg, sector_t * frontsector, sector_t * backsector)
 	RenderStyle=STYLE_Normal;
 	gltexture=NULL;
 
-	topflat=frontsector->GetTexture(sector_t::ceiling);	// for glowing textures. These must be saved because
-	bottomflat=frontsector->GetTexture(sector_t::floor);	// the sector passed here might be a temporary copy.
+
+	if (gl_GetWallGlow(frontsector, topglowcolor, bottomglowcolor)) flags |= GLWF_GLOW;
 	topplane = frontsector->ceilingplane;
 	bottomplane = frontsector->floorplane;
 
@@ -1787,8 +1757,7 @@ void GLWall::ProcessLowerMiniseg(seg_t *seg, sector_t * frontsector, sector_t * 
 		RenderStyle = STYLE_Normal;
 		Colormap = frontsector->ColorMap;
 
-		topflat = frontsector->GetTexture(sector_t::ceiling);	// for glowing textures
-		bottomflat = frontsector->GetTexture(sector_t::floor);
+		if (gl_GetWallGlow(frontsector, topglowcolor, bottomglowcolor)) flags |= GLWF_GLOW;
 		topplane = frontsector->ceilingplane;
 		bottomplane = frontsector->floorplane;
 
