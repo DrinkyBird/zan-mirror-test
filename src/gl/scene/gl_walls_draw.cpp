@@ -314,7 +314,7 @@ void GLWall::RenderFogBoundary()
 		{
 			// otherwise some approximation is needed. This won't look as good
 			// as the shader version but it's an acceptable compromise.
-			float fogdensity=gl_GetFogDensity(lightlevel, Colormap.FadeColor);
+			float fogdensity=gl_GetFogDensity(lightlevel, Colormap.FadeColor, Colormap.fogdensity);
 
 			float xcamera=FIXED2FLOAT(viewx);
 			float ycamera=FIXED2FLOAT(viewy);

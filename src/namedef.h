@@ -517,6 +517,7 @@ xx(floorglowcolor)
 xx(floorglowheight)
 xx(ceilingglowcolor)
 xx(ceilingglowheight)
+xx(fogdensity)
 
 // USDF keywords
 xx(Amount)

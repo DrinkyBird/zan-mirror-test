@@ -1358,3 +1358,25 @@ the function was added in manually without a transplant.
  	DVector3 Normal() const
  	{
  		return{ FIXED2FLOAT(a), FIXED2FLOAT(b), FIXED2FLOAT(c) };
+
+===============================================================================================================
+Git hash: d748b6ad70175253035e2cba4fc2b77c2371fdc7
+Mercurial hash: c89ff3e472f95b8ca95ca6d21944b006f83bc176
+- added explicit fog density as a sector property, accessible through UDMF and ACS.
+- allow changing sector glow information through ACS.
+
+Reason for documentation: the single line change in "src/gl/compatibility/gl_20.cpp" was manually copied into
+"src/gl/scene/gl_walls_draw.cpp" instead.
+===============================================================================================================
+
+--- src/gl/compatibility/gl_20.cpp
++++ src/gl/compatibility/gl_20.cpp
+@@ -515,7 +515,7 @@
+ {
+ 	// without shaders some approximation is needed. This won't look as good
+ 	// as the shader version but it's an acceptable compromise.
+-	float fogdensity = gl_GetFogDensity(lightlevel, Colormap.FadeColor);
++	float fogdensity = gl_GetFogDensity(lightlevel, Colormap.FadeColor, Colormap.fogdensity);
+ 
+ 	float dist1 = Dist2(ViewPos.X, ViewPos.Y, glseg.x1, glseg.y1);
+ 	float dist2 = Dist2(ViewPos.X, ViewPos.Y, glseg.x2, glseg.y2);

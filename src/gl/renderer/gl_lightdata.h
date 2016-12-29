@@ -23,7 +23,7 @@ void gl_GetLightColor(int lightlevel, int rellight, const FColormap * cm, float 
 void gl_SetColor(int light, int rellight, const FColormap * cm, float alpha, PalEntry ThingColor = 0xffffff, bool weapon=false);
 void gl_SetColor(int light, int rellight, const FColormap * cm, float *red, float *green, float *blue, PalEntry ThingColor=0xffffff, bool weapon=false);
 
-float gl_GetFogDensity(int lightlevel, PalEntry fogcolor);
+float gl_GetFogDensity(int lightlevel, PalEntry fogcolor, int sectorfogdensity);
 struct sector_t;
 bool gl_CheckFog(FColormap *cm, int lightlevel);
 bool gl_CheckFog(sector_t *frontsector, sector_t *backsector);
