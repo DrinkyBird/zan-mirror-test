@@ -5496,6 +5496,7 @@ enum EACSFunctions
 
 	// [BB] Out of order ZDoom backport.
 	ACSF_GetActorFloorTexture = 204,
+	ACSF_GetActorFloorTerrain,
 
 	// [BB] Skulltag functions
 	ACSF_ResetMap = 100,
@@ -9166,6 +9167,22 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 			}
 			break;
 		}
+
+		case ACSF_GetActorFloorTerrain:
+		{
+			auto a = SingleActorFromTID(args[0], activator);
+			if (a != nullptr)
+			{
+				return GlobalACSStrings.AddString(Terrains[a->floorterrain].Name);
+			}
+			else
+			{
+				return GlobalACSStrings.AddString("");
+			}
+			break;
+		}
+
+
 
 		default:
 			break;
