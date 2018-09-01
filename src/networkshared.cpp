@@ -579,6 +579,7 @@ NETADDRESS_s::NETADDRESS_s()
 void NETADDRESS_s::Clear()
 {
 	abIP[0] = abIP[1] = abIP[2] = abIP[3] = 0;
+	usIP[0] = usIP[1] = usIP[2] = usIP[3] = usIP[4] = usIP[5] = usIP[6] = usIP[7] = 0;
 	usPort = 0;
 }
 
@@ -586,11 +587,34 @@ void NETADDRESS_s::Clear()
 //
 bool NETADDRESS_s::Compare ( const NETADDRESS_s& other, bool ignorePort ) const
 {
-	return (( abIP[0] == other.abIP[0] ) &&
-		( abIP[1] == other.abIP[1] ) &&
-		( abIP[2] == other.abIP[2] ) &&
-		( abIP[3] == other.abIP[3] ) &&
-		( ignorePort ? 1 : ( usPort == other.usPort )));
+	bool bIsPortSame = ignorePort ? 1 : ( usPort == other.usPort );
+
+	// [WS] Is it an IPv6 address?
+	if ( IsValidIPv6Address() && other.IsValidIPv6Address( ) )
+	{
+		return ( usIP[0] == other.usIP[0] &&
+			usIP[1] == other.usIP[1] &&
+			usIP[2] == other.usIP[2] &&
+			usIP[3] == other.usIP[3] &&
+			usIP[4] == other.usIP[4] &&
+			usIP[5] == other.usIP[5] &&
+			usIP[6] == other.usIP[6] &&
+			usIP[7] == other.usIP[7] &&
+			bIsPortSame );
+	}
+
+	// [WS] Is it an IPv4 address?
+	if ( IsValidIPv4Address() && other.IsValidIPv4Address( ) )
+	{
+		return (( abIP[0] == other.abIP[0] ) &&
+			( abIP[1] == other.abIP[1] ) &&
+			( abIP[2] == other.abIP[2] ) &&
+			( abIP[3] == other.abIP[3] ) &&
+			( bIsPortSame ) );
+	}
+
+	// [WS] It is no address, return false.
+	return false;
 }
 
 //*****************************************************************************
@@ -605,57 +629,94 @@ NETADDRESS_s::NETADDRESS_s ( const char* string, bool* ok )
 //
 bool NETADDRESS_s::LoadFromString ( const char* string )
 {
-	struct hostent  *h;
-	struct sockaddr_in sadr;
-	char    *colon;
-	char    copy[512];
+	struct addrinfo hints;
+	struct addrinfo *res;
 
-	memset (&sadr, 0, sizeof(sadr));
-	sadr.sin_family = AF_INET;
+	memset(&hints, 0, sizeof hints);	// make sure the struct is empty
+	hints.ai_family = AF_UNSPEC;		// don't care IPv4 or IPv6
+	hints.ai_socktype = SOCK_DGRAM;		// UDP stream socket
+	hints.ai_flags = AI_PASSIVE;		// fill in my IP for me
 
-	sadr.sin_port = 0;
+	std::string host;
+	std::string port;
+	std::string address(string);
 
-	strncpy (copy, string, 512-1);
-	copy[512-1] = 0;
-
-	// strip off a trailing :port if present
-	for (colon = copy ; *colon ; colon++)
+	int leftBracketIndex;
+	int rightBracketIndex;
+	// [WS] Is it an IPv6 string address with possibly a port?
+	if ((leftBracketIndex = address.find_last_of('[')) != std::string::npos &&
+		(rightBracketIndex = address.find_last_of(']')) != std::string::npos)
 	{
-		if (*colon == ':')
+		host = address.substr(leftBracketIndex + 1, rightBracketIndex - 1);
+		size_t colonIndex = rightBracketIndex + 1;
+		if ( colonIndex + 1 < address.length() && address[colonIndex] == ':')
 		{
-			*colon = 0;
-			sadr.sin_port = htons(atoi(colon+1));
-			break;
-		}
-	}
-
-	{
-		const ULONG ulRet = inet_addr( copy );
-
-		// If our return value is INADDR_NONE, the IP specified is not a valid IPv4 string.
-		if ( ulRet == INADDR_NONE )
-		{
-			// If the string cannot be resolved to a valid IP address, return false.
-			if (( h = gethostbyname( copy )) == NULL )
-				return false;
-
-			*(int *)&sadr.sin_addr = *(int *)h->h_addr_list[0];
+			port = address.substr(colonIndex + 1, address.length() - 1);
 		}
 		else
-			*(int *)&sadr.sin_addr = ulRet;
+			sprintf((char *)port.data(), "%d", DEFAULT_SERVER_PORT);
+	}
+	else
+	{ // [WS] Is it an IPv4 or other address with a port, or an IPv6 address without a port.
+		int coloncount = std::count(address.begin(), address.end(), ':');
+
+		// [WS] IPv4, IPv6 or other address without a port.
+		if (coloncount != 1)
+		{
+			host = address;
+			sprintf((char *)port.data(), "%d", DEFAULT_SERVER_PORT);
+		}
+		// [WS] IPv4 or other address with a port.
+		else
+		{
+			int portBeginIndex = address.find_last_of(':') + 1;
+			host = address.substr(0, portBeginIndex - 1);
+			port = address.substr(portBeginIndex, address.length() - 1);
+		}
 	}
 
-	this->LoadFromSocketAddress( reinterpret_cast<sockaddr&>(sadr) );
+	if (getaddrinfo(host.c_str(), port.c_str(), &hints, &res) != 0 )
+	{
+		Printf("Warning: Could not resolve address.\n");
+		return false;
+	}
+
+	// [WS] Let's get the network address.
+	LoadFromAddressInfo ( res );
 	return true;
+}
+
+//*****************************************************************************
+//
+void NETADDRESS_s::LoadFromAddressInfo( struct addrinfo *res )
+{
+	struct addrinfo *p;
+	for ( p = res;p != NULL; p = p->ai_next )
+		LoadFromSocketAddress ( *(p->ai_addr) );
 }
 
 //*****************************************************************************
 //
 void NETADDRESS_s::LoadFromSocketAddress ( const struct sockaddr& sockaddr )
 {
-	const sockaddr_in ipv4 = reinterpret_cast<const sockaddr_in&> ( sockaddr );
-	*( int * )&this->abIP = *(const int *)&ipv4.sin_addr;
-	this->usPort = ipv4.sin_port;
+	// get the pointer to the address itself,
+	// different fields in IPv4 and IPv6:
+	if (sockaddr.sa_family == AF_INET)
+	{ // IPv4
+		const sockaddr_in ipv4 = reinterpret_cast<const sockaddr_in&> ( sockaddr );
+		*( int * )&this->abIP = *(const int *)&ipv4.sin_addr;
+		this->usPort = ipv4.sin_port;
+	}
+	else
+	{ // IPv6
+		struct sockaddr_in6 ipv6 = reinterpret_cast<const sockaddr_in6&> ( sockaddr );
+		// [BL/WS] Store our IPv6 address here.
+		*(int *)&this->usIP[0] = *(const int *)&ipv6.sin6_addr;
+		*(int *)&this->usIP[2] = *(((const int *)&ipv6.sin6_addr)+1);
+		*(int *)&this->usIP[4] = *(((const int *)&ipv6.sin6_addr)+2);
+		*(int *)&this->usIP[6] = *(((const int *)&ipv6.sin6_addr)+3);
+		this->usPort = ipv6.sin6_port;
+	}
 }
 
 //*****************************************************************************
@@ -664,10 +725,25 @@ void NETADDRESS_s::ToSocketAddress( struct sockaddr &SocketAddress ) const
 {
 	memset( &SocketAddress, 0, sizeof SocketAddress );
 
-	struct sockaddr_in *ipv4 = reinterpret_cast <struct sockaddr_in *> ( &SocketAddress );
-	*(int *)&ipv4->sin_addr = *(int *)&abIP;
-	ipv4->sin_port = usPort;
-	ipv4->sin_family = AF_INET;
+	// Set the socket's address and port.
+	// [WS] IPv6 has priority.
+	if ( IsValidIPv6Address() )
+	{
+		struct sockaddr_in6 *ipv6 = reinterpret_cast <struct sockaddr_in6 *> ( &SocketAddress );
+		*(int *)&ipv6->sin6_addr = *(int *)&usIP[0];
+		*(((int *)&ipv6->sin6_addr)+1) = *(int *)&usIP[2];
+		*(((int *)&ipv6->sin6_addr)+2) = *(int *)&usIP[4];
+		*(((int *)&ipv6->sin6_addr)+3) = *(int *)&usIP[6];
+		ipv6->sin6_port = usPort;
+		ipv6->sin6_family = AF_INET6;
+	}
+	else if ( IsValidIPv4Address() )
+	{
+		struct sockaddr_in *ipv4 = reinterpret_cast <struct sockaddr_in *> ( &SocketAddress );
+		*(int *)&ipv4->sin_addr = *(int *)&abIP;
+		ipv4->sin_port = usPort;
+		ipv4->sin_family = AF_INET;
+	}
 }
 
 //*****************************************************************************
@@ -699,7 +775,31 @@ const char* NETADDRESS_s::ToStringNoPort() const
 //
 bool NETADDRESS_s::IsSet() const
 {
-	return ( abIP[0] != 0 );
+	return ( IsValidIPv6Address() || IsValidIPv4Address() );
+}
+
+//*****************************************************************************
+//
+bool NETADDRESS_s::IsValidIPv6Address() const
+{
+	if ( usIP[0] == 0 && usIP[1] == 0 &&
+		usIP[2] == 0 && usIP[3] == 0 &&
+		usIP[4] == 0 && usIP[5] == 0 &&
+		usIP[6] == 0 && usIP[7] == 0 )
+		return false;
+
+	return true;
+}
+
+//*****************************************************************************
+//
+bool NETADDRESS_s::IsValidIPv4Address() const
+{
+	if ( abIP[0] == 0 && abIP[1] == 0 &&
+		abIP[2] == 0 && abIP[3] == 0 )
+		return false;
+
+	return true;
 }
 
 //*****************************************************************************

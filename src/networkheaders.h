@@ -72,6 +72,8 @@
 #	include <windows.h>
 // [BB] Include winsock2.h instead of winsock.h
 #	include <winsock2.h>
+// [WS] We need this.
+#	include <ws2tcpip.h>
 #else
 #	include <sys/socket.h>
 #	include <netinet/in.h>

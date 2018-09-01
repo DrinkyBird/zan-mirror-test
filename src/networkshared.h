@@ -277,6 +277,9 @@ public:
 	// Four digit IP address.
 	BYTE		abIP[4];
 
+	// [WS] Eight hextets IPv6 address.
+	USHORT		usIP[8];
+
 	// The IP address's port extension.
 	USHORT		usPort;
 
@@ -292,7 +295,10 @@ public:
 	const char* ToStringNoPort() const;
 	bool LoadFromString( const char* string );
 	void LoadFromSocketAddress ( const struct sockaddr& sockaddr );
+	void LoadFromAddressInfo( struct addrinfo *res );
 	bool IsSet () const;
+	bool IsValidIPv6Address () const;
+	bool IsValidIPv4Address () const;
 	void WriteToStream ( BYTESTREAM_s *pByteStream, bool IncludePort = true ) const;
 	void ReadFromStream ( BYTESTREAM_s *pByteStream, bool IncludePort = true );
 
