@@ -654,7 +654,7 @@ bool NETADDRESS_s::LoadFromString ( const char* string )
 			port = address.substr(colonIndex + 1, address.length() - 1);
 		}
 		else
-			sprintf((char *)port.data(), "%d", DEFAULT_SERVER_PORT);
+			port = std::to_string ( DEFAULT_SERVER_PORT );
 	}
 	else
 	{ // [WS] Is it an IPv4 or other address with a port, or an IPv6 address without a port.
@@ -664,7 +664,7 @@ bool NETADDRESS_s::LoadFromString ( const char* string )
 		if (coloncount != 1)
 		{
 			host = address;
-			sprintf((char *)port.data(), "%d", DEFAULT_SERVER_PORT);
+			port = std::to_string ( DEFAULT_SERVER_PORT );
 		}
 		// [WS] IPv4 or other address with a port.
 		else
@@ -677,7 +677,7 @@ bool NETADDRESS_s::LoadFromString ( const char* string )
 
 	if (getaddrinfo(host.c_str(), port.c_str(), &hints, &res) != 0 )
 	{
-		Printf("Warning: Could not resolve address.\n");
+		Printf("Warning: Could not resolve address (host = %s, port = %s).\n", host.c_str(), port.c_str());
 		return false;
 	}
 
