@@ -723,13 +723,12 @@ void NETADDRESS_s::LoadFromSocketAddress ( const struct sockaddr& sockaddr )
 //
 void NETADDRESS_s::ToSocketAddress( struct sockaddr &SocketAddress ) const
 {
-	memset( &SocketAddress, 0, sizeof SocketAddress );
-
 	// Set the socket's address and port.
 	// [WS] IPv6 has priority.
 	if ( IsValidIPv6Address() )
 	{
 		struct sockaddr_in6 *ipv6 = reinterpret_cast <struct sockaddr_in6 *> ( &SocketAddress );
+		memset( ipv6, 0, sizeof ( sockaddr_in6 ) );
 		*(int *)&ipv6->sin6_addr = *(int *)&usIP[0];
 		*(((int *)&ipv6->sin6_addr)+1) = *(int *)&usIP[2];
 		*(((int *)&ipv6->sin6_addr)+2) = *(int *)&usIP[4];
@@ -740,6 +739,7 @@ void NETADDRESS_s::ToSocketAddress( struct sockaddr &SocketAddress ) const
 	else if ( IsValidIPv4Address() )
 	{
 		struct sockaddr_in *ipv4 = reinterpret_cast <struct sockaddr_in *> ( &SocketAddress );
+		memset( ipv4, 0, sizeof ( sockaddr_in ) );
 		*(int *)&ipv4->sin_addr = *(int *)&abIP;
 		ipv4->sin_port = usPort;
 		ipv4->sin_family = AF_INET;
