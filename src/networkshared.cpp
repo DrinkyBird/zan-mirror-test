@@ -699,6 +699,9 @@ void NETADDRESS_s::LoadFromAddressInfo( struct addrinfo *res )
 //
 void NETADDRESS_s::LoadFromSocketAddress ( const struct sockaddr& sockaddr )
 {
+	// [BB] To make sure that we don't keep old IPv4 or IPv6 info.
+	Clear();
+
 	// get the pointer to the address itself,
 	// different fields in IPv4 and IPv6:
 	if (sockaddr.sa_family == AF_INET)
