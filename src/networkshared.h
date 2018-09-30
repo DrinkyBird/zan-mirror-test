@@ -277,8 +277,12 @@ public:
 	// Four digit IP address.
 	BYTE		abIP[4];
 
-	// [WS] Eight hextets IPv6 address.
-	USHORT		usIP[8];
+	// [WS/BB] Eight hextets / sixteen bytes IPv6 address.
+	union
+	{
+		BYTE u6_addr8[16];
+		USHORT u6_addr16[8];
+	} IPv6;
 
 	// The IP address's port extension.
 	USHORT		usPort;

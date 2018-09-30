@@ -579,7 +579,7 @@ NETADDRESS_s::NETADDRESS_s()
 void NETADDRESS_s::Clear()
 {
 	abIP[0] = abIP[1] = abIP[2] = abIP[3] = 0;
-	usIP[0] = usIP[1] = usIP[2] = usIP[3] = usIP[4] = usIP[5] = usIP[6] = usIP[7] = 0;
+	IPv6.u6_addr16[0] = IPv6.u6_addr16[1] = IPv6.u6_addr16[2] = IPv6.u6_addr16[3] = IPv6.u6_addr16[4] = IPv6.u6_addr16[5] = IPv6.u6_addr16[6] = IPv6.u6_addr16[7] = 0;
 	usPort = 0;
 }
 
@@ -592,14 +592,14 @@ bool NETADDRESS_s::Compare ( const NETADDRESS_s& other, bool ignorePort ) const
 	// [WS] Is it an IPv6 address?
 	if ( IsValidIPv6Address() && other.IsValidIPv6Address( ) )
 	{
-		return ( usIP[0] == other.usIP[0] &&
-			usIP[1] == other.usIP[1] &&
-			usIP[2] == other.usIP[2] &&
-			usIP[3] == other.usIP[3] &&
-			usIP[4] == other.usIP[4] &&
-			usIP[5] == other.usIP[5] &&
-			usIP[6] == other.usIP[6] &&
-			usIP[7] == other.usIP[7] &&
+		return ( IPv6.u6_addr16[0] == other.IPv6.u6_addr16[0] &&
+			IPv6.u6_addr16[1] == other.IPv6.u6_addr16[1] &&
+			IPv6.u6_addr16[2] == other.IPv6.u6_addr16[2] &&
+			IPv6.u6_addr16[3] == other.IPv6.u6_addr16[3] &&
+			IPv6.u6_addr16[4] == other.IPv6.u6_addr16[4] &&
+			IPv6.u6_addr16[5] == other.IPv6.u6_addr16[5] &&
+			IPv6.u6_addr16[6] == other.IPv6.u6_addr16[6] &&
+			IPv6.u6_addr16[7] == other.IPv6.u6_addr16[7] &&
 			bIsPortSame );
 	}
 
@@ -711,10 +711,10 @@ void NETADDRESS_s::LoadFromSocketAddress ( const struct sockaddr& sockaddr )
 	{ // IPv6
 		struct sockaddr_in6 ipv6 = reinterpret_cast<const sockaddr_in6&> ( sockaddr );
 		// [BL/WS] Store our IPv6 address here.
-		*(int *)&this->usIP[0] = *(const int *)&ipv6.sin6_addr;
-		*(int *)&this->usIP[2] = *(((const int *)&ipv6.sin6_addr)+1);
-		*(int *)&this->usIP[4] = *(((const int *)&ipv6.sin6_addr)+2);
-		*(int *)&this->usIP[6] = *(((const int *)&ipv6.sin6_addr)+3);
+		*(int *)&this->IPv6.u6_addr16[0] = *(const int *)&ipv6.sin6_addr;
+		*(int *)&this->IPv6.u6_addr16[2] = *(((const int *)&ipv6.sin6_addr)+1);
+		*(int *)&this->IPv6.u6_addr16[4] = *(((const int *)&ipv6.sin6_addr)+2);
+		*(int *)&this->IPv6.u6_addr16[6] = *(((const int *)&ipv6.sin6_addr)+3);
 		this->usPort = ipv6.sin6_port;
 	}
 }
@@ -729,10 +729,10 @@ void NETADDRESS_s::ToSocketAddress( struct sockaddr &SocketAddress ) const
 	{
 		struct sockaddr_in6 *ipv6 = reinterpret_cast <struct sockaddr_in6 *> ( &SocketAddress );
 		memset( ipv6, 0, sizeof ( sockaddr_in6 ) );
-		*(int *)&ipv6->sin6_addr = *(int *)&usIP[0];
-		*(((int *)&ipv6->sin6_addr)+1) = *(int *)&usIP[2];
-		*(((int *)&ipv6->sin6_addr)+2) = *(int *)&usIP[4];
-		*(((int *)&ipv6->sin6_addr)+3) = *(int *)&usIP[6];
+		*(int *)&ipv6->sin6_addr = *(int *)&IPv6.u6_addr16[0];
+		*(((int *)&ipv6->sin6_addr)+1) = *(int *)&IPv6.u6_addr16[2];
+		*(((int *)&ipv6->sin6_addr)+2) = *(int *)&IPv6.u6_addr16[4];
+		*(((int *)&ipv6->sin6_addr)+3) = *(int *)&IPv6.u6_addr16[6];
 		ipv6->sin6_port = usPort;
 		ipv6->sin6_family = AF_INET6;
 	}
@@ -782,10 +782,10 @@ bool NETADDRESS_s::IsSet() const
 //
 bool NETADDRESS_s::IsValidIPv6Address() const
 {
-	if ( usIP[0] == 0 && usIP[1] == 0 &&
-		usIP[2] == 0 && usIP[3] == 0 &&
-		usIP[4] == 0 && usIP[5] == 0 &&
-		usIP[6] == 0 && usIP[7] == 0 )
+	if ( IPv6.u6_addr16[0] == 0 && IPv6.u6_addr16[1] == 0 &&
+		IPv6.u6_addr16[2] == 0 && IPv6.u6_addr16[3] == 0 &&
+		IPv6.u6_addr16[4] == 0 && IPv6.u6_addr16[5] == 0 &&
+		IPv6.u6_addr16[6] == 0 && IPv6.u6_addr16[7] == 0 )
 		return false;
 
 	return true;
