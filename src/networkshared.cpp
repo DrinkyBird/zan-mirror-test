@@ -758,7 +758,11 @@ void NETADDRESS_s::SetPort ( USHORT port )
 const char* NETADDRESS_s::ToString() const
 {
 	static char	buffer[64];
-	sprintf( buffer, "%i.%i.%i.%i:%i", abIP[0], abIP[1], abIP[2], abIP[3], ntohs( usPort ));
+	if ( IsValidIPv6Address () )
+		sprintf( buffer, "[%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x]:%i",
+			IPv6.u6_addr8[0], IPv6.u6_addr8[1], IPv6.u6_addr8[2], IPv6.u6_addr8[3], IPv6.u6_addr8[4], IPv6.u6_addr8[5], IPv6.u6_addr8[6], IPv6.u6_addr8[7], IPv6.u6_addr8[8], IPv6.u6_addr8[9], IPv6.u6_addr8[10], IPv6.u6_addr8[11], IPv6.u6_addr8[12], IPv6.u6_addr8[13], IPv6.u6_addr8[14], IPv6.u6_addr8[15], ntohs( usPort ));
+	else
+		sprintf( buffer, "%i.%i.%i.%i:%i", abIP[0], abIP[1], abIP[2], abIP[3], ntohs( usPort ));
 	return ( buffer );
 }
 

@@ -246,7 +246,7 @@ static const std::vector<std::string> g_FreedoomDehackedHashes = {
 static	void			network_InitPWADList( void );
 static	void			network_Error( const char *pszError );
 static	SOCKET			network_AllocateSocket( void );
-static	bool			network_BindSocketToPort( SOCKET Socket, ULONG ulInAddr, USHORT usPort, bool bReUse );
+static	bool			network_BindSocketToPort( SOCKET Socket, IN6_ADDR ulInAddr, USHORT usPort, bool bReUse );
 static	bool			network_GenerateLumpMD5HashAndWarnIfNeeded( const int LumpNum, const char *LumpName, FString &MD5Hash );
 static	void			network_CheckIfDuplicateLump( const int LumpNum ); // [AK]
 
@@ -274,19 +274,22 @@ void NETWORK_Construct( USHORT usPort, bool bAllocateLANSocket )
 		Printf( "Winsock initialization succeeded!\n" );
 #endif
 
-		ULONG ulInAddr = INADDR_ANY;
+		IN6_ADDR ulInAddr = in6addr_any;
 		const char* pszIPAddress = Args->CheckValue( "-useip" );
 		// [BB] An IP was specfied. Check if it's valid and if it is, try to bind our socket to it.
 		if ( pszIPAddress )
 		{
-			ULONG requestedIP = inet_addr( pszIPAddress );
-			if ( requestedIP == INADDR_NONE )
+			IN6_ADDR inAddr;
+			int success = inet_pton ( AF_INET6, pszIPAddress, &(inAddr) );
+			if ( success <= 0 )
 			{
 				sprintf( szString, "NETWORK_Construct: %s is not a valid IP address\n", pszIPAddress );
 				network_Error( szString );
 			}
 			else
-				ulInAddr = requestedIP;
+			{
+				ulInAddr = inAddr;
+			}
 		}
 
 		g_usLocalPort = usPort;
@@ -307,9 +310,9 @@ void NETWORK_Construct( USHORT usPort, bool bAllocateLANSocket )
 				if ( usNewPort == g_usLocalPort )
 				{
 					// [BB] We couldn't use the specified IP, so just try any.
-					if ( ulInAddr != INADDR_ANY )
+					if ( memcmp(&ulInAddr.s6_addr, &in6addr_any.s6_addr, 16) != 0 )
 					{
-						ulInAddr = INADDR_ANY;
+						ulInAddr = in6addr_any;
 						bSuccessIP = false;
 						continue;
 					}
@@ -356,7 +359,7 @@ void NETWORK_Construct( USHORT usPort, bool bAllocateLANSocket )
 		}
 
 		// [BB] Get and save our local IP.
-		if ( ( ulInAddr == INADDR_ANY ) || ( pszIPAddress == NULL ) )
+		if ( ( memcmp(&ulInAddr.s6_addr, &in6addr_any.s6_addr, 16) == 0 ) || ( pszIPAddress == NULL ) )
 			g_LocalAddress = NETWORK_GetLocalAddress( );
 		// [BB] We are using a specified IP, so we don't need to figure out what IP we have, but just use the specified one.
 		else
@@ -706,7 +709,7 @@ int NETWORK_GetPackets( void )
 {
 	LONG				lNumBytes;
 	INT					iDecodedNumBytes = sizeof(g_ucHuffmanBuffer);
-	sockaddr			SocketFrom;
+	sockaddr_in6			SocketFrom;
 	INT					iSocketFromLength;
 
 	iSocketFromLength = sizeof( SocketFrom );
@@ -716,7 +719,7 @@ int NETWORK_GetPackets( void )
 		return ( 0 );
 
 #ifdef	WIN32
-	lNumBytes = recvfrom( g_NetworkSocket, (char *)g_ucHuffmanBuffer, sizeof( g_ucHuffmanBuffer ), 0, &SocketFrom, &iSocketFromLength );
+	lNumBytes = recvfrom( g_NetworkSocket, (char *)g_ucHuffmanBuffer, sizeof( g_ucHuffmanBuffer ), 0, reinterpret_cast<sockaddr*>(&SocketFrom), &iSocketFromLength );
 #else
 	lNumBytes = recvfrom( g_NetworkSocket, (char *)g_ucHuffmanBuffer, sizeof( g_ucHuffmanBuffer ), 0, &SocketFrom, (socklen_t *)&iSocketFromLength );
 #endif
@@ -767,7 +770,7 @@ int NETWORK_GetPackets( void )
 		return ( 0 );
 
 	// Store the IP address of the sender.
-	g_AddressFrom.LoadFromSocketAddress( SocketFrom );
+	g_AddressFrom.LoadFromSocketAddress( reinterpret_cast<sockaddr&>(SocketFrom) );
 
 	// Decode the huffman-encoded message we received.
 	// [BB] Communication with the auth server is not Huffman-encoded.
@@ -801,13 +804,13 @@ int NETWORK_GetLANPackets( void )
 
 	LONG				lNumBytes;
 	INT					iDecodedNumBytes = sizeof(g_ucHuffmanBuffer);
-	sockaddr			SocketFrom;
+	sockaddr_in6		SocketFrom;
 	INT					iSocketFromLength;
 
     iSocketFromLength = sizeof( SocketFrom );
 
 #ifdef	WIN32
-	lNumBytes = recvfrom( g_LANSocket, (char *)g_ucHuffmanBuffer, sizeof( g_ucHuffmanBuffer ), 0, &SocketFrom, &iSocketFromLength );
+	lNumBytes = recvfrom( g_LANSocket, (char *)g_ucHuffmanBuffer, sizeof( g_ucHuffmanBuffer ), 0, reinterpret_cast<sockaddr*>(&SocketFrom), &iSocketFromLength );
 #else
 	lNumBytes = recvfrom( g_LANSocket, (char *)g_ucHuffmanBuffer, sizeof( g_ucHuffmanBuffer ), 0, &SocketFrom, (socklen_t *)&iSocketFromLength );
 #endif
@@ -858,7 +861,7 @@ int NETWORK_GetLANPackets( void )
 		return ( 0 );
 
 	// Store the IP address of the sender.
-	g_AddressFrom.LoadFromSocketAddress( SocketFrom );
+	g_AddressFrom.LoadFromSocketAddress( reinterpret_cast<sockaddr&>(SocketFrom) );
 
 	// Decode the huffman-encoded message we received.
 	// [BB] Communication with the auth server is not Huffman-encoded.
@@ -901,7 +904,7 @@ void NETWORK_LaunchPacket( NETBUFFER_s *pBuffer, NETADDRESS_s Address )
 		return;
 
 	// Convert the IP address to a socket address.
-	struct sockaddr_in SocketAddress;
+	struct sockaddr_in6 SocketAddress;
 	Address.ToSocketAddress( reinterpret_cast<sockaddr&>(SocketAddress) );
 
 	// [BB] Communication with the auth server is not Huffman-encoded.
@@ -973,7 +976,7 @@ return;
 NETADDRESS_s NETWORK_GetLocalAddress( void )
 {
 	char				szBuffer[512];
-	struct sockaddr_in	SocketAddress;
+	struct sockaddr_in6	SocketAddress;
 	int					iNameLength;
 
 #ifndef __WINE__
@@ -1092,7 +1095,7 @@ NETADDRESS_s NETWORK_GetLocalAddress( void )
 	}
 #endif
 
-	Address.usPort = SocketAddress.sin_port;
+	Address.usPort = SocketAddress.sin6_port;
 	return ( Address );
 }
 
@@ -1691,7 +1694,7 @@ static SOCKET network_AllocateSocket( void )
 	SOCKET	Socket;
 
 	// Allocate a socket.
-	Socket = socket( PF_INET, SOCK_DGRAM, IPPROTO_UDP );
+	Socket = socket( PF_INET6, SOCK_DGRAM, IPPROTO_UDP );
 	if ( Socket == INVALID_SOCKET )
 	{
 		static char network_AllocateSocket[] = "network_AllocateSocket: Couldn't create socket!";
@@ -1703,18 +1706,18 @@ static SOCKET network_AllocateSocket( void )
 
 //*****************************************************************************
 //
-bool network_BindSocketToPort( SOCKET Socket, ULONG ulInAddr, USHORT usPort, bool bReUse )
+bool network_BindSocketToPort( SOCKET Socket, IN6_ADDR ulInAddr, USHORT usPort, bool bReUse )
 {
 	int		iErrorCode;
-	struct sockaddr_in address;
+	struct sockaddr_in6 address;
 
 	// setsockopt needs an int, bool won't work
 	int		enable = 1;
 
 	memset (&address, 0, sizeof(address));
-	address.sin_family = AF_INET;
-	address.sin_addr.s_addr = ulInAddr;
-	address.sin_port = htons( usPort );
+	address.sin6_family = AF_INET6;
+	address.sin6_addr = ulInAddr;
+	address.sin6_port = htons( usPort );
 
 	// Allow the network socket to broadcast.
 	setsockopt( Socket, SOL_SOCKET, SO_BROADCAST, (const char *)&enable, sizeof( enable ));
