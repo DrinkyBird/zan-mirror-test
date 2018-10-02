@@ -741,11 +741,20 @@ void NETADDRESS_s::ToSocketAddress( struct sockaddr &SocketAddress ) const
 	}
 	else if ( IsValidIPv4Address() )
 	{
+		std::string IPv4mappedString = std::string ( "::ffff:" ) + ToStringNoPort();
+		struct sockaddr_in6 *ipv6 = reinterpret_cast <struct sockaddr_in6 *> ( &SocketAddress );
+		memset( ipv6, 0, sizeof ( sockaddr_in6 ) );
+		if ( inet_pton ( AF_INET6, IPv4mappedString.c_str(),  &ipv6->sin6_addr) != 1 )
+			Printf ( "Warning: Error calling inet_pton\n" );
+		ipv6->sin6_port = usPort;
+		ipv6->sin6_family = AF_INET6;
+		/*
 		struct sockaddr_in *ipv4 = reinterpret_cast <struct sockaddr_in *> ( &SocketAddress );
 		memset( ipv4, 0, sizeof ( sockaddr_in ) );
 		*(int *)&ipv4->sin_addr = *(int *)&abIP;
 		ipv4->sin_port = usPort;
 		ipv4->sin_family = AF_INET;
+		*/
 	}
 }
 

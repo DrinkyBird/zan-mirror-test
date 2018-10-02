@@ -1713,6 +1713,7 @@ bool network_BindSocketToPort( SOCKET Socket, IN6_ADDR ulInAddr, USHORT usPort, 
 
 	// setsockopt needs an int, bool won't work
 	int		enable = 1;
+	int		disable = 0; 
 
 	memset (&address, 0, sizeof(address));
 	address.sin6_family = AF_INET6;
@@ -1721,6 +1722,7 @@ bool network_BindSocketToPort( SOCKET Socket, IN6_ADDR ulInAddr, USHORT usPort, 
 
 	// Allow the network socket to broadcast.
 	setsockopt( Socket, SOL_SOCKET, SO_BROADCAST, (const char *)&enable, sizeof( enable ));
+	setsockopt( Socket, IPPROTO_IPV6, IPV6_V6ONLY, (const char *)&disable, sizeof(disable));
 	if ( bReUse )
 		setsockopt( Socket, SOL_SOCKET, SO_REUSEADDR, (const char *)&enable, sizeof( enable ));
 
