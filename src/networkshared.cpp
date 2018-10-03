@@ -55,6 +55,16 @@
 #include <algorithm>
 #include "i_system.h"
 
+#ifndef IN6_IS_ADDR_V4MAPPED
+#define IN6_IS_ADDR_V4MAPPED(a) \
+       ((((a)->u.Word[0]) == 0) && \
+        (((a)->u.Word[1]) == 0) && \
+        (((a)->u.Word[2]) == 0) && \
+        (((a)->u.Word[3]) == 0) && \
+        (((a)->u.Word[4]) == 0) && \
+        (((a)->u.Word[5]) == 0xFFFF))
+#endif
+
 //*****************************************************************************
 //	VARIABLES
 
@@ -713,11 +723,17 @@ void NETADDRESS_s::LoadFromSocketAddress ( const struct sockaddr& sockaddr )
 	else
 	{ // IPv6
 		struct sockaddr_in6 ipv6 = reinterpret_cast<const sockaddr_in6&> ( sockaddr );
-		// [BL/WS] Store our IPv6 address here.
-		*(int *)&this->IPv6.u6_addr16[0] = *(const int *)&ipv6.sin6_addr;
-		*(int *)&this->IPv6.u6_addr16[2] = *(((const int *)&ipv6.sin6_addr)+1);
-		*(int *)&this->IPv6.u6_addr16[4] = *(((const int *)&ipv6.sin6_addr)+2);
-		*(int *)&this->IPv6.u6_addr16[6] = *(((const int *)&ipv6.sin6_addr)+3);
+		// [BB] This is actually a IPv4 address.
+		if ( IN6_IS_ADDR_V4MAPPED ( &ipv6.sin6_addr ) )
+			*( int * )&this->abIP = *( ( (const int *)&ipv6.sin6_addr ) + 3 );
+		else
+		{
+			// [BL/WS] Store our IPv6 address here.
+			*(int *)&this->IPv6.u6_addr16[0] = *(const int *)&ipv6.sin6_addr;
+			*(int *)&this->IPv6.u6_addr16[2] = *(((const int *)&ipv6.sin6_addr)+1);
+			*(int *)&this->IPv6.u6_addr16[4] = *(((const int *)&ipv6.sin6_addr)+2);
+			*(int *)&this->IPv6.u6_addr16[6] = *(((const int *)&ipv6.sin6_addr)+3);
+		}
 		this->usPort = ipv6.sin6_port;
 	}
 }
