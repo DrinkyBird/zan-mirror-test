@@ -812,7 +812,7 @@ int NETWORK_GetLANPackets( void )
 #ifdef	WIN32
 	lNumBytes = recvfrom( g_LANSocket, (char *)g_ucHuffmanBuffer, sizeof( g_ucHuffmanBuffer ), 0, reinterpret_cast<sockaddr*>(&SocketFrom), &iSocketFromLength );
 #else
-	lNumBytes = recvfrom( g_LANSocket, (char *)g_ucHuffmanBuffer, sizeof( g_ucHuffmanBuffer ), 0, &SocketFrom, (socklen_t *)&iSocketFromLength );
+	lNumBytes = recvfrom( g_LANSocket, (char *)g_ucHuffmanBuffer, sizeof( g_ucHuffmanBuffer ), 0, reinterpret_cast<sockaddr*>(&SocketFrom), (socklen_t *)&iSocketFromLength );
 #endif
 
 	// If the number of bytes returned is -1, an error has occured.
