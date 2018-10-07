@@ -246,7 +246,7 @@ static const std::vector<std::string> g_FreedoomDehackedHashes = {
 static	void			network_InitPWADList( void );
 static	void			network_Error( const char *pszError );
 static	SOCKET			network_AllocateSocket( void );
-static	bool			network_BindSocketToPort( SOCKET Socket, IN6_ADDR ulInAddr, USHORT usPort, bool bReUse );
+static	bool			network_BindSocketToPort( SOCKET Socket, in6_addr ulInAddr, USHORT usPort, bool bReUse );
 static	bool			network_GenerateLumpMD5HashAndWarnIfNeeded( const int LumpNum, const char *LumpName, FString &MD5Hash );
 static	void			network_CheckIfDuplicateLump( const int LumpNum ); // [AK]
 
@@ -274,12 +274,12 @@ void NETWORK_Construct( USHORT usPort, bool bAllocateLANSocket )
 		Printf( "Winsock initialization succeeded!\n" );
 #endif
 
-		IN6_ADDR ulInAddr = in6addr_any;
+		in6_addr ulInAddr = in6addr_any;
 		const char* pszIPAddress = Args->CheckValue( "-useip" );
 		// [BB] An IP was specfied. Check if it's valid and if it is, try to bind our socket to it.
 		if ( pszIPAddress )
 		{
-			IN6_ADDR inAddr;
+			in6_addr inAddr;
 			int success = inet_pton ( AF_INET6, pszIPAddress, &(inAddr) );
 			if ( success <= 0 )
 			{
@@ -721,7 +721,7 @@ int NETWORK_GetPackets( void )
 #ifdef	WIN32
 	lNumBytes = recvfrom( g_NetworkSocket, (char *)g_ucHuffmanBuffer, sizeof( g_ucHuffmanBuffer ), 0, reinterpret_cast<sockaddr*>(&SocketFrom), &iSocketFromLength );
 #else
-	lNumBytes = recvfrom( g_NetworkSocket, (char *)g_ucHuffmanBuffer, sizeof( g_ucHuffmanBuffer ), 0, &SocketFrom, (socklen_t *)&iSocketFromLength );
+	lNumBytes = recvfrom( g_NetworkSocket, (char *)g_ucHuffmanBuffer, sizeof( g_ucHuffmanBuffer ), 0, reinterpret_cast<sockaddr*>(&SocketFrom), (socklen_t *)&iSocketFromLength );
 #endif
 
 	// If the number of bytes returned is -1, an error has occured.
@@ -1706,7 +1706,7 @@ static SOCKET network_AllocateSocket( void )
 
 //*****************************************************************************
 //
-bool network_BindSocketToPort( SOCKET Socket, IN6_ADDR ulInAddr, USHORT usPort, bool bReUse )
+bool network_BindSocketToPort( SOCKET Socket, in6_addr ulInAddr, USHORT usPort, bool bReUse )
 {
 	int		iErrorCode;
 	struct sockaddr_in6 address;
