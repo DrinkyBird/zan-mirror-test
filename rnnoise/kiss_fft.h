@@ -142,10 +142,13 @@ kiss_fft_state *opus_fft_alloc(int nfft,void * mem,size_t * lenmem, int arch);
  * Note that each element is complex and can be accessed like
     f[k].r and f[k].i
  * */
-void opus_fft_c(const kiss_fft_state *cfg,const kiss_fft_cpx *fin,kiss_fft_cpx *fout);
-void opus_ifft_c(const kiss_fft_state *cfg,const kiss_fft_cpx *fin,kiss_fft_cpx *fout);
 
-void opus_fft_impl(const kiss_fft_state *st,kiss_fft_cpx *fout);
+// [AK] Added rnnoise_ prefix to avoid symbol clashes with Opus.
+void rnnoise_opus_fft_c(const kiss_fft_state *cfg,const kiss_fft_cpx *fin,kiss_fft_cpx *fout);
+void rnnoise_opus_ifft_c(const kiss_fft_state *cfg,const kiss_fft_cpx *fin,kiss_fft_cpx *fout);
+
+// [AK] Added rnnoise_ prefix to avoid symbol clashes with Opus.
+void rnnoise_opus_fft_impl(const kiss_fft_state *st,kiss_fft_cpx *fout);
 void opus_ifft_impl(const kiss_fft_state *st,kiss_fft_cpx *fout);
 
 void opus_fft_free(const kiss_fft_state *cfg, int arch);
@@ -188,10 +191,10 @@ extern void (*const OPUS_IFFT[OPUS_ARCHMASK+1])(const kiss_fft_state *cfg,
          ((void)(arch), opus_fft_free_arch_c(_st))
 
 #define opus_fft(_cfg, _fin, _fout, arch) \
-         ((void)(arch), opus_fft_c(_cfg, _fin, _fout))
+         ((void)(arch), rnnoise_opus_fft_c(_cfg, _fin, _fout))
 
 #define opus_ifft(_cfg, _fin, _fout, arch) \
-         ((void)(arch), opus_ifft_c(_cfg, _fin, _fout))
+         ((void)(arch), rnnoise_opus_ifft_c(_cfg, _fin, _fout))
 
 #endif /* end if defined(OPUS_HAVE_RTCD) && (defined(HAVE_ARM_NE10)) */
 #endif /* end if !defined(OVERRIDE_OPUS_FFT) */
