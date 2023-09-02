@@ -68,7 +68,8 @@ static OPUS_INLINE float tansig_approx(float x)
 
 static OPUS_INLINE float sigmoid_approx(float x)
 {
-   return .5 + .5*tansig_approx(.5*x);
+   // [AK] Changed constants to floats to fix compiler warnings.
+   return .5f + .5f*tansig_approx(.5f*x);
 }
 
 static OPUS_INLINE float relu(float x)

@@ -425,7 +425,8 @@ static opus_val16 compute_pitch_gain(opus_val32 xy, opus_val32 xx, opus_val32 yy
 #else
 static opus_val16 compute_pitch_gain(opus_val32 xy, opus_val32 xx, opus_val32 yy)
 {
-   return xy/sqrt(1+xx*yy);
+   // [AK] Switched to sqrtf to fix a compiler warning.
+   return xy/sqrtf(1+xx*yy);
 }
 #endif
 
