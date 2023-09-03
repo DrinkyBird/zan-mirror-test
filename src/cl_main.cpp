@@ -4525,6 +4525,8 @@ void ServerCommands::SetLocalPlayerJumpTics::Execute()
 //
 void ServerCommands::DisconnectPlayer::Execute()
 {
+	const unsigned int playerIndex = static_cast<unsigned>( player - players );
+
 	// If we were a spectator and looking through this player's eyes, revert them.
 	if ( player->mo->CheckLocalView( consoleplayer ))
 	{
@@ -4549,13 +4551,13 @@ void ServerCommands::DisconnectPlayer::Execute()
 		player->mo = NULL;
 	}
 
-	playeringame[player - players] = false;
+	playeringame[playerIndex] = false;
 
 	// [AK] Clear all the saved chat messages this player said.
-	CHAT_ClearChatMessages( player - players );
+	CHAT_ClearChatMessages( playerIndex );
 
 	// [AK] Reset this player's custom values to their default values.
-	PLAYER_ResetCustomValues( player - players );
+	PLAYER_ResetCustomValues( playerIndex );
 
 	// Zero out all the player information.
 	PLAYER_ResetPlayerData( player );
