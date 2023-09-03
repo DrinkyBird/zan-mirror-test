@@ -65,6 +65,7 @@
 #include "d_netinf.h"
 #include "v_palette.h"
 #include "r_data/r_translate.h"
+#include "voicechat.h"
 
 // [AK] Implement the string table and the conversion functions for the scoreboard enums.
 #define GENERATE_ENUM_STRINGS  // Start string generation
@@ -1575,6 +1576,8 @@ PlayerValue DataScoreColumn::GetValue( const ULONG ulPlayer ) const
 			case COLUMNTYPE_STATUSICON:
 				if (( players[ulPlayer].bLagging ) && ( gamestate == GS_LEVEL ))
 					Result.SetValue<FTexture *>( TexMan.FindTexture( "LAGMINI" ));
+				else if ( VOIPController::GetInstance( ).IsPlayerTalking( ulPlayer ))
+					Result.SetValue<FTexture *>( TexMan.FindTexture( "SPKRMINI" ));
 				else if ( players[ulPlayer].bChatting )
 					Result.SetValue<FTexture *>( TexMan.FindTexture( "TLKMINI" ));
 				else if ( players[ulPlayer].bInConsole )

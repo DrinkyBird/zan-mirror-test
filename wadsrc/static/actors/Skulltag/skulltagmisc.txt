@@ -18,6 +18,9 @@ ACTOR FloatyIcon native
 	CHAT:
 		TALK A -1 bright
 		loop
+	VOICECHAT:
+		SPKR A -1 bright
+		loop
 	INCONSOLE:
 		CNSL AB 9 bright
 		loop

@@ -73,6 +73,7 @@
 #include "p_acs.h"
 #include "st_hud.h"
 #include "c_console.h"
+#include "voicechat.h"
 
 //*****************************************************************************
 //	VARIABLES
@@ -112,6 +113,7 @@ static	MEDAL_t	g_Medals[NUM_MEDALS] =
 enum
 {
 	SPRITE_CHAT,
+	SPRITE_VOICECHAT,
 	SPRITE_INCONSOLE,
 	SPRITE_INMENU,
 	SPRITE_ALLY,
@@ -825,6 +827,10 @@ ULONG medal_GetDesiredIcon( player_t *pPlayer, AInventory *&pTeamItem )
 	if ( pPlayer->bInMenu )
 		ulDesiredSprite = SPRITE_INMENU;
 
+	// Draw a speaker icon over the player if they're talking.
+	if ( VOIPController::GetInstance( ).IsPlayerTalking( pPlayer - players ))
+		ulDesiredSprite = SPRITE_VOICECHAT;
+
 	// Draw a lag icon over their head if they're lagging.
 	if ( pPlayer->bLagging )
 		ulDesiredSprite = SPRITE_LAG;
@@ -909,6 +915,17 @@ void medal_SelectIcon( ULONG ulPlayer )
 			}
 			else
 				ulActualSprite = SPRITE_CHAT;
+			break;
+		// Voice chat icon. Delete it if the player is no longer talking.
+		case S_VOICECHAT:
+
+			if ( VOIPController::GetInstance( ).IsPlayerTalking( pPlayer - players ) == false )
+			{
+				pPlayer->pIcon->Destroy( );
+				pPlayer->pIcon = NULL;
+			}
+			else
+				ulActualSprite = SPRITE_VOICECHAT;
 			break;
 		// In console icon. Delete it if the player is no longer in the console.
 		case S_INCONSOLE:
@@ -1055,6 +1072,10 @@ void medal_SelectIcon( ULONG ulPlayer )
 
 		case SPRITE_CHAT:
 			ulFrame = S_CHAT;
+			break;
+
+		case SPRITE_VOICECHAT:
+			ulFrame = S_VOICECHAT;
 			break;
 
 		case SPRITE_INCONSOLE:
