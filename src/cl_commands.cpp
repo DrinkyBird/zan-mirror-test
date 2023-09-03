@@ -896,3 +896,16 @@ void CLIENTCOMMANDS_RCONSetCVar( const char *cvarName, const char *cvarValue )
 	CLIENT_GetLocalBuffer( )->ByteStream.WriteString( cvarName );
 	CLIENT_GetLocalBuffer( )->ByteStream.WriteString( cvarValue );
 }
+
+//*****************************************************************************
+// [AK]
+void CLIENTCOMMANDS_VoIPAudioPacket( const unsigned int frame, const unsigned char *data, const unsigned int length )
+{
+	if (( data == nullptr ) || ( length == 0 ))
+		return;
+
+	CLIENT_GetLocalBuffer( )->ByteStream.WriteByte( CLC_VOIPAUDIOPACKET );
+	CLIENT_GetLocalBuffer( )->ByteStream.WriteLong( frame );
+	CLIENT_GetLocalBuffer( )->ByteStream.WriteByte( length );
+	CLIENT_GetLocalBuffer( )->ByteStream.WriteBuffer( data, length );
+}

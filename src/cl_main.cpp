@@ -130,6 +130,7 @@
 #include "v_text.h"
 #include "maprotation.h"
 #include "st_hud.h"
+#include "voicechat.h"
 
 //*****************************************************************************
 //	MISC CRAP THAT SHOULDN'T BE HERE BUT HAS TO BE BECAUSE OF SLOPPY CODING
@@ -199,6 +200,7 @@ CUSTOM_CVAR( Int, cl_backupcommands, 0, CVAR_ARCHIVE )
 // [BB] Does not work with the latest ZDoom changes. Check if it's still necessary.
 //static	void	client_SetPlayerPieces( BYTESTREAM_s *pByteStream );
 static	void	client_IgnorePlayer( BYTESTREAM_s *pByteStream );
+static	void	client_PlayerVoIPAudioPacket( BYTESTREAM_s *byteStream );
 
 // Game commands.
 static	void	client_SetGameMode( BYTESTREAM_s *pByteStream );
@@ -429,6 +431,9 @@ void CLIENT_ClearAllPlayers( void )
 
 		// [AK] Clear out saved chat messages from the players.
 		CHAT_ClearChatMessages( ulIdx );
+
+		// [AK] Delete this player's VoIP channel if it exists.
+		VOIPController::GetInstance( ).RemoveVoIPChannel( ulIdx );
 	}
 
 	// [AK] Also clear out saved chat messages from the server.
@@ -1906,6 +1911,11 @@ void CLIENT_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 	case SVC_IGNOREPLAYER:
 
 		client_IgnorePlayer( pByteStream );
+		break;
+
+	case SVC_PLAYERVOIPAUDIOPACKET:
+
+		client_PlayerVoIPAudioPacket( pByteStream );
 		break;
 
 	case SVC_EXTENDEDCOMMAND:
@@ -4144,6 +4154,8 @@ void ServerCommands::SetPlayerUserInfo::Execute()
 		// [CK] We do compressed bitfields now.
 		else if ( name == NAME_CL_ClientFlags )
 			player->userinfo.ClientFlagsChanged ( value.ToLong() );
+		else if ( name == NAME_Voice_Enable )
+			player->userinfo.VoiceEnableChanged ( value.ToLong() );
 		else
 		{
 			FBaseCVar **cvarPointer = player->userinfo.CheckKey( name );
@@ -4561,6 +4573,9 @@ void ServerCommands::DisconnectPlayer::Execute()
 
 	// Zero out all the player information.
 	PLAYER_ResetPlayerData( player );
+
+	// [AK] Delete this player's VoIP channel if it exists.
+	VOIPController::GetInstance( ).RemoveVoIPChannel( playerIndex );
 
 	// Refresh the HUD because this affects the number of players in the game.
 	HUD_ShouldRefreshBeforeRendering( );
@@ -5897,6 +5912,10 @@ static void client_SetGameModeLimits( BYTESTREAM_s *pByteStream )
 	// [AK] Read in, and set the value for sv_allowprivatechat.
 	Value.Int = pByteStream->ReadByte();
 	sv_allowprivatechat.ForceSet( Value, CVAR_Int );
+
+	// [AK] Read in, and set the value for sv_allowvoicechat.
+	Value.Int = pByteStream->ReadByte();
+	sv_allowvoicechat.ForceSet( Value, CVAR_Int );
 
 	// [AK] Read in, and set the value for sv_respawndelaytime.
 	Value.Float = pByteStream->ReadFloat();
@@ -9181,6 +9200,20 @@ static void client_IgnorePlayer( BYTESTREAM_s *pByteStream )
 
 		Printf( "%s will be ignored, because you're ignoring %s IP.\n", players[ulPlayer].userinfo.GetName(), players[ulPlayer].userinfo.GetGender() == GENDER_MALE ? "his" : players[ulPlayer].userinfo.GetGender() == GENDER_FEMALE ? "her" : "its" );
 	}
+}
+
+//*****************************************************************************
+//
+static void client_PlayerVoIPAudioPacket( BYTESTREAM_s *byteStream )
+{
+	const unsigned int player = byteStream->ReadByte( );
+	const unsigned int frame = byteStream->ReadLong( );
+	const unsigned int length = byteStream->ReadByte( );
+	unsigned char *data = new unsigned char[length];
+
+	byteStream->ReadBuffer( data, length );
+	VOIPController::GetInstance( ).ReceiveAudioPacket( player, frame, data, length );
+	delete[] data;
 }
 
 //*****************************************************************************

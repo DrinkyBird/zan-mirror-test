@@ -251,6 +251,11 @@ add_subdirectory( wadsrc_bm )
 add_subdirectory( wadsrc_st )
 add_subdirectory( src )
 
+# [AK] Library for noise suppression for VoIP.
+if ( NOT NO_SOUND )
+	add_subdirectory( rnnoise )
+endif ( NOT NO_SOUND )
+
 if( NOT WIN32 AND NOT APPLE )
 	# [BB] We don't need output_sdl (only used for sound), if we are just building the server.
 	if ( NOT SERVERONLY )

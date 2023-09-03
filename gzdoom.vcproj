@@ -1201,6 +1201,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\voicechat.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\w_wad.cpp"
 				>
 			</File>
@@ -1847,6 +1851,10 @@
 			</File>
 			<File
 				RelativePath=".\src\vectors.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\voicechat.h"
 				>
 			</File>
 			<File

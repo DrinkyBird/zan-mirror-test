@@ -138,6 +138,31 @@ OptionMenu ZA_NetworkOptions
 
 // =================================================================================================
 //
+// VOICE CHAT OPTIONS
+//
+// =================================================================================================
+
+OptionValue ZA_VoiceMode
+{
+	0, "Off"
+	1, "Push-to-talk"
+	2, "Voice activity"
+}
+
+OptionMenu "ZA_VoiceChatOptions"
+{
+	Title "VOICE CHAT OPTIONS"
+
+	Option		"Enable voice chat",		"voice_enable",			"ZA_VoiceMode"
+	Slider		"Output volume",		"voice_outputvolume",		0.0, 2.0, 0.1
+	Slider		"Voice sensitivity (dB)",	"voice_recordsensitivity",	-100, 0, 5
+	StaticText	" "
+	Option		"Use noise suppression",	"voice_suppressnoise",		"YesNo"
+	TextField	"RNNoise model file",		"voice_noisemodelfile",		"voice_suppressnoise"
+}
+
+// =================================================================================================
+//
 // OFFLINE SKIRMISH
 //
 // =================================================================================================
@@ -594,7 +619,7 @@ ListMenu "BotSkillMenu"
 //
 // =================================================================================================
 
-OptionValue ZA_AllowPrivateChat
+OptionValue ZA_AllowChat
 {
 	0, "Never"
 	1, "Everyone"
@@ -630,7 +655,8 @@ OptionMenu ZA_ServerSetupMenu
 	TextField	"Join password",			"sv_joinpassword",			"sv_forcejoinpassword"
 	Option		"Require login to join",	"sv_forcelogintojoin",		"YesNo"
 	StaticText	" "
-	Option		"Allow private chat",		"sv_allowprivatechat",		"ZA_AllowPrivateChat"
+	Option		"Allow private chat",		"sv_allowprivatechat",		"ZA_AllowChat"
+	Option		"Allow voice chat",		"sv_allowvoicechat",		"ZA_AllowChat"
 	// Option	"Smooth lagging players",	"sv_smoothplayers",			"ZA_ExtrapolateLimit"
 	NumberField	"Max connected clients",	"sv_maxclients",			0, 64
 	NumberField	"Max players",				"sv_maxplayers",			0, 64

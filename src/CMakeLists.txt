@@ -671,6 +671,13 @@ if( WIN32 )
 	set ( ZDOOM_LIBS ${ZDOOM_LIBS} crypt32 )
 endif ( WIN32 )
 
+# [AK] We need Opus for encoding/decoding VoIP audio packets, and RNNoise for noise suppression.
+if ( NOT NO_SOUND )
+	find_package( Opus REQUIRED )
+	include_directories( ${OPUS_INCLUDE_DIR} )
+	set( ZDOOM_LIBS ${ZDOOM_LIBS} ${OPUS_LIBRARIES} rnnoise )
+endif ( NOT NO_SOUND )
+
 if( NOT DYN_FLUIDSYNTH)
 	if( FLUIDSYNTH_FOUND )
 		set( ZDOOM_LIBS ${ZDOOM_LIBS} "${FLUIDSYNTH_LIBRARIES}" )
@@ -1245,6 +1252,7 @@ add_executable( zdoom WIN32
 	v_pfx.cpp
 	v_text.cpp
 	v_video.cpp
+	voicechat.cpp #ZA
 	w_wad.cpp
 	wi_stuff.cpp
 	za_database.cpp #ZA
@@ -1464,6 +1472,7 @@ include_directories( .
 	xlat
 	../gdtoa
 	../dumb/include
+	../rnnoise/ #ZA
         ../sqlite/ #ZA
 	../upnpnat/ #ST
 	${CMAKE_BINARY_DIR}/gdtoa

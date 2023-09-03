@@ -430,6 +430,8 @@ struct userinfo_t : TMap<FName,FBaseCVar *>
 	int TicsPerUpdateChanged(int ticsperupdate);
 	int ConnectionTypeChanged(int connectiontype);
 	int ClientFlagsChanged(int flags);
+	int VoiceEnableChanged(int voiceenable);
+
 	int GetRailColor() const 
 	{
 		if ( CheckKey(NAME_RailColor) != NULL )
@@ -472,6 +474,15 @@ struct userinfo_t : TMap<FName,FBaseCVar *>
 			return *static_cast<FIntCVar *>(*CheckKey(NAME_CL_ClientFlags));
 		else {
 			Printf ( "Error: No ClientFlags key found!\n" );
+			return 0;
+		}
+	}
+	int GetVoiceEnable() const
+	{
+		if ( CheckKey(NAME_Voice_Enable) != nullptr )
+			return *static_cast<FIntCVar *>(*CheckKey(NAME_Voice_Enable));
+		else {
+			Printf( "Error: No Voice_Enable key found!\n" );
 			return 0;
 		}
 	}

@@ -482,6 +482,7 @@ OptionMenu "CustomizeControls"
 	Control 	"Say",					"messagemode"
 	Control 	"Team say",				"messagemode2"
 	Control		"Private say",				"messagemode3" // [AK]
+	Control		"Voice chat",				"+voicerecord" // [AK]
 	StaticText 	""
 	StaticText 	"Weapons", 1
 	Control 	"Next weapon",			"weapnext"
@@ -1657,6 +1658,7 @@ OptionMenu SoundOptions
 	StaticText " "
 	Submenu "Advanced options",			"AdvSoundOptions"
 	Submenu "Module replayer options",	"ModReplayerOptions"
+	Submenu "Voice chat options",		"ZA_VoiceChatOptions" // [AK]
 }
 
 /*=======================================

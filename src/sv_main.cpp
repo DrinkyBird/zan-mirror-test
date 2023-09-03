@@ -2256,6 +2256,9 @@ bool SERVER_GetUserInfo( BYTESTREAM_s *pByteStream, bool bAllowKick, bool bEnfor
 		// [CK] We use a bitfield now.
 		else if ( name == NAME_CL_ClientFlags )
 			pPlayer->userinfo.ClientFlagsChanged ( value.ToLong() );
+		// [AK]
+		else if ( name == NAME_Voice_Enable )
+			pPlayer->userinfo.VoiceEnableChanged ( value.ToLong() );
 		// If this is a Hexen game, read in the player's class.
 		else if ( name == NAME_PlayerClass )
 		{
@@ -2300,7 +2303,8 @@ bool SERVER_GetUserInfo( BYTESTREAM_s *pByteStream, bool bAllowKick, bool bEnfor
 		static const std::set<FName> required = {
 			NAME_Name, NAME_Autoaim, NAME_Gender, NAME_Skin, NAME_RailColor,
 			NAME_CL_ConnectionType, NAME_CL_ClientFlags,
-			NAME_Handicap, NAME_CL_TicsPerUpdate, NAME_Color, NAME_ColorSet
+			NAME_Handicap, NAME_CL_TicsPerUpdate, NAME_Color, NAME_ColorSet,
+			NAME_Voice_Enable
 		};
 		std::set<FName> missing;
 		std::set_difference( required.begin(), required.end(), names.begin(), names.end(),
@@ -5150,6 +5154,19 @@ bool SERVER_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 			}
 		}
 		break;
+
+	case CLC_VOIPAUDIOPACKET:
+		{
+			const unsigned int frame = pByteStream->ReadLong( );
+			const unsigned int length = pByteStream->ReadByte( );
+			unsigned char *data = new unsigned char[length];
+
+			pByteStream->ReadBuffer( data, length );
+			SERVERCOMMANDS_PlayerVoIPAudioPacket( g_lCurrentClient, frame, data, length );
+			delete[] data;
+		}
+		break;
+
 	default:
 
 		Printf( PRINT_HIGH, "SERVER_ParseCommands: Unknown client message: %d\n", static_cast<int> (lCommand) );

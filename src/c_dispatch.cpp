@@ -143,7 +143,8 @@ FButtonStatus Button_Mlook, Button_Klook, Button_Use, Button_AltAttack,
 	Button_User1, Button_User2, Button_User3, Button_User4,
 	Button_AM_PanLeft, Button_AM_PanRight, Button_AM_PanDown, Button_AM_PanUp,
 	Button_AM_ZoomIn, Button_AM_ZoomOut,
-	Button_ShowMedals;	// [BC] Added the "show medals" button.
+	Button_ShowMedals,	// [BC] Added the "show medals" button.
+	Button_VoiceRecord;	// [AK] Added the "voicerecord" button.
 
 
 bool ParsingKeyConf, UnsafeExecutionContext;
@@ -173,7 +174,8 @@ public:
 
 FActionMap ActionMaps[] =
 {
-	{ &Button_ShowMedals,	0x03fe31c3, "showmedals" },	// [BC] New "show medals" button.
+	{ &Button_ShowMedals,	0x03fe31c3, "showmedals" },		// [BC] New "show medals" button.
+	{ &Button_VoiceRecord,	0x0719c77f, "voicerecord" },	// [AK] Added the "voicerecord" button.
 	{ &Button_AM_PanLeft,	0x0d52d67b, "am_panleft"},
 	{ &Button_User2,		0x125f5226, "user2" },
 	{ &Button_Jump,			0x1eefa611, "jump" },

@@ -112,6 +112,7 @@
 #include "p_3dmidtex.h"
 #include "a_lightning.h"
 #include "po_man.h"
+#include "voicechat.h"
 
 #include <zlib.h>
 
@@ -1993,6 +1994,9 @@ void G_Ticker ()
 	default:
 		break;
 	}
+
+	// [AK] Tick the VoIP controller.
+	VOIPController::GetInstance( ).Tick( );
 
 	// [BC] If any data has accumulated in our packet, send it out now.
 	if ( NETWORK_GetState( ) == NETSTATE_CLIENT )

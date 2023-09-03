@@ -83,6 +83,8 @@
 #include "network/netcommand.h"
 #include "network/servercommands.h"
 #include "maprotation.h"
+#include "voicechat.h"
+#include "d_netinf.h"
 
 CVAR (Bool, sv_showwarnings, false, CVAR_GLOBALCONFIG|CVAR_ARCHIVE)
 
@@ -1208,6 +1210,47 @@ void SERVERCOMMANDS_PrivateSay( ULONG ulSender, ULONG ulReceiver, const char *ps
 	{
 		// [AK] Tell in-game RCON clients that the server sent a private message to somebody.
 		SendPrivateMessageToRCONClients( command, ulReceiver, true );
+	}
+}
+
+//*****************************************************************************
+//
+void SERVERCOMMANDS_PlayerVoIPAudioPacket( ULONG player, unsigned int frame, unsigned char *data, unsigned int length, ULONG playerExtra, ServerCommandFlags flags )
+{
+	if (( sv_allowvoicechat == VOICECHAT_OFF ) || ( PLAYER_IsValidPlayer( player ) == false ) || ( data == nullptr ) || ( length == 0 ))
+		return;
+
+	// [AK] Potentially prevent spectators from talking to active players during LMS games.
+	const bool forbidVoiceChatToPlayers = GAMEMODE_IsClientForbiddenToChatToPlayers( player );
+
+	NetCommand command( SVC_PLAYERVOIPAUDIOPACKET );
+	command.addByte( player );
+	command.addLong( frame );
+	command.addByte( length );
+	command.addBuffer( data, length );
+
+	// [AK] We shouldn't care if a VoIP packet doesn't get received by the clients.
+	command.setUnreliable( true );
+
+	for ( ClientIterator it( playerExtra, flags ); it.notAtEnd( ); ++it )
+	{
+		// [AK] Don't broadcast to the same player that sent the VoIP packet,
+		// or any players that don't want to receive VoIP packets.
+		if (( *it == player ) || ( players[*it].userinfo.GetVoiceEnable( ) == VOICEMODE_OFF ))
+			continue;
+
+		// [AK] Don't broadcast to any live players if they're forbidden.
+		if (( forbidVoiceChatToPlayers ) && ( players[*it].bSpectating == false ))
+			continue;
+
+		// [AK] Don't broadcast to any player that aren't teammates if required.
+		if (( sv_allowvoicechat == VOICECHAT_TEAMMATESONLY ) && ( GAMEMODE_GetCurrentFlags( ) & GMF_PLAYERSONTEAMS ))
+		{
+			if ( PlayersAreTeammates( player, *it ) == false )
+				continue;
+		}
+
+		command.sendCommandToClients( *it, SVCF_ONLYTHISCLIENT );
 	}
 }
 
@@ -2400,6 +2443,8 @@ void SERVERCOMMANDS_SetGameModeLimits( ULONG ulPlayerExtra, ServerCommandFlags f
 	command.addByte( sv_limitcommands );
 	// [AK] Send sv_allowprivatechat.
 	command.addByte( sv_allowprivatechat );
+	// [AK] Send sv_allowvoicechat.
+	command.addByte( sv_allowvoicechat );
 	// [AK] Send sv_respawndelaytime.
 	command.addFloat( sv_respawndelaytime );
 	command.sendCommandToClients( ulPlayerExtra, flags );

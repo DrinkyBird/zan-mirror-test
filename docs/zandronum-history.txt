@@ -18,6 +18,7 @@
 *+	- Added the new AUTHINFO lump, allowing modders to define their own list of lumps to be authenticated. [Kaminsky]
 *+	- Revamped the scoreboard, and added the new SCORINFO lump that allows full customization of the scoreboard. [Kaminsky]
 *+	- Added support for custom vote types using the new VOTEINFO lump. [Dusk]
+*+	- Added support for voice chat. Audio is encoded and decoded using Opus, allowing it to be transmitted over the network with minimal bandwidth usage and decent quality. Any unwanted noise in the audio is also removed with RNNoise before it's sent to the server. [Kaminsky]
 +	- Added the +NOMORPHLIMITATIONS flag, allowing morphs to switch weapons, play sounds, and be affected by speed powerups. [geNia/Binary]
 +	- Added CVars: "con_interpolate" and "con_speed" which interpolates and controls how fast the console moves. Based on featues from ZCC. [Kaminsky]
 +	- Added ACS functions: "GetCurrentMapPosition", "GetEventResult", "GetActorSectorLocation", and "ChangeTeamScore". [Kaminsky]
