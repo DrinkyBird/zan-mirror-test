@@ -193,6 +193,25 @@ void CheckPositionReuse( AActor *pActor, ULONG &ulBits )
 
 //*****************************************************************************
 //
+// [AK] Checks if two players are teammates.
+bool PlayersAreTeammates( const unsigned int playerOne, const unsigned int playerTwo )
+{
+	const bool playerOneSpectating = PLAYER_IsTrueSpectator( &players[playerOne] );
+	const bool playerTwoSpectating = PLAYER_IsTrueSpectator( &players[playerTwo] );
+
+	// If either player is not on a team, return false.
+	if ((( players[playerOne].bOnTeam == false ) || ( players[playerTwo].bOnTeam == false )) && (( playerOneSpectating == false ) || ( playerTwoSpectating == false )))
+		return false;
+
+	// If the players are not on the same team, return false.
+	if (( players[playerOne].Team != players[playerTwo].Team ) && (( playerOneSpectating != playerTwoSpectating ) || ( playerTwoSpectating == false )))
+		return false;
+
+	return true;
+}
+
+//*****************************************************************************
+//
 // [AK] Sends a private message sent to/from the server to all in-game RCON clients.
 void SendPrivateMessageToRCONClients( ServerCommands::PlayerSay &command, ULONG ulPlayer, bool bServerSent )
 {
@@ -1122,19 +1141,8 @@ void SERVERCOMMANDS_PlayerSay( ULONG ulPlayer, const char *pszString, ULONG ulMo
 		// The player is sending a message to his teammates.
 		if ( ulMode == CHATMODE_TEAM )
 		{
-			if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSONTEAMS )
-			{
-				// If either player is not on a team, don't send the message.
-				if ( (( players[*it].bOnTeam == false ) || ( players[ulPlayer].bOnTeam == false ))
-					&& (( PLAYER_IsTrueSpectator ( &players[*it] ) == false ) || ( PLAYER_IsTrueSpectator ( &players[ulPlayer] ) == false )) )
-					continue;
-
-				// If the players are not on the same team, don't send the message.
-				if ( ( players[*it].Team != players[ulPlayer].Team ) && ( ( PLAYER_IsTrueSpectator ( &players[*it] ) != PLAYER_IsTrueSpectator ( &players[ulPlayer] ) ) || ( PLAYER_IsTrueSpectator ( &players[*it] ) == false ) ) )
-					continue;
-			}
-			// Not in a team mode.
-			else
+			// [AK] Skip if we're not in a team mode, or if this player isn't a teammate.
+			if ((( GAMEMODE_GetCurrentFlags( ) & GMF_PLAYERSONTEAMS ) == false ) || ( PlayersAreTeammates( ulPlayer, *it ) == false ))
 				continue;
 		}
 
