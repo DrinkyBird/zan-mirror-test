@@ -51,6 +51,7 @@
 #include "doomdef.h"
 #include "c_cvars.h"
 #include "networkshared.h"
+#include "i_soundinternal.h"
 
 // [AK] Only include FMOD, Opus, and RNNoise files if compiling with sound.
 #ifndef NO_SOUND
@@ -121,6 +122,7 @@ public:
 	void ListRecordDrivers( void ) const { }
 	FString GrabStats( void ) const { return ""; }
 	void ReceiveAudioPacket( const unsigned int player, const unsigned int frame, const unsigned char *data, const unsigned int length ) { }
+	void UpdateProximityChat( void ) { }
 	void RemoveVoIPChannel( const unsigned int player ) { }
 
 private:
@@ -143,6 +145,7 @@ private:
 	void ListRecordDrivers( void ) const;
 	FString GrabStats( void ) const;
 	void ReceiveAudioPacket( const unsigned int player, const unsigned int frame, const unsigned char *data, const unsigned int length );
+	void UpdateProximityChat( void );
 	void RemoveVoIPChannel( const unsigned int player );
 
 	// [AK] Static constants of the audio's properties.
@@ -188,10 +191,12 @@ private:
 		VOIPChannel( const unsigned int player );
 		~VOIPChannel( void );
 
+		bool ShouldPlayIn3DMode( void ) const;
 		int GetUnreadSamples( void ) const;
 		int DecodeOpusFrame( const unsigned char *inBuffer, const unsigned int inLength, float *outBuffer, const unsigned int outLength );
 		void StartPlaying( void );
 		void ReadSamples( unsigned char *soundBuffer, const unsigned int length );
+		void Update3DAttributes( void );
 		void UpdatePlayback( void );
 		void UpdateEndDelay( const bool resetEpoch );
 	};
@@ -220,6 +225,13 @@ private:
 	bool isRecordButtonPressed;
 	TRANSMISSIONTYPE_e transmissionType;
 
+	// [AK] This is necessasry for setting up the sound rolloff settings of all
+	// VoIP channels that are played in 3D mode (i.e. proximity chat is used).
+	// A pointer to this struct is used for the channel's user data, which the
+	// custom callback function FMODSoundRenderer::RolloffCallback then uses to
+	// calculate the sound's volume based on distance.
+	FISoundChannel proximityInfo;
+
 #endif // NO_SOUND
 
 };
@@ -228,5 +240,6 @@ private:
 //	EXTERNAL CONSOLE VARIABLES
 
 EXTERN_CVAR( Int, sv_allowvoicechat )
+EXTERN_CVAR( Bool, sv_proximityvoicechat )
 
 #endif // __VOICECHAT_H__

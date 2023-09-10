@@ -657,6 +657,7 @@ OptionMenu ZA_ServerSetupMenu
 	StaticText	" "
 	Option		"Allow private chat",		"sv_allowprivatechat",		"ZA_AllowChat"
 	Option		"Allow voice chat",		"sv_allowvoicechat",		"ZA_AllowChat"
+	Option		"Use proximity chat",		"sv_proximityvoicechat",	"YesNo"
 	// Option	"Smooth lagging players",	"sv_smoothplayers",			"ZA_ExtrapolateLimit"
 	NumberField	"Max connected clients",	"sv_maxclients",			0, 64
 	NumberField	"Max players",				"sv_maxplayers",			0, 64

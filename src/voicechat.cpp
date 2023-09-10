@@ -104,6 +104,15 @@ CUSTOM_CVAR( Int, sv_allowvoicechat, VOICECHAT_EVERYONE, CVAR_NOSETBYACS | CVAR_
 	SERVER_SettingChanged( self, false );
 }
 
+// [AK] Enables or disables proximity-based voice chat.
+CUSTOM_CVAR( Bool, sv_proximityvoicechat, false, CVAR_NOSETBYACS | CVAR_SERVERINFO )
+{
+	VOIPController::GetInstance( ).UpdateProximityChat( );
+
+	// [AK] Notify the clients about the change.
+	SERVER_SettingChanged( self, false );
+}
+
 //*****************************************************************************
 //	CONSOLE COMMANDS
 
@@ -144,6 +153,13 @@ VOIPController::VOIPController( void ) :
 	isRecordButtonPressed( false ),
 	transmissionType( TRANSMISSIONTYPE_OFF )
 {
+	proximityInfo.SysChannel = nullptr;
+	proximityInfo.StartTime.AsOne = 0;
+	proximityInfo.Rolloff.RolloffType = ROLLOFF_Doom;
+	proximityInfo.Rolloff.MinDistance = 200.0f;
+	proximityInfo.Rolloff.MaxDistance = 1200.0f;
+	proximityInfo.DistanceScale = 1.0f;
+
 	Button_VoiceRecord.Reset( );
 }
 
@@ -673,7 +689,19 @@ bool VOIPController::IsPlayerTalking( const unsigned int player ) const
 		return true;
 
 	if (( PLAYER_IsValidPlayer( player )) && ( VoIPChannels[player] != nullptr ) && ( VoIPChannels[player]->channel != nullptr ))
+	{
+		// [AK] If this channel's playing in 3D mode, check if they're audible.
+		// In case getting the channel's audibility fails, just return true.
+		if ( VoIPChannels[player]->ShouldPlayIn3DMode( ))
+		{
+			float audibility = 0.0f;
+
+			if ( VoIPChannels[player]->channel->getAudibility( &audibility ) == FMOD_OK )
+				return ( audibility > 0.0f );
+		}
+
 		return true;
+	}
 
 	return false;
 }
@@ -848,6 +876,30 @@ void VOIPController::ReceiveAudioPacket( const unsigned int player, const unsign
 
 //*****************************************************************************
 //
+// [AK] VOIPController::UpdateProximityChat
+//
+// Updates the VoIP controller's proximity chat for every player's channel. If
+// proximity chat is enabled, and the player isn't spectating or being spied
+// on, then 3D mode is enabled and their 3D attributes (position and velocity)
+// are updated.
+//
+// Otherwise, 3D mode is disabled and 2D mode is re-enabled.
+//
+//*****************************************************************************
+
+void VOIPController::UpdateProximityChat( void )
+{
+	for ( unsigned int i = 0; i < MAXPLAYERS; i++ )
+	{
+		if (( playeringame[i] == false ) || ( VoIPChannels[i] == nullptr ) || ( VoIPChannels[i]->channel == nullptr ))
+			continue;
+
+		VoIPChannels[i]->Update3DAttributes( );
+	}
+}
+
+//*****************************************************************************
+//
 // [AK] VOIPController::RemoveVoIPChannel
 //
 // Deletes a channel from the VOIP controller.
@@ -994,7 +1046,7 @@ VOIPController::VOIPChannel::VOIPChannel( const unsigned int player ) :
 		Printf( TEXTCOLOR_ORANGE "Failed to create Opus decoder for VoIP channel %u: %s.\n", player, opus_strerror( opusErrorCode ));
 
 	FMOD_CREATESOUNDEXINFO exinfo = CreateSoundExInfo( PLAYBACK_SAMPLE_RATE, PLAYBACK_SOUND_LENGTH );
-	FMOD_MODE mode = FMOD_2D | FMOD_OPENUSER | FMOD_LOOP_NORMAL | FMOD_SOFTWARE;
+	FMOD_MODE mode = FMOD_3D | FMOD_OPENUSER | FMOD_LOOP_NORMAL | FMOD_SOFTWARE;
 
 	if (( VOIPController::GetInstance( ).system == nullptr ) || ( VOIPController::GetInstance( ).system->createSound( nullptr, mode, &exinfo, &sound ) != FMOD_OK ))
 		Printf( TEXTCOLOR_ORANGE "Failed to create sound for VoIP channel %u.\n", player );
@@ -1027,6 +1079,24 @@ VOIPController::VOIPChannel::~VOIPChannel( void )
 		opus_decoder_destroy( decoder );
 		decoder = nullptr;
 	}
+}
+
+//*****************************************************************************
+//
+// [AK] VOIPController::VOIPChannel::ShouldPlayIn3DMode
+//
+// Checks if the VoIP channel should be played in 3D mode. To do so, proximity
+// chat must be enabled while in a level, and the player can't be spectating or
+// be spied on by the local player.
+//
+//*****************************************************************************
+
+bool VOIPController::VOIPChannel::ShouldPlayIn3DMode( void ) const
+{
+	if (( sv_proximityvoicechat == false ) || ( gamestate != GS_LEVEL ) || ( PLAYER_IsValidPlayer( player ) == false ))
+		return false;
+
+	return (( players[player].bSpectating == false ) && ( players[player].mo != nullptr ) && ( players[player].mo != players[consoleplayer].camera ));
 }
 
 //*****************************************************************************
@@ -1089,6 +1159,7 @@ void VOIPController::VOIPChannel::StartPlaying( void )
 		return;
 	}
 
+	channel->setUserData( &VOIPController::GetInstance( ).proximityInfo );
 	channel->setCallback( VOIPController::ChannelCallback );
 
 	// [AK] Give the VoIP channels more priority than other sounds.
@@ -1096,6 +1167,9 @@ void VOIPController::VOIPChannel::StartPlaying( void )
 
 	// [AK] Reset the channel's end delay epoch before playing.
 	UpdateEndDelay( true );
+
+	// [AK] Update this channel's 3D attributes.
+	Update3DAttributes( );
 
 	voicechat_ReadSoundBuffer( this, sound, lastReadPosition, MIN( GetUnreadSamples( ), READ_BUFFER_SIZE ), &VOIPChannel::ReadSamples );
 
@@ -1178,6 +1252,50 @@ void VOIPController::VOIPChannel::ReadSamples( unsigned char *soundBuffer, const
 
 	samplesRead += samplesReadIntoBuffer;
 	UpdateEndDelay( false );
+}
+
+//*****************************************************************************
+//
+// [AK] VOIPController::VOIPChannel::Update3DAttributes
+//
+// Updates a channel's 3D attributes.
+//
+//*****************************************************************************
+
+void VOIPController::VOIPChannel::Update3DAttributes( void )
+{
+	FMOD_VECTOR pos = { 0.0f, 0.0f, 0.0f };
+	FMOD_VECTOR vel = { 0.0f, 0.0f, 0.0f };
+
+	// [AK] If this channel shouldn't play in "3D" mode, then set its position
+	// and velocity to the listener's. This effectively makes them sound "2D".
+	if ( ShouldPlayIn3DMode( ) == false )
+	{
+		if ( VOIPController::GetInstance( ).system == nullptr )
+		{
+			Printf( TEXTCOLOR_ORANGE "Can't get 3D attributes of the listener without a valid FMOD system.\n" );
+			return;
+		}
+
+		if ( VOIPController::GetInstance( ).system->get3DListenerAttributes( 0, &pos, &vel, nullptr, nullptr ) != FMOD_OK )
+		{
+			Printf( TEXTCOLOR_ORANGE "Failed to get 3D attributes of the listener.\n" );
+			return;
+		}
+	}
+	else if ( players[player].mo != nullptr )
+	{
+		pos.x = FIXED2FLOAT( players[player].mo->x );
+		pos.y = FIXED2FLOAT( players[player].mo->z );
+		pos.z = FIXED2FLOAT( players[player].mo->y );
+
+		vel.x = FIXED2FLOAT( players[player].mo->velx );
+		vel.y = FIXED2FLOAT( players[player].mo->velz );
+		vel.z = FIXED2FLOAT( players[player].mo->vely );
+	}
+
+	if ( channel->set3DAttributes( &pos, &vel ) != FMOD_OK )
+		Printf( TEXTCOLOR_ORANGE "Failed to set 3D attributes for VoIP channel %u.\n", player );
 }
 
 //*****************************************************************************

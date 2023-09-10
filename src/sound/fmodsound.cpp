@@ -2439,6 +2439,10 @@ void FMODSoundRenderer::Sync(bool sync)
 
 void FMODSoundRenderer::UpdateSounds()
 {
+	// [AK] Check if any VoIP channels should still play in 3D mode, and
+	// update the 3D attributes of those that can.
+	VOIPController::GetInstance( ).UpdateProximityChat( );
+
 	// Any sounds played between now and the next call to this function
 	// will start exactly one tic from now.
 	Sys->getDSPClock(&DSPClock.Hi, &DSPClock.Lo);

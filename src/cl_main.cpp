@@ -5917,6 +5917,10 @@ static void client_SetGameModeLimits( BYTESTREAM_s *pByteStream )
 	Value.Int = pByteStream->ReadByte();
 	sv_allowvoicechat.ForceSet( Value, CVAR_Int );
 
+	// [AK] Read in, and set the value for sv_proximityvoicechat.
+	Value.Bool = !!pByteStream->ReadByte();
+	sv_proximityvoicechat.ForceSet( Value, CVAR_Bool );
+
 	// [AK] Read in, and set the value for sv_respawndelaytime.
 	Value.Float = pByteStream->ReadFloat();
 	sv_respawndelaytime.ForceSet( Value, CVAR_Float );
