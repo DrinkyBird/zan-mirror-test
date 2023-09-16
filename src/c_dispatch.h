@@ -53,6 +53,9 @@ public:
 	// [TP]
 	bool SafeGetNumber( int i, int &value, const char *errormessage = "That is not a valid player index" );
 
+	// [AK]
+	bool GetPlayerFromArg( int &playerIndex, const int i, const bool isIndexCmd, const bool ignoreBots = false );
+
 private:
 	const char *cmd;
 	int _argc;

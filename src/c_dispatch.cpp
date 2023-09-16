@@ -1012,6 +1012,37 @@ bool FCommandLine::SafeGetNumber( int i, int &value, const char *errormessage )
 	}
 }
 
+// [AK] Used to get a valid player's index from a console command's argument, either by name or number.
+bool FCommandLine::GetPlayerFromArg( int &playerIndex, const int i, const bool isIndexCmd, const bool ignoreBots )
+{
+	if ( i >= argc( ))
+		return false;
+
+	if ( isIndexCmd )
+	{
+		if (( SafeGetNumber( i, playerIndex ) == false ) || ( PLAYER_IsValidPlayer( playerIndex ) == false ))
+			return false;
+	}
+	else
+	{
+		playerIndex = SERVER_GetPlayerIndexFromName(( *this )[i], true, true );
+
+		if ( playerIndex == MAXPLAYERS )
+		{
+			Printf( "There isn't a player named %s.\n", ( *this )[i] );
+			return false;
+		}
+	}
+
+	if (( ignoreBots ) && ( players[playerIndex].bIsBot ))
+	{
+		Printf( "Player %s is a bot.\n", players[playerIndex].userinfo.GetName( ));
+		return false;
+	}
+
+	return true;
+}
+
 static FConsoleCommand *ScanChainForName (FConsoleCommand *start, const char *name, size_t namelen, FConsoleCommand **prev)
 {
 	int comp;
