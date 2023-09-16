@@ -117,6 +117,7 @@ public:
 	void StopTransmission( void ) { }
 	bool IsVoiceChatAllowed( void ) const { return false; }
 	bool IsPlayerTalking( const unsigned int player ) const { return false; }
+	void SetChannelVolume( const unsigned int player, float volume ) { }
 	void SetVolume( float volume ) { }
 	void SetPitch( float pitch ) { }
 	void ListRecordDrivers( void ) const { }
@@ -140,6 +141,7 @@ private:
 	void StopTransmission( void );
 	bool IsVoiceChatAllowed( void ) const;
 	bool IsPlayerTalking( const unsigned int player ) const;
+	void SetChannelVolume( const unsigned int player, float volume );
 	void SetVolume( float volume );
 	void SetPitch( float pitch );
 	void ListRecordDrivers( void ) const;
@@ -211,6 +213,7 @@ private:
 	static FMOD_RESULT F_CALLBACK ChannelCallback( FMOD_CHANNEL *channel, FMOD_CHANNEL_CALLBACKTYPE type, void *commanddata1, void *commanddata2 );
 
 	VOIPChannel *VoIPChannels[MAXPLAYERS];
+	float channelVolumes[MAXPLAYERS];
 	FMOD::System *system;
 	FMOD::Sound *recordSound;
 	FMOD::ChannelGroup *VoIPChannelGroup;

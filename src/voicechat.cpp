@@ -53,6 +53,7 @@
 #include "network.h"
 #include "v_text.h"
 #include "stats.h"
+#include "p_acs.h"
 
 //*****************************************************************************
 //	CONSOLE VARIABLES
@@ -119,6 +120,45 @@ CUSTOM_CVAR( Bool, sv_proximityvoicechat, false, CVAR_NOSETBYACS | CVAR_SERVERIN
 // [AK] Everything past this point only compiles if compiling with sound.
 #ifndef NO_SOUND
 
+static void voicechat_SetChannelVolume( FCommandLine &argv, const bool isIndexCmd )
+{
+	int player = MAXPLAYERS;
+
+	// [AK] Mods are not allowed to change a VoIP channel's volume.
+	if ( ACS_IsCalledFromConsoleCommand( ))
+		return;
+
+	// [AK] Show a tip message if there's not enough arguments.
+	if ( argv.argc( ) < 3 )
+	{
+		Printf( "Sets a player's channel volume.\nUsage: %s <%s> <volume, 0.0 to 2.0>\n", argv[0], isIndexCmd ? "index" : "name" );
+		return;
+	}
+
+	if ( argv.GetPlayerFromArg( player, 1, isIndexCmd, true ))
+	{
+		if ( player == consoleplayer )
+		{
+			Printf( "You can't set the volume of your own channel.\n" );
+			return;
+		}
+
+		float volume = clamp<float>( static_cast<float>( atof( argv[2] )), 0.0f, 2.0f );
+		VOIPController::GetInstance( ).SetChannelVolume( player, volume );
+	}
+}
+
+// [AK] Changes the volume of one VoIP channel, using the player's name or index.
+CCMD( voice_chanvolume )
+{
+	voicechat_SetChannelVolume( argv, false );
+}
+
+CCMD( voice_chanvolume_idx )
+{
+	voicechat_SetChannelVolume( argv, true );
+}
+
 // [AK] Lists all recording devices that are currently connected.
 CCMD( voice_listrecorddrivers )
 {
@@ -153,6 +193,9 @@ VOIPController::VOIPController( void ) :
 	isRecordButtonPressed( false ),
 	transmissionType( TRANSMISSIONTYPE_OFF )
 {
+	for ( unsigned int i = 0; i < MAXPLAYERS; i++ )
+		channelVolumes[i] = 1.0f;
+
 	proximityInfo.SysChannel = nullptr;
 	proximityInfo.StartTime.AsOne = 0;
 	proximityInfo.Rolloff.RolloffType = ROLLOFF_Doom;
@@ -708,6 +751,28 @@ bool VOIPController::IsPlayerTalking( const unsigned int player ) const
 
 //*****************************************************************************
 //
+// [AK] VOIPController::SetChannelVolume
+//
+// Adjusts the volume for one particular VoIP channel.
+//
+//*****************************************************************************
+
+void VOIPController::SetChannelVolume( const unsigned int player, float volume )
+{
+	if (( isInitialized == false ) || ( player >= MAXPLAYERS ))
+		return;
+
+	channelVolumes[player] = volume;
+
+	if (( VoIPChannels[player] == nullptr ) || ( VoIPChannels[player]->channel == nullptr ))
+		return;
+
+	if ( VoIPChannels[player]->channel->setVolume( volume ) != FMOD_OK )
+		Printf( TEXTCOLOR_ORANGE "Couldn't change the volume of VoIP channel %u.\n", player );
+}
+
+//*****************************************************************************
+//
 // [AK] VOIPController::SetVolume
 //
 // Adjusts the volume of all VoIP channels.
@@ -1079,6 +1144,9 @@ VOIPController::VOIPChannel::~VOIPChannel( void )
 		opus_decoder_destroy( decoder );
 		decoder = nullptr;
 	}
+
+	// [AK] Reset this channel's volume back to default.
+	VOIPController::GetInstance( ).channelVolumes[player] = 1.0f;
 }
 
 //*****************************************************************************
@@ -1174,6 +1242,7 @@ void VOIPController::VOIPChannel::StartPlaying( void )
 	voicechat_ReadSoundBuffer( this, sound, lastReadPosition, MIN( GetUnreadSamples( ), READ_BUFFER_SIZE ), &VOIPChannel::ReadSamples );
 
 	channel->setChannelGroup( VOIPController::GetInstance( ).VoIPChannelGroup );
+	channel->setVolume( VOIPController::GetInstance( ).channelVolumes[player] );
 	channel->setPaused( false );
 }
 
