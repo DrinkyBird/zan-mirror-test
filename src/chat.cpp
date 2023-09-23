@@ -1711,8 +1711,10 @@ CCMD( sayto_idx )
 //
 // [RC] Lets clients ignore an annoying player's chat messages.
 //
-void chat_IgnorePlayer( FCommandLine &argv, const ULONG ulPlayer )
+void chat_IgnorePlayer( FCommandLine &argv, const bool bIsIndexCmd )
 {
+	int playerIndex = MAXPLAYERS;
+
 	// [AK] This function may not be used by ConsoleCommand.
 	if ( ACS_IsCalledFromConsoleCommand( ))
 		return;
@@ -1721,14 +1723,16 @@ void chat_IgnorePlayer( FCommandLine &argv, const ULONG ulPlayer )
 	if ( argv.argc( ) < 2 )
 	{
 		// Create a list of currently ignored players.
-		FString PlayersIgnored;
-		chat_GetIgnoredPlayers( PlayersIgnored );
+		FString message;
+		chat_GetIgnoredPlayers( message );
 
-		if ( PlayersIgnored.Len( ))
-			Printf( TEXTCOLOR_RED "Ignored players: " TEXTCOLOR_NORMAL "%s\nUse \"unignore\" or \"unignore_idx\" to undo.\n", PlayersIgnored.GetChars() );
+		if ( message.Len( ))
+		{
+			Printf( TEXTCOLOR_RED "Ignored players: " TEXTCOLOR_NORMAL "%s\nUse \"unignore\" or \"unignore_idx\" to undo.\n", message.GetChars( ));
+		}
 		else
 		{
-			FString message = "Ignores a certain player's chat messages.\nUsage: ignore <name> [duration, in minutes]";
+			message.Format( "Ignores a certain player's chat messages.\nUsage: %s <%s> [duration, in minutes]", argv[0], bIsIndexCmd ? "index" : "name" );
 
 			// [JK] Only the server can specify a reason.
 			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
@@ -1739,77 +1743,76 @@ void chat_IgnorePlayer( FCommandLine &argv, const ULONG ulPlayer )
 
 		return;
 	}
-	
-	LONG	lTicks = -1;
-	const LONG lArgv2 = ( argv.argc( ) >= 3 ) ? atoi( argv[2] ) : -1;
-	const char *pszReason = ( argv.argc( ) >= 4 ) ? argv[3] : NULL;
 
-	// Did the user specify a set duration?
-	if ( ( lArgv2 > 0 ) && ( lArgv2 < LONG_MAX / ( TICRATE * MINUTE )))
-		lTicks = lArgv2 * TICRATE * MINUTE;
-
-	if ( ulPlayer == MAXPLAYERS )
-		Printf( "There isn't a player named %s" TEXTCOLOR_NORMAL ".\n", argv[1] );
-	else if ( ( ulPlayer == (ULONG)consoleplayer ) && ( NETWORK_GetState( ) != NETSTATE_SERVER ) )
-		Printf( "You can't ignore yourself.\n" );
-	else if ( players[ulPlayer].bIgnoreChat && ( players[ulPlayer].lIgnoreChatTicks == lTicks ))
-		Printf( "You're already ignoring %s.\n", players[ulPlayer].userinfo.GetName() );
-	else
+	if ( argv.GetPlayerFromArg( playerIndex, 1, bIsIndexCmd ))
 	{
-		FString message;
+		const LONG lArgv2 = ( argv.argc( ) >= 3 ) ? atoi( argv[2] ) : -1;
+		const char *pszReason = ( argv.argc( ) >= 4 ) ? argv[3] : NULL;
+		LONG lTicks = -1;
 
-		players[ulPlayer].bIgnoreChat = true;
-		players[ulPlayer].lIgnoreChatTicks = lTicks;
+		// Did the user specify a set duration?
+		if (( lArgv2 > 0 ) && ( lArgv2 < LONG_MAX / ( TICRATE * MINUTE )))
+			lTicks = lArgv2 * TICRATE * MINUTE;
 
-		message.Format( "%s will now be ignored", players[ulPlayer].userinfo.GetName( ));
-
-		if ( lTicks > 0 )
-			message.AppendFormat( ", for %d minutes", static_cast<int>( lArgv2 ));
-
-		Printf( "%s.\n", message.GetChars( ));
-
-		// Add a helpful note about bots.
-		if ( players[ulPlayer].bIsBot )
-			Printf( "Note: you can disable all bot chat by setting the CVAR bot_allowchat to false.\n" );
-
-		// Notify the server so that others using this IP are also ignored.
-		if ( NETWORK_GetState( ) == NETSTATE_CLIENT )
+		if (( playerIndex == consoleplayer ) && ( NETWORK_GetState( ) != NETSTATE_SERVER ))
 		{
-			CLIENTCOMMANDS_Ignore( ulPlayer, true, lTicks );
+			Printf( "You can't ignore yourself.\n" );
 		}
-		// [JK] Tell the client that they've been muted on the server.
-		else if ( NETWORK_GetState( ) == NETSTATE_SERVER )
+		else if (( players[playerIndex].bIgnoreChat ) && ( players[playerIndex].lIgnoreChatTicks == lTicks ))
 		{
-			SERVER_GetClient( ulPlayer )->MutedReason = pszReason;
-			SERVER_PrintMutedMessageToPlayer( ulPlayer );
+			Printf( "You're already ignoring %s.\n", players[playerIndex].userinfo.GetName( ));
+		}
+		else
+		{
+			FString message;
+
+			players[playerIndex].bIgnoreChat = true;
+			players[playerIndex].lIgnoreChatTicks = lTicks;
+
+			message.Format( "%s will now be ignored", players[playerIndex].userinfo.GetName( ));
+
+			if ( lTicks > 0 )
+				message.AppendFormat( ", for %d minutes", static_cast<int>( lArgv2 ));
+
+			Printf( "%s.\n", message.GetChars( ));
+
+			// Add a helpful note about bots.
+			if ( players[playerIndex].bIsBot )
+				Printf( "Note: you can disable all bot chat by setting the CVAR bot_allowchat to false.\n" );
+
+			// Notify the server so that others using this IP are also ignored.
+			if ( NETWORK_GetState( ) == NETSTATE_CLIENT )
+			{
+				CLIENTCOMMANDS_Ignore( playerIndex, true, lTicks );
+			}
+			// [JK] Tell the client that they've been muted on the server.
+			else if ( NETWORK_GetState( ) == NETSTATE_SERVER )
+			{
+				SERVER_GetClient( playerIndex )->MutedReason = pszReason;
+				SERVER_PrintMutedMessageToPlayer( playerIndex );
+			}
 		}
 	}
 }
 
 CCMD( ignore )
 {
-	// Find the player and ignore him.
-	chat_IgnorePlayer( argv, argv.argc( ) >= 2 ? SERVER_GetPlayerIndexFromName( argv[1], true, true ) : MAXPLAYERS );
+	chat_IgnorePlayer( argv, false );
 }
 
 CCMD( ignore_idx )
 {
-	int playerIndex;
-	if ( argv.SafeGetNumber( 1, playerIndex ) == false )
-		return;
-
-	if ( PLAYER_IsValidPlayer( playerIndex ) == false )
-		return;
-
-	chat_IgnorePlayer( argv, playerIndex );
+	chat_IgnorePlayer( argv, true );
 }
 
 //*****************************************************************************
 //
 // [RC] Undos "ignore".
 //
-void chat_UnignorePlayer( FCommandLine &argv, const ULONG ulPlayer )
+void chat_UnignorePlayer( FCommandLine &argv, const bool bIsIndexCmd )
 {
+	int playerIndex = MAXPLAYERS;
+
 	// [AK] This function may not be used by ConsoleCommand.
 	if ( ACS_IsCalledFromConsoleCommand( ))
 		return;
@@ -1818,49 +1821,47 @@ void chat_UnignorePlayer( FCommandLine &argv, const ULONG ulPlayer )
 	if ( argv.argc( ) < 2 )
 	{
 		// Create a list of currently ignored players.
-		FString PlayersIgnored = "";
-		chat_GetIgnoredPlayers( PlayersIgnored );
+		FString playersIgnored;
+		chat_GetIgnoredPlayers( playersIgnored );
 
-		if ( PlayersIgnored.Len( ))
-			Printf( TEXTCOLOR_RED "Ignored players: " TEXTCOLOR_NORMAL "%s\n", PlayersIgnored.GetChars() );
+		if ( playersIgnored.Len( ))
+			Printf( TEXTCOLOR_RED "Ignored players: " TEXTCOLOR_NORMAL "%s\n", playersIgnored.GetChars( ));
 		else
-			Printf( "Un-ignores a certain player's chat messages.\nUsage: unignore <name>\n" );
+			Printf( "Un-ignores a certain player's chat messages.\nUsage: %s <%s>\n", argv[0], bIsIndexCmd ? "index" : "name" );
 
 		return;
 	}
-	
-	if ( ulPlayer == MAXPLAYERS )
-		Printf( "There isn't a player named %s" TEXTCOLOR_NORMAL ".\n", argv[1] );
-	else if ( ( ulPlayer == (ULONG)consoleplayer ) && ( NETWORK_GetState( ) != NETSTATE_SERVER ) )
-		Printf( "You can't unignore yourself.\n" );
-	else if ( !players[ulPlayer].bIgnoreChat )
-		Printf( "You're not ignoring %s.\n", players[ulPlayer].userinfo.GetName() );
-	else 
-	{
-		chat_UnmutePlayer( ulPlayer );
-		Printf( "%s will no longer be ignored.\n", players[ulPlayer].userinfo.GetName() );
 
-		// Notify the server so that others using this IP are also ignored.
-		if ( NETWORK_GetState( ) == NETSTATE_CLIENT )
-			CLIENTCOMMANDS_Ignore( ulPlayer, false );
+	if ( argv.GetPlayerFromArg( playerIndex, 1, bIsIndexCmd ))
+	{
+		if (( playerIndex == consoleplayer ) && ( NETWORK_GetState( ) != NETSTATE_SERVER ))
+		{
+			Printf( "You can't unignore yourself.\n" );
+		}
+		else if ( !players[playerIndex].bIgnoreChat )
+		{
+			Printf( "You're not ignoring %s.\n", players[playerIndex].userinfo.GetName( ));
+		}
+		else
+		{
+			chat_UnmutePlayer( playerIndex );
+			Printf( "%s will no longer be ignored.\n", players[playerIndex].userinfo.GetName( ));
+
+			// Notify the server so that others using this IP are also ignored.
+			if ( NETWORK_GetState( ) == NETSTATE_CLIENT )
+				CLIENTCOMMANDS_Ignore( playerIndex, false );
+		}
 	}
 }
 
 CCMD( unignore )
 {
-	chat_UnignorePlayer( argv, argv.argc( ) >= 2 ? SERVER_GetPlayerIndexFromName( argv[1], true, true ) : MAXPLAYERS );
+	chat_UnignorePlayer( argv, false );
 }
 
 CCMD( unignore_idx )
 {
-	int playerIndex;
-	if ( argv.SafeGetNumber( 1, playerIndex ) == false )
-		return;
-
-	if ( PLAYER_IsValidPlayer( playerIndex ) == false )
-		return;
-
-	chat_UnignorePlayer( argv, playerIndex );
+	chat_UnignorePlayer( argv, true );
 }
 
 // [TP]
