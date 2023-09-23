@@ -205,11 +205,11 @@ FStringCVar	*g_ChatMacros[10] =
 //*****************************************************************************
 //	PROTOTYPES
 
-void	chat_SendMessage( ULONG ulMode, const char *pszString );
-void	chat_GetIgnoredPlayers( FString &Destination ); // [RC]
-void	chat_DoSubstitution( FString &Input ); // [CW]
-void	chat_UnmutePlayer( ULONG ulPlayer ); // [AK]
-bool	chat_IsPlayerValidReceiver( ULONG ulPlayer ); // [AK]
+void		chat_SendMessage( ULONG ulMode, const char *pszString );
+FString		chat_GetIgnoredPlayers( void ); // [RC]
+void		chat_DoSubstitution( FString &Input ); // [CW]
+void		chat_UnmutePlayer( ULONG ulPlayer ); // [AK]
+bool		chat_IsPlayerValidReceiver( ULONG ulPlayer ); // [AK]
 
 //*****************************************************************************
 //	FUNCTIONS
@@ -1213,33 +1213,33 @@ void chat_SendMessage( ULONG ulMode, const char *pszString )
 
 //*****************************************************************************
 //
-// [RC] Fills Destination with a list of ignored players.
+// [RC] Returns a list of ignored players.
 //
-void chat_GetIgnoredPlayers( FString &Destination )
+FString chat_GetIgnoredPlayers( void )
 {
-	Destination = "";
+	FString result;
 
 	// Append all the players' names.
 	for ( ULONG i = 0; i < MAXPLAYERS; i++ )
 	{
 		if ( players[i].bIgnoreChat )
 		{
-			Destination += players[i].userinfo.GetName();
-			
+			// [AK] Add a ", " after the previous player.
+			if ( result.Len( ) > 0 )
+				result += ", ";
+
+			result += players[i].userinfo.GetName( );
+
 			// Add the time remaining.
 			if ( players[i].lIgnoreChatTicks > 0 )
 			{
 				int iMinutesLeft = static_cast<int>( 1 + players[i].lIgnoreChatTicks / ( MINUTE * TICRATE ));
-				Destination.AppendFormat( " (%d minute%s left)", iMinutesLeft, ( iMinutesLeft == 1 ? "" : "s" ));
+				result.AppendFormat( " (%d minute%s left)", iMinutesLeft, ( iMinutesLeft == 1 ? "" : "s" ));
 			}
-
-			Destination += ", ";
 		}
 	}
 
-	// Remove the last ", ".
-	if ( Destination.Len( ) )
-		Destination = Destination.Left( Destination.Len( ) - 2 );
+	return result;
 }
 
 //*****************************************************************************
@@ -1723,8 +1723,7 @@ void chat_IgnorePlayer( FCommandLine &argv, const bool bIsIndexCmd )
 	if ( argv.argc( ) < 2 )
 	{
 		// Create a list of currently ignored players.
-		FString message;
-		chat_GetIgnoredPlayers( message );
+		FString message = chat_GetIgnoredPlayers( );
 
 		if ( message.Len( ))
 		{
@@ -1821,8 +1820,7 @@ void chat_UnignorePlayer( FCommandLine &argv, const bool bIsIndexCmd )
 	if ( argv.argc( ) < 2 )
 	{
 		// Create a list of currently ignored players.
-		FString playersIgnored;
-		chat_GetIgnoredPlayers( playersIgnored );
+		FString playersIgnored = chat_GetIgnoredPlayers( );
 
 		if ( playersIgnored.Len( ))
 			Printf( TEXTCOLOR_RED "Ignored players: " TEXTCOLOR_NORMAL "%s\n", playersIgnored.GetChars( ));
