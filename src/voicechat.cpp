@@ -76,6 +76,15 @@ CUSTOM_CVAR( Float, voice_recordsensitivity, -50.0f, CVAR_ARCHIVE | CVAR_NOSETBY
 		self = clampedValue;
 }
 
+// [AK] Controls the volume of the input device.
+CUSTOM_CVAR( Float, voice_recordvolume, 1.0f, CVAR_ARCHIVE | CVAR_NOSETBYACS | CVAR_GLOBALCONFIG )
+{
+	const float clampedValue = clamp<float>( self, 0.0f, 2.0f );
+
+	if ( self != clampedValue )
+		self = clampedValue;
+}
+
 // [AK] Controls the volume of everyone's voices on the client's end.
 CUSTOM_CVAR( Float, voice_outputvolume, 1.0f, CVAR_ARCHIVE | CVAR_NOSETBYACS | CVAR_GLOBALCONFIG )
 {
@@ -605,7 +614,7 @@ void VOIPController::ReadRecordSamples( unsigned char *soundBuffer, unsigned int
 		for ( unsigned int byte = 0; byte < SAMPLE_SIZE; byte++ )
 			dataUnion.l |= soundBuffer[indexBase + byte] << 8 * byte;
 
-		uncompressedBuffer[i] = dataUnion.f;
+		uncompressedBuffer[i] = clamp<float>( dataUnion.f * voice_recordvolume, -1.0f, 1.0f );
 	}
 
 	// [AK] Denoise the audio frame.

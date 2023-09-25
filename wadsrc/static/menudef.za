@@ -154,6 +154,7 @@ OptionMenu "ZA_VoiceChatOptions"
 	Title "VOICE CHAT OPTIONS"
 
 	Option		"Enable voice chat",		"voice_enable",			"ZA_VoiceMode"
+	Slider		"Input volume",			"voice_recordvolume",		0.0, 2.0, 0.1
 	Slider		"Output volume",		"voice_outputvolume",		0.0, 2.0, 0.1
 	Slider		"Voice sensitivity (dB)",	"voice_recordsensitivity",	-100, 0, 5
 	StaticText	" "
