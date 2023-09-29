@@ -58,14 +58,24 @@
 //*****************************************************************************
 //	CONSOLE VARIABLES
 
-// [AK] Which input device to use when recording audio.
-CVAR( Int, voice_recorddriver, 0, CVAR_ARCHIVE | CVAR_NOSETBYACS | CVAR_GLOBALCONFIG )
-
 // [AK] Enables noise suppression while transmitting audio.
 CVAR( Bool, voice_suppressnoise, true, CVAR_ARCHIVE | CVAR_NOSETBYACS | CVAR_GLOBALCONFIG )
 
 // [AK] Allows the client to load a custom RNNoise model file.
 CVAR( String, voice_noisemodelfile, "", CVAR_ARCHIVE | CVAR_NOSETBYACS | CVAR_GLOBALCONFIG )
+
+// [AK] Which input device to use when recording audio.
+CUSTOM_CVAR( Int, voice_recorddriver, 0, CVAR_ARCHIVE | CVAR_NOSETBYACS | CVAR_GLOBALCONFIG )
+{
+	VOIPController &instance = VOIPController::GetInstance( );
+
+	// [AK] If currently recording from a device, stop and start over.
+	if ( instance.IsRecording( ))
+	{
+		instance.StopRecording( );
+		instance.StartRecording( );
+	}
+}
 
 // [AK] How sensitive voice activity detection is, in decibels.
 CUSTOM_CVAR( Float, voice_recordsensitivity, -50.0f, CVAR_ARCHIVE | CVAR_NOSETBYACS | CVAR_GLOBALCONFIG )
@@ -171,7 +181,11 @@ CCMD( voice_chanvolume_idx )
 // [AK] Lists all recording devices that are currently connected.
 CCMD( voice_listrecorddrivers )
 {
-	VOIPController::GetInstance( ).ListRecordDrivers( );
+	TArray<FString> recordDriverList;
+	VOIPController::GetInstance( ).RetrieveRecordDrivers( recordDriverList );
+
+	for ( unsigned int i = 0; i < recordDriverList.Size( ); i++ )
+		Printf( "%d. %s\n", i, recordDriverList[i].GetChars( ));
 }
 
 //*****************************************************************************
@@ -355,42 +369,12 @@ void VOIPController::Shutdown( void )
 
 void VOIPController::Activate( void )
 {
-	int numRecordDrivers = 0;
-
 	if (( isInitialized == false ) || ( isActive ) || ( CLIENTDEMO_IsPlaying( )))
 		return;
 
-	// [AK] Try to start recording from the selected record driver.
-	if ( system->getRecordNumDrivers( &numRecordDrivers ) == FMOD_OK )
-	{
-		if ( numRecordDrivers > 0 )
-		{
-			if ( voice_recorddriver >= numRecordDrivers )
-			{
-				Printf( "Record driver %d doesn't exist. Using 0 instead.\n", *voice_recorddriver );
-				recordDriverID = 0;
-			}
-			else
-			{
-				recordDriverID = voice_recorddriver;
-			}
-
-			if ( system->recordStart( recordDriverID, recordSound, true ) != FMOD_OK )
-				Printf( TEXTCOLOR_ORANGE "Failed to start VoIP recording.\n" );
-		}
-		else
-		{
-			Printf( TEXTCOLOR_ORANGE "Failed to find any connected record drivers.\n" );
-		}
-	}
-	else
-	{
-		Printf( TEXTCOLOR_ORANGE "Failed to retrieve number of record drivers.\n" );
-	}
-
+	StartRecording( );
 	isActive = true;
 }
-
 
 //*****************************************************************************
 //
@@ -409,14 +393,7 @@ void VOIPController::Deactivate( void )
 	for ( unsigned int i = 0; i < MAXPLAYERS; i++ )
 		RemoveVoIPChannel( i );
 
-	// [AK] If we're in the middle of a transmission, stop that too.
-	StopTransmission( );
-
-	if ( system->recordStop( recordDriverID ) != FMOD_OK )
-	{
-		Printf( TEXTCOLOR_ORANGE "Failed to stop voice recording.\n" );
-		return;
-	}
+	StopRecording( );
 
 	framesSent = 0;
 	isActive = false;
@@ -667,6 +644,70 @@ void VOIPController::ReadRecordSamples( unsigned char *soundBuffer, unsigned int
 
 //*****************************************************************************
 //
+// [AK] VOIPController::StartRecording
+//
+// Starts recording from the input device chosen by voice_recorddriver.
+//
+//*****************************************************************************
+
+void VOIPController::StartRecording( void )
+{
+	if ( IsRecording( ))
+		return;
+
+	int numRecordDrivers = 0;
+
+	// [AK] Try to start recording from the selected record driver.
+	if ( system->getRecordNumDrivers( &numRecordDrivers ) == FMOD_OK )
+	{
+		if ( numRecordDrivers > 0 )
+		{
+			if ( voice_recorddriver >= numRecordDrivers )
+			{
+				Printf( "Record driver %d doesn't exist. Using 0 instead.\n", *voice_recorddriver );
+				recordDriverID = 0;
+			}
+			else
+			{
+				recordDriverID = voice_recorddriver;
+			}
+
+			if ( system->recordStart( recordDriverID, recordSound, true ) != FMOD_OK )
+				Printf( TEXTCOLOR_ORANGE "Failed to start VoIP recording.\n" );
+		}
+		else
+		{
+			Printf( TEXTCOLOR_ORANGE "Failed to find any connected record drivers.\n" );
+		}
+	}
+	else
+	{
+		Printf( TEXTCOLOR_ORANGE "Failed to retrieve number of record drivers.\n" );
+	}
+}
+
+//*****************************************************************************
+//
+// [AK] VOIPController::StopRecording
+//
+// Stops recording from the selected input device.
+//
+//*****************************************************************************
+
+void VOIPController::StopRecording( void )
+{
+	if ( IsRecording( ) == false )
+		return;
+
+	// [AK] If we're in the middle of a transmission, stop that too.
+	StopTransmission( );
+
+	if ( system->recordStop( recordDriverID ) != FMOD_OK )
+		Printf( TEXTCOLOR_ORANGE "Failed to stop voice recording.\n" );
+}
+
+//*****************************************************************************
+//
 // [AK] VOIPController::StartTransmission
 //
 // Prepares the VoIP controller to start transmitting audio to the server.
@@ -760,6 +801,24 @@ bool VOIPController::IsPlayerTalking( const unsigned int player ) const
 
 //*****************************************************************************
 //
+// [AK] VOIPController::IsRecording
+//
+// Checks if the VoIP controller is recording from the selected input device.
+//
+//*****************************************************************************
+
+bool VOIPController::IsRecording( void ) const
+{
+	bool isRecording = false;
+
+	if (( system != nullptr ) && ( system->isRecording( recordDriverID, &isRecording ) == FMOD_OK ))
+		return isRecording;
+
+	return false;
+}
+
+//*****************************************************************************
+//
 // [AK] VOIPController::SetChannelVolume
 //
 // Adjusts the volume for one particular VoIP channel.
@@ -839,24 +898,26 @@ void VOIPController::SetPitch( float pitch )
 
 //*****************************************************************************
 //
-// [AK] VOIPController::ListRecordDrivers
+// [AK] VOIPController::RetrieveRecordDrivers
 //
 // Prints a list of all record drivers that are connected in the same format
 // as FMODSoundRenderer::PrintDriversList.
 //
 //*****************************************************************************
 
-void VOIPController::ListRecordDrivers( void ) const
+void VOIPController::RetrieveRecordDrivers( TArray<FString> &list ) const
 {
 	int numDrivers = 0;
 	char name[256];
+
+	list.Clear( );
 
 	if (( system != nullptr ) && ( system->getRecordNumDrivers( &numDrivers ) == FMOD_OK ))
 	{
 		for ( int i = 0; i < numDrivers; i++ )
 		{
 			if ( system->getRecordDriverInfo( i, name, sizeof( name ), nullptr ) == FMOD_OK )
-				Printf( "%d. %s\n", i, name );
+				list.Push( name );
 		}
 	}
 }

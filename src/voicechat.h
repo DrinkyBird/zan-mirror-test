@@ -113,14 +113,17 @@ public:
 #ifdef NO_SOUND
 
 	void Tick( void ) { }
+	void StartRecording( void ) { }
+	void StopRecording( void ) { }
 	void StartTransmission( const TRANSMISSIONTYPE_e type, const bool getRecordPosition ) { }
 	void StopTransmission( void ) { }
 	bool IsVoiceChatAllowed( void ) const { return false; }
 	bool IsPlayerTalking( const unsigned int player ) const { return false; }
+	bool IsRecording( void ) const { return false; }
 	void SetChannelVolume( const unsigned int player, float volume ) { }
 	void SetVolume( float volume ) { }
 	void SetPitch( float pitch ) { }
-	void ListRecordDrivers( void ) const { }
+	void RetrieveRecordDrivers( TArray<FString> &list ) const { }
 	FString GrabStats( void ) const { return ""; }
 	void ReceiveAudioPacket( const unsigned int player, const unsigned int frame, const unsigned char *data, const unsigned int length ) { }
 	void UpdateProximityChat( void ) { }
@@ -137,14 +140,17 @@ private:
 	void Activate( void );
 	void Deactivate( void );
 	void Tick( void );
+	void StartRecording( void );
+	void StopRecording( void );
 	void StartTransmission( const TRANSMISSIONTYPE_e type, const bool getRecordPosition );
 	void StopTransmission( void );
 	bool IsVoiceChatAllowed( void ) const;
 	bool IsPlayerTalking( const unsigned int player ) const;
+	bool IsRecording( void ) const;
 	void SetChannelVolume( const unsigned int player, float volume );
 	void SetVolume( float volume );
 	void SetPitch( float pitch );
-	void ListRecordDrivers( void ) const;
+	void RetrieveRecordDrivers( TArray<FString> &list ) const;
 	FString GrabStats( void ) const;
 	void ReceiveAudioPacket( const unsigned int player, const unsigned int frame, const unsigned char *data, const unsigned int length );
 	void UpdateProximityChat( void );

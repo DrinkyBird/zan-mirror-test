@@ -142,6 +142,9 @@ OptionMenu ZA_NetworkOptions
 //
 // =================================================================================================
 
+// [AK] This gets filled in by the engine.
+OptionValue ZA_RecordDrivers { }
+
 OptionValue ZA_VoiceMode
 {
 	0, "Off"
@@ -152,8 +155,10 @@ OptionValue ZA_VoiceMode
 OptionMenu "ZA_VoiceChatOptions"
 {
 	Title "VOICE CHAT OPTIONS"
+	Class "VoiceChatMenu"
 
 	Option		"Enable voice chat",		"voice_enable",			"ZA_VoiceMode"
+	Option		"Input device",			"voice_recorddriver",		"ZA_RecordDrivers"
 	Slider		"Input volume",			"voice_recordvolume",		0.0, 2.0, 0.1
 	Slider		"Output volume",		"voice_outputvolume",		0.0, 2.0, 0.1
 	Slider		"Voice sensitivity (dB)",	"voice_recordsensitivity",	-100, 0, 5

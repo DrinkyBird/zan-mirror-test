@@ -75,6 +75,7 @@
 #include "invasion.h"
 #include "lastmanstanding.h"
 #include "st_hud.h"
+#include "voicechat.h"
 
 static void M_StartSkirmishGame();
 static void M_ClearBotSlots();
@@ -588,6 +589,55 @@ public:
 };
 
 IMPLEMENT_CLASS( DWeaponSetupMenu )
+
+// =================================================================================================
+//
+// [AK] DVoiceChatMenu
+//
+// The voice chat options menu, which initializes the record driver list.
+//
+// =================================================================================================
+
+class DVoiceChatMenu : public DOptionMenu
+{
+	DECLARE_CLASS( DVoiceChatMenu, DOptionMenu )
+
+public:
+	void Init( DMenu *parent, FOptionMenuDescriptor *desc )
+	{
+		FOptionValues **opt = OptionValues.CheckKey( "ZA_RecordDrivers" );
+
+		if ( opt != nullptr )
+		{
+			TArray<FString> recordDriverList;
+			FOptionValues::Pair pair;
+
+			VOIPController::GetInstance( ).RetrieveRecordDrivers( recordDriverList );
+
+			( *opt )->mValues.Clear( );
+
+			if ( recordDriverList.Size( ) > 0 )
+			{
+				for ( unsigned int i = 0; i < recordDriverList.Size( ); i++ )
+				{
+					pair.Value = i;
+					pair.Text = recordDriverList[i];
+					( *opt )->mValues.Push( pair );
+				}
+			}
+			else
+			{
+				pair.Value = 0;
+				pair.Text = "None";
+				( *opt )->mValues.Push( pair );
+			}
+		}
+
+		Super::Init( parent, desc );
+	}
+};
+
+IMPLEMENT_CLASS( DVoiceChatMenu )
 
 // =================================================================================================
 //
