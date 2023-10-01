@@ -635,6 +635,15 @@ public:
 
 		Super::Init( parent, desc );
 	}
+
+	virtual void Close( void )
+	{
+		// [AK] Stop testing the microphone when we exit the menu.
+		if ( VOIPController::GetInstance( ).IsTestingMicrophone( ))
+			VOIPController::GetInstance( ).SetMicrophoneTest( false );
+
+		Super::Close( );
+	}
 };
 
 IMPLEMENT_CLASS( DVoiceChatMenu )

@@ -165,6 +165,17 @@ OptionMenu "ZA_VoiceChatOptions"
 	StaticText	" "
 	Option		"Use noise suppression",	"voice_suppressnoise",		"YesNo"
 	TextField	"RNNoise model file",		"voice_noisemodelfile",		"voice_suppressnoise"
+	
+	// [AK] Tip message for testing the microphone.
+	StaticText	" "
+	StaticText	"If you're having microphone issues,", 1
+	StaticText	"start a test to play your voice back.", 1
+	StaticText	" "
+	StaticText	"If using voice activity, your volume must", 1
+	StaticText	"pass the dark green bar to be transmitted.", 1
+	StaticText	" "
+
+	MicTestBar	"Test microphone"
 }
 
 // =================================================================================================

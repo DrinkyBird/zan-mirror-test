@@ -928,6 +928,15 @@ static void ParseOptionMenuBody(FScanner &sc, FOptionMenuDescriptor *desc)
 			FOptionMenuItem *it = new FOptionMenuServerBrowserLine(sc.Number);
 			desc->mItems.Push(it);
 		}
+		// [AK] Microphone test bar.
+		else if ( sc.Compare ( "MicTestBar" ))
+		{
+			sc.MustGetString( );
+			FString label = sc.String;
+
+			FOptionMenuItem *it = new FOptionMenuMicTestBar( label.GetChars( ));
+			desc->mItems.Push( it );
+		}
 		// [TP] --
 		else
 		{

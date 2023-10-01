@@ -55,6 +55,17 @@
 #include "stats.h"
 #include "p_acs.h"
 
+// [AK] These files must be included to also include "optionmenuitems.h".
+#include "menu/menu.h"
+#include "v_video.h"
+#include "v_palette.h"
+#include "d_event.h"
+#include "c_bind.h"
+#include "gi.h"
+
+#define NO_IMP
+#include "menu/optionmenuitems.h"
+
 //*****************************************************************************
 //	CONSOLE VARIABLES
 
@@ -80,7 +91,7 @@ CUSTOM_CVAR( Int, voice_recorddriver, 0, CVAR_ARCHIVE | CVAR_NOSETBYACS | CVAR_G
 // [AK] How sensitive voice activity detection is, in decibels.
 CUSTOM_CVAR( Float, voice_recordsensitivity, -50.0f, CVAR_ARCHIVE | CVAR_NOSETBYACS | CVAR_GLOBALCONFIG )
 {
-	const float clampedValue = clamp<float>( self, -100.0f, 0.0f );
+	const float clampedValue = clamp<float>( self, MIN_DECIBELS, 0.0f );
 
 	if ( self != clampedValue )
 		self = clampedValue;
@@ -202,6 +213,7 @@ CCMD( voice_listrecorddrivers )
 
 VOIPController::VOIPController( void ) :
 	VoIPChannels{ nullptr },
+	testRMSVolume( MIN_DECIBELS ),
 	system( nullptr ),
 	recordSound( nullptr ),
 	VoIPChannelGroup( nullptr ),
@@ -213,6 +225,7 @@ VOIPController::VOIPController( void ) :
 	lastRecordPosition( 0 ),
 	isInitialized( false ),
 	isActive( false ),
+	isTesting( false ),
 	isRecordButtonPressed( false ),
 	transmissionType( TRANSMISSIONTYPE_OFF )
 {
@@ -355,6 +368,7 @@ void VOIPController::Shutdown( void )
 	}
 
 	isInitialized = false;
+	isTesting = false;
 	isRecordButtonPressed = false;
 	Printf( "VoIP controller shutting down.\n" );
 }
@@ -506,13 +520,14 @@ void VOIPController::Tick( void )
 		}
 	}
 
-	if ( isActive == false )
+	if (( isActive == false ) && ( isTesting == false ))
 		return;
 
 	// [AK] Are we're transmitting audio by pressing the "voicerecord" button right
 	// now, or using voice activity detection? We'll check if we have enough new
 	// samples recorded to fill an audio frame that can be encoded and sent out.
-	if (( transmissionType != TRANSMISSIONTYPE_OFF ) || ( players[consoleplayer].userinfo.GetVoiceEnable( ) == VOICEMODE_VOICEACTIVITY ))
+	// This also applies while testing the microphone.
+	if (( transmissionType != TRANSMISSIONTYPE_OFF ) || ( players[consoleplayer].userinfo.GetVoiceEnable( ) == VOICEMODE_VOICEACTIVITY ) || ( isTesting ))
 	{
 		unsigned int recordPosition = 0;
 
@@ -554,7 +569,18 @@ void VOIPController::Tick( void )
 		// always enough gap between the number of samples read and played.
 		if ( VoIPChannels[i]->channel != nullptr )
 		{
+			unsigned int oldPlaybackPosition = VoIPChannels[i]->lastPlaybackPosition;
+			const unsigned int oldSamplesPlayed = VoIPChannels[i]->samplesPlayed;
+
 			VoIPChannels[i]->UpdatePlayback( );
+
+			// [AK] Update the test RMS volume every three tics if testing the microphone.
+			if (( i == static_cast<unsigned>( consoleplayer )) && ( isTesting ) && ( gametic % 3 == 0 ))
+			{
+				const unsigned int numNewSamples = VoIPChannels[i]->samplesPlayed - oldSamplesPlayed;
+				voicechat_ReadSoundBuffer( this, VoIPChannels[i]->sound, oldPlaybackPosition, numNewSamples, &VOIPController::UpdateTestRMSVolume );
+			}
+
 			const int sampleDiff = static_cast<int>( VoIPChannels[i]->samplesRead ) - static_cast<int>( VoIPChannels[i]->samplesPlayed );
 
 			if ( sampleDiff < READ_BUFFER_SIZE )
@@ -574,6 +600,22 @@ void VOIPController::Tick( void )
 //
 //*****************************************************************************
 
+static float voicechat_ByteArrayToFloat( unsigned char *bytes )
+{
+	if ( bytes == nullptr )
+		return 0.0f;
+
+	union { DWORD l; float f; } dataUnion;
+	dataUnion.l = 0;
+
+	for ( unsigned int i = 0; i < 4; i++ )
+		dataUnion.l |= bytes[i] << 8 * i;
+
+	return dataUnion.f;
+}
+
+//*****************************************************************************
+//
 void VOIPController::ReadRecordSamples( unsigned char *soundBuffer, unsigned int length )
 {
 	float uncompressedBuffer[RECORD_SAMPLES_PER_FRAME];
@@ -581,18 +623,7 @@ void VOIPController::ReadRecordSamples( unsigned char *soundBuffer, unsigned int
 	float rms = 0.0f;
 
 	for ( unsigned int i = 0; i < RECORD_SAMPLES_PER_FRAME; i++ )
-	{
-		const unsigned int indexBase = i * SAMPLE_SIZE;
-		union { DWORD l; float f; } dataUnion;
-
-		dataUnion.l = 0;
-
-		// [AK] Convert from a byte array to a float in little-endian.
-		for ( unsigned int byte = 0; byte < SAMPLE_SIZE; byte++ )
-			dataUnion.l |= soundBuffer[indexBase + byte] << 8 * byte;
-
-		uncompressedBuffer[i] = clamp<float>( dataUnion.f * voice_recordvolume, -1.0f, 1.0f );
-	}
+		uncompressedBuffer[i] = clamp<float>( voicechat_ByteArrayToFloat( soundBuffer + i * SAMPLE_SIZE ) * voice_recordvolume, -1.0f, 1.0f );
 
 	// [AK] Denoise the audio frame.
 	if (( voice_suppressnoise ) && ( denoiseState != nullptr ))
@@ -613,17 +644,17 @@ void VOIPController::ReadRecordSamples( unsigned char *soundBuffer, unsigned int
 		for ( unsigned int i = 0; i < RECORD_SAMPLES_PER_FRAME; i++ )
 			rms += powf( uncompressedBuffer[i], 2 );
 
-		rms = sqrtf( rms / RECORD_SAMPLES_PER_FRAME );
+		rms = 20 * log10( sqrtf( rms / RECORD_SAMPLES_PER_FRAME ));
 	}
 
 	// [AK] Check if the audio frame should actually be sent. This is always the
 	// case while pressing the "voicerecord" button, or if the sound intensity
-	// exceeds the minimum threshold.
-	if (( transmissionType == TRANSMISSIONTYPE_BUTTON ) || ( 20 * log10( rms ) >= voice_recordsensitivity ))
+	// exceeds the minimum threshold. If testing, then always send it.
+	if (( transmissionType == TRANSMISSIONTYPE_BUTTON ) || ( rms >= voice_recordsensitivity ) || ( isTesting ))
 	{
 		// [AK] If we're using voice activity, and not transmitting audio already,
 		// then start transmitting now.
-		if ( transmissionType == TRANSMISSIONTYPE_OFF )
+		if (( isTesting == false ) && ( transmissionType == TRANSMISSIONTYPE_OFF ))
 			StartTransmission( TRANSMISSIONTYPE_VOICEACTIVITY, false );
 
 		// [AK] Downsize the input audio frame from 48 kHz to 24 kHz.
@@ -634,12 +665,38 @@ void VOIPController::ReadRecordSamples( unsigned char *soundBuffer, unsigned int
 		int numBytesEncoded = EncodeOpusFrame( downsizedBuffer, PLAYBACK_SAMPLES_PER_FRAME, compressedBuffer, MAX_PACKET_SIZE );
 
 		if ( numBytesEncoded > 0 )
-			CLIENTCOMMANDS_VoIPAudioPacket( framesSent++, compressedBuffer, numBytesEncoded );
+		{
+			// [AK] If testing the microphone, just receive the audio frame right away.
+			if ( isTesting == false )
+				CLIENTCOMMANDS_VoIPAudioPacket( framesSent++, compressedBuffer, numBytesEncoded );
+			else
+				ReceiveAudioPacket( consoleplayer, 0, compressedBuffer, numBytesEncoded );
+		}
 	}
 	else
 	{
 		StopTransmission( );
 	}
+}
+
+//*****************************************************************************
+//
+// [AK] VOIPController::UpdateTestRMSVolume
+//
+// Calculates the current RMS volume of the local player's VoIP channel during
+// a microphone test.
+//
+//*****************************************************************************
+
+void VOIPController::UpdateTestRMSVolume( unsigned char *soundBuffer, const unsigned int length )
+{
+	const unsigned int samplesInBuffer = length / SAMPLE_SIZE;
+	testRMSVolume = 0.0f;
+
+	for ( unsigned int i = 0; i < length; i += SAMPLE_SIZE )
+		testRMSVolume += powf( voicechat_ByteArrayToFloat( soundBuffer + i ), 2 );
+
+	testRMSVolume = 20 * log10( sqrtf( testRMSVolume / samplesInBuffer ));
 }
 
 //*****************************************************************************
@@ -778,8 +835,15 @@ bool VOIPController::IsVoiceChatAllowed( void ) const
 
 bool VOIPController::IsPlayerTalking( const unsigned int player ) const
 {
-	if (( player == static_cast<unsigned>( consoleplayer )) && ( transmissionType != TRANSMISSIONTYPE_OFF ))
-		return true;
+	if ( player == static_cast<unsigned>( consoleplayer ))
+	{
+		// [AK] The local player isn't transmitting during a microphone test.
+		if ( isTesting )
+			return false;
+
+		if ( transmissionType != TRANSMISSIONTYPE_OFF )
+			return true;
+	}
 
 	if (( PLAYER_IsValidPlayer( player )) && ( VoIPChannels[player] != nullptr ) && ( VoIPChannels[player]->channel != nullptr ))
 	{
@@ -898,6 +962,51 @@ void VOIPController::SetPitch( float pitch )
 
 //*****************************************************************************
 //
+// [AK] VOIPController::SetMicrophoneTest
+//
+// Enables or disables the microphone test function.
+//
+//*****************************************************************************
+
+void VOIPController::SetMicrophoneTest( const bool enable )
+{
+	if ( isTesting == enable )
+		return;
+
+	const bool isRecording = IsRecording( );
+
+	if ( enable )
+	{
+		// [AK] If we're not already recording, then start doing so.
+		if ( isRecording == false )
+			StartRecording( );
+
+		// [AK] While we're testing our microphone, we don't want to hear the
+		// voices of other players, so we'll mute the VoIP channel group.
+		if ( VoIPChannelGroup != nullptr )
+			VoIPChannelGroup->setMute( true );
+	}
+	else
+	{
+		// [AK] Stop recording if we're not allowed to (i.e. we only started
+		// recording for the sake of testing).
+		if (( IsVoiceChatAllowed( ) == false ) && ( isRecording ))
+			StopRecording( );
+
+		testRMSVolume = MIN_DECIBELS;
+
+		// [AK] Unmute the VoIP channel group now.
+		if ( VoIPChannelGroup != nullptr )
+			VoIPChannelGroup->setMute( false );
+
+		RemoveVoIPChannel( consoleplayer );
+	}
+
+	isTesting = enable;
+}
+
+//*****************************************************************************
+//
 // [AK] VOIPController::RetrieveRecordDrivers
 //
 // Prints a list of all record drivers that are connected in the same format
@@ -944,7 +1053,7 @@ FString VOIPController::GrabStats( void ) const
 
 		out.AppendFormat( "VoIP channel %u (%s): ", i, players[i].userinfo.GetName( ));
 
-		if ( IsPlayerTalking( i ))
+		if (( IsPlayerTalking( i )) || (( i == static_cast<unsigned>( consoleplayer )) && ( isTesting )))
 		{
 			out.AppendFormat( "samples read/played = %u/%u", VoIPChannels[i]->samplesRead, VoIPChannels[i]->samplesPlayed );
 
@@ -974,7 +1083,11 @@ FString VOIPController::GrabStats( void ) const
 
 void VOIPController::ReceiveAudioPacket( const unsigned int player, const unsigned int frame, const unsigned char *data, const unsigned int length )
 {
-	if (( isActive == false ) || ( PLAYER_IsValidPlayer( player ) == false ) || ( data == nullptr ) || ( length == 0 ))
+	// [AK] If this is the local player, then they're testing their microphone.
+	if (( isActive == false ) && ( player != static_cast<unsigned>( consoleplayer )))
+		return;
+
+	if (( PLAYER_IsValidPlayer( player ) == false ) || ( data == nullptr ) || ( length == 0 ))
 		return;
 
 	// [AK] If this player's channel doesn't exist yet, create a new one.
@@ -1234,6 +1347,10 @@ bool VOIPController::VOIPChannel::ShouldPlayIn3DMode( void ) const
 	if (( sv_proximityvoicechat == false ) || ( gamestate != GS_LEVEL ) || ( PLAYER_IsValidPlayer( player ) == false ))
 		return false;
 
+	// [AK] Never play the local player's channel in 3D mode while testing.
+	if (( player == static_cast<unsigned>( consoleplayer )) && ( VOIPController::GetInstance( ).isTesting ))
+		return false;
+
 	return (( players[player].bSpectating == false ) && ( players[player].mo != nullptr ) && ( players[player].mo != players[consoleplayer].camera ));
 }
 
@@ -1309,10 +1426,21 @@ void VOIPController::VOIPChannel::StartPlaying( void )
 	// [AK] Update this channel's 3D attributes.
 	Update3DAttributes( );
 
-	voicechat_ReadSoundBuffer( this, sound, lastReadPosition, MIN( GetUnreadSamples( ), READ_BUFFER_SIZE ), &VOIPChannel::ReadSamples );
+	// [AK] Creating a channel belonging to the local player should only happen
+	// if they're testing their own microphone. This channel is excluded from the
+	// VoIP channel group so that everyone else's channels can be muted without
+	// muting the local player's.
+	if ( player == static_cast<unsigned>( consoleplayer ))
+	{
+		channel->setVolume( voice_recordvolume );
+	}
+	else
+	{
+		channel->setChannelGroup( VOIPController::GetInstance( ).VoIPChannelGroup );
+		channel->setVolume( VOIPController::GetInstance( ).channelVolumes[player] );
+	}
 
-	channel->setChannelGroup( VOIPController::GetInstance( ).VoIPChannelGroup );
-	channel->setVolume( VOIPController::GetInstance( ).channelVolumes[player] );
+	voicechat_ReadSoundBuffer( this, sound, lastReadPosition, MIN( GetUnreadSamples( ), READ_BUFFER_SIZE ), &VOIPChannel::ReadSamples );
 	channel->setPaused( false );
 }
 
@@ -1526,6 +1654,116 @@ void VOIPController::VOIPChannel::UpdateEndDelay( const bool resetEpoch )
 }
 
 #endif // NO_SOUND
+
+//*****************************************************************************
+//
+// [AK] FOptionMenuMicTestBar::Activate
+//
+// Starts or stops the microphone test upon activating the option menu item.
+//
+//*****************************************************************************
+
+bool FOptionMenuMicTestBar::Activate( void )
+{
+	const bool enableTest = !VOIPController::GetInstance( ).IsTestingMicrophone( );
+
+	S_Sound( CHAN_VOICE | CHAN_UI, "menu/choose", snd_menuvolume, ATTN_NONE );
+	VOIPController::GetInstance( ).SetMicrophoneTest( enableTest );
+	return true;
+}
+
+//*****************************************************************************
+//
+// [AK] FOptionMenuMicTestBar::Draw
+//
+// Draws the menu item's label and the test bar itself.
+//
+//*****************************************************************************
+
+int FOptionMenuMicTestBar::Draw( FOptionMenuDescriptor *desc, int y, int indent, bool selected )
+{
+	drawLabel( indent, y, selected ? OptionSettings.mFontColorSelection : OptionSettings.mFontColorMore );
+
+	if ( mBarTexture != nullptr )
+	{
+		const int barStartX = indent + CURSORSPACE;
+
+		// [AK] If testing, draw the RMS and sensitivity volume bars too.
+		if ( VOIPController::GetInstance( ).IsTestingMicrophone( ))
+		{
+			const float rmsVolume = VOIPController::GetInstance( ).GetTestRMSVolume( );
+
+			// [AK] Only draw the "background" bar if it will be visible.
+			if (( voice_recordsensitivity < 0.0f ) && ( rmsVolume < 0.0f ))
+				DrawBar( MAKERGB( 64, 64, 64 ), barStartX, y );
+
+			// [AK] Draw the "sensitivity" bar if it will be visible.
+			if (( voice_recordsensitivity > MIN_DECIBELS ) && ( voice_recordsensitivity > rmsVolume ))
+				DrawBar( MAKERGB( 0, 115, 15 ), barStartX, y, ( MIN_DECIBELS - voice_recordsensitivity ) / MIN_DECIBELS );
+
+			if ( rmsVolume > MIN_DECIBELS )
+			{
+				// [AK] Draw the "RMS" bar if it will be visible.
+				if ( rmsVolume > voice_recordsensitivity )
+					DrawBar( MAKERGB( 20, 255, 50 ), barStartX, y, ( MIN_DECIBELS - rmsVolume ) / MIN_DECIBELS );
+
+				// [AK] Draw a "shadow" of the sensitivity bar over the RMS bar.
+				const float diff = MIN<float>( rmsVolume, voice_recordsensitivity );
+				DrawBar( MAKERGB( 0, 170, 0 ), barStartX, y, ( MIN_DECIBELS - diff ) / MIN_DECIBELS );
+			}
+		}
+		else
+		{
+			DrawBar( MAKERGB( 64, 64, 64 ), barStartX, y );
+		}
+	}
+
+	return indent;
+}
+
+//*****************************************************************************
+//
+// [AK] FOptionMenuMicTestBar::DrawBar
+//
+// Draws a layer of the test bar. A percentage between 0-1 indicates how much
+// of the bar to actually draw, width-wise.
+//
+//*****************************************************************************
+
+void FOptionMenuMicTestBar::DrawBar( const DWORD color, const int x, const int y, const float percentage )
+{
+	if ( mBarTexture == nullptr )
+		return;
+
+	const float newPercentage = clamp<float>( percentage, 0.0f, 1.0f );
+	const int width = static_cast<int>( mBarTexture->GetScaledWidth( ) * newPercentage ) * CleanXfac_1;
+	const int height = mBarTexture->GetScaledHeight( ) * CleanYfac_1;
+
+	screen->DrawTexture( mBarTexture, x, y,
+		DTA_FillColor, color,
+		DTA_CleanNoMove_1, true,
+		DTA_ClipLeft, x,
+		DTA_ClipRight, x + width,
+		DTA_ClipTop, y,
+		DTA_ClipBottom, y + height,
+		TAG_DONE );
+}
+
+//*****************************************************************************
+//
+// [AK] FOptionMenuMicTestBar::Selectable
+//
+// The microphone test function should only be selectable when Zandronum is
+// compiled with sound and there's at least one input device to test from.
+//
+//*****************************************************************************
+
+bool FOptionMenuMicTestBar::Selectable( void )
+{
+	TArray<FString> recordDriverList;
+	VOIPController::GetInstance( ).RetrieveRecordDrivers( recordDriverList );
+	return ( recordDriverList.Size( ) > 0 );
+}
 
 //*****************************************************************************
 //	STATISTICS

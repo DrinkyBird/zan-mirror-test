@@ -63,6 +63,9 @@
 //*****************************************************************************
 //	DEFINES
 
+// [AK] The relative decibel range of the voice chat is between -100 to 0 dB.
+#define MIN_DECIBELS	-100.0f
+
 enum VOICECHAT_e
 {
 	// Voice chatting is disabled by the server.
@@ -120,9 +123,12 @@ public:
 	bool IsVoiceChatAllowed( void ) const { return false; }
 	bool IsPlayerTalking( const unsigned int player ) const { return false; }
 	bool IsRecording( void ) const { return false; }
+	bool IsTestingMicrophone( void ) const { return false; }
+	float GetTestRMSVolume( void ) const { return MIN_DECIBELS; }
 	void SetChannelVolume( const unsigned int player, float volume ) { }
 	void SetVolume( float volume ) { }
 	void SetPitch( float pitch ) { }
+	void SetMicrophoneTest( const bool enable ) { }
 	void RetrieveRecordDrivers( TArray<FString> &list ) const { }
 	FString GrabStats( void ) const { return ""; }
 	void ReceiveAudioPacket( const unsigned int player, const unsigned int frame, const unsigned char *data, const unsigned int length ) { }
@@ -147,9 +153,12 @@ private:
 	bool IsVoiceChatAllowed( void ) const;
 	bool IsPlayerTalking( const unsigned int player ) const;
 	bool IsRecording( void ) const;
+	bool IsTestingMicrophone( void ) const { return isTesting; }
+	float GetTestRMSVolume( void ) const { return testRMSVolume; }
 	void SetChannelVolume( const unsigned int player, float volume );
 	void SetVolume( float volume );
 	void SetPitch( float pitch );
+	void SetMicrophoneTest( const bool enable );
 	void RetrieveRecordDrivers( TArray<FString> &list ) const;
 	FString GrabStats( void ) const;
 	void ReceiveAudioPacket( const unsigned int player, const unsigned int frame, const unsigned char *data, const unsigned int length );
@@ -213,6 +222,7 @@ private:
 	~VOIPController( void ) { Shutdown( ); }
 
 	void ReadRecordSamples( unsigned char *soundBuffer, unsigned int length );
+	void UpdateTestRMSVolume( unsigned char *soundBuffer, const unsigned int length );
 	int EncodeOpusFrame( const float *inBuffer, const unsigned int inLength, unsigned char *outBuffer, const unsigned int outLength );
 
 	static FMOD_CREATESOUNDEXINFO CreateSoundExInfo( const unsigned int sampleRate, const unsigned int fileLength );
@@ -220,6 +230,7 @@ private:
 
 	VOIPChannel *VoIPChannels[MAXPLAYERS];
 	float channelVolumes[MAXPLAYERS];
+	float testRMSVolume;
 	FMOD::System *system;
 	FMOD::Sound *recordSound;
 	FMOD::ChannelGroup *VoIPChannelGroup;
@@ -231,6 +242,7 @@ private:
 	unsigned int lastRecordPosition;
 	bool isInitialized;
 	bool isActive;
+	bool isTesting;
 	bool isRecordButtonPressed;
 	TRANSMISSIONTYPE_e transmissionType;
 

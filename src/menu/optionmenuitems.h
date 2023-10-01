@@ -1440,6 +1440,28 @@ public:
 	bool MenuEvent (int mkey, bool fromcontroller);
 };
 
+//=============================================================================
+//
+// [AK] FOptionMenuMicTestBar
+//
+//=============================================================================
+
+class FOptionMenuMicTestBar : public FOptionMenuItem
+{
+	FTexture *mBarTexture;
+
+	void DrawBar( const DWORD color, const int x, const int y, const float percentage = 1.0f );
+
+public:
+	FOptionMenuMicTestBar( const char *label ) :
+		FOptionMenuItem( label ),
+		mBarTexture( TexMan.FindTexture( "MICBAR" )) { }
+
+	virtual bool Activate( void );
+	virtual int Draw( FOptionMenuDescriptor *desc, int y, int indent, bool selected );
+	virtual bool Selectable( void );
+};
+
 //
 // [TP] End of Zandronum-specific option menu widgets
 // -------------------------------------------------------------------------------------------------
