@@ -9212,7 +9212,7 @@ static void client_PlayerVoIPAudioPacket( BYTESTREAM_s *byteStream )
 {
 	const unsigned int player = byteStream->ReadByte( );
 	const unsigned int frame = byteStream->ReadLong( );
-	const unsigned int length = byteStream->ReadByte( );
+	const unsigned int length = byteStream->ReadShort( );
 	unsigned char *data = new unsigned char[length];
 
 	byteStream->ReadBuffer( data, length );

@@ -1226,7 +1226,7 @@ void SERVERCOMMANDS_PlayerVoIPAudioPacket( ULONG player, unsigned int frame, uns
 	NetCommand command( SVC_PLAYERVOIPAUDIOPACKET );
 	command.addByte( player );
 	command.addLong( frame );
-	command.addByte( length );
+	command.addShort( length );
 	command.addBuffer( data, length );
 
 	// [AK] We shouldn't care if a VoIP packet doesn't get received by the clients.

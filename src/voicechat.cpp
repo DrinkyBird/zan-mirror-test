@@ -223,6 +223,7 @@ VOIPController::VOIPController( void ) :
 	recordDriverID( 0 ),
 	framesSent( 0 ),
 	lastRecordPosition( 0 ),
+	lastPackedTOC( 0 ),
 	isInitialized( false ),
 	isActive( false ),
 	isTesting( false ),
@@ -295,6 +296,15 @@ void VOIPController::Init( FMOD::System *mainSystem )
 	opus_encoder_ctl( encoder, OPUS_SET_FORCE_CHANNELS( 1 ));
 	opus_encoder_ctl( encoder, OPUS_SET_SIGNAL( OPUS_SIGNAL_VOICE ));
 
+	repacketizer = opus_repacketizer_create( );
+
+	// [AK] Stop here if the Opus repacketizer wasn't created successfully.
+	if ( repacketizer == nullptr )
+	{
+		Printf( TEXTCOLOR_ORANGE "Failed to create Opus repacketizer: %s.\n", opus_strerror( opusErrorCode ));
+		return;
+	}
+
 	// [AK] Load a custom RNNoise model file if we can. Otherwise, use the built-in model.
 	if ( strlen( voice_noisemodelfile ) > 0 )
 	{
@@ -341,6 +351,12 @@ void VOIPController::Shutdown( void )
 	{
 		opus_encoder_destroy( encoder );
 		encoder = nullptr;
+	}
+
+	if ( repacketizer != nullptr )
+	{
+		opus_repacketizer_destroy( repacketizer );
+		repacketizer = nullptr;
 	}
 
 	if ( recordSound != nullptr )
@@ -538,6 +554,11 @@ void VOIPController::Tick( void )
 			// [AK] We may need to send out multiple audio frames in a single tic.
 			for ( unsigned int frame = 0; frame < recordDelta / RECORD_SAMPLES_PER_FRAME; frame++ )
 				voicechat_ReadSoundBuffer( this, recordSound, lastRecordPosition, RECORD_SAMPLES_PER_FRAME, &VOIPController::ReadRecordSamples );
+
+			if (( isTesting == false ) && ( opus_repacketizer_get_nb_frames( repacketizer ) > 0 ))
+				SendAudioPacket( );
+
+			compressedBuffers.Clear( );
 		}
 	}
 
@@ -661,22 +682,75 @@ void VOIPController::ReadRecordSamples( unsigned char *soundBuffer, unsigned int
 		for ( unsigned int i = 0; i < PLAYBACK_SAMPLES_PER_FRAME; i++ )
 			downsizedBuffer[i] = ( uncompressedBuffer[2 * i] + uncompressedBuffer[2 * i + 1] ) / 2.0f;
 
-		unsigned char compressedBuffer[MAX_PACKET_SIZE];
-		int numBytesEncoded = EncodeOpusFrame( downsizedBuffer, PLAYBACK_SAMPLES_PER_FRAME, compressedBuffer, MAX_PACKET_SIZE );
+		compressedBuffers.Reserve( 1 );
+		int numBytesEncoded = EncodeOpusFrame( downsizedBuffer, PLAYBACK_SAMPLES_PER_FRAME, compressedBuffers.Last( ).data, MAX_PACKET_SIZE );
 
 		if ( numBytesEncoded > 0 )
 		{
 			// [AK] If testing the microphone, just receive the audio frame right away.
 			if ( isTesting == false )
-				CLIENTCOMMANDS_VoIPAudioPacket( framesSent++, compressedBuffer, numBytesEncoded );
+			{
+				const unsigned int numFrames = opus_repacketizer_get_nb_frames( repacketizer );
+				const unsigned char toc = compressedBuffers.Last( ).data[0];
+
+				// [AK] The repacketizer can't merge frames that have incompatible
+				// TOCs, or merge more than 120 ms of audio frames. If this happens,
+				// then send out the packet and reinitialize the repacketizer.
+				if ( numFrames > 0 )
+				{
+					if ((( lastPackedTOC & 0xFC ) != ( toc & 0xFC )) || ( numFrames * FRAME_SIZE >= 120 ))
+						SendAudioPacket( );
+				}
+
+				int opusErrorCode = opus_repacketizer_cat( repacketizer, compressedBuffers.Last( ).data, numBytesEncoded );
+				lastPackedTOC = toc;
+
+				if ( opusErrorCode != OPUS_OK )
+					Printf( TEXTCOLOR_ORANGE "Failed to merge Opus audio frame: %s.\n", opus_strerror( opusErrorCode ));
+			}
 			else
-				ReceiveAudioPacket( consoleplayer, 0, compressedBuffer, numBytesEncoded );
+			{
+				ReceiveAudioPacket( consoleplayer, 0, compressedBuffers.Last( ).data, numBytesEncoded );
+			}
 		}
 	}
 	else
 	{
 		StopTransmission( );
 	}
+}
+
+//*****************************************************************************
+//
+// [AK] VOIPController::SendAudioPacket
+//
+// This is called when the client sends an audio packet from the server.
+//
+//*****************************************************************************
+
+void VOIPController::SendAudioPacket( void )
+{
+	const unsigned int numFrames = opus_repacketizer_get_nb_frames( repacketizer );
+
+	// [AK] According to Opus, in order to guarantee success, the size of the
+	// output buffer should be at least 1277 multiplied by the number of frames.
+	const unsigned int maxBufferSize = ( MAX_PACKET_SIZE + 1 ) * numFrames;
+
+	unsigned char *mergedBuffer = new unsigned char[maxBufferSize];
+	const int mergedBufferSize = opus_repacketizer_out( repacketizer, mergedBuffer, maxBufferSize );
+
+	if ( mergedBufferSize > 0 )
+	{
+		CLIENTCOMMANDS_VoIPAudioPacket( framesSent, mergedBuffer, mergedBufferSize );
+		framesSent += numFrames;
+	}
+	else
+	{
+		Printf( TEXTCOLOR_ORANGE "Failed to get merged Opus audio packet: %s.\n", opus_strerror( mergedBufferSize ));
+	}
+
+	opus_repacketizer_init( repacketizer );
+	delete[] mergedBuffer;
 }
 
 //*****************************************************************************
@@ -1098,28 +1172,45 @@ void VOIPController::ReceiveAudioPacket( const unsigned int player, const unsign
 	if ( frame < VoIPChannels[player]->lastFrameRead )
 		return;
 
-	VOIPChannel::AudioFrame newAudioFrame;
-	newAudioFrame.frame = frame;
+	opus_repacketizer_cat( repacketizer, data, length );
+	const unsigned int numFrames = opus_repacketizer_get_nb_frames( repacketizer );
 
-	if ( VoIPChannels[player]->DecodeOpusFrame( data, length, newAudioFrame.samples, PLAYBACK_SAMPLES_PER_FRAME ) > 0 )
+	for ( unsigned int i = 0; i < numFrames; i++ )
 	{
-		// [AK] Insert the new audio frame in the jitter buffer. The frames must
-		// be ordered correctly so that the audio isn't distorted.
-		for ( unsigned int i = 0; i < VoIPChannels[player]->jitterBuffer.Size( ); i++ )
+		unsigned char audioPacket[MAX_PACKET_SIZE];
+		const int audioPacketSize = opus_repacketizer_out_range( repacketizer, i, i + 1, audioPacket, MAX_PACKET_SIZE );
+
+		if ( audioPacketSize < 0 )
 		{
-			if ( newAudioFrame.frame < VoIPChannels[player]->jitterBuffer[i].frame )
-			{
-				VoIPChannels[player]->jitterBuffer.Insert( i, newAudioFrame );
-				return;
-			}
+			Printf( TEXTCOLOR_ORANGE "Failed to split Opus audio packet: %s.\n", opus_strerror( audioPacketSize ));
+			continue;
 		}
 
-		// [AK] Wait five tics before playing this VoIP channel.
-		if (( VoIPChannels[player]->jitterBuffer.Size( ) == 0 ) && ( VoIPChannels[player]->channel == nullptr ))
-			VoIPChannels[player]->playbackTick = gametic + 5;
+		VOIPChannel::AudioFrame newAudioFrame;
+		newAudioFrame.frame = frame + i;
 
-		VoIPChannels[player]->jitterBuffer.Push( newAudioFrame );
+		if ( VoIPChannels[player]->DecodeOpusFrame( audioPacket, audioPacketSize, newAudioFrame.samples, PLAYBACK_SAMPLES_PER_FRAME ) > 0 )
+		{
+			// [AK] Insert the new audio frame in the jitter buffer. The frames
+			// must be ordered correctly so that the audio isn't distorted.
+			for ( unsigned int j = 0; j < VoIPChannels[player]->jitterBuffer.Size( ); j++ )
+			{
+				if ( newAudioFrame.frame < VoIPChannels[player]->jitterBuffer[j].frame )
+				{
+					VoIPChannels[player]->jitterBuffer.Insert( j, newAudioFrame );
+					break;
+				}
+			}
+
+			// [AK] Wait five tics before playing this VoIP channel.
+			if (( VoIPChannels[player]->jitterBuffer.Size( ) == 0 ) && ( VoIPChannels[player]->channel == nullptr ))
+				VoIPChannels[player]->playbackTick = gametic + 5;
+
+			VoIPChannels[player]->jitterBuffer.Push( newAudioFrame );
+		}
 	}
+
+	opus_repacketizer_init( repacketizer );
 }
 
 //*****************************************************************************

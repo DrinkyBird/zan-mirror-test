@@ -906,6 +906,6 @@ void CLIENTCOMMANDS_VoIPAudioPacket( const unsigned int frame, const unsigned ch
 
 	CLIENT_GetLocalBuffer( )->ByteStream.WriteByte( CLC_VOIPAUDIOPACKET );
 	CLIENT_GetLocalBuffer( )->ByteStream.WriteLong( frame );
-	CLIENT_GetLocalBuffer( )->ByteStream.WriteByte( length );
+	CLIENT_GetLocalBuffer( )->ByteStream.WriteShort( length );
 	CLIENT_GetLocalBuffer( )->ByteStream.WriteBuffer( data, length );
 }

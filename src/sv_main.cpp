@@ -5158,7 +5158,7 @@ bool SERVER_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 	case CLC_VOIPAUDIOPACKET:
 		{
 			const unsigned int frame = pByteStream->ReadLong( );
-			const unsigned int length = pByteStream->ReadByte( );
+			const unsigned int length = pByteStream->ReadShort( );
 			unsigned char *data = new unsigned char[length];
 
 			pByteStream->ReadBuffer( data, length );

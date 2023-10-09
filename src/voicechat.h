@@ -222,6 +222,7 @@ private:
 	~VOIPController( void ) { Shutdown( ); }
 
 	void ReadRecordSamples( unsigned char *soundBuffer, unsigned int length );
+	void SendAudioPacket( void );
 	void UpdateTestRMSVolume( unsigned char *soundBuffer, const unsigned int length );
 	int EncodeOpusFrame( const float *inBuffer, const unsigned int inLength, unsigned char *outBuffer, const unsigned int outLength );
 
@@ -235,16 +236,23 @@ private:
 	FMOD::Sound *recordSound;
 	FMOD::ChannelGroup *VoIPChannelGroup;
 	OpusEncoder *encoder;
+	OpusRepacketizer *repacketizer;
 	RNNModel *denoiseModel;
 	DenoiseState *denoiseState;
 	int recordDriverID;
 	unsigned int framesSent;
 	unsigned int lastRecordPosition;
+	unsigned char lastPackedTOC;
 	bool isInitialized;
 	bool isActive;
 	bool isTesting;
 	bool isRecordButtonPressed;
 	TRANSMISSIONTYPE_e transmissionType;
+
+	// [AK] This is needed for saving the arrays of encoded audio frames while
+	// using Opus's repacketizer to merge the audio frames together.
+	struct CompressedBuffer { unsigned char data[MAX_PACKET_SIZE]; };
+	TArray<CompressedBuffer> compressedBuffers;
 
 	// [AK] This is necessasry for setting up the sound rolloff settings of all
 	// VoIP channels that are played in 3D mode (i.e. proximity chat is used).
