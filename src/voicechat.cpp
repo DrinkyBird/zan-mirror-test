@@ -144,6 +144,38 @@ CUSTOM_CVAR( Bool, sv_proximityvoicechat, false, CVAR_NOSETBYACS | CVAR_SERVERIN
 	SERVER_SettingChanged( self, false );
 }
 
+// [AK] The distance at which a player's voice starts getting quieter.
+CUSTOM_CVAR( Float, sv_minproximityrolloffdist, 200.0f, CVAR_NOSETBYACS | CVAR_SERVERINFO )
+{
+	const float clampedValue = clamp<float>( self, 0.0f, sv_maxproximityrolloffdist );
+
+	if ( self != clampedValue )
+	{
+		self = clampedValue;
+		return;
+	}
+
+	VOIPController::GetInstance( ).UpdateRolloffDistances( );
+
+	// [AK] Notify the clients about the change.
+	SERVER_SettingChanged( self, false, 1 );
+}
+
+// [AK] The distance at which a player's voice can no longer be heard.
+CUSTOM_CVAR( Float, sv_maxproximityrolloffdist, 1200.0f, CVAR_NOSETBYACS | CVAR_SERVERINFO )
+{
+	if ( self < sv_minproximityrolloffdist )
+	{
+		self = sv_minproximityrolloffdist;
+		return;
+	}
+
+	VOIPController::GetInstance( ).UpdateRolloffDistances( );
+
+	// [AK] Notify the clients about the change.
+	SERVER_SettingChanged( self, false, 1 );
+}
+
 //*****************************************************************************
 //	CONSOLE COMMANDS
 
@@ -236,10 +268,9 @@ VOIPController::VOIPController( void ) :
 	proximityInfo.SysChannel = nullptr;
 	proximityInfo.StartTime.AsOne = 0;
 	proximityInfo.Rolloff.RolloffType = ROLLOFF_Doom;
-	proximityInfo.Rolloff.MinDistance = 200.0f;
-	proximityInfo.Rolloff.MaxDistance = 1200.0f;
 	proximityInfo.DistanceScale = 1.0f;
 
+	UpdateRolloffDistances( );
 	Button_VoiceRecord.Reset( );
 }
 
@@ -1235,6 +1266,22 @@ void VOIPController::UpdateProximityChat( void )
 
 		VoIPChannels[i]->Update3DAttributes( );
 	}
+}
+
+//*****************************************************************************
+//
+// [AK] VOIPController::UpdateRolloffDistances
+//
+// Updates the min/max rolloff distances that are used when proximity chat is
+// enabled. This is called during startup, or when sv_minproximityrolloffdist
+// or sv_maxproximityrolloffdist are changed.
+//
+//*****************************************************************************
+
+void VOIPController::UpdateRolloffDistances( void )
+{
+	proximityInfo.Rolloff.MinDistance = sv_minproximityrolloffdist;
+	proximityInfo.Rolloff.MaxDistance = sv_maxproximityrolloffdist;
 }
 
 //*****************************************************************************

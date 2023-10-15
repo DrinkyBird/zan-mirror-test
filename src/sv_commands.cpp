@@ -2447,6 +2447,10 @@ void SERVERCOMMANDS_SetGameModeLimits( ULONG ulPlayerExtra, ServerCommandFlags f
 	command.addByte( sv_allowvoicechat );
 	// [AK] Send sv_proximityvoicechat.
 	command.addByte( sv_proximityvoicechat );
+	// [AK] Send the min proximity voice chat rolloff distance.
+	command.addFloat( sv_minproximityrolloffdist );
+	// [AK] Send the max proximity voice chat rolloff distance.
+	command.addFloat( sv_maxproximityrolloffdist );
 	// [AK] Send sv_respawndelaytime.
 	command.addFloat( sv_respawndelaytime );
 	command.sendCommandToClients( ulPlayerExtra, flags );

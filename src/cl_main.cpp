@@ -5921,6 +5921,14 @@ static void client_SetGameModeLimits( BYTESTREAM_s *pByteStream )
 	Value.Bool = !!pByteStream->ReadByte();
 	sv_proximityvoicechat.ForceSet( Value, CVAR_Bool );
 
+	// [AK] Read in, and set the value for sv_minproximityrolloffdist.
+	Value.Float = pByteStream->ReadFloat();
+	sv_minproximityrolloffdist.ForceSet( Value, CVAR_Float );
+
+	// [AK] Read in, and set the value for sv_maxproximityrolloffdist.
+	Value.Float = pByteStream->ReadFloat();
+	sv_maxproximityrolloffdist.ForceSet( Value, CVAR_Float );
+
 	// [AK] Read in, and set the value for sv_respawndelaytime.
 	Value.Float = pByteStream->ReadFloat();
 	sv_respawndelaytime.ForceSet( Value, CVAR_Float );

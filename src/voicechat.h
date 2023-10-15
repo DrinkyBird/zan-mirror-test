@@ -133,6 +133,7 @@ public:
 	FString GrabStats( void ) const { return ""; }
 	void ReceiveAudioPacket( const unsigned int player, const unsigned int frame, const unsigned char *data, const unsigned int length ) { }
 	void UpdateProximityChat( void ) { }
+	void UpdateRolloffDistances( void ) { }
 	void RemoveVoIPChannel( const unsigned int player ) { }
 
 private:
@@ -163,6 +164,7 @@ private:
 	FString GrabStats( void ) const;
 	void ReceiveAudioPacket( const unsigned int player, const unsigned int frame, const unsigned char *data, const unsigned int length );
 	void UpdateProximityChat( void );
+	void UpdateRolloffDistances( void );
 	void RemoveVoIPChannel( const unsigned int player );
 
 	// [AK] Static constants of the audio's properties.
@@ -270,5 +272,7 @@ private:
 
 EXTERN_CVAR( Int, sv_allowvoicechat )
 EXTERN_CVAR( Bool, sv_proximityvoicechat )
+EXTERN_CVAR( Float, sv_minproximityrolloffdist )
+EXTERN_CVAR( Float, sv_maxproximityrolloffdist )
 
 #endif // __VOICECHAT_H__
