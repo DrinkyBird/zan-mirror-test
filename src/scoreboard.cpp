@@ -1040,38 +1040,17 @@ void ScoreColumn::DrawHeader( const LONG lYPos, const ULONG ulHeight, const floa
 
 void ScoreColumn::DrawString( const char *pszString, FFont *pFont, const ULONG ulColor, const LONG lYPos, const ULONG ulHeight, const float fAlpha ) const
 {
-	if (( pszString == NULL ) || ( pFont == NULL ))
-		return;
-
-	const ULONG ulLength = strlen( pszString );
-
-	// [AK] Don't bother drawing the string if it's empty.
-	if ( ulLength == 0 )
+	if (( pszString == NULL ) || ( pFont == NULL ) || ( strlen( pszString ) == 0 ))
 		return;
 
 	LONG lXPos = GetAlignmentPosition( pFont->StringWidth( pszString ));
-	ULONG ulLargestCharHeight = 0;
-
-	// [AK] Get the largest character height so the string is aligned within the centre of the specified height.
-	for ( unsigned int i = 0; i < ulLength; i++ )
-	{
-		FTexture *pCharTexture = pFont->GetChar( pszString[i], NULL );
-
-		if ( pCharTexture != NULL )
-		{
-			const ULONG ulTextureHeight = pCharTexture->GetScaledHeight( );
-
-			if ( ulTextureHeight > ulLargestCharHeight )
-				ulLargestCharHeight = ulTextureHeight;
-		}
-	}
 
 	int clipLeft = lRelX;
 	int clipWidth = ulWidth;
 	int clipTop = lYPos;
 	int clipHeight = ulHeight;
 
-	LONG lNewYPos = lYPos + ( clipHeight - static_cast<LONG>( ulLargestCharHeight )) / 2;
+	LONG lNewYPos = lYPos + ( clipHeight - static_cast<LONG>( pFont->StringHeight( pszString ))) / 2;
 
 	// [AK] We must take into account the virtual screen's size when setting up the clipping rectangle.
 	// Nothing should be drawn outside of this rectangle (i.e. the column's boundaries).

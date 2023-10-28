@@ -873,6 +873,38 @@ int FFont::GetCharWidth (int code) const
 
 //==========================================================================
 //
+// [AK] FFont :: StringHeight
+//
+// Returns the height of a string using this font in pixels.
+//
+//==========================================================================
+
+int FFont::StringHeight( const char *str ) const
+{
+	if ( str == nullptr )
+		return 0;
+
+	const unsigned int length = strlen( str );
+	int largestHeight = 0;
+
+	for ( unsigned int i = 0; i < length; i++ )
+	{
+		FTexture *charTexture = GetChar( str[i], nullptr );
+
+		if ( charTexture != nullptr )
+		{
+			const int textureHeight = charTexture->GetScaledHeight( );
+
+			if ( textureHeight > largestHeight )
+				largestHeight = textureHeight;
+		}
+	}
+
+	return largestHeight;
+}
+
+//==========================================================================
+//
 // FFont :: LoadTranslations
 //
 //==========================================================================
