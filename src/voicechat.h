@@ -48,10 +48,13 @@
 #ifndef __VOICECHAT_H__
 #define __VOICECHAT_H__
 
+#include <set>
+#include <vector>
 #include "doomdef.h"
 #include "c_cvars.h"
 #include "networkshared.h"
 #include "i_soundinternal.h"
+#include "v_font.h"
 
 // [AK] Only include FMOD, Opus, and RNNoise files if compiling with sound.
 #ifndef NO_SOUND
@@ -89,6 +92,22 @@ enum VOICEMODE_e
 
 	// The player transmits audio based on voice activity.
 	VOICEMODE_VOICEACTIVITY,
+};
+
+//*****************************************************************************
+enum VOICEPANEL_TEAMFORMAT_e
+{
+	// Teams aren't shown in any form on the voice panel.
+	VOICEPANEL_TEAMFORMAT_OFF,
+
+	// Show the team's full name.
+	VOICEPANEL_TEAMFORMAT_NAME,
+
+	// Show the number of the team, starting from 1.
+	VOICEPANEL_TEAMFORMAT_NUMBER,
+
+	// Show an asterisk in the same color as the team.
+	VOICEPANEL_TEAMFORMAT_ASTERISK,
 };
 
 //*****************************************************************************
@@ -265,6 +284,38 @@ private:
 
 #endif // NO_SOUND
 
+};
+
+//*****************************************************************************
+class VOIPPanel
+{
+public:
+	static VOIPPanel &GetInstance( void ) { static VOIPPanel instance; return instance; }
+	void Refresh( void );
+	void Render( void );
+
+	static const int ROW_GAP_SIZE = 1;
+
+private:
+	struct VOIPPanelRow
+	{
+		unsigned int player;
+		FString text;
+		EColorRange color;
+		float alpha;
+		int speakerYPos;
+		int textXPos;
+		int textYPos;
+	};
+
+	VOIPPanel( void );
+
+	FTexture *const speakerIcon;
+	std::set<unsigned int> playersTalking;
+	std::vector<VOIPPanelRow> rows;
+	int speakerXPos;
+	int speakerXOffset;
+	int lastRefreshGametic;
 };
 
 //*****************************************************************************

@@ -73,6 +73,7 @@
 #include "sbar.h"
 #include "p_trace.h"
 #include "win32/g15/g15.h"
+#include "voicechat.h"
 
 // [AK] Message levels used for cl_identifytarget.
 enum
@@ -266,6 +267,9 @@ void HUD_Render( ULONG ulDisplayPlayer )
 		HUD_Refresh( );
 		g_bRefreshBeforeRendering = false;
 	}
+
+	// [AK] Draw the voice chat panel.
+	VOIPPanel::GetInstance( ).Render( );
 
 	// Draw the main scoreboard.
 	if ( SCOREBOARD_ShouldDrawBoard( ))

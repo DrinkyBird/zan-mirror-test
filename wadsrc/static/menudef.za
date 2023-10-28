@@ -152,6 +152,14 @@ OptionValue ZA_VoiceMode
 	2, "Voice activity"
 }
 
+OptionValue ZA_VoicePanelShowTeams
+{
+	0, "No"
+	1, "Name"
+	2, "Number"
+	3, "Asterisk"
+}
+
 OptionMenu "ZA_VoiceChatOptions"
 {
 	Title "VOICE CHAT OPTIONS"
@@ -165,7 +173,13 @@ OptionMenu "ZA_VoiceChatOptions"
 	StaticText	" "
 	Option		"Use noise suppression",	"voice_suppressnoise",		"YesNo"
 	TextField	"RNNoise model file",		"voice_noisemodelfile",		"voice_suppressnoise"
-	
+	StaticText	" "
+	Option		"Show voice panel",		"voice_showpanel",		"YesNo"
+	TextField	"Panel x-pos",			"voice_panelx",			"voice_showpanel"
+	TextField	"Panel y-pos",			"voice_panely",			"voice_showpanel"
+	NumberField	"Max panel rows",		"voice_panelrows",		1, 64, 1,			"voice_showpanel"
+	Option		"Show teams",			"voice_panelshowteams",		"ZA_VoicePanelShowTeams",	"voice_showpanel"
+
 	// [AK] Tip message for testing the microphone.
 	StaticText	" "
 	StaticText	"If you're having microphone issues,", 1

@@ -46,6 +46,7 @@
 //-----------------------------------------------------------------------------
 
 #include "voicechat.h"
+#include "c_console.h"
 #include "c_dispatch.h"
 #include "cl_commands.h"
 #include "cl_demo.h"
@@ -54,6 +55,9 @@
 #include "v_text.h"
 #include "stats.h"
 #include "p_acs.h"
+#include "st_hud.h"
+#include "st_stuff.h"
+#include "team.h"
 
 // [AK] These files must be included to also include "optionmenuitems.h".
 #include "menu/menu.h"
@@ -74,6 +78,33 @@ CVAR( Bool, voice_suppressnoise, true, CVAR_ARCHIVE | CVAR_NOSETBYACS | CVAR_GLO
 
 // [AK] Allows the client to load a custom RNNoise model file.
 CVAR( String, voice_noisemodelfile, "", CVAR_ARCHIVE | CVAR_NOSETBYACS | CVAR_GLOBALCONFIG )
+
+// [AK] If enabled, displays a list of all players talking on the screen.
+CVAR( Bool, voice_showpanel, true, CVAR_ARCHIVE )
+
+// [AK] The x-position of the voice panel.
+CVAR( Int, voice_panelx, -7, CVAR_ARCHIVE )
+
+// [AK] The y-position of the voice panel.
+CVAR( Int, voice_panely, -40, CVAR_ARCHIVE )
+
+// [AK] The maximum number of rows that can appear on the voice panel.
+CUSTOM_CVAR( Int, voice_panelrows, 10, CVAR_ARCHIVE )
+{
+	const int clampedValue = clamp<int>( self, 1, MAXPLAYERS );
+
+	if ( self != clampedValue )
+		self = clampedValue;
+}
+
+// [AK] Show which team the player belongs to on the voice panel.
+CUSTOM_CVAR( Int, voice_panelshowteams, VOICEPANEL_TEAMFORMAT_NAME, CVAR_ARCHIVE )
+{
+	const int clampedValue = clamp<int>( self, VOICEPANEL_TEAMFORMAT_OFF, VOICEPANEL_TEAMFORMAT_ASTERISK );
+
+	if ( self != clampedValue )
+		self = clampedValue;
+}
 
 // [AK] Which input device to use when recording audio.
 CUSTOM_CVAR( Int, voice_recorddriver, 0, CVAR_ARCHIVE | CVAR_NOSETBYACS | CVAR_GLOBALCONFIG )
@@ -1792,6 +1823,229 @@ void VOIPController::VOIPChannel::UpdateEndDelay( const bool resetEpoch )
 }
 
 #endif // NO_SOUND
+
+//*****************************************************************************
+//
+// [AK] VOIPPanel::VOIPPanel
+//
+// Initializes all members to their default values.
+//
+//*****************************************************************************
+
+VOIPPanel::VOIPPanel( void ) :
+	speakerIcon( TexMan.FindTexture( "SPKRMINI" )),
+	speakerXPos( 0 ),
+	speakerXOffset( speakerIcon ? speakerIcon->GetScaledWidth( ) + SmallFont->GetCharWidth( 32 ) : 0 ),
+	lastRefreshGametic( 0 ) { }
+
+//*****************************************************************************
+//
+// [AK] VOIPPanel::Refresh
+//
+// Refreshes the rows on the voice chat panel.
+//
+//*****************************************************************************
+
+void VOIPPanel::Refresh( void )
+{
+	const unsigned int maxRows = *voice_panelrows;
+	lastRefreshGametic = gametic;
+
+	// [AK] If the panel shouldn't be visible, then just empty the player list.
+	if (( voice_showpanel == false ) || ( VOIPController::GetInstance( ).IsVoiceChatAllowed( ) == false ))
+	{
+		if ( playersTalking.empty( ) == false )
+			playersTalking.clear( );
+
+		if ( rows.empty( ) == false )
+			rows.clear( );
+
+		return;
+	}
+
+	// [AK] Delete any extra rows if there's too many, likely because the value
+	// of voice_panelrows was reduced to a lower number.
+	while ( rows.size( ) > maxRows )
+		rows.erase( rows.begin( ));
+
+	for ( unsigned int i = 0; i < MAXPLAYERS; i++ )
+	{
+		const bool isTalking = VOIPController::GetInstance( ).IsPlayerTalking( i );
+		bool onList = false;
+
+		// [AK] Check if this player's already on the list.
+		for ( auto it = rows.begin( ); it != rows.end( ); it++ )
+		{
+			if ( it->player != i )
+				continue;
+
+			// [AK] If this player isn't talking anymore, then gradually make
+			// this row less opaque and delete it.
+			if ( isTalking == false )
+			{
+				it->alpha -= 0.15f;
+
+				if ( it->alpha <= 0.0f )
+				{
+					rows.erase( it );
+					break;
+				}
+			}
+			// [AK] Otherwise, ensure that the row is fully opaque.
+			else if ( it->alpha < 1.0f )
+			{
+				it->alpha = MIN<float>( it->alpha + 0.5f, 1.0f );
+			}
+
+			onList = true;
+		}
+
+		if ( isTalking )
+		{
+			// [AK] If this player's not on the list yet, add them in. If the
+			// maximum number of rows is reached, then only do this if this
+			// player has just started talking.
+			if (( onList == false ) && (( rows.size( ) < maxRows ) || ( playersTalking.find( i ) == playersTalking.end( ))))
+			{
+				if ( rows.size( ) == maxRows )
+					rows.erase( rows.begin( ));
+
+				VOIPPanelRow newRow;
+				newRow.player = i;
+				newRow.alpha = 1.0f;
+				rows.push_back( newRow );
+			}
+
+			playersTalking.insert( i );
+		}
+		else
+		{
+			playersTalking.erase( i );
+		}
+	}
+
+	// [AK] Determine the position and alignment of the panel on the screen.
+	int xPos = voice_panelx.GetGenericRep( CVAR_Int ).Int;
+	int yPos = voice_panely.GetGenericRep( CVAR_Int ).Int;
+	const bool alignRight = ( xPos < 0 );
+	const bool alignBottom = ( yPos < 0 );
+
+	if ( alignRight )
+		xPos += HUD_GetWidth( );
+
+	if ( alignBottom )
+		yPos += viewheight <= ST_Y ? static_cast<int>( ST_Y * g_rYScale ) : HUD_GetHeight( );
+
+	// [AK] Set the x-position of the speaker icon.
+	if ( speakerIcon != nullptr )
+		speakerXPos = xPos - ( alignRight ? speakerIcon->GetScaledWidth( ) : 0 );
+
+	// [AK] Update the text, and then set the positions of the text and the
+	// y-position of the speaker icon of each row.
+	for ( auto it = rows.begin( ); it != rows.end( ); it++ )
+	{
+		const unsigned int player = it->player;
+
+		if ( playeringame[player] )
+		{
+			it->text = players[player].userinfo.GetName( );
+
+			// [AK] Show which team the player's on, or if they're spectating.
+			if ( voice_panelshowteams > VOICEPANEL_TEAMFORMAT_OFF )
+			{
+				FString teamName;
+
+				if ( PLAYER_IsTrueSpectator( &players[player] ))
+				{
+					if (( voice_panelshowteams == VOICEPANEL_TEAMFORMAT_ASTERISK ) && ( GAMEMODE_GetCurrentFlags( ) & GMF_PLAYERSONTEAMS ))
+						teamName = "*";
+					else
+						teamName = "<SPEC>";
+
+					it->color = CR_GREY;
+				}
+				else if (( GAMEMODE_GetCurrentFlags( ) & GMF_PLAYERSONTEAMS ) && ( players[player].bOnTeam ))
+				{
+					if ( voice_panelshowteams == VOICEPANEL_TEAMFORMAT_NAME )
+						teamName.Format( "<%s>", TEAM_GetName( players[player].Team ));
+					else if ( voice_panelshowteams == VOICEPANEL_TEAMFORMAT_NUMBER )
+						teamName.Format( "<#%u>", players[player].Team + 1 );
+					else
+						teamName = "*";
+
+					it->color = static_cast<EColorRange>( TEAM_GetTextColor( players[player].Team ));
+				}
+
+				if ( teamName.Len( ) > 0 )
+				{
+					if ( alignRight )
+					{
+						it->text.AppendFormat( " %s", teamName.GetChars( ));
+					}
+					else
+					{
+						teamName += ' ';
+						it->text.Insert( 0, teamName.GetChars( ));
+					}
+				}
+			}
+		}
+
+		const int textWidth = SmallFont->StringWidth( it->text );
+		const int textHeight = SmallFont->StringHeight( it->text );
+		const int rowHeight = MAX<int>( textHeight, speakerIcon ? speakerIcon->GetScaledHeight( ) : 0 );
+
+		if ( alignBottom )
+			yPos -= rowHeight;
+
+		if ( speakerIcon != nullptr )
+			it->speakerYPos = yPos + ( rowHeight - speakerIcon->GetScaledHeight( )) / 2;
+
+		it->textXPos = alignRight ? xPos - speakerXOffset - textWidth : xPos + speakerXOffset;
+		it->textYPos = yPos + ( rowHeight - textHeight ) / 2;
+
+		// [AK] If the panel is aligned to the top of the screen, then the next
+		// row goes underneath this one. Otherwise, it goes above it.
+		if ( alignBottom )
+			yPos -= ROW_GAP_SIZE;
+		else
+			yPos += rowHeight + ROW_GAP_SIZE;
+	}
+}
+
+//*****************************************************************************
+//
+// [AK] VOIPPanel::Render
+//
+// Draws the voice chat panel on the screen.
+//
+//*****************************************************************************
+
+void VOIPPanel::Render( void )
+{
+	// [AK] Refresh the voice panel once per tick.
+	if ( gametic != lastRefreshGametic )
+		Refresh( );
+
+	for ( auto it = rows.begin( ); it != rows.end( ); it++ )
+	{
+		const fixed_t alpha = FLOAT2FIXED( it->alpha );
+
+		screen->DrawText( SmallFont, it->color, it->textXPos, it->textYPos, it->text,
+			DTA_UseVirtualScreen, g_bScale,
+			DTA_Alpha, alpha,
+			TAG_DONE );
+
+		if ( speakerIcon == nullptr )
+			continue;
+
+		screen->DrawTexture( speakerIcon, speakerXPos, it->speakerYPos,
+			DTA_UseVirtualScreen, g_bScale,
+			DTA_Alpha, alpha,
+			TAG_DONE );
+	}
+}
+
 
 //*****************************************************************************
 //
