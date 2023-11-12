@@ -1222,6 +1222,7 @@ void SERVERCOMMANDS_PlayerVoIPAudioPacket( ULONG player, unsigned int frame, uns
 
 	// [AK] Potentially prevent spectators from talking to active players during LMS games.
 	const bool forbidVoiceChatToPlayers = GAMEMODE_IsClientForbiddenToChatToPlayers( player );
+	const int transmitFilter = players[player].userinfo.GetVoiceTransmitFilter( );
 
 	NetCommand command( SVC_PLAYERVOIPAUDIOPACKET );
 	command.addByte( player );
@@ -1243,15 +1244,22 @@ void SERVERCOMMANDS_PlayerVoIPAudioPacket( ULONG player, unsigned int frame, uns
 		if (( forbidVoiceChatToPlayers ) && ( players[*it].bSpectating == false ))
 			continue;
 
+		const int listenFilter = players[*it].userinfo.GetVoiceListenFilter( );
+
 		// [AK] Don't broadcast to any player that aren't teammates if required.
-		if (( sv_allowvoicechat == VOICECHAT_TEAMMATESONLY ) && ( GAMEMODE_GetCurrentFlags( ) & GMF_PLAYERSONTEAMS ))
+		if (( GAMEMODE_GetCurrentFlags( ) & GMF_PLAYERSONTEAMS ) &&
+			(( sv_allowvoicechat == VOICECHAT_TEAMMATESONLY ) ||
+			( transmitFilter == VOICEFILTER_TEAMMATESONLY ) ||
+			( listenFilter == VOICEFILTER_TEAMMATESONLY )))
 		{
 			if ( PlayersAreTeammates( player, *it ) == false )
 				continue;
 		}
 
 		// [AK] ...or to live players if the sender is a spectator and vice versa.
-		if ( sv_allowvoicechat == VOICECHAT_PLAYERS_OR_SPECTATORS_ONLY )
+		if (( sv_allowvoicechat == VOICECHAT_PLAYERS_OR_SPECTATORS_ONLY ) ||
+			( transmitFilter == VOICEFILTER_PLAYERS_OR_SPECTATORS_ONLY ) ||
+			( listenFilter == VOICEFILTER_PLAYERS_OR_SPECTATORS_ONLY ))
 		{
 			if ( players[player].bSpectating != players[*it].bSpectating )
 				continue;

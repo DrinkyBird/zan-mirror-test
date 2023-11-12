@@ -152,6 +152,13 @@ OptionValue ZA_VoiceMode
 	2, "Voice activity"
 }
 
+OptionValue ZA_VoiceChatFilter
+{
+	0, "Everyone"
+	1, "Teammates only"
+	2, "Players or spectators only"
+}
+
 OptionValue ZA_VoicePanelShowTeams
 {
 	0, "No"
@@ -166,11 +173,13 @@ OptionMenu "ZA_VoiceChatOptions"
 	Class "VoiceChatMenu"
 
 	Option		"Enable voice chat",		"voice_enable",			"ZA_VoiceMode"
+	Option		"Listen filter",		"voice_listenfilter",		"ZA_VoiceChatFilter",		"voice_enable"
+	Option		"Transmit filter",		"voice_transmitfilter",		"ZA_VoiceChatFilter",		"voice_enable"
+	StaticText	" "
 	Option		"Input device",			"voice_recorddriver",		"ZA_RecordDrivers"
 	Slider		"Input volume",			"voice_recordvolume",		0.0, 2.0, 0.1
 	Slider		"Output volume",		"voice_outputvolume",		0.0, 2.0, 0.1
 	Slider		"Voice sensitivity (dB)",	"voice_recordsensitivity",	-100, 0, 5
-	StaticText	" "
 	Option		"Use noise suppression",	"voice_suppressnoise",		"YesNo"
 	TextField	"RNNoise model file",		"voice_noisemodelfile",		"voice_suppressnoise"
 	StaticText	" "

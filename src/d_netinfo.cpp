@@ -105,6 +105,10 @@ CVAR (Int,		cl_connectiontype,			1,		CVAR_USERINFO | CVAR_ARCHIVE);
 CVAR (Flag,		cl_clientsidepuffs,			cl_clientflags, CLIENTFLAGS_CLIENTSIDEPUFFS );
 // [AK] Let the user decide whether voice chat is on/off and how to transmit audio.
 CVAR (Int,		voice_enable,				VOICEMODE_PUSHTOTALK,	CVAR_ARCHIVE | CVAR_NOSETBYACS | CVAR_USERINFO);
+// [AK] Determines what kind of players the client can receive VoIP packets from.
+CVAR (Int,		voice_listenfilter,			VOICEFILTER_EVERYONE,	CVAR_NOSETBYACS | CVAR_USERINFO);
+// [AK] Determines what kind of players the client can send VoIP packets to.
+CVAR (Int,		voice_transmitfilter,		VOICEFILTER_EVERYONE,	CVAR_NOSETBYACS | CVAR_USERINFO);
 
 // [TP] Userinfo changes yet to be sent.
 static UserInfoChanges PendingUserinfoChanges;
@@ -620,6 +624,8 @@ void D_SetupUserInfo ()
 			case NAME_CL_ConnectionType:	coninfo->ConnectionTypeChanged(cl_connectiontype); break;
 			case NAME_CL_ClientFlags:		coninfo->ClientFlagsChanged(cl_clientflags); break;
 			case NAME_Voice_Enable:			coninfo->VoiceEnableChanged(voice_enable); break;
+			case NAME_Voice_ListenFilter:	coninfo->VoiceListenFilterChanged(voice_listenfilter); break;
+			case NAME_Voice_TransmitFilter:	coninfo->VoiceTransmitFilterChanged(voice_transmitfilter); break;
 
 			// The rest do.
 			default:
@@ -842,6 +848,30 @@ int userinfo_t::VoiceEnableChanged(int voiceenable)
 	return voiceenable;
 }
 
+// [AK]
+int userinfo_t::VoiceListenFilterChanged(int listenfilter)
+{
+	if ( (*this)[NAME_Voice_ListenFilter] == nullptr )
+	{
+		Printf( "Error: No Voice_ListenFilter key found!\n" );
+		return 0;
+	}
+	*static_cast<FIntCVar *>((*this)[NAME_Voice_ListenFilter]) = listenfilter;
+	return listenfilter;
+}
+
+// [AK]
+int userinfo_t::VoiceTransmitFilterChanged(int transmitfilter)
+{
+	if ( (*this)[NAME_Voice_TransmitFilter] == nullptr )
+	{
+		Printf( "Error: No Voice_TransmitFilter key found!\n" );
+		return 0;
+	}
+	*static_cast<FIntCVar *>((*this)[NAME_Voice_TransmitFilter]) = transmitfilter;
+	return transmitfilter;
+}
+
 void D_UserInfoChanged (FBaseCVar *cvar)
 {
 	UCVarValue val;
@@ -955,6 +985,19 @@ void D_UserInfoChanged (FBaseCVar *cvar)
 	{
 		val = cvar->GetGenericRep( CVAR_Int );
 		const int clampedValue = clamp<int>( val.Int, VOICEMODE_OFF, VOICEMODE_VOICEACTIVITY );
+
+		if ( val.Int != clampedValue )
+		{
+			val.Int = clampedValue;
+			cvar->SetGenericRep( val, CVAR_Int );
+			return;
+		}
+	}
+	// [AK]
+	else if (( cvar == &voice_listenfilter ) || ( cvar == &voice_transmitfilter ))
+	{
+		val = cvar->GetGenericRep( CVAR_Int );
+		const int clampedValue = clamp<int>( val.Int, VOICEFILTER_EVERYONE, VOICEFILTER_PLAYERS_OR_SPECTATORS_ONLY );
 
 		if ( val.Int != clampedValue )
 		{
@@ -1446,9 +1489,19 @@ void D_ReadUserInfoStrings (int pnum, BYTE **stream, bool update)
 				info->ClientFlagsChanged ( atoi( value ) );
 				break;
 
-				// [AK]
+			// [AK]
 			case NAME_Voice_Enable:
 				info->VoiceEnableChanged ( atoi( value ) );
+				break;
+
+			// [AK]
+			case NAME_Voice_ListenFilter:
+				info->VoiceListenFilterChanged ( atoi( value ) );
+				break;
+
+			// [AK]
+			case NAME_Voice_TransmitFilter:
+				info->VoiceTransmitFilterChanged ( atoi( value ) );
 				break;
 
 			default:

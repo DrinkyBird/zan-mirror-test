@@ -2259,6 +2259,12 @@ bool SERVER_GetUserInfo( BYTESTREAM_s *pByteStream, bool bAllowKick, bool bEnfor
 		// [AK]
 		else if ( name == NAME_Voice_Enable )
 			pPlayer->userinfo.VoiceEnableChanged ( value.ToLong() );
+		// [AK]
+		else if ( name == NAME_Voice_ListenFilter )
+			pPlayer->userinfo.VoiceListenFilterChanged ( value.ToLong() );
+		// [AK]
+		else if ( name == NAME_Voice_TransmitFilter )
+			pPlayer->userinfo.VoiceTransmitFilterChanged ( value.ToLong() );
 		// If this is a Hexen game, read in the player's class.
 		else if ( name == NAME_PlayerClass )
 		{
@@ -2304,7 +2310,7 @@ bool SERVER_GetUserInfo( BYTESTREAM_s *pByteStream, bool bAllowKick, bool bEnfor
 			NAME_Name, NAME_Autoaim, NAME_Gender, NAME_Skin, NAME_RailColor,
 			NAME_CL_ConnectionType, NAME_CL_ClientFlags,
 			NAME_Handicap, NAME_CL_TicsPerUpdate, NAME_Color, NAME_ColorSet,
-			NAME_Voice_Enable
+			NAME_Voice_Enable, NAME_Voice_ListenFilter, NAME_Voice_TransmitFilter
 		};
 		std::set<FName> missing;
 		std::set_difference( required.begin(), required.end(), names.begin(), names.end(),

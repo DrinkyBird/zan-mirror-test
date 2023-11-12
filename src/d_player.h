@@ -431,6 +431,8 @@ struct userinfo_t : TMap<FName,FBaseCVar *>
 	int ConnectionTypeChanged(int connectiontype);
 	int ClientFlagsChanged(int flags);
 	int VoiceEnableChanged(int voiceenable);
+	int VoiceListenFilterChanged(int listenfilter);
+	int VoiceTransmitFilterChanged(int transmitfilter);
 
 	int GetRailColor() const 
 	{
@@ -483,6 +485,24 @@ struct userinfo_t : TMap<FName,FBaseCVar *>
 			return *static_cast<FIntCVar *>(*CheckKey(NAME_Voice_Enable));
 		else {
 			Printf( "Error: No Voice_Enable key found!\n" );
+			return 0;
+		}
+	}
+	int GetVoiceListenFilter() const
+	{
+		if ( CheckKey(NAME_Voice_ListenFilter) != nullptr )
+			return *static_cast<FIntCVar *>(*CheckKey(NAME_Voice_ListenFilter));
+		else {
+			Printf( "Error: No Voice_ListenFilter key found!\n" );
+			return 0;
+		}
+	}
+	int GetVoiceTransmitFilter() const
+	{
+		if ( CheckKey(NAME_Voice_TransmitFilter) != nullptr )
+			return *static_cast<FIntCVar *>(*CheckKey(NAME_Voice_TransmitFilter));
+		else {
+			Printf( "Error: No Voice_TransmitFilter key found!\n" );
 			return 0;
 		}
 	}

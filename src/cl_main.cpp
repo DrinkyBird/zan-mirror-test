@@ -4156,6 +4156,10 @@ void ServerCommands::SetPlayerUserInfo::Execute()
 			player->userinfo.ClientFlagsChanged ( value.ToLong() );
 		else if ( name == NAME_Voice_Enable )
 			player->userinfo.VoiceEnableChanged ( value.ToLong() );
+		else if ( name == NAME_Voice_ListenFilter )
+			player->userinfo.VoiceListenFilterChanged ( value.ToLong() );
+		else if ( name == NAME_Voice_TransmitFilter )
+			player->userinfo.VoiceTransmitFilterChanged ( value.ToLong() );
 		else
 		{
 			FBaseCVar **cvarPointer = player->userinfo.CheckKey( name );

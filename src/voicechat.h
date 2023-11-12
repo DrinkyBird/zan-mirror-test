@@ -98,6 +98,20 @@ enum VOICEMODE_e
 };
 
 //*****************************************************************************
+enum VOICEFILTER_e
+{
+	// The client can hear and/or transmit to everyone.
+	VOICEFILTER_EVERYONE,
+
+	// The client only hears and/or transmits to their teammates.
+	VOICEFILTER_TEAMMATESONLY,
+
+	// The client only hears and/or transmits to live players if they're also
+	// alive, or to spectators if they're a (dead) spectator.
+	VOICEFILTER_PLAYERS_OR_SPECTATORS_ONLY,
+};
+
+//*****************************************************************************
 enum VOICEPANEL_TEAMFORMAT_e
 {
 	// Teams aren't shown in any form on the voice panel.
