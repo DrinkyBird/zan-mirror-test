@@ -74,11 +74,14 @@ enum VOICECHAT_e
 	// Voice chatting is disabled by the server.
 	VOICECHAT_OFF,
 
-	// Everyone can chat with each other.
+	// Everyone can voice chat with each other.
 	VOICECHAT_EVERYONE,
 
 	// Players can only use voice chat amongst their teammates.
 	VOICECHAT_TEAMMATESONLY,
+
+	// Live players and (dead) spectators voice chat with each other separately.
+	VOICECHAT_PLAYERS_OR_SPECTATORS_ONLY,
 };
 
 //*****************************************************************************

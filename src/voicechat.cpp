@@ -154,7 +154,7 @@ CUSTOM_CVAR( Float, voice_outputvolume, 1.0f, CVAR_ARCHIVE | CVAR_NOSETBYACS | C
 // [AK] How the voice chat is used on the server (0 = never, 1 = always, 2 = teammates only).
 CUSTOM_CVAR( Int, sv_allowvoicechat, VOICECHAT_EVERYONE, CVAR_NOSETBYACS | CVAR_SERVERINFO )
 {
-	const int clampedValue = clamp<int>( self, VOICECHAT_OFF, VOICECHAT_TEAMMATESONLY );
+	const int clampedValue = clamp<int>( self, VOICECHAT_OFF, VOICECHAT_PLAYERS_OR_SPECTATORS_ONLY );
 
 	if ( self != clampedValue )
 	{

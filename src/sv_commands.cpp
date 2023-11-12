@@ -1250,6 +1250,13 @@ void SERVERCOMMANDS_PlayerVoIPAudioPacket( ULONG player, unsigned int frame, uns
 				continue;
 		}
 
+		// [AK] ...or to live players if the sender is a spectator and vice versa.
+		if ( sv_allowvoicechat == VOICECHAT_PLAYERS_OR_SPECTATORS_ONLY )
+		{
+			if ( players[player].bSpectating != players[*it].bSpectating )
+				continue;
+		}
+
 		command.sendCommandToClients( *it, SVCF_ONLYTHISCLIENT );
 	}
 }
