@@ -176,6 +176,7 @@ static	void	server_PrintWithIP( FString message, const NETADDRESS_s &address );
 static	void	server_PerformBacktrace( ULONG ulClient, ULONG ulNumLateMoveCMDs );
 static	bool	server_ShouldPerformBacktrace( ULONG ulClient );
 static	void	server_FixZFromBacktrace( APlayerPawn *pmo, fixed_t oldFloorZ );
+static	void	server_ForceRenamePlayer( ULONG playerIndex ); // [SB]
 
 // [RC]
 #ifdef CREATE_PACKET_LOG
@@ -7783,6 +7784,35 @@ FString CLIENT_s::GetAccountName() const
 }
 
 //*****************************************************************************
+// [SB] Used by the forcerename and forcerename_idx commands.
+static void server_ForceRenamePlayer( ULONG playerIndex )
+{
+	// Make sure the target is valid and applicable.
+	if ( PLAYER_IsValidPlayer ( playerIndex ) == false )
+	{
+		Printf( "No such player!\n" );
+		return;
+	}
+
+	FString oldName( players[playerIndex].userinfo.GetName() );
+	FString newName = PLAYER_GenerateUniqueName();
+
+	players[playerIndex].userinfo.NameChanged( newName );
+	SERVERCOMMANDS_SetPlayerUserInfo( playerIndex, { NAME_Name } );
+
+	// Inform the player in question.
+	FString message;
+	message.Format( "A server administrator has forcibly changed your name. You have been renamed to '%s'.\n", newName.GetChars() );
+	SERVERCOMMANDS_PrintMid( message, true, playerIndex, SVCF_ONLYTHISCLIENT );
+
+	// and everyone else.
+	SERVER_Printf( "%s is now known as %s\n", oldName.GetChars(), players[playerIndex].userinfo.GetName() );
+
+	// Update clients using the RCON utility.
+	SERVER_RCON_UpdateInfo( SVRCU_PLAYERDATA );
+}
+
+//*****************************************************************************
 //	CONSOLE COMMANDS
 
 CCMD( kick_idx )
@@ -7991,6 +8021,73 @@ CCMD( kickfromgame )
 CCMD( kickfromgame_idx )
 {
 	Cmd_forcespec_idx( argv, who, key );
+}
+
+//*****************************************************************************
+// [SB] Commands to forcibly change a player's name.
+//
+CCMD( forcerename_idx )
+{
+	// This function may not be used by ConsoleCommand.
+	if ( ACS_IsCalledFromConsoleCommand( ))
+		return;
+
+	// Only the server can do this.
+	if ( NETWORK_GetState() != NETSTATE_SERVER )
+		return;
+
+	if ( argv.argc() < 2 )
+	{
+		Printf( "Usage: forcerename_idx <player index>\nYou can get the list of players and indexes with the ccmd playerinfo.\n" );
+		return;
+	}
+
+	int playerIndex;
+	if ( argv.SafeGetNumber(1, playerIndex) == false )
+		return;
+
+	if ( playerIndex < 0 || playerIndex >= MAXPLAYERS )
+		return;
+
+	server_ForceRenamePlayer( playerIndex );
+}
+
+CCMD( forcerename )
+{
+	// This function may not be used by ConsoleCommand.
+	if ( ACS_IsCalledFromConsoleCommand( ))
+		return;
+
+	// Only the server can do this.
+	if ( NETWORK_GetState() != NETSTATE_SERVER )
+		return;
+
+	if ( argv.argc() < 2 )
+	{
+		Printf( "Usage: forcerename <playername>\n" );
+		return;
+	}
+
+	// Loop through all the players, and try to find one that matches the given name.
+	for ( ULONG idx = 0; idx < MAXPLAYERS; idx++ )
+	{
+		if ( playeringame[idx] == false )
+			continue;
+
+		// Removes the color codes from the player name so it appears as the server sees it in the window.
+		FString playerName = players[idx].userinfo.GetName();
+		V_RemoveColorCodes( playerName );
+
+		if ( playerName.CompareNoCase( argv[1] ) == 0 )
+		{
+			server_ForceRenamePlayer( idx );
+
+			return;
+		}
+	}
+
+	// Didn't find a player that matches the name.
+	Printf( "Unknown player: %s\n", argv[1] );
 }
 
 //*****************************************************************************
