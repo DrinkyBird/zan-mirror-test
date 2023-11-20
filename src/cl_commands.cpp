@@ -909,3 +909,15 @@ void CLIENTCOMMANDS_VoIPAudioPacket( const unsigned int frame, const unsigned ch
 	CLIENT_GetLocalBuffer( )->ByteStream.WriteShort( length );
 	CLIENT_GetLocalBuffer( )->ByteStream.WriteBuffer( data, length );
 }
+
+//*****************************************************************************
+// [AK]
+void CLIENTCOMMANDS_SetVoIPChannelVolume( const unsigned int player, const float volume )
+{
+	if ( PLAYER_IsValidPlayer( player ) == false )
+		return;
+
+	CLIENT_GetLocalBuffer( )->ByteStream.WriteByte( CLC_SETVOIPCHANNELVOLUME );
+	CLIENT_GetLocalBuffer( )->ByteStream.WriteByte( player );
+	CLIENT_GetLocalBuffer( )->ByteStream.WriteFloat( volume );
+}

@@ -1327,20 +1327,31 @@ void SERVERCOMMANDS_PlayerDropInventory( ULONG ulPlayer, AInventory *pItem, ULON
 
 //*****************************************************************************
 //
-void SERVERCOMMANDS_PotentiallyIgnorePlayer( ULONG ulPlayer )
+void SERVERCOMMANDS_PotentiallySendPlayerCommRule( const unsigned int player )
 {
-	for ( ClientIterator it; it.notAtEnd(); ++it )
+	const NETADDRESS_s address = SERVER_GetClient( player )->Address;
+
+	for ( ClientIterator it; it.notAtEnd( ); ++it )
 	{
-		// Check whether this player is ignoring the newcomer's address.
-		LONG lTicks = SERVER_GetPlayerIgnoreTic( *it, SERVER_GetClient( ulPlayer )->Address );
+		SERVER_GetClient( *it )->UpdateCommRules( );
 
-		if ( lTicks == 0 )
-			continue;
+		std::list<ClientCommRule> &list = SERVER_GetClient( *it )->commRules;
 
-		NetCommand command( SVC_IGNOREPLAYER );
-		command.addByte( ulPlayer );
-		command.addLong( lTicks );
-		command.sendCommandToOneClient( *it );
+		for ( std::list<ClientCommRule>::iterator i = list.begin( ); i != list.end( ); i++ )
+		{
+			if ( i->address.CompareNoPort( address ))
+			{
+				ServerCommands::SendPlayerCommRule command;
+				command.SetPlayer( &players[player] );
+				command.SetIgnoreChat( i->ignoreChat );
+				command.SetSendVoIPChannelVolume( i->VoIPChannelVolume != 1.0f );
+				command.SetIgnoreChatTicks( i->ignoreChat ? SERVER_GetPlayerIgnoreTic( *it, address ) : 0 );
+				command.SetVoIPChannelVolume( i->VoIPChannelVolume );
+				command.sendCommandToClients( *it, SVCF_ONLYTHISCLIENT );
+
+				break;
+			}
+		}
 	}
 }
 

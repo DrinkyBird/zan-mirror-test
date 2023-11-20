@@ -199,7 +199,6 @@ CUSTOM_CVAR( Int, cl_backupcommands, 0, CVAR_ARCHIVE )
 // Player functions.
 // [BB] Does not work with the latest ZDoom changes. Check if it's still necessary.
 //static	void	client_SetPlayerPieces( BYTESTREAM_s *pByteStream );
-static	void	client_IgnorePlayer( BYTESTREAM_s *pByteStream );
 static	void	client_PlayerVoIPAudioPacket( BYTESTREAM_s *byteStream );
 
 // Game commands.
@@ -1906,11 +1905,6 @@ void CLIENT_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 	case SVC_ADJUSTPUSHER:
 
 		client_AdjustPusher( pByteStream );
-		break;
-
-	case SVC_IGNOREPLAYER:
-
-		client_IgnorePlayer( pByteStream );
 		break;
 
 	case SVC_PLAYERVOIPAUDIOPACKET:
@@ -4841,6 +4835,25 @@ void ServerCommands::SetHexenArmorSlots::Execute()
 	else
 	{
 		CLIENT_PrintWarning( "SetHexenArmorSlots: Player %td does not have HexenArmor!\n", player - players );
+	}
+}
+
+//*****************************************************************************
+//
+void ServerCommands::SendPlayerCommRule::Execute()
+{
+	// [AK] Set the player's VoIP channel volume if it was sent.
+	if ( sendVoIPChannelVolume )
+		VOIPController::GetInstance( ).SetChannelVolume( player - players, clamp<float>( VoIPChannelVolume, 0.0f, 2.0f ));
+
+	// [AK] Ignore the player's chat messages, and the duration, if necessary.
+	if ( ignoreChat )
+	{
+		player->bIgnoreChat = true;
+		player->lIgnoreChatTicks = ignoreChatTicks;
+
+		const int gender = player->userinfo.GetGender( );
+		Printf( "%s will be ignored, because you're muting %s IP.\n", player->userinfo.GetName( ), gender == GENDER_MALE ? "his" : ( gender == GENDER_FEMALE ? "her" : "its" ));
 	}
 }
 
@@ -9200,22 +9213,6 @@ static void client_CreateTranslation( BYTESTREAM_s *pByteStream )
 		pTranslation->AddDesaturation( Translation.ulStart, Translation.ulEnd, Translation.fR1, Translation.fG1, Translation.fB1, Translation.fR2, Translation.fG2, Translation.fB2 );
 
 	pTranslation->UpdateNative();
-}
-
-//*****************************************************************************
-//
-static void client_IgnorePlayer( BYTESTREAM_s *pByteStream )
-{
-	ULONG	ulPlayer = pByteStream->ReadByte();
-	LONG	lTicks = pByteStream->ReadLong();
-
-	if ( ulPlayer < MAXPLAYERS )
-	{
-		players[ulPlayer].bIgnoreChat = true;
-		players[ulPlayer].lIgnoreChatTicks = lTicks;
-
-		Printf( "%s will be ignored, because you're ignoring %s IP.\n", players[ulPlayer].userinfo.GetName(), players[ulPlayer].userinfo.GetGender() == GENDER_MALE ? "his" : players[ulPlayer].userinfo.GetGender() == GENDER_FEMALE ? "her" : "its" );
-	}
 }
 
 //*****************************************************************************

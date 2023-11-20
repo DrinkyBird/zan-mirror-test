@@ -1709,7 +1709,8 @@ void SERVER_ConnectNewPlayer( BYTESTREAM_s *pByteStream )
 	SERVERCOMMANDS_EndSnapshot( g_lCurrentClient );
 
 	// [RC] Clients may wish to ignore this new player.
-	SERVERCOMMANDS_PotentiallyIgnorePlayer( g_lCurrentClient );
+	// [AK] This may also update the new player's VoIP channel volume for clients.
+	SERVERCOMMANDS_PotentiallySendPlayerCommRule( g_lCurrentClient );
 
 	// [AK] Trigger an event script indicating that the client has connected to the server.
 	// Also indicate if they had previously connected to the server.
@@ -2067,7 +2068,7 @@ void SERVER_SetupNewConnection( BYTESTREAM_s *pByteStream, bool bNewPlayer )
 	g_aClients[lClient].bSuspicious = false;
 	g_aClients[lClient].ulNumConsistencyWarnings = 0;
 	g_aClients[lClient].szSkin[0] = 0;
-	g_aClients[lClient].IgnoredAddresses.clear();
+	g_aClients[lClient].commRules.clear( );
 	g_aClients[lClient].ScreenWidth = 0;
 	g_aClients[lClient].ScreenHeight = 0;
 	g_aClients[lClient].ulClientGameTic = 0;
@@ -3944,22 +3945,18 @@ bool SERVER_IsPlayerAllowedToKnowHealth( ULONG ulPlayer, ULONG ulPlayer2 )
 //
 LONG SERVER_GetPlayerIgnoreTic( ULONG ulPlayer, NETADDRESS_s Address )
 {
-	// Remove all expired entries first. ([RC] We could combine the loops, but not all of the old entries would be removed.)
-	for ( std::list<STORED_QUERY_IP_s>::iterator i = SERVER_GetClient( ulPlayer )->IgnoredAddresses.begin(); i != SERVER_GetClient( ulPlayer )->IgnoredAddresses.end( ); )
-	{
-		if (( i->lNextAllowedGametic != -1 ) && ( i->lNextAllowedGametic <= gametic ))
-			i = SERVER_GetClient( ulPlayer )->IgnoredAddresses.erase( i ); // Returns a new iterator.
-		else
-			++i;
-	}
+	// Remove all expired entries first.
+	SERVER_GetClient( ulPlayer )->UpdateCommRules( );
+
+	std::list<ClientCommRule> &list = SERVER_GetClient( ulPlayer )->commRules;
 
 	// Search for entries with this address.
-	for ( std::list<STORED_QUERY_IP_s>::iterator i = SERVER_GetClient( ulPlayer )->IgnoredAddresses.begin(); i != SERVER_GetClient( ulPlayer )->IgnoredAddresses.end(); ++i )
+	for ( std::list<ClientCommRule>::iterator i = list.begin( ); i != list.end( ); i++ )
 	{
-		if ( i->Address.CompareNoPort( Address ))
+		if (( i->address.CompareNoPort( Address )) && ( i->ignoreChat ))
 		{
-			if ( i->lNextAllowedGametic != -1 )
-				return i->lNextAllowedGametic - gametic;
+			if ( i->unignoreChatGametic != -1 )
+				return i->unignoreChatGametic - gametic;
 			else
 				return -1;
 		}
@@ -5173,6 +5170,40 @@ bool SERVER_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 		}
 		break;
 
+	case CLC_SETVOIPCHANNELVOLUME:
+		{
+			const unsigned int targetPlayer = pByteStream->ReadByte( );
+			const float volume = clamp<float>( pByteStream->ReadFloat( ), 0.0f, 2.0f );
+
+			if ( SERVER_IsValidClient( targetPlayer ))
+			{
+				NETADDRESS_s address = SERVER_GetClient( targetPlayer )->Address;
+				std::list<ClientCommRule> &list = SERVER_GetClient( g_lCurrentClient )->commRules;
+
+				for ( std::list<ClientCommRule>::iterator i = list.begin( ); i != list.end( ); i++ )
+				{
+					if ( i->address.CompareNoPort( address ))
+					{
+						i->VoIPChannelVolume = volume;
+
+						if ( i->IsObsolete( ))
+							list.erase( i );
+
+						return false;
+					}
+				}
+
+				if ( volume != 1.0f )
+				{
+					ClientCommRule entry( address );
+					entry.VoIPChannelVolume = volume;
+
+					list.push_back( entry );
+				}
+			}
+		}
+		break;
+
 	default:
 
 		Printf( PRINT_HIGH, "SERVER_ParseCommands: Unknown client message: %d\n", static_cast<int> (lCommand) );
@@ -5699,33 +5730,55 @@ void SERVER_PrintMutedMessageToPlayer( ULONG ulPlayer )
 
 //*****************************************************************************
 //
+ClientCommRule::ClientCommRule( NETADDRESS_s address ) :
+	address( address ),
+	ignoreChat( false ),
+	unignoreChatGametic( 0 ),
+	VoIPChannelVolume( 1.0f ) { }
+
+//*****************************************************************************
+//
+bool ClientCommRule::IsObsolete( void ) const
+{
+	return (( ignoreChat == false ) && ( VoIPChannelVolume == 1.0f ));
+}
+
+//*****************************************************************************
+//
 static bool server_Ignore( BYTESTREAM_s *pByteStream )
 {
-	ULONG	ulTargetIdx = pByteStream->ReadByte();
-	bool	bIgnore = !!pByteStream->ReadByte();
-	LONG	lTicks = pByteStream->ReadLong();
+	const unsigned int targetPlayer = pByteStream->ReadByte( );
+	const bool ignore = !!pByteStream->ReadByte( );
+	const int ticks = pByteStream->ReadLong( );
 
-	if ( !SERVER_IsValidClient( ulTargetIdx ))
+	if ( !SERVER_IsValidClient( targetPlayer ))
 		return false;
 
-	// First, remove any entries using this IP.
-	NETADDRESS_s AddressToIgnore  = SERVER_GetClient( ulTargetIdx )->Address;
-	for ( std::list<STORED_QUERY_IP_s>::iterator i = SERVER_GetClient( g_lCurrentClient )->IgnoredAddresses.begin(); i != SERVER_GetClient( g_lCurrentClient )->IgnoredAddresses.end( ); )
+	const int unignoreChatTick = ( ticks == -1 ) ? ticks : ( gametic + ticks );
+	NETADDRESS_s addressToIgnore = SERVER_GetClient( targetPlayer )->Address;
+	std::list<ClientCommRule> &list = SERVER_GetClient( g_lCurrentClient )->commRules;
+
+	for ( std::list<ClientCommRule>::iterator i = list.begin( ); i != list.end( ); i++ )
 	{
-		if ( i->Address.CompareNoPort( AddressToIgnore ))
-			i = SERVER_GetClient( g_lCurrentClient )->IgnoredAddresses.erase( i ); // Returns a new iterator.
-		else
-			++i;
+		if ( i->address.CompareNoPort( addressToIgnore ))
+		{
+			i->ignoreChat = ignore;
+			i->unignoreChatGametic = unignoreChatTick;
+
+			if ( i->IsObsolete( ))
+				list.erase( i );
+
+			return false;
+		}
 	}
 
-	// Now, add the new entry. If an entry had existed before, this "updates" it.
-	if ( bIgnore )
+	if ( ignore )
 	{
-		STORED_QUERY_IP_s Entry;
-		Entry.Address = AddressToIgnore;
-		Entry.lNextAllowedGametic = ( lTicks == -1 ) ? lTicks : ( gametic + lTicks );
+		ClientCommRule entry( addressToIgnore );
+		entry.ignoreChat = true;
+		entry.unignoreChatGametic = unignoreChatTick;
 
-		SERVER_GetClient( g_lCurrentClient )->IgnoredAddresses.push_back( Entry );
+		list.push_back( entry );
 	}
 
 	return false;
@@ -7797,7 +7850,7 @@ static void server_FixZFromBacktrace( APlayerPawn *pmo, fixed_t oldFloorZ )
 
 //*****************************************************************************
 //
-FString CLIENT_s::GetAccountName() const
+FString CLIENT_s::GetAccountName( void ) const
 {
 	if ( loggedIn )
 	{
@@ -7809,6 +7862,25 @@ FString CLIENT_s::GetAccountName() const
 		FString result;
 		result.Format ( "%td@localhost", this - g_aClients );
 		return result;
+	}
+}
+
+//*****************************************************************************
+//
+void CLIENT_s::UpdateCommRules( void )
+{
+	for ( std::list<ClientCommRule>::iterator i = commRules.begin( ); i != commRules.end( ); )
+	{
+		if (( i->ignoreChat ) && ( i->unignoreChatGametic != -1 ) && ( i->unignoreChatGametic <= gametic ))
+		{
+			i->ignoreChat = false;
+			i->unignoreChatGametic = 0;
+		}
+
+		if ( i->IsObsolete( ))
+			commRules.erase( i );
+		else
+			i++;
 	}
 }
 

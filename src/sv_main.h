@@ -293,6 +293,20 @@ struct CLIENT_PLAYER_DATA_s
 };
 
 //*****************************************************************************
+struct ClientCommRule
+{
+	NETADDRESS_s	address;
+	bool			ignoreChat;
+	int				unignoreChatGametic;
+	float			VoIPChannelVolume;
+
+	ClientCommRule( NETADDRESS_s address );
+
+	// [AK] Checks if this rule isn't needed anymore and should be deleted.
+	bool IsObsolete( void ) const;
+};
+
+//*****************************************************************************
 class ClientCommand
 {
 public:
@@ -497,8 +511,8 @@ struct CLIENT_s
 	// What is the name of the client's skin?
 	char			szSkin[MAX_SKIN_NAME+1];
 
-	// [RC] List of IP addresses that this client is ignoring.
-	std::list<STORED_QUERY_IP_s> IgnoredAddresses;
+	// [AK] A list of IP addresses that this client has set up communication rules for.
+	std::list<ClientCommRule> commRules;
 
 	// [K6] Last tic we got some action from the client. Used to determine his presence.
 	LONG			lLastActionTic;
@@ -541,7 +555,8 @@ struct CLIENT_s
 	// [AK] The reason why the client has been muted on the server, if one is provided.
 	FString			MutedReason;
 
-	FString GetAccountName() const;
+	FString GetAccountName( void ) const;
+	void UpdateCommRules( void );
 };
 
 //*****************************************************************************

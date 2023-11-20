@@ -236,8 +236,14 @@ static void voicechat_SetChannelVolume( FCommandLine &argv, const bool isIndexCm
 			return;
 		}
 
-		float volume = clamp<float>( static_cast<float>( atof( argv[2] )), 0.0f, 2.0f );
-		VOIPController::GetInstance( ).SetChannelVolume( player, volume );
+		const float oldVolume = VOIPController::GetInstance( ).GetChannelVolume( player );
+		float newVolume = clamp<float>( static_cast<float>( atof( argv[2] )), 0.0f, 2.0f );
+
+		VOIPController::GetInstance( ).SetChannelVolume( player, newVolume );
+
+		// [AK] Tell the server what volume we set this player's channel to.
+		if (( NETWORK_GetState( ) == NETSTATE_CLIENT ) && ( newVolume != oldVolume ))
+			CLIENTCOMMANDS_SetVoIPChannelVolume( player, newVolume );
 	}
 }
 
@@ -1015,6 +1021,19 @@ bool VOIPController::IsRecording( void ) const
 		return isRecording;
 
 	return false;
+}
+
+//*****************************************************************************
+//
+// [AK] VOIPController::GetChannelVolume
+//
+// Returns the volume of a particular VoIP channel.
+//
+//*****************************************************************************
+
+float VOIPController::GetChannelVolume( const unsigned int player ) const
+{
+	return ( player < MAXPLAYERS ? channelVolumes[player] : 0.0f );
 }
 
 //*****************************************************************************

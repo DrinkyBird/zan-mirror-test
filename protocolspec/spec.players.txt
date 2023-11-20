@@ -312,3 +312,18 @@ Command SetHexenArmorSlots
 	Long slot3
 	Long slot4
 EndCommand
+
+Command SendPlayerCommRule
+	ExtendedCommand
+	Player player with IndexTestOnly
+	Bool ignoreChat
+	Bool sendVoIPChannelVolume
+
+	If (ignoreChat)
+		Long ignoreChatTicks
+	EndIf
+
+	If (sendVoIPChannelVolume)
+		Float VoIPChannelVolume
+	EndIf
+EndCommand
