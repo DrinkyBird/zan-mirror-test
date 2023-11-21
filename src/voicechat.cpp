@@ -221,8 +221,8 @@ static void voicechat_SetChannelVolume( FCommandLine &argv, const bool isIndexCm
 	if ( ACS_IsCalledFromConsoleCommand( ))
 		return;
 
-	// [AK] Show a tip message if there's not enough arguments.
-	if ( argv.argc( ) < 3 )
+	// [AK] Show a tip message if there's no arguments.
+	if ( argv.argc( ) < 2 )
 	{
 		Printf( "Sets a player's channel volume.\nUsage: %s <%s> <volume, 0.0 to 2.0>\n", argv[0], isIndexCmd ? "index" : "name" );
 		return;
@@ -237,6 +237,15 @@ static void voicechat_SetChannelVolume( FCommandLine &argv, const bool isIndexCm
 		}
 
 		const float oldVolume = VOIPController::GetInstance( ).GetChannelVolume( player );
+
+		// [AK] If no volume was passed with this command's arguments, then just
+		// print the current volume of the player's channel.
+		if ( argv.argc( ) < 3 )
+		{
+			Printf( "%s's channel volume is %.3g.\n", players[player].userinfo.GetName( ), oldVolume );
+			return;
+		}
+
 		float newVolume = clamp<float>( static_cast<float>( atof( argv[2] )), 0.0f, 2.0f );
 
 		VOIPController::GetInstance( ).SetChannelVolume( player, newVolume );
