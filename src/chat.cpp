@@ -1799,7 +1799,7 @@ CCMD( sayto_idx )
 //
 // [RC] Lets clients ignore an annoying player's chat messages.
 //
-void chat_ExecuteIgnoreCmd( FCommandLine &argv, const bool bIsIndexCmd )
+void chat_ExecuteIgnoreCmd( FCommandLine &argv, const bool isIndexCmd )
 {
 	int playerIndex = MAXPLAYERS;
 
@@ -1819,7 +1819,7 @@ void chat_ExecuteIgnoreCmd( FCommandLine &argv, const bool bIsIndexCmd )
 		}
 		else
 		{
-			message.Format( "Ignores a certain player's chat messages.\nUsage: %s <%s> [duration, in minutes]", argv[0], bIsIndexCmd ? "index" : "name" );
+			message.Format( "Ignores a certain player's chat messages.\nUsage: %s <%s> [duration, in minutes]", argv[0], isIndexCmd ? "index" : "name" );
 
 			// [JK] Only the server can specify a reason.
 			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
@@ -1831,21 +1831,21 @@ void chat_ExecuteIgnoreCmd( FCommandLine &argv, const bool bIsIndexCmd )
 		return;
 	}
 
-	if ( argv.GetPlayerFromArg( playerIndex, 1, bIsIndexCmd ))
+	if ( argv.GetPlayerFromArg( playerIndex, 1, isIndexCmd ))
 	{
-		const LONG lArgv2 = ( argv.argc( ) >= 3 ) ? atoi( argv[2] ) : -1;
-		const char *pszReason = ( argv.argc( ) >= 4 ) ? argv[3] : NULL;
-		LONG lTicks = -1;
+		const LONG minutes = ( argv.argc( ) >= 3 ) ? atoi( argv[2] ) : -1;
+		const char *reason = ( argv.argc( ) >= 4 ) ? argv[3] : NULL;
+		LONG ticks = -1;
 
 		// Did the user specify a set duration?
-		if (( lArgv2 > 0 ) && ( lArgv2 < LONG_MAX / ( TICRATE * MINUTE )))
-			lTicks = lArgv2 * TICRATE * MINUTE;
+		if (( minutes > 0 ) && ( minutes < LONG_MAX / ( TICRATE * MINUTE )))
+			ticks = minutes * TICRATE * MINUTE;
 
 		if (( playerIndex == consoleplayer ) && ( NETWORK_GetState( ) != NETSTATE_SERVER ))
 		{
 			Printf( "You can't ignore yourself.\n" );
 		}
-		else if (( players[playerIndex].bIgnoreChat ) && ( players[playerIndex].lIgnoreChatTicks == lTicks ))
+		else if (( players[playerIndex].bIgnoreChat ) && ( players[playerIndex].lIgnoreChatTicks == ticks ))
 		{
 			Printf( "You're already ignoring %s.\n", players[playerIndex].userinfo.GetName( ));
 		}
@@ -1853,11 +1853,11 @@ void chat_ExecuteIgnoreCmd( FCommandLine &argv, const bool bIsIndexCmd )
 		{
 			FString message;
 
-			CHAT_IgnorePlayer( playerIndex, lTicks, pszReason );
+			CHAT_IgnorePlayer( playerIndex, ticks, reason );
 			message.Format( "%s will now be ignored", players[playerIndex].userinfo.GetName( ));
 
-			if ( lTicks > 0 )
-				message.AppendFormat( ", for %d minutes", static_cast<int>( lArgv2 ));
+			if ( ticks > 0 )
+				message.AppendFormat( ", for %d minutes", static_cast<int>( minutes ));
 
 			Printf( "%s.\n", message.GetChars( ));
 
@@ -1867,7 +1867,7 @@ void chat_ExecuteIgnoreCmd( FCommandLine &argv, const bool bIsIndexCmd )
 
 			// Notify the server so that others using this IP are also ignored.
 			if ( NETWORK_GetState( ) == NETSTATE_CLIENT )
-				CLIENTCOMMANDS_Ignore( playerIndex, true, lTicks );
+				CLIENTCOMMANDS_Ignore( playerIndex, true, ticks );
 		}
 	}
 }
@@ -1886,7 +1886,7 @@ CCMD( ignore_idx )
 //
 // [RC] Undos "ignore".
 //
-void chat_ExecuteUnignoreCmd( FCommandLine &argv, const bool bIsIndexCmd )
+void chat_ExecuteUnignoreCmd( FCommandLine &argv, const bool isIndexCmd )
 {
 	int playerIndex = MAXPLAYERS;
 
@@ -1903,12 +1903,12 @@ void chat_ExecuteUnignoreCmd( FCommandLine &argv, const bool bIsIndexCmd )
 		if ( playersIgnored.Len( ))
 			Printf( TEXTCOLOR_RED "Ignored players: " TEXTCOLOR_NORMAL "%s\n", playersIgnored.GetChars( ));
 		else
-			Printf( "Un-ignores a certain player's chat messages.\nUsage: %s <%s>\n", argv[0], bIsIndexCmd ? "index" : "name" );
+			Printf( "Un-ignores a certain player's chat messages.\nUsage: %s <%s>\n", argv[0], isIndexCmd ? "index" : "name" );
 
 		return;
 	}
 
-	if ( argv.GetPlayerFromArg( playerIndex, 1, bIsIndexCmd ))
+	if ( argv.GetPlayerFromArg( playerIndex, 1, isIndexCmd ))
 	{
 		if (( playerIndex == consoleplayer ) && ( NETWORK_GetState( ) != NETSTATE_SERVER ))
 		{
