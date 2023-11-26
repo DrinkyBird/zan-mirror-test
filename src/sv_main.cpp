@@ -2080,10 +2080,6 @@ void SERVER_SetupNewConnection( BYTESTREAM_s *pByteStream, bool bNewPlayer )
 	g_aClients[lClient].recentMoveCMDs.clear();
 	g_aClients[lClient].recentSelectCMDs.clear();
 
-	// [AK] Clear whatever reason the previous client had for being muted.
-	if ( g_aClients[lClient].MutedReason.Len( ) > 0 )
-		g_aClients[lClient].MutedReason = "";
-
 	// [AK] Reset the client's tic buffer.
 	SERVER_ResetClientTicBuffer( lClient );
 
@@ -5683,53 +5679,6 @@ void SERVER_ResetClientExtrapolation( ULONG ulClient, bool bAfterBacktrace )
 
 //*****************************************************************************
 //
-void SERVER_PrintMutedMessageToPlayer( ULONG ulPlayer )
-{
-	// [AK] Make sure that this player is valid.
-	if ( SERVER_IsValidClient( ulPlayer ) == false )
-		return;
-
-	// [BB] Tell the player that (and for how long) he is muted.
-	// Except when the muting time is not limited.
-	FString message = "The server has muted you. Nobody can see your messages";
-	if ( players[ulPlayer].lIgnoreChatTicks != -1 )
-	{
-		// [EP] Print how many minutes and how many seconds are left.
-		int iMinutes = static_cast<int>( players[ulPlayer].lIgnoreChatTicks / ( TICRATE * MINUTE ));
-		int iSeconds = static_cast<int>(( players[ulPlayer].lIgnoreChatTicks / TICRATE ) % MINUTE );
-
-		if (( iMinutes > 0 ) && ( iSeconds > 0 ))
-		{
-			message.AppendFormat( " for %d minute%s and %d second%s", iMinutes, iMinutes == 1 ? "" : "s", iSeconds, iSeconds == 1 ? "" : "s" );
-		}
-		// [EP] If the time to wait is just some tics,
-		// tell the player that he can wait just a bit.
-		// There's no need to print the tics.
-		else if (( iMinutes == 0 ) && ( iSeconds == 0 ))
-		{
-			message += " for less than a second";
-		}
-		else
-		{
-			if ( iMinutes > 0 )
-				message.AppendFormat( " for %d minute%s", iMinutes, iMinutes == 1 ? "" : "s" );
-
-			if ( iSeconds > 0 )
-				message.AppendFormat( " for %d second%s", iSeconds, iSeconds == 1 ? "" : "s" );
-		}
-	}
-
-	message += '.';
-
-	// [JK] If a reason is provided, print it.
-	if ( g_aClients[ulPlayer].MutedReason.Len( ) > 0 )
-		message.AppendFormat( " Reason: %s", g_aClients[ulPlayer].MutedReason.GetChars( ));
-
-	SERVER_PrintfPlayer( ulPlayer, "%s\n", message.GetChars( ));
-}
-
-//*****************************************************************************
-//
 ClientCommRule::ClientCommRule( NETADDRESS_s address ) :
 	address( address ),
 	ignoreChat( false ),
@@ -5935,17 +5884,12 @@ static bool server_Say( BYTESTREAM_s *pByteStream )
 
 	// [RC] Are this player's chats ignored?
 	if ( players[ulPlayer].bIgnoreChat )
-	{
-		SERVER_PrintMutedMessageToPlayer( ulPlayer );
 		return ( false );
-	}
 
 	// Check for chat flooding.
 	if ( server_CheckForChatFlood ( ulPlayer ) == true )
 	{
-		players[ulPlayer].bIgnoreChat = true;
-		players[ulPlayer].lIgnoreChatTicks = 15 * TICRATE;
-		SERVER_PrintfPlayer( ulPlayer, "Please refrain from chatting so much. You've been muted for 15 seconds.\n" );
+		CHAT_IgnorePlayer( ulPlayer, 15 * TICRATE, "chatting too much" );
 		return ( false );
 	}
 	// Or, relay the chat message onto clients.

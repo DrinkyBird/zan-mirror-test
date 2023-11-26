@@ -552,9 +552,6 @@ struct CLIENT_s
 	WORD			ScreenWidth;
 	WORD			ScreenHeight;
 
-	// [AK] The reason why the client has been muted on the server, if one is provided.
-	FString			MutedReason;
-
 	FString GetAccountName( void ) const;
 	void UpdateCommRules( void );
 };
@@ -704,7 +701,6 @@ bool		SERVER_IsExtrapolatingPlayer( ULONG ulClient );
 bool		SERVER_IsBacktracingPlayer( ULONG ulClient );
 void		SERVER_ResetClientTicBuffer( ULONG ulClient );
 void		SERVER_ResetClientExtrapolation( ULONG ulClient, bool bAfterBacktrace = false );
-void		SERVER_PrintMutedMessageToPlayer( ULONG ulPlayer );
 
 // From sv_master.cpp
 void		SERVER_MASTER_Construct( void );

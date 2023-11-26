@@ -3063,6 +3063,7 @@ void PLAYER_ResetPlayerData( player_t *pPlayer )
 	pPlayer->bSpectating = 0;
 	pPlayer->bIgnoreChat = 0;
 	pPlayer->lIgnoreChatTicks = -1;
+	pPlayer->ignoreChatReason = "";
 	pPlayer->bDeadSpectator = 0;
 	pPlayer->ulLivesLeft = 0;
 	pPlayer->bStruckPlayer = 0;
@@ -4855,6 +4856,16 @@ void ServerCommands::SendPlayerCommRule::Execute()
 		const int gender = player->userinfo.GetGender( );
 		Printf( "%s will be ignored, because you're muting %s IP.\n", player->userinfo.GetName( ), gender == GENDER_MALE ? "his" : ( gender == GENDER_FEMALE ? "her" : "its" ));
 	}
+}
+
+//*****************************************************************************
+//
+void ServerCommands::IgnoreLocalPlayer::Execute()
+{
+	if ( ignore )
+		CHAT_IgnorePlayer( player - players, ticks, reason );
+	else
+		CHAT_UnignorePlayer( player - players );
 }
 
 //*****************************************************************************

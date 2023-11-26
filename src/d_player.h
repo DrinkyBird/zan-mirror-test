@@ -732,6 +732,9 @@ public:
 	// [RC] Number of ticks until this player can chat again.
 	LONG		lIgnoreChatTicks;
 
+	// [AK] The reason why this player's chat messages have been muted on the server.
+	FString		ignoreChatReason;
+
 	// *** THE FOLLOWING ARE NETWORK VARIABLES ***
 	// Ping of the player to the server he's playing on.
 	ULONG		ulPing;

@@ -2157,6 +2157,7 @@ void G_PlayerReborn (int player, bool bGiveInventory)
 	CSkullBot	*pSkullBot;
 	bool		bIgnoreChat;
 	LONG		lIgnoreChatTicks;
+	FString		ignoreChatReason;
 	ULONG		ulPing;
 	ULONG		ulPingAverages;
 	ULONG		ulCountryIndex;
@@ -2196,6 +2197,7 @@ void G_PlayerReborn (int player, bool bGiveInventory)
 	pSkullBot = p->pSkullBot;
 	bIgnoreChat = p->bIgnoreChat;
 	lIgnoreChatTicks = p->lIgnoreChatTicks;
+	ignoreChatReason = p->ignoreChatReason;
 	ulPing = p->ulPing;
 	ulPingAverages = p->ulPingAverages;
 	ulCountryIndex = p->ulCountryIndex;
@@ -2260,6 +2262,7 @@ void G_PlayerReborn (int player, bool bGiveInventory)
 	p->pSkullBot = pSkullBot;
 	p->bIgnoreChat = bIgnoreChat;
 	p->lIgnoreChatTicks = lIgnoreChatTicks;
+	p->ignoreChatReason = ignoreChatReason;
 	p->ulPing = ulPing;
 	p->ulPingAverages = ulPingAverages;
 	p->ulCountryIndex = ulCountryIndex;

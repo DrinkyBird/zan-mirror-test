@@ -327,3 +327,14 @@ Command SendPlayerCommRule
 		Float VoIPChannelVolume
 	EndIf
 EndCommand
+
+Command IgnoreLocalPlayer
+	ExtendedCommand
+	Player player with IndexTestOnly
+	Bool ignore
+
+	If (ignore)
+		Long ticks
+		String reason
+	EndIf
+EndCommand

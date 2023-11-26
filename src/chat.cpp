@@ -208,7 +208,6 @@ FStringCVar	*g_ChatMacros[10] =
 void		chat_SendMessage( ULONG ulMode, const char *pszString );
 FString		chat_GetIgnoredPlayers( void ); // [RC]
 void		chat_DoSubstitution( FString &Input ); // [CW]
-void		chat_UnmutePlayer( ULONG ulPlayer ); // [AK]
 bool		chat_IsPlayerValidReceiver( ULONG ulPlayer ); // [AK]
 
 //*****************************************************************************
@@ -545,7 +544,12 @@ void CHAT_Tick( void )
 
 		// Is it time to un-ignore him?
 		if ( players[i].lIgnoreChatTicks == 0 )
-			chat_UnmutePlayer( i );
+		{
+			// [AK] Don't let the local player unignore themselves if they've
+			// been ignored on the server. The server will tell them when.
+			if (( NETWORK_GetState( ) == NETSTATE_SERVER ) || ( i != static_cast<unsigned>( consoleplayer )))
+				CHAT_UnignorePlayer( i );
+		}
 	}
 
 	// [AK] Reset the chat cursor's ticker if it goes too high.
@@ -1159,52 +1163,157 @@ bool CHAT_CanSendPrivateMessageTo( ULONG ulSender, ULONG ulReceiver )
 }
 
 //*****************************************************************************
+//
+void CHAT_IgnorePlayer( const unsigned int player, const unsigned int ticks, const char *reason )
+{
+	if ( PLAYER_IsValidPlayer( player ) == false )
+		return;
+
+	players[player].bIgnoreChat = true;
+	players[player].lIgnoreChatTicks = ticks;
+	players[player].ignoreChatReason = reason;
+
+	// [JK] Tell the client that they've been muted on the server.
+	if ( NETWORK_GetState( ) != NETSTATE_SERVER )
+	{
+		if ( player == static_cast<unsigned>( consoleplayer ))
+			CHAT_PrintMutedMessage( );
+	}
+	else
+	{
+		SERVERCOMMANDS_IgnoreLocalPlayer( player, true, ticks, reason );
+	}
+}
+
+//*****************************************************************************
+//
+void CHAT_UnignorePlayer( const unsigned int player )
+{
+	if ( PLAYER_IsValidPlayer( player ) == false )
+		return;
+
+	players[player].bIgnoreChat = false;
+	players[player].ignoreChatReason = "";
+
+	// [BB] The player is unignored indefinitely. If we wouldn't do this,
+	// bIgnoreChat would be set to false every tic once lIgnoreChatTicks reaches 0.
+	players[player].lIgnoreChatTicks = -1;
+
+	// [JK] Tell the client that they're no longer muted on the server.
+	if ( NETWORK_GetState( ) != NETSTATE_SERVER )
+	{
+		if ( player == static_cast<unsigned>( consoleplayer ))
+			Printf( "You are no longer muted on the server.\n" );
+	}
+	else
+	{
+		SERVERCOMMANDS_IgnoreLocalPlayer( player, false );
+	}
+}
+
+//*****************************************************************************
+//
+void CHAT_PrintMutedMessage( void )
+{
+	// [AK] The server should never execute this.
+	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
+		return;
+
+	// [BB] Tell the player that (and for how long) he is muted.
+	// Except when the muting time is not limited.
+	FString message = "The server has muted you. Nobody can see your messages";
+
+	if ( players[consoleplayer].lIgnoreChatTicks != -1 )
+	{
+		// [EP] Print how many minutes and how many seconds are left.
+		int minutes = static_cast<int>( players[consoleplayer].lIgnoreChatTicks / ( TICRATE * MINUTE ));
+		int seconds = static_cast<int>(( players[consoleplayer].lIgnoreChatTicks / TICRATE ) % MINUTE );
+
+		if (( minutes > 0 ) && ( seconds > 0 ))
+		{
+			message.AppendFormat( " for %d minute%s and %d second%s", minutes, minutes == 1 ? "" : "s", seconds, seconds == 1 ? "" : "s" );
+		}
+		// [EP] If the time to wait is just some tics,
+		// tell the player that he can wait just a bit.
+		// There's no need to print the tics.
+		else if (( minutes == 0 ) && ( seconds == 0 ))
+		{
+			message += " for less than a second";
+		}
+		else
+		{
+			if ( minutes > 0 )
+				message.AppendFormat( " for %d minute%s", minutes, minutes == 1 ? "" : "s" );
+
+			if ( seconds > 0 )
+				message.AppendFormat( " for %d second%s", seconds, seconds == 1 ? "" : "s" );
+		}
+	}
+
+	message += '.';
+
+	// [JK] If a reason is provided, print it.
+	if ( players[consoleplayer].ignoreChatReason.Len( ) > 0 )
+		message.AppendFormat( " Reason: %s", players[consoleplayer].ignoreChatReason.GetChars( ));
+
+	Printf( "%s\n", message.GetChars( ));
+}
+
+//*****************************************************************************
 //*****************************************************************************
 //
 void chat_SendMessage( ULONG ulMode, const char *pszString )
 {
-	FString ChatMessage = pszString;
-
-	// [AK] Don't process and send chat messages that are empty.
-	if ( ChatMessage.IsEmpty( ) )
-		return;
-
-	// [CW] Substitute the message if necessary.
-	chat_DoSubstitution( ChatMessage );
-
-	// [SB] All commands used by Konar6's kpatch don't work with prefixes/suffixes, so don't add them.
-	if (( strnicmp( "!irc", pszString, 4 ) != 0 ) &&
-		( strnicmp( "!music", pszString, 6 ) != 0 ) &&
-		( strnicmp( "!maplist", pszString, 8 ) != 0 ))
+	// [AK] Don't send the chat message if we're ignored on the server.
+	if ( players[consoleplayer].bIgnoreChat )
 	{
-		// [AK] Take into account the length of prefix and suffix and truncate the chat message if necessary.
-		unsigned int maxLength = MAX_CHATBUFFER_LENGTH - (strlen( cl_chatprefix ) + strlen( cl_chatsuffix ));
-		if ( ChatMessage.Len() > maxLength )
-			ChatMessage.Truncate( maxLength );
-
-		// [SB] Add the prefix after /me, so actions works
-		ChatMessage.Insert( strnicmp( "/me", pszString, 3 ) == 0 ? 3 : 0, cl_chatprefix );
-		ChatMessage += cl_chatsuffix;
-	}
-
-	// Format our message so color codes can appear.
-	V_ColorizeString( ChatMessage );
-
-	// If we're the client, let the server handle formatting/sending the msg to other players.
-	if ( NETWORK_GetState( ) == NETSTATE_CLIENT )
-	{
-		CLIENTCOMMANDS_Say( ulMode, ChatMessage.GetChars( ), g_ulChatPlayer );
-	}
-	else if ( demorecording )
-	{
-		Net_WriteByte( DEM_SAY );
-		Net_WriteByte( static_cast<BYTE> ( ulMode ) );
-		Net_WriteString( ChatMessage.GetChars( ));
+		CHAT_PrintMutedMessage( );
 	}
 	else
 	{
-		ULONG ulPlayer = ulMode == CHATMODE_PRIVATE_SEND ? g_ulChatPlayer : static_cast<ULONG>( consoleplayer );
-		CHAT_PrintChatString( ulPlayer, ulMode, ChatMessage.GetChars( ));
+		FString ChatMessage = pszString;
+
+		// [AK] Don't process and send chat messages that are empty.
+		if ( ChatMessage.IsEmpty( ) )
+			return;
+
+		// [CW] Substitute the message if necessary.
+		chat_DoSubstitution( ChatMessage );
+
+		// [SB] All commands used by Konar6's kpatch don't work with prefixes/suffixes, so don't add them.
+		if (( strnicmp( "!irc", pszString, 4 ) != 0 ) &&
+			( strnicmp( "!music", pszString, 6 ) != 0 ) &&
+			( strnicmp( "!maplist", pszString, 8 ) != 0 ))
+		{
+			// [AK] Take into account the length of prefix and suffix and truncate the chat message if necessary.
+			unsigned int maxLength = MAX_CHATBUFFER_LENGTH - (strlen( cl_chatprefix ) + strlen( cl_chatsuffix ));
+			if ( ChatMessage.Len() > maxLength )
+				ChatMessage.Truncate( maxLength );
+
+			// [SB] Add the prefix after /me, so actions works
+			ChatMessage.Insert( strnicmp( "/me", pszString, 3 ) == 0 ? 3 : 0, cl_chatprefix );
+			ChatMessage += cl_chatsuffix;
+		}
+
+		// Format our message so color codes can appear.
+		V_ColorizeString( ChatMessage );
+
+		// If we're the client, let the server handle formatting/sending the msg to other players.
+		if ( NETWORK_GetState( ) == NETSTATE_CLIENT )
+		{
+			CLIENTCOMMANDS_Say( ulMode, ChatMessage.GetChars( ), g_ulChatPlayer );
+		}
+		else if ( demorecording )
+		{
+			Net_WriteByte( DEM_SAY );
+			Net_WriteByte( static_cast<BYTE> ( ulMode ) );
+			Net_WriteString( ChatMessage.GetChars( ));
+		}
+		else
+		{
+			ULONG ulPlayer = ulMode == CHATMODE_PRIVATE_SEND ? g_ulChatPlayer : static_cast<ULONG>( consoleplayer );
+			CHAT_PrintChatString( ulPlayer, ulMode, ChatMessage.GetChars( ));
+		}
 	}
 
 	// [TP] The message has been sent. Start creating a new one.
@@ -1222,7 +1331,8 @@ FString chat_GetIgnoredPlayers( void )
 	// Append all the players' names.
 	for ( ULONG i = 0; i < MAXPLAYERS; i++ )
 	{
-		if ( players[i].bIgnoreChat )
+		// [AK] Don't include the local player in this list.
+		if (( players[i].bIgnoreChat ) && (( NETWORK_GetState( ) == NETSTATE_SERVER ) || ( i != static_cast<ULONG>( consoleplayer ))))
 		{
 			// [AK] Add a ", " after the previous player.
 			if ( result.Len( ) > 0 )
@@ -1338,28 +1448,6 @@ void chat_DoSubstitution( FString &Input )
 		}
 
 		Input = Output;
-	}
-}
-
-//*****************************************************************************
-//
-// [AK] Helper function to unmute a player.
-//
-void chat_UnmutePlayer( ULONG ulPlayer )
-{
-	if ( PLAYER_IsValidPlayer( ulPlayer ) == false )
-		return;
-
-	players[ulPlayer].bIgnoreChat = false;
-	// [BB] The player is unignored indefinitely. If we wouldn't do this,
-	// bIgnoreChat would be set to false every tic once lIgnoreChatTicks reaches 0.
-	players[ulPlayer].lIgnoreChatTicks = -1;
-
-	// [JK] Tell the client that they're no longer muted on the server.
-	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-	{
-		SERVER_GetClient( ulPlayer )->MutedReason = "";
-		SERVER_PrintfPlayer( ulPlayer, "You are no longer muted on the server.\n" );
 	}
 }
 
@@ -1711,7 +1799,7 @@ CCMD( sayto_idx )
 //
 // [RC] Lets clients ignore an annoying player's chat messages.
 //
-void chat_IgnorePlayer( FCommandLine &argv, const bool bIsIndexCmd )
+void chat_ExecuteIgnoreCmd( FCommandLine &argv, const bool bIsIndexCmd )
 {
 	int playerIndex = MAXPLAYERS;
 
@@ -1765,9 +1853,7 @@ void chat_IgnorePlayer( FCommandLine &argv, const bool bIsIndexCmd )
 		{
 			FString message;
 
-			players[playerIndex].bIgnoreChat = true;
-			players[playerIndex].lIgnoreChatTicks = lTicks;
-
+			CHAT_IgnorePlayer( playerIndex, lTicks, pszReason );
 			message.Format( "%s will now be ignored", players[playerIndex].userinfo.GetName( ));
 
 			if ( lTicks > 0 )
@@ -1781,34 +1867,26 @@ void chat_IgnorePlayer( FCommandLine &argv, const bool bIsIndexCmd )
 
 			// Notify the server so that others using this IP are also ignored.
 			if ( NETWORK_GetState( ) == NETSTATE_CLIENT )
-			{
 				CLIENTCOMMANDS_Ignore( playerIndex, true, lTicks );
-			}
-			// [JK] Tell the client that they've been muted on the server.
-			else if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-			{
-				SERVER_GetClient( playerIndex )->MutedReason = pszReason;
-				SERVER_PrintMutedMessageToPlayer( playerIndex );
-			}
 		}
 	}
 }
 
 CCMD( ignore )
 {
-	chat_IgnorePlayer( argv, false );
+	chat_ExecuteIgnoreCmd( argv, false );
 }
 
 CCMD( ignore_idx )
 {
-	chat_IgnorePlayer( argv, true );
+	chat_ExecuteIgnoreCmd( argv, true );
 }
 
 //*****************************************************************************
 //
 // [RC] Undos "ignore".
 //
-void chat_UnignorePlayer( FCommandLine &argv, const bool bIsIndexCmd )
+void chat_ExecuteUnignoreCmd( FCommandLine &argv, const bool bIsIndexCmd )
 {
 	int playerIndex = MAXPLAYERS;
 
@@ -1842,7 +1920,7 @@ void chat_UnignorePlayer( FCommandLine &argv, const bool bIsIndexCmd )
 		}
 		else
 		{
-			chat_UnmutePlayer( playerIndex );
+			CHAT_UnignorePlayer( playerIndex );
 			Printf( "%s will no longer be ignored.\n", players[playerIndex].userinfo.GetName( ));
 
 			// Notify the server so that others using this IP are also ignored.
@@ -1854,12 +1932,12 @@ void chat_UnignorePlayer( FCommandLine &argv, const bool bIsIndexCmd )
 
 CCMD( unignore )
 {
-	chat_UnignorePlayer( argv, false );
+	chat_ExecuteUnignoreCmd( argv, false );
 }
 
 CCMD( unignore_idx )
 {
-	chat_UnignorePlayer( argv, true );
+	chat_ExecuteUnignoreCmd( argv, true );
 }
 
 // [TP]

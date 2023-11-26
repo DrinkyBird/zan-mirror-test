@@ -346,6 +346,7 @@ player_t::player_t()
   bIsBot( 0 ),
   bIgnoreChat( 0 ),
   lIgnoreChatTicks( -1 ),
+  ignoreChatReason( ),
   ulPing( 0 ),
   ulPingAverages( 0 ),
   ulCountryIndex( 0 ),
@@ -512,6 +513,7 @@ player_t &player_t::operator=(const player_t &p)
 	bIsBot = p.bIsBot;
 	bIgnoreChat = p.bIgnoreChat;
 	lIgnoreChatTicks = p.lIgnoreChatTicks;
+	ignoreChatReason = p.ignoreChatReason;
 	ulPing = p.ulPing;
 	ulPingAverages = p.ulPingAverages;
 	ulCountryIndex = p.ulCountryIndex;

@@ -1357,6 +1357,21 @@ void SERVERCOMMANDS_PotentiallySendPlayerCommRule( const unsigned int player )
 
 //*****************************************************************************
 //
+void SERVERCOMMANDS_IgnoreLocalPlayer( const unsigned int player, const bool ignore, const int ticks, const char *reason )
+{
+	if ( PLAYER_IsValidPlayer( player ) == false )
+		return;
+
+	ServerCommands::IgnoreLocalPlayer command;
+	command.SetPlayer( &players[player] );
+	command.SetIgnore( ignore );
+	command.SetTicks( ticks );
+	command.SetReason( reason );
+	command.sendCommandToClients( player, SVCF_ONLYTHISCLIENT );
+}
+
+//*****************************************************************************
+//
 void SERVERCOMMANDS_SpawnThing( AActor *pActor, ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
 	if ( pActor == NULL )
