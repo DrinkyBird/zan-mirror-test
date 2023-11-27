@@ -5883,7 +5883,7 @@ static bool server_Say( BYTESTREAM_s *pByteStream )
 		return ( true );
 
 	// [RC] Are this player's chats ignored?
-	if ( players[ulPlayer].bIgnoreChat )
+	if ( players[ulPlayer].ignoreChat.enabled )
 		return ( false );
 
 	// Check for chat flooding.

@@ -2155,9 +2155,7 @@ void G_PlayerReborn (int player, bool bGiveInventory)
 	ULONG		ulUnrewardedDamageDealt;
 	ULONG		ulMedalCount[NUM_MEDALS];
 	CSkullBot	*pSkullBot;
-	bool		bIgnoreChat;
-	LONG		lIgnoreChatTicks;
-	FString		ignoreChatReason;
+	IgnoreComm	ignoreChat;
 	ULONG		ulPing;
 	ULONG		ulPingAverages;
 	ULONG		ulCountryIndex;
@@ -2195,9 +2193,7 @@ void G_PlayerReborn (int player, bool bGiveInventory)
 	ulUnrewardedDamageDealt = p->ulUnrewardedDamageDealt;
 	memcpy( &ulMedalCount, &p->ulMedalCount, sizeof( ulMedalCount ));
 	pSkullBot = p->pSkullBot;
-	bIgnoreChat = p->bIgnoreChat;
-	lIgnoreChatTicks = p->lIgnoreChatTicks;
-	ignoreChatReason = p->ignoreChatReason;
+	ignoreChat = p->ignoreChat;
 	ulPing = p->ulPing;
 	ulPingAverages = p->ulPingAverages;
 	ulCountryIndex = p->ulCountryIndex;
@@ -2260,9 +2256,7 @@ void G_PlayerReborn (int player, bool bGiveInventory)
 	p->ulUnrewardedDamageDealt = ulUnrewardedDamageDealt;
 	memcpy( &p->ulMedalCount, &ulMedalCount, sizeof( ulMedalCount ));
 	p->pSkullBot = pSkullBot;
-	p->bIgnoreChat = bIgnoreChat;
-	p->lIgnoreChatTicks = lIgnoreChatTicks;
-	p->ignoreChatReason = ignoreChatReason;
+	p->ignoreChat = ignoreChat;
 	p->ulPing = ulPing;
 	p->ulPingAverages = ulPingAverages;
 	p->ulCountryIndex = ulCountryIndex;

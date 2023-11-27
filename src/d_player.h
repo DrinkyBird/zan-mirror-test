@@ -511,6 +511,25 @@ struct userinfo_t : TMap<FName,FBaseCVar *>
 void ReadUserInfo(FArchive &arc, userinfo_t &info, FString &skin);
 void WriteUserInfo(FArchive &arc, userinfo_t &info);
 
+// [AK] A structure for muting a player's communications with us.
+struct IgnoreComm
+{
+	bool enabled;
+	int ticks;
+	FString reason;
+
+	IgnoreComm( void ) { Reset( ); }
+	void Reset( void ) { ( *this )( false, -1, "" ); }
+	void operator= ( const IgnoreComm &other ) { ( *this )( other.enabled, other.ticks, other.reason ); }
+
+	void operator() ( const bool ignore, const int newTicks, const char *newReason )
+	{
+		enabled = ignore;
+		ticks = newTicks;
+		reason = newReason;
+	}
+};
+
 //
 // Extended player object info: player_t
 //
@@ -727,13 +746,7 @@ public:
 	bool		bIsBot;
 
 	// [RC] Are we, the client, ignoring this player's chat messages?
-	bool		bIgnoreChat;
-
-	// [RC] Number of ticks until this player can chat again.
-	LONG		lIgnoreChatTicks;
-
-	// [AK] The reason why this player's chat messages have been muted on the server.
-	FString		ignoreChatReason;
+	IgnoreComm	ignoreChat;
 
 	// *** THE FOLLOWING ARE NETWORK VARIABLES ***
 	// Ping of the player to the server he's playing on.

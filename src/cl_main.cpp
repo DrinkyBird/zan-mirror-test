@@ -3061,9 +3061,7 @@ void PLAYER_ResetPlayerData( player_t *pPlayer )
 	pPlayer->bInConsole = 0;
 	pPlayer->bInMenu = 0;
 	pPlayer->bSpectating = 0;
-	pPlayer->bIgnoreChat = 0;
-	pPlayer->lIgnoreChatTicks = -1;
-	pPlayer->ignoreChatReason = "";
+	pPlayer->ignoreChat.Reset( );
 	pPlayer->bDeadSpectator = 0;
 	pPlayer->ulLivesLeft = 0;
 	pPlayer->bStruckPlayer = 0;
@@ -4850,8 +4848,7 @@ void ServerCommands::SendPlayerCommRule::Execute()
 	// [AK] Ignore the player's chat messages, and the duration, if necessary.
 	if ( ignoreChat )
 	{
-		player->bIgnoreChat = true;
-		player->lIgnoreChatTicks = ignoreChatTicks;
+		player->ignoreChat( true, ignoreChatTicks, nullptr );
 
 		const int gender = player->userinfo.GetGender( );
 		Printf( "%s will be ignored, because you're muting %s IP.\n", player->userinfo.GetName( ), gender == GENDER_MALE ? "his" : ( gender == GENDER_FEMALE ? "her" : "its" ));

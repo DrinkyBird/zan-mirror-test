@@ -538,11 +538,11 @@ void CHAT_Tick( void )
 			continue;
 
 		// Decrement this player's timer.
-		if ( players[i].bIgnoreChat && ( players[i].lIgnoreChatTicks > 0 ))
-			players[i].lIgnoreChatTicks--;
+		if ( players[i].ignoreChat.enabled && ( players[i].ignoreChat.ticks > 0 ))
+			players[i].ignoreChat.ticks--;
 
 		// Is it time to un-ignore him?
-		if ( players[i].lIgnoreChatTicks == 0 )
+		if ( players[i].ignoreChat.ticks == 0 )
 		{
 			// [AK] Don't let the local player unignore themselves if they've
 			// been ignored on the server. The server will tell them when.
@@ -956,7 +956,7 @@ void CHAT_PrintChatString( ULONG ulPlayer, ULONG ulMode, const char *pszString )
 	FString		ChatString;
 
 	// [RC] Are we ignoring this player?
-	if (( ulPlayer != MAXPLAYERS ) && players[ulPlayer].bIgnoreChat )
+	if (( ulPlayer != MAXPLAYERS ) && players[ulPlayer].ignoreChat.enabled )
 		return;
 
 	// [AK] Sanity check, make sure the chat mode is valid.
@@ -1168,9 +1168,7 @@ void CHAT_IgnorePlayer( const unsigned int player, const unsigned int ticks, con
 	if ( PLAYER_IsValidPlayer( player ) == false )
 		return;
 
-	players[player].bIgnoreChat = true;
-	players[player].lIgnoreChatTicks = ticks;
-	players[player].ignoreChatReason = reason;
+	players[player].ignoreChat( true, ticks, reason );
 
 	// [JK] Tell the client that they've been muted on the server.
 	if ( NETWORK_GetState( ) != NETSTATE_SERVER )
@@ -1232,7 +1230,7 @@ void CHAT_ExecuteIgnoreCmd( FCommandLine &argv, const bool isIndexCmd )
 		{
 			Printf( "You can't ignore yourself.\n" );
 		}
-		else if (( players[playerIndex].bIgnoreChat ) && ( players[playerIndex].lIgnoreChatTicks == ticks ))
+		else if (( players[playerIndex].ignoreChat.enabled ) && ( players[playerIndex].ignoreChat.ticks == ticks ))
 		{
 			Printf( "You're already ignoring %s.\n", players[playerIndex].userinfo.GetName( ));
 		}
@@ -1266,12 +1264,7 @@ void CHAT_UnignorePlayer( const unsigned int player )
 	if ( PLAYER_IsValidPlayer( player ) == false )
 		return;
 
-	players[player].bIgnoreChat = false;
-	players[player].ignoreChatReason = "";
-
-	// [BB] The player is unignored indefinitely. If we wouldn't do this,
-	// bIgnoreChat would be set to false every tic once lIgnoreChatTicks reaches 0.
-	players[player].lIgnoreChatTicks = -1;
+	players[player].ignoreChat.Reset( );
 
 	// [JK] Tell the client that they're no longer muted on the server.
 	if ( NETWORK_GetState( ) != NETSTATE_SERVER )
@@ -1315,7 +1308,7 @@ void CHAT_ExecuteUnignoreCmd( FCommandLine &argv, const bool isIndexCmd )
 		{
 			Printf( "You can't unignore yourself.\n" );
 		}
-		else if ( !players[playerIndex].bIgnoreChat )
+		else if ( !players[playerIndex].ignoreChat.enabled )
 		{
 			Printf( "You're not ignoring %s.\n", players[playerIndex].userinfo.GetName( ));
 		}
@@ -1343,11 +1336,11 @@ void CHAT_PrintMutedMessage( void )
 	// Except when the muting time is not limited.
 	FString message = "The server has muted you. Nobody can see your messages";
 
-	if ( players[consoleplayer].lIgnoreChatTicks != -1 )
+	if ( players[consoleplayer].ignoreChat.ticks != -1 )
 	{
 		// [EP] Print how many minutes and how many seconds are left.
-		int minutes = static_cast<int>( players[consoleplayer].lIgnoreChatTicks / ( TICRATE * MINUTE ));
-		int seconds = static_cast<int>(( players[consoleplayer].lIgnoreChatTicks / TICRATE ) % MINUTE );
+		int minutes = static_cast<int>( players[consoleplayer].ignoreChat.ticks / ( TICRATE * MINUTE ));
+		int seconds = static_cast<int>(( players[consoleplayer].ignoreChat.ticks / TICRATE ) % MINUTE );
 
 		if (( minutes > 0 ) && ( seconds > 0 ))
 		{
@@ -1373,8 +1366,8 @@ void CHAT_PrintMutedMessage( void )
 	message += '.';
 
 	// [JK] If a reason is provided, print it.
-	if ( players[consoleplayer].ignoreChatReason.Len( ) > 0 )
-		message.AppendFormat( " Reason: %s", players[consoleplayer].ignoreChatReason.GetChars( ));
+	if ( players[consoleplayer].ignoreChat.reason.Len( ) > 0 )
+		message.AppendFormat( " Reason: %s", players[consoleplayer].ignoreChat.reason.GetChars( ));
 
 	Printf( "%s\n", message.GetChars( ));
 }
@@ -1385,7 +1378,7 @@ void CHAT_PrintMutedMessage( void )
 void chat_SendMessage( ULONG ulMode, const char *pszString )
 {
 	// [AK] Don't send the chat message if we're ignored on the server.
-	if ( players[consoleplayer].bIgnoreChat )
+	if ( players[consoleplayer].ignoreChat.enabled )
 	{
 		CHAT_PrintMutedMessage( );
 	}
@@ -1452,7 +1445,7 @@ FString chat_GetIgnoredPlayers( void )
 	for ( ULONG i = 0; i < MAXPLAYERS; i++ )
 	{
 		// [AK] Don't include the local player in this list.
-		if (( players[i].bIgnoreChat ) && (( NETWORK_GetState( ) == NETSTATE_SERVER ) || ( i != static_cast<ULONG>( consoleplayer ))))
+		if (( players[i].ignoreChat.enabled ) && (( NETWORK_GetState( ) == NETSTATE_SERVER ) || ( i != static_cast<ULONG>( consoleplayer ))))
 		{
 			// [AK] Add a ", " after the previous player.
 			if ( result.Len( ) > 0 )
@@ -1461,9 +1454,9 @@ FString chat_GetIgnoredPlayers( void )
 			result += players[i].userinfo.GetName( );
 
 			// Add the time remaining.
-			if ( players[i].lIgnoreChatTicks > 0 )
+			if ( players[i].ignoreChat.ticks > 0 )
 			{
-				int iMinutesLeft = static_cast<int>( 1 + players[i].lIgnoreChatTicks / ( MINUTE * TICRATE ));
+				int iMinutesLeft = static_cast<int>( 1 + players[i].ignoreChat.ticks / ( MINUTE * TICRATE ));
 				result.AppendFormat( " (%d minute%s left)", iMinutesLeft, ( iMinutesLeft == 1 ? "" : "s" ));
 			}
 		}
