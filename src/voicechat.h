@@ -162,7 +162,7 @@ public:
 	bool IsTestingMicrophone( void ) const { return false; }
 	float GetTestRMSVolume( void ) const { return MIN_DECIBELS; }
 	float GetChannelVolume( const unsigned int player ) const { return 0.0f; }
-	void SetChannelVolume( const unsigned int player, float volume ) { }
+	void SetChannelVolume( const unsigned int player, float volume, const bool updateServer ) { }
 	void SetVolume( float volume ) { }
 	void SetPitch( float pitch ) { }
 	void SetMicrophoneTest( const bool enable ) { }
@@ -194,7 +194,7 @@ private:
 	bool IsTestingMicrophone( void ) const { return isTesting; }
 	float GetTestRMSVolume( void ) const { return testRMSVolume; }
 	float GetChannelVolume( const unsigned int player ) const;
-	void SetChannelVolume( const unsigned int player, float volume );
+	void SetChannelVolume( const unsigned int player, float volume, const bool updateServer );
 	void SetVolume( float volume );
 	void SetPitch( float pitch );
 	void SetMicrophoneTest( const bool enable );

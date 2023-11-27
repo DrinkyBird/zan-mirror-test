@@ -138,9 +138,11 @@ CVAR ( Int, menu_callvoteplayer, 0, 0 )
 CVAR ( Bool, menu_callvoteban, 0, 0 )
 CVAR ( Int, menu_jointeamidx, 0, 0 )
 CVAR ( Int, menu_joinclassidx, 0, 0 )
-CVAR ( Int, menu_ignoreplayer, 0, 0 )
+CVAR ( Int, menu_playerindex, 0, 0 )
 CVAR ( Int, menu_ignoreduration, 0, 0 )
-CVAR ( Bool, menu_ignoreaction, false, 0 )
+CVAR ( Bool, menu_ignoreaction, true, 0 )
+CVAR ( Bool, menu_ignoretype, false, 0 )
+CVAR ( Float, menu_voicevolume, 1.0f, 0 )
 CVAR ( String, menu_authusername, 0, 0 )
 CVAR ( String, menu_authpassword, 0, 0 )
 CVAR ( Int, menu_skirmishskill, 0, CVAR_ARCHIVE )
@@ -650,6 +652,48 @@ IMPLEMENT_CLASS( DVoiceChatMenu )
 
 // =================================================================================================
 //
+// [AK] DPlayerListMenu
+//
+// The player list menu, allowing the user to (un)ignore another player's chat messages or voice,
+// or adjust the volume of their VoIP channel.
+//
+// =================================================================================================
+
+class DPlayerListMenu : public DOptionMenu
+{
+	DECLARE_CLASS( DPlayerListMenu, DOptionMenu )
+
+public:
+	void Init( DMenu *parent, FOptionMenuDescriptor *desc )
+	{
+		// [AK] Set the volume slider to the selected player's VoIP channel volume. If no valid
+		// player is selected, then reset the slider back to default.
+		if ( PLAYER_IsValidPlayer( menu_playerindex ))
+			menu_voicevolume = VOIPController::GetInstance( ).GetChannelVolume( menu_playerindex );
+		else
+			menu_voicevolume.ResetToDefault( );
+
+		Super::Init( parent, desc );
+	}
+
+	void CVarChanged( FBaseCVar *cvar )
+	{
+		if ( PLAYER_IsValidPlayer( menu_playerindex ) == false )
+			return;
+
+		// [AK] If the selected player has changed, set the volume slider to their VoIP channel volume.
+		if ( cvar == &menu_playerindex )
+			menu_voicevolume = VOIPController::GetInstance( ).GetChannelVolume( menu_playerindex );
+		// [AK] If the volume slider has changed, update the selected player's VoIP channel volume.
+		else if (( cvar == &menu_voicevolume ) && ( mDesc->mItems[mDesc->mSelectedItem]->GetAction( nullptr ) == FName( "menu_voicevolume" )))
+			VOIPController::GetInstance( ).SetChannelVolume( menu_playerindex, menu_voicevolume, true );
+	}
+};
+
+IMPLEMENT_CLASS( DPlayerListMenu )
+
+// =================================================================================================
+//
 //
 //
 //
@@ -797,23 +841,22 @@ static void M_CallResetMapVote()
 
 static void M_ExecuteIgnore()
 {
-	if ( PLAYER_IsValidPlayer( menu_ignoreplayer ) )
+	if ( PLAYER_IsValidPlayer( menu_playerindex ) )
 	{
 		FString command;
 
-		if ( menu_ignoreaction == 0 )
+		if ( menu_ignoreaction )
 		{
 			// Ignore a player
-			command.Format( "ignore_idx %d %d", *menu_ignoreplayer, *menu_ignoreduration );
+			command.Format( "%signore_idx %d %d", menu_ignoretype ? "voice_" : "", *menu_playerindex, *menu_ignoreduration );
 		}
 		else
 		{
 			// Unignore a player
-			command.Format( "unignore_idx %d", *menu_ignoreplayer );
+			command.Format( "%sunignore_idx %d", menu_ignoretype ? "voice_" : "", *menu_playerindex );
 		}
 
 		C_DoCommand( command );
-		M_ClearMenus();
 	}
 }
 

@@ -258,23 +258,15 @@ static void voicechat_SetChannelVolume( FCommandLine &argv, const bool isIndexCm
 			return;
 		}
 
-		const float oldVolume = VOIPController::GetInstance( ).GetChannelVolume( player );
-
 		// [AK] If no volume was passed with this command's arguments, then just
 		// print the current volume of the player's channel.
 		if ( argv.argc( ) < 3 )
 		{
-			Printf( "%s's channel volume is %.3g.\n", players[player].userinfo.GetName( ), oldVolume );
+			Printf( "%s's channel volume is %.3g.\n", players[player].userinfo.GetName( ), VOIPController::GetInstance( ).GetChannelVolume( player ));
 			return;
 		}
 
-		float newVolume = clamp<float>( static_cast<float>( atof( argv[2] )), 0.0f, 2.0f );
-
-		VOIPController::GetInstance( ).SetChannelVolume( player, newVolume );
-
-		// [AK] Tell the server what volume we set this player's channel to.
-		if (( NETWORK_GetState( ) == NETSTATE_CLIENT ) && ( newVolume != oldVolume ))
-			CLIENTCOMMANDS_SetVoIPChannelVolume( player, newVolume );
+		VOIPController::GetInstance( ).SetChannelVolume( player, clamp<float>( static_cast<float>( atof( argv[2] )), 0.0f, 2.0f ), true );
 	}
 }
 
@@ -1106,12 +1098,17 @@ float VOIPController::GetChannelVolume( const unsigned int player ) const
 //
 //*****************************************************************************
 
-void VOIPController::SetChannelVolume( const unsigned int player, float volume )
+void VOIPController::SetChannelVolume( const unsigned int player, float volume, const bool updateServer )
 {
 	if (( isInitialized == false ) || ( player >= MAXPLAYERS ))
 		return;
 
+	const float oldVolume = channelVolumes[player];
 	channelVolumes[player] = volume;
+
+	// [AK] Tell the server what volume we set this player's channel to.
+	if (( NETWORK_GetState( ) == NETSTATE_CLIENT ) && ( updateServer ) && ( volume != oldVolume ))
+		CLIENTCOMMANDS_SetVoIPChannelVolume( player, volume );
 
 	if (( VoIPChannels[player] == nullptr ) || ( VoIPChannels[player]->channel == nullptr ))
 		return;

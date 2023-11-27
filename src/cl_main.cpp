@@ -4844,7 +4844,7 @@ void ServerCommands::SendPlayerCommRule::Execute()
 {
 	// [AK] Set the player's VoIP channel volume if it was sent.
 	if ( sendVoIPChannelVolume )
-		VOIPController::GetInstance( ).SetChannelVolume( player - players, clamp<float>( VoIPChannelVolume, 0.0f, 2.0f ));
+		VOIPController::GetInstance( ).SetChannelVolume( player - players, clamp<float>( VoIPChannelVolume, 0.0f, 2.0f ), false );
 
 	// [AK] Ignore the player's chat messages or voice, if necessary.
 	if (( ignoreChat ) || ( ignoreVoice ))

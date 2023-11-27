@@ -51,7 +51,7 @@ OptionMenu ZA_MultiplayerOptions
 	Command		"Disconnect",				"menu_disconnect"
 	StaticText	" "
 	SubMenu		"Call a vote",				"ZA_CallVote"
-	SubMenu		"Ignore a player",			"ZA_IgnoreMenu"
+	SubMenu		"Player list",				"ZA_PlayerListMenu"
 	StaticText	" "
 	Option		"Start as spectator",		"cl_startasspectator",		"YesNo"
 	TextField	"Server password",			"cl_password"
@@ -452,9 +452,21 @@ OptionMenu ZA_CallResetMapVote
 
 // =================================================================================================
 //
-// IGNORE A PLAYER MENU
+// PLAYER LIST MENU
 //
 // =================================================================================================
+
+OptionValue ZA_IgnoreAction
+{
+	0, "Unignore"
+	1, "Ignore"
+}
+
+OptionValue ZA_IgnoreType
+{
+	0, "Chat messages"
+	1, "Voice"
+}
 
 OptionValue ZA_IgnoreDuration
 {
@@ -464,26 +476,28 @@ OptionValue ZA_IgnoreDuration
 	30, "30 minutes"
 }
 
-OptionValue ZA_IgnoreAction
+OptionMenu ZA_PlayerListMenu
 {
-	0, "Ignore"
-	1, "Unignore"
-}
-
-OptionMenu ZA_IgnoreMenu
-{
-	Title "IGNORE A PLAYER"
+	Title "PLAYER LIST"
+	Class "PlayerListMenu"
 	NetGameOnly
 
-	PlayerField	"Player",				"menu_ignoreplayer",			NoBots, NotSelf
+	PlayerField	"Player",			"menu_playerindex",		NoBots, NotSelf
+	StaticText	" "
+	StaticText	"Ignore or unignore them", 1
+	StaticText	" "
+	Option		"Action",			"menu_ignoreaction",		"ZA_IgnoreAction"
+	Option		"What",				"menu_ignoretype",		"ZA_IgnoreType"
 	// [TP] Perhaps this could be a slider? But then we need to somehow make it display
 	// 0 as "indefinitely". Qt solved this (although with spinboxes) with a "special value"
 	// attribute which is displayed instead of the value when the value is at the minimum.
 	// Maybe something similar could be done here? This needs to be coordinated with ZDoom though.
-	Option		"Duration",				"menu_ignoreduration",			"ZA_IgnoreDuration"
+	Option		"Duration",			"menu_ignoreduration",		"ZA_IgnoreDuration",	"menu_ignoreaction"
+	Command		"Execute!",			"menu_ignore"
 	StaticText	" "
-	Option		"Action",				"menu_ignoreaction",			"ZA_IgnoreAction"
-	Command		"Execute!",				"menu_ignore"
+	StaticText	"Adjust their VoIP channel volume", 1
+	StaticText	" "
+	Slider		"Volume",			"menu_voicevolume",		0.0, 2.0, 0.1
 }
 
 // =================================================================================================
