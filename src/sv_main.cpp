@@ -3938,8 +3938,9 @@ bool SERVER_IsPlayerAllowedToKnowHealth( ULONG ulPlayer, ULONG ulPlayer2 )
 // 
 // [RC] Is this player ignoring players at this address?
 // Returns 0 (if not), -1 (if indefinitely), or the tics until expiration (if temporarily).
+// [AK] Updated to return either if this address's chat messages or voice are ignored.
 //
-LONG SERVER_GetPlayerIgnoreTic( const unsigned int player, NETADDRESS_s address )
+LONG SERVER_GetPlayerIgnoreTic( const unsigned int player, NETADDRESS_s address, const bool doVoice )
 {
 	// Remove all expired entries first.
 	SERVER_GetClient( player )->UpdateCommRules( );
@@ -3949,10 +3950,14 @@ LONG SERVER_GetPlayerIgnoreTic( const unsigned int player, NETADDRESS_s address 
 	// Search for entries with this address.
 	for ( std::list<ClientCommRule>::iterator i = list.begin( ); i != list.end( ); i++ )
 	{
-		if (( i->address.CompareNoPort( address )) && ( i->ignoreChat ))
+		const bool ignored = doVoice ? i->ignoreVoice : i->ignoreChat;
+
+		if (( i->address.CompareNoPort( address )) && ( ignored ))
 		{
-			if ( i->unignoreChatGametic != -1 )
-				return i->unignoreChatGametic - gametic;
+			const int unignoredGametic = doVoice ? i->unignoreVoiceGametic : i->unignoreChatGametic;
+
+			if ( unignoredGametic != -1 )
+				return unignoredGametic - gametic;
 			else
 				return -1;
 		}
@@ -5161,7 +5166,11 @@ bool SERVER_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 			unsigned char *data = new unsigned char[length];
 
 			pByteStream->ReadBuffer( data, length );
-			SERVERCOMMANDS_PlayerVoIPAudioPacket( g_lCurrentClient, frame, data, length );
+
+			// [AK] Only send out the VoIP audio packet if the player isn't ignored.
+			if ( players[g_lCurrentClient].ignoreVoice.enabled == false )
+				SERVERCOMMANDS_PlayerVoIPAudioPacket( g_lCurrentClient, frame, data, length );
+
 			delete[] data;
 		}
 		break;
@@ -5682,14 +5691,32 @@ void SERVER_ResetClientExtrapolation( ULONG ulClient, bool bAfterBacktrace )
 ClientCommRule::ClientCommRule( NETADDRESS_s address ) :
 	address( address ),
 	ignoreChat( false ),
+	ignoreVoice( false ),
 	unignoreChatGametic( 0 ),
+	unignoreVoiceGametic( 0 ),
 	VoIPChannelVolume( 1.0f ) { }
+
+//*****************************************************************************
+//
+void ClientCommRule::SetIgnore( const bool doVoice, const bool ignore, const int unignoreTick )
+{
+	if ( doVoice )
+	{
+		ignoreVoice = ignore;
+		unignoreVoiceGametic = unignoreTick;
+	}
+	else
+	{
+		ignoreChat = ignore;
+		unignoreChatGametic = unignoreTick;
+	}
+}
 
 //*****************************************************************************
 //
 bool ClientCommRule::IsObsolete( void ) const
 {
-	return (( ignoreChat == false ) && ( VoIPChannelVolume == 1.0f ));
+	return (( ignoreChat == false ) && ( ignoreVoice == false ) && ( VoIPChannelVolume == 1.0f ));
 }
 
 //*****************************************************************************
@@ -5697,13 +5724,14 @@ bool ClientCommRule::IsObsolete( void ) const
 static bool server_Ignore( BYTESTREAM_s *pByteStream )
 {
 	const unsigned int targetPlayer = pByteStream->ReadByte( );
-	const bool ignore = !!pByteStream->ReadByte( );
+	const bool ignore = !!pByteStream->ReadBit( );
+	const bool doVoice = !!pByteStream->ReadBit( );
 	const int ticks = pByteStream->ReadLong( );
 
 	if ( !SERVER_IsValidClient( targetPlayer ))
 		return false;
 
-	const int unignoreChatTick = ( ticks == -1 ) ? ticks : ( gametic + ticks );
+	const int unignoreTick = ( ticks == -1 ) ? ticks : ( gametic + ticks );
 	NETADDRESS_s addressToIgnore = SERVER_GetClient( targetPlayer )->Address;
 	std::list<ClientCommRule> &list = SERVER_GetClient( g_lCurrentClient )->commRules;
 
@@ -5711,8 +5739,7 @@ static bool server_Ignore( BYTESTREAM_s *pByteStream )
 	{
 		if ( i->address.CompareNoPort( addressToIgnore ))
 		{
-			i->ignoreChat = ignore;
-			i->unignoreChatGametic = unignoreChatTick;
+			i->SetIgnore( doVoice, ignore, unignoreTick );
 
 			if ( i->IsObsolete( ))
 				list.erase( i );
@@ -5724,8 +5751,7 @@ static bool server_Ignore( BYTESTREAM_s *pByteStream )
 	if ( ignore )
 	{
 		ClientCommRule entry( addressToIgnore );
-		entry.ignoreChat = true;
-		entry.unignoreChatGametic = unignoreChatTick;
+		entry.SetIgnore( doVoice, true, unignoreTick );
 
 		list.push_back( entry );
 	}
@@ -5889,7 +5915,7 @@ static bool server_Say( BYTESTREAM_s *pByteStream )
 	// Check for chat flooding.
 	if ( server_CheckForChatFlood ( ulPlayer ) == true )
 	{
-		CHAT_IgnorePlayer( ulPlayer, 15 * TICRATE, "chatting too much" );
+		CHAT_IgnorePlayer( ulPlayer, false, 15 * TICRATE, "chatting too much" );
 		return ( false );
 	}
 	// Or, relay the chat message onto clients.
@@ -7815,11 +7841,13 @@ void CLIENT_s::UpdateCommRules( void )
 {
 	for ( std::list<ClientCommRule>::iterator i = commRules.begin( ); i != commRules.end( ); )
 	{
+		// [AK] Check if this address's chat messages are now unignored.
 		if (( i->ignoreChat ) && ( i->unignoreChatGametic != -1 ) && ( i->unignoreChatGametic <= gametic ))
-		{
-			i->ignoreChat = false;
-			i->unignoreChatGametic = 0;
-		}
+			i->SetIgnore( false, false, 0 );
+
+		// [AK] The same goes for this address's VoIP audio packets.
+		if (( i->ignoreVoice ) && ( i->unignoreVoiceGametic != -1 ) && ( i->unignoreVoiceGametic <= gametic ))
+			i->SetIgnore( true, false, 0 );
 
 		if ( i->IsObsolete( ))
 			commRules.erase( i );

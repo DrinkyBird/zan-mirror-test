@@ -3062,6 +3062,7 @@ void PLAYER_ResetPlayerData( player_t *pPlayer )
 	pPlayer->bInMenu = 0;
 	pPlayer->bSpectating = 0;
 	pPlayer->ignoreChat.Reset( );
+	pPlayer->ignoreVoice.Reset( );
 	pPlayer->bDeadSpectator = 0;
 	pPlayer->ulLivesLeft = 0;
 	pPlayer->bStruckPlayer = 0;
@@ -4845,13 +4846,32 @@ void ServerCommands::SendPlayerCommRule::Execute()
 	if ( sendVoIPChannelVolume )
 		VOIPController::GetInstance( ).SetChannelVolume( player - players, clamp<float>( VoIPChannelVolume, 0.0f, 2.0f ));
 
-	// [AK] Ignore the player's chat messages, and the duration, if necessary.
-	if ( ignoreChat )
+	// [AK] Ignore the player's chat messages or voice, if necessary.
+	if (( ignoreChat ) || ( ignoreVoice ))
 	{
-		player->ignoreChat( true, ignoreChatTicks, nullptr );
-
 		const int gender = player->userinfo.GetGender( );
-		Printf( "%s will be ignored, because you're muting %s IP.\n", player->userinfo.GetName( ), gender == GENDER_MALE ? "his" : ( gender == GENDER_FEMALE ? "her" : "its" ));
+		FString message;
+
+		message.Format( "%s's ", player->userinfo.GetName( ));
+
+		if ( ignoreChat )
+		{
+			player->ignoreChat( true, ignoreChatTicks, nullptr );
+			message += "chat messages";
+		}
+
+		if ( ignoreVoice )
+		{
+			player->ignoreVoice( true, ignoreVoiceTicks, nullptr );
+
+			if ( ignoreChat )
+				message += " and ";
+
+			message += "voice";
+		}
+
+		message.AppendFormat( " will be ignored, because you're muting %s IP.\n", gender == GENDER_MALE ? "his" : ( gender == GENDER_FEMALE ? "her" : "its" ));
+		Printf( "%s\n", message.GetChars( ));
 	}
 }
 
@@ -4860,9 +4880,9 @@ void ServerCommands::SendPlayerCommRule::Execute()
 void ServerCommands::IgnoreLocalPlayer::Execute()
 {
 	if ( ignore )
-		CHAT_IgnorePlayer( player - players, ticks, reason );
+		CHAT_IgnorePlayer( player - players, doVoice, ticks, reason );
 	else
-		CHAT_UnignorePlayer( player - players );
+		CHAT_UnignorePlayer( player - players, doVoice );
 }
 
 //*****************************************************************************

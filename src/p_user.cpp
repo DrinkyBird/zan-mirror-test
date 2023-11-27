@@ -509,6 +509,7 @@ player_t &player_t::operator=(const player_t &p)
 	pSkullBot = p.pSkullBot;
 	bIsBot = p.bIsBot;
 	ignoreChat = p.ignoreChat;
+	ignoreVoice = p.ignoreVoice;
 	ulPing = p.ulPing;
 	ulPingAverages = p.ulPingAverages;
 	ulCountryIndex = p.ulCountryIndex;

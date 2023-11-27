@@ -748,6 +748,9 @@ public:
 	// [RC] Are we, the client, ignoring this player's chat messages?
 	IgnoreComm	ignoreChat;
 
+	// [AK] Are we ignoring this player's voice?
+	IgnoreComm	ignoreVoice;
+
 	// *** THE FOLLOWING ARE NETWORK VARIABLES ***
 	// Ping of the player to the server he's playing on.
 	ULONG		ulPing;

@@ -317,10 +317,15 @@ Command SendPlayerCommRule
 	ExtendedCommand
 	Player player with IndexTestOnly
 	Bool ignoreChat
+	Bool ignoreVoice
 	Bool sendVoIPChannelVolume
 
 	If (ignoreChat)
 		Long ignoreChatTicks
+	EndIf
+
+	If (ignoreVoice)
+		Long ignoreVoiceTicks
 	EndIf
 
 	If (sendVoIPChannelVolume)
@@ -332,6 +337,7 @@ Command IgnoreLocalPlayer
 	ExtendedCommand
 	Player player with IndexTestOnly
 	Bool ignore
+	Bool doVoice
 
 	If (ignore)
 		Long ticks

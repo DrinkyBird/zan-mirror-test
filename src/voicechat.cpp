@@ -47,7 +47,6 @@
 
 #include "voicechat.h"
 #include "c_console.h"
-#include "c_dispatch.h"
 #include "cl_commands.h"
 #include "cl_demo.h"
 #include "d_netinf.h"
@@ -58,6 +57,7 @@
 #include "st_hud.h"
 #include "st_stuff.h"
 #include "team.h"
+#include "chat.h"
 
 // [AK] These files must be included to also include "optionmenuitems.h".
 #include "menu/menu.h"
@@ -209,6 +209,28 @@ CUSTOM_CVAR( Float, sv_maxproximityrolloffdist, 1200.0f, CVAR_NOSETBYACS | CVAR_
 
 //*****************************************************************************
 //	CONSOLE COMMANDS
+
+// [AK] Ignores a player's voice, using either their name or index.
+CCMD( voice_ignore )
+{
+	CHAT_ExecuteIgnoreCmd( argv, false, true );
+}
+
+CCMD( voice_ignore_idx )
+{
+	CHAT_ExecuteIgnoreCmd( argv, true, true );
+}
+
+// [AK] Unignores a player's voice, using either their name or index.
+CCMD( voice_unignore )
+{
+	CHAT_ExecuteUnignoreCmd( argv, false, true );
+}
+
+CCMD( voice_unignore_idx )
+{
+	CHAT_ExecuteUnignoreCmd( argv, true, true );
+}
 
 // [AK] Everything past this point only compiles if compiling with sound.
 #ifndef NO_SOUND
@@ -567,6 +589,24 @@ static void voicechat_ReadSoundBuffer( T *object, FMOD::Sound *sound, unsigned i
 //
 void VOIPController::Tick( void )
 {
+	// [AK] Check if any players' voices need to be unignored.
+	for ( unsigned int i = 0; i < MAXPLAYERS; i++ )
+	{
+		if ( playeringame[i] == false )
+			continue;
+
+		if (( players[i].ignoreVoice.enabled ) && ( players[i].ignoreVoice.ticks > 0 ))
+			players[i].ignoreVoice.ticks--;
+
+		if ( players[i].ignoreVoice.ticks == 0 )
+		{
+			// [AK] Don't let the local player unignore themselves if they've
+			// been ignored on the server. The server will tell them when.
+			if (( NETWORK_GetState( ) == NETSTATE_SERVER ) || ( i != static_cast<unsigned>( consoleplayer )))
+				CHAT_UnignorePlayer( i, true );
+		}
+	}
+
 	// [AK] Don't tick while the VoIP controller is uninitialized.
 	if ( isInitialized == false )
 		return;
@@ -580,6 +620,8 @@ void VOIPController::Tick( void )
 	{
 		Deactivate( );
 	}
+
+	const bool isNotIgnored = !players[consoleplayer].ignoreVoice.enabled;
 
 	// [AK] Check the status of the "voicerecord" button. If the button's been
 	// pressed, start transmitting, or it's been released stop transmitting.
@@ -600,16 +642,27 @@ void VOIPController::Tick( void )
 		if ( players[consoleplayer].userinfo.GetVoiceEnable( ) == VOICEMODE_PUSHTOTALK )
 		{
 			if ( IsVoiceChatAllowed( ))
-				StartTransmission( TRANSMISSIONTYPE_BUTTON, true );
+			{
+				if ( isNotIgnored )
+					StartTransmission( TRANSMISSIONTYPE_BUTTON, true );
+				else
+					CHAT_PrintMutedMessage( true );
+			}
 			// [AK] We can't transmit if we're watching a demo.
 			else if ( CLIENTDEMO_IsPlaying( ))
+			{
 				Printf( "Voice chat can't be used during demo playback.\n" );
+			}
 			// ...or if we're in an offline game.
 			else if (( NETWORK_GetState( ) == NETSTATE_SINGLE ) || ( NETWORK_GetState( ) == NETSTATE_SINGLE_MULTIPLAYER ))
+			{
 				Printf( "Voice chat can't be used in a singleplayer game.\n" );
+			}
 			// ...or if the server has disabled voice chatting.
 			else if ( sv_allowvoicechat == VOICECHAT_OFF )
+			{
 				Printf( "Voice chat has been disabled by the server.\n" );
+			}
 		}
 	}
 
@@ -620,7 +673,7 @@ void VOIPController::Tick( void )
 	// now, or using voice activity detection? We'll check if we have enough new
 	// samples recorded to fill an audio frame that can be encoded and sent out.
 	// This also applies while testing the microphone.
-	if (( transmissionType != TRANSMISSIONTYPE_OFF ) || ( players[consoleplayer].userinfo.GetVoiceEnable( ) == VOICEMODE_VOICEACTIVITY ) || ( isTesting ))
+	if ((( isNotIgnored ) && (( transmissionType != TRANSMISSIONTYPE_OFF ) || ( players[consoleplayer].userinfo.GetVoiceEnable( ) == VOICEMODE_VOICEACTIVITY ))) || ( isTesting ))
 	{
 		unsigned int recordPosition = 0;
 
@@ -645,8 +698,8 @@ void VOIPController::Tick( void )
 		if ( VoIPChannels[i] == nullptr )
 			continue;
 
-		// [AK] Delete this channel if this player's no longer valid.
-		if ( PLAYER_IsValidPlayer( i ) == false )
+		// [AK] Delete this channel if this player's no longer valid, or ignored.
+		if (( PLAYER_IsValidPlayer( i ) == false ) || (( i != static_cast<unsigned>( consoleplayer )) && ( players[i].ignoreVoice.enabled )))
 		{
 			RemoveVoIPChannel( i );
 			continue;
@@ -1252,6 +1305,10 @@ void VOIPController::ReceiveAudioPacket( const unsigned int player, const unsign
 		return;
 
 	if (( PLAYER_IsValidPlayer( player ) == false ) || ( data == nullptr ) || ( length == 0 ))
+		return;
+
+	// [AK] Don't process any audio frames from other players that are ignored.
+	if (( player != static_cast<unsigned>( consoleplayer )) && ( players[player].ignoreVoice.enabled ))
 		return;
 
 	// [AK] If this player's channel doesn't exist yet, create a new one.

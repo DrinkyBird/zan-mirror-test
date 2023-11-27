@@ -1177,7 +1177,7 @@ void SERVERCOMMANDS_PrivateSay( ULONG ulSender, ULONG ulReceiver, const char *ps
 	if ( ulReceiver != MAXPLAYERS )
 	{
 		// [AK] Don't send the command if the sender is supposed to be ignoring the player who receives the message.
-		if (( ulSender != MAXPLAYERS ) && ( SERVER_GetPlayerIgnoreTic( ulSender, SERVER_GetClient( ulReceiver )->Address ) != 0 ))
+		if (( ulSender != MAXPLAYERS ) && ( SERVER_GetPlayerIgnoreTic( ulSender, SERVER_GetClient( ulReceiver )->Address, false ) != 0 ))
 		{
 			SERVER_PrintfPlayer( ulSender, "You have ignored %s on your end, so you can't send any private messages to them.\n",
 				players[ulReceiver].userinfo.GetName() );
@@ -1186,7 +1186,7 @@ void SERVERCOMMANDS_PrivateSay( ULONG ulSender, ULONG ulReceiver, const char *ps
 
 		// [AK] Don't send the command to the receiver if they're supposed to be ignoring the player who sent the
 		// message. We'll still send the command back to the sender so they can't know if they've been ignored.
-		if (( ulSender == MAXPLAYERS ) || ( SERVER_GetPlayerIgnoreTic( ulReceiver, SERVER_GetClient( ulSender )->Address ) == 0 ))
+		if (( ulSender == MAXPLAYERS ) || ( SERVER_GetPlayerIgnoreTic( ulReceiver, SERVER_GetClient( ulSender )->Address, false ) == 0 ))
 		{
 			command.SetPlayerNumber( ulSender );
 			command.SetMode( CHATMODE_PRIVATE_RECEIVE );
@@ -1264,6 +1264,10 @@ void SERVERCOMMANDS_PlayerVoIPAudioPacket( ULONG player, unsigned int frame, uns
 			if ( players[player].bSpectating != players[*it].bSpectating )
 				continue;
 		}
+
+		// [AK] Don't broadcast to anyone that ignored this player's voice.
+		if ( SERVER_GetPlayerIgnoreTic( *it, SERVER_GetClient( player )->Address, true ) != 0 )
+			continue;
 
 		command.sendCommandToClients( *it, SVCF_ONLYTHISCLIENT );
 	}
@@ -1344,8 +1348,10 @@ void SERVERCOMMANDS_PotentiallySendPlayerCommRule( const unsigned int player )
 				ServerCommands::SendPlayerCommRule command;
 				command.SetPlayer( &players[player] );
 				command.SetIgnoreChat( i->ignoreChat );
+				command.SetIgnoreVoice( i->ignoreVoice );
 				command.SetSendVoIPChannelVolume( i->VoIPChannelVolume != 1.0f );
-				command.SetIgnoreChatTicks( i->ignoreChat ? SERVER_GetPlayerIgnoreTic( *it, address ) : 0 );
+				command.SetIgnoreChatTicks( i->ignoreChat ? SERVER_GetPlayerIgnoreTic( *it, address, false ) : 0 );
+				command.SetIgnoreVoiceTicks( i->ignoreVoice ? SERVER_GetPlayerIgnoreTic( *it, address, true ) : 0 );
 				command.SetVoIPChannelVolume( i->VoIPChannelVolume );
 				command.sendCommandToClients( *it, SVCF_ONLYTHISCLIENT );
 
@@ -1357,7 +1363,7 @@ void SERVERCOMMANDS_PotentiallySendPlayerCommRule( const unsigned int player )
 
 //*****************************************************************************
 //
-void SERVERCOMMANDS_IgnoreLocalPlayer( const unsigned int player, const bool ignore, const int ticks, const char *reason )
+void SERVERCOMMANDS_IgnoreLocalPlayer( const unsigned int player, const bool ignore, const bool doVoice, const int ticks, const char *reason )
 {
 	if ( PLAYER_IsValidPlayer( player ) == false )
 		return;
@@ -1365,6 +1371,7 @@ void SERVERCOMMANDS_IgnoreLocalPlayer( const unsigned int player, const bool ign
 	ServerCommands::IgnoreLocalPlayer command;
 	command.SetPlayer( &players[player] );
 	command.SetIgnore( ignore );
+	command.SetDoVoice( doVoice );
 	command.SetTicks( ticks );
 	command.SetReason( reason );
 	command.sendCommandToClients( player, SVCF_ONLYTHISCLIENT );

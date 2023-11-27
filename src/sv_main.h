@@ -297,10 +297,15 @@ struct ClientCommRule
 {
 	NETADDRESS_s	address;
 	bool			ignoreChat;
+	bool			ignoreVoice;
 	int				unignoreChatGametic;
+	int				unignoreVoiceGametic;
 	float			VoIPChannelVolume;
 
 	ClientCommRule( NETADDRESS_s address );
+
+	// [AK] Updates ignore (chat messages or voice) rules for this address.
+	void SetIgnore( const bool doVoice, const bool ignore, const int unignoreTick );
 
 	// [AK] Checks if this rule isn't needed anymore and should be deleted.
 	bool IsObsolete( void ) const;
@@ -655,7 +660,7 @@ void		SERVER_ForceToSpectate( ULONG ulPlayer, const char *pszReason );
 void		SERVER_AddCommand( const char *pszCommand );
 void		SERVER_DeleteCommand( void );
 bool		SERVER_IsEveryoneReadyToGoOn( void );
-LONG		SERVER_GetPlayerIgnoreTic( const unsigned int player, NETADDRESS_s address ); // [RC]
+LONG		SERVER_GetPlayerIgnoreTic( const unsigned int player, NETADDRESS_s address, const bool doVoice ); // [RC/AK]
 bool		SERVER_IsPlayerVisible( ULONG ulPlayer, ULONG ulPlayer2 );
 bool		SERVER_IsPlayerAllowedToKnowHealth( ULONG ulPlayer, ULONG ulPlayer2 );
 LONG		SERVER_AdjustDoorDirection( LONG lDirection );
