@@ -78,7 +78,7 @@ void	CLIENTCOMMANDS_UserInfo( const UserInfoChanges &cvars );
 void	CLIENTCOMMANDS_SendAllUserInfo();
 void	CLIENTCOMMANDS_SetStatus( const ULONG ulType );
 void	CLIENTCOMMANDS_Say( ULONG ulMode, const char *pszString, ULONG ulPlayer = MAXPLAYERS );
-void	CLIENTCOMMANDS_Ignore( ULONG ulPlayer, bool bIgnore, LONG lTicks = -1 );
+void	CLIENTCOMMANDS_Ignore( const unsigned int player, const bool ignore, const int ticks = -1 );
 void	CLIENTCOMMANDS_ClientMove( void );
 void	CLIENTCOMMANDS_MissingPacket( void );
 void	CLIENTCOMMANDS_Pong( unsigned int time );

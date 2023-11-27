@@ -307,12 +307,12 @@ void CLIENTCOMMANDS_Say( ULONG ulMode, const char *pszString, ULONG ulPlayer )
 
 //*****************************************************************************
 //
-void CLIENTCOMMANDS_Ignore( ULONG ulPlayer, bool bIgnore, LONG lTicks )
+void CLIENTCOMMANDS_Ignore( const unsigned int player, const bool ignore, const int ticks )
 {
 	CLIENT_GetLocalBuffer( )->ByteStream.WriteByte( CLC_IGNORE );
-	CLIENT_GetLocalBuffer( )->ByteStream.WriteByte( ulPlayer );
-	CLIENT_GetLocalBuffer( )->ByteStream.WriteByte( bIgnore );
-	CLIENT_GetLocalBuffer( )->ByteStream.WriteLong( lTicks );
+	CLIENT_GetLocalBuffer( )->ByteStream.WriteByte( player );
+	CLIENT_GetLocalBuffer( )->ByteStream.WriteByte( ignore );
+	CLIENT_GetLocalBuffer( )->ByteStream.WriteLong( ticks );
 }
 
 //*****************************************************************************

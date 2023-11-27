@@ -3939,17 +3939,17 @@ bool SERVER_IsPlayerAllowedToKnowHealth( ULONG ulPlayer, ULONG ulPlayer2 )
 // [RC] Is this player ignoring players at this address?
 // Returns 0 (if not), -1 (if indefinitely), or the tics until expiration (if temporarily).
 //
-LONG SERVER_GetPlayerIgnoreTic( ULONG ulPlayer, NETADDRESS_s Address )
+LONG SERVER_GetPlayerIgnoreTic( const unsigned int player, NETADDRESS_s address )
 {
 	// Remove all expired entries first.
-	SERVER_GetClient( ulPlayer )->UpdateCommRules( );
+	SERVER_GetClient( player )->UpdateCommRules( );
 
-	std::list<ClientCommRule> &list = SERVER_GetClient( ulPlayer )->commRules;
+	std::list<ClientCommRule> &list = SERVER_GetClient( player )->commRules;
 
 	// Search for entries with this address.
 	for ( std::list<ClientCommRule>::iterator i = list.begin( ); i != list.end( ); i++ )
 	{
-		if (( i->address.CompareNoPort( Address )) && ( i->ignoreChat ))
+		if (( i->address.CompareNoPort( address )) && ( i->ignoreChat ))
 		{
 			if ( i->unignoreChatGametic != -1 )
 				return i->unignoreChatGametic - gametic;
