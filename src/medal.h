@@ -203,10 +203,4 @@ void	MEDAL_ClearMedalQueue( ULONG ulPlayer );
 void	MEDAL_PlayerDied( ULONG ulPlayer, ULONG ulSourcePlayer, int dmgflags );
 void	MEDAL_ResetFirstFragAwarded( void );
 
-//*****************************************************************************
-//	EXTERNAL CONSOLE VARIABLES
-
-EXTERN_CVAR( Bool, cl_medals )
-EXTERN_CVAR( Bool, cl_icons )
-
 #endif
