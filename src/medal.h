@@ -129,6 +129,21 @@ enum
 	NUM_MEDALS
 };
 
+//*****************************************************************************
+enum
+{
+	SPRITE_CHAT,
+	SPRITE_VOICECHAT,
+	SPRITE_INCONSOLE,
+	SPRITE_INMENU,
+	SPRITE_ALLY,
+	SPRITE_LAG,
+	SPRITE_WHITEFLAG,
+	SPRITE_TERMINATORARTIFACT,
+	SPRITE_POSSESSIONARTIFACT,
+	SPRITE_TEAMITEM,
+	NUM_SPRITES
+};
 
 //*****************************************************************************
 #define	MEDALQUEUE_DEPTH			NUM_MEDALS
