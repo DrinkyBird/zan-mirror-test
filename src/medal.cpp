@@ -78,37 +78,8 @@
 //*****************************************************************************
 //	VARIABLES
 
-static	MEDAL_t	g_Medals[NUM_MEDALS] =
-{
-	{ "EXCLA0", S_EXCELLENT, "Excellent!", CR_GRAY, "Excellent", NUM_MEDALS, "",	},
-	{ "INCRA0", S_INCREDIBLE, "Incredible!", CR_RED, "Incredible", MEDAL_EXCELLENT, "", },
-
-	{ "IMPRA0", S_IMPRESSIVE, "Impressive!", CR_GRAY, "Impressive", NUM_MEDALS, "", },
-	{ "MIMPA0", S_MOST_IMPRESSIVE, "Most impressive!", CR_RED, "MostImpressive", MEDAL_IMPRESSIVE, "", },
-
-	{ "DOMNA0", S_DOMINATION, "Domination!", CR_GRAY, "Domination", NUM_MEDALS, "", },
-	{ "TDOMA0", S_TOTAL_DOMINATION, "Total domination!", CR_RED, "TotalDomination", MEDAL_DOMINATION, "", },
-
-	{ "ACCUA0", S_ACCURACY, "Accuracy!", CR_GRAY, "Accuracy", NUM_MEDALS, "", },
-	{ "PRECA0", S_PRECISION, "Precision!", CR_RED, "Precision", MEDAL_ACCURACY, "", },
-
-	{ "FAILA0", S_YOUFAILIT, "You fail it!", CR_GREEN, "YouFailIt", NUM_MEDALS, "", },
-	{ "SKILA0", S_YOURSKILLISNOTENOUGH, "Your skill is not enough!", CR_ORANGE, "YourSkillIsNotEnough", MEDAL_YOUFAILIT, "", },
-
-	{ "LLAMA0", S_LLAMA, "Llama!", CR_GREEN, "Llama", NUM_MEDALS, "misc/llama", },
-	{ "SPAMA0", S_SPAM, "Spam!", CR_GREEN, "Spam", MEDAL_LLAMA, "misc/spam", },
-
-	{ "VICTA0", S_VICTORY, "Victory!", CR_GRAY, "Victory", NUM_MEDALS, "", },
-	{ "PFCTA0", S_PERFECT, "Perfect!", CR_RED, "Perfect", MEDAL_VICTORY, "", },
-
-	{ "TRMAA0", S_TERMINATION, "Termination!", CR_GRAY, "Termination", NUM_MEDALS, "", },
-	{ "FFRGA0", S_FIRSTFRAG, "First frag!", CR_GRAY, "FirstFrag", NUM_MEDALS, "", },
-	{ "CAPTA0", S_CAPTURE, "Capture!", CR_GRAY, "Capture", NUM_MEDALS, "", },
-	{ "STAGA0", S_TAG, "Tag!", CR_GRAY, "Tag", NUM_MEDALS, "", },
-	{ "ASSTA0", S_ASSIST, "Assist!", CR_GRAY, "Assist", NUM_MEDALS, "", },
-	{ "DFNSA0", S_DEFENSE, "Defense!", CR_GRAY, "Defense", NUM_MEDALS, "", },
-	{ "FISTA0", S_FISTING, "Fisting!", CR_GRAY, "Fisting", NUM_MEDALS, "", },
-};
+// A list of all defined medals.
+static	MEDAL_t	g_Medals[NUM_MEDALS];
 
 // Any medals that players have recently earned that need to be displayed.
 static	MEDALQUEUE_t	medalQueue[MAXPLAYERS];
@@ -145,6 +116,176 @@ bool	medal_PlayerHasCarrierIcon( ULONG ulPlayer );
 
 void MEDAL_Construct( void )
 {
+	// Excellent
+	g_Medals[MEDAL_EXCELLENT].icon = TexMan.CheckForTexture( "EXCLA0", FTexture::TEX_MiscPatch );
+	g_Medals[MEDAL_EXCELLENT].usFrame = S_EXCELLENT;
+	g_Medals[MEDAL_EXCELLENT].text = "Excellent!";
+	g_Medals[MEDAL_EXCELLENT].textColor = CR_GREY;
+	g_Medals[MEDAL_EXCELLENT].announcerEntry = "Excellent";
+	g_Medals[MEDAL_EXCELLENT].lowerMedal = nullptr;
+
+	// Incredible
+	g_Medals[MEDAL_INCREDIBLE].icon = TexMan.CheckForTexture( "INCRA0", FTexture::TEX_MiscPatch );
+	g_Medals[MEDAL_INCREDIBLE].usFrame = S_INCREDIBLE;
+	g_Medals[MEDAL_INCREDIBLE].text = "Incredible!";
+	g_Medals[MEDAL_INCREDIBLE].textColor = CR_RED;
+	g_Medals[MEDAL_INCREDIBLE].announcerEntry = "Incredible";
+	g_Medals[MEDAL_INCREDIBLE].lowerMedal = &g_Medals[MEDAL_EXCELLENT];
+
+	// Impressive
+	g_Medals[MEDAL_IMPRESSIVE].icon = TexMan.CheckForTexture( "IMPRA0", FTexture::TEX_MiscPatch );
+	g_Medals[MEDAL_IMPRESSIVE].usFrame = S_IMPRESSIVE;
+	g_Medals[MEDAL_IMPRESSIVE].text = "Impressive!";
+	g_Medals[MEDAL_IMPRESSIVE].textColor = CR_GREY;
+	g_Medals[MEDAL_IMPRESSIVE].announcerEntry = "Impressive";
+	g_Medals[MEDAL_IMPRESSIVE].lowerMedal = nullptr;
+
+	// Most impressive
+	g_Medals[MEDAL_MOSTIMPRESSIVE].icon = TexMan.CheckForTexture( "MIMPA0", FTexture::TEX_MiscPatch );
+	g_Medals[MEDAL_MOSTIMPRESSIVE].usFrame = S_MOST_IMPRESSIVE;
+	g_Medals[MEDAL_MOSTIMPRESSIVE].text = "Most impressive!";
+	g_Medals[MEDAL_MOSTIMPRESSIVE].textColor = CR_RED;
+	g_Medals[MEDAL_MOSTIMPRESSIVE].announcerEntry = "MostImpressive";
+	g_Medals[MEDAL_MOSTIMPRESSIVE].lowerMedal = &g_Medals[MEDAL_IMPRESSIVE];
+
+	// Domination
+	g_Medals[MEDAL_DOMINATION].icon = TexMan.CheckForTexture( "DOMNA0", FTexture::TEX_MiscPatch );
+	g_Medals[MEDAL_DOMINATION].usFrame = S_DOMINATION;
+	g_Medals[MEDAL_DOMINATION].text = "Domination!";
+	g_Medals[MEDAL_DOMINATION].textColor = CR_GREY;
+	g_Medals[MEDAL_DOMINATION].announcerEntry = "Domination";
+	g_Medals[MEDAL_DOMINATION].lowerMedal = nullptr;
+
+	// Total domination
+	g_Medals[MEDAL_TOTALDOMINATION].icon = TexMan.CheckForTexture( "TDOMA0", FTexture::TEX_MiscPatch );
+	g_Medals[MEDAL_TOTALDOMINATION].usFrame = S_TOTAL_DOMINATION;
+	g_Medals[MEDAL_TOTALDOMINATION].text = "Total domination!";
+	g_Medals[MEDAL_TOTALDOMINATION].textColor = CR_RED;
+	g_Medals[MEDAL_TOTALDOMINATION].announcerEntry = "TotalDomination";
+	g_Medals[MEDAL_TOTALDOMINATION].lowerMedal = &g_Medals[MEDAL_DOMINATION];
+
+	// Accuracy
+	g_Medals[MEDAL_ACCURACY].icon = TexMan.CheckForTexture( "ACCUA0", FTexture::TEX_MiscPatch );
+	g_Medals[MEDAL_ACCURACY].usFrame = S_ACCURACY;
+	g_Medals[MEDAL_ACCURACY].text = "Accuracy!";
+	g_Medals[MEDAL_ACCURACY].textColor = CR_GREY;
+	g_Medals[MEDAL_ACCURACY].announcerEntry = "Accuracy";
+	g_Medals[MEDAL_ACCURACY].lowerMedal = nullptr;
+
+	// Precision
+	g_Medals[MEDAL_PRECISION].icon = TexMan.CheckForTexture( "PRECA0", FTexture::TEX_MiscPatch );
+	g_Medals[MEDAL_PRECISION].usFrame = S_PRECISION;
+	g_Medals[MEDAL_PRECISION].text = "Precision!";
+	g_Medals[MEDAL_PRECISION].textColor = CR_RED;
+	g_Medals[MEDAL_PRECISION].announcerEntry = "Precision";
+	g_Medals[MEDAL_PRECISION].lowerMedal = &g_Medals[MEDAL_ACCURACY];
+
+	// You fail it
+	g_Medals[MEDAL_YOUFAILIT].icon = TexMan.CheckForTexture( "FAILA0", FTexture::TEX_MiscPatch );
+	g_Medals[MEDAL_YOUFAILIT].usFrame = S_YOUFAILIT;
+	g_Medals[MEDAL_YOUFAILIT].text = "You fail it!";
+	g_Medals[MEDAL_YOUFAILIT].textColor = CR_GREEN;
+	g_Medals[MEDAL_YOUFAILIT].announcerEntry = "YouFailIt";
+	g_Medals[MEDAL_YOUFAILIT].lowerMedal = nullptr;
+
+	// Your skill is not enough
+	g_Medals[MEDAL_YOURSKILLISNOTENOUGH].icon = TexMan.CheckForTexture( "SKILA0", FTexture::TEX_MiscPatch );
+	g_Medals[MEDAL_YOURSKILLISNOTENOUGH].usFrame = S_YOURSKILLISNOTENOUGH;
+	g_Medals[MEDAL_YOURSKILLISNOTENOUGH].text = "Your skill is not enough!";
+	g_Medals[MEDAL_YOURSKILLISNOTENOUGH].textColor = CR_ORANGE;
+	g_Medals[MEDAL_YOURSKILLISNOTENOUGH].announcerEntry = "YourSkillIsNotEnough";
+	g_Medals[MEDAL_YOURSKILLISNOTENOUGH].lowerMedal = &g_Medals[MEDAL_YOUFAILIT];
+
+	// Llama
+	g_Medals[MEDAL_LLAMA].icon = TexMan.CheckForTexture( "LLAMA0", FTexture::TEX_MiscPatch );
+	g_Medals[MEDAL_LLAMA].usFrame = S_LLAMA;
+	g_Medals[MEDAL_LLAMA].text = "Llama!";
+	g_Medals[MEDAL_LLAMA].textColor = CR_GREEN;
+	g_Medals[MEDAL_LLAMA].announcerEntry = "Llama";
+	g_Medals[MEDAL_LLAMA].lowerMedal = nullptr;
+	g_Medals[MEDAL_LLAMA].sound = "misc/llama";
+
+	// Spam
+	g_Medals[MEDAL_SPAM].icon = TexMan.CheckForTexture( "SPAMA0", FTexture::TEX_MiscPatch );
+	g_Medals[MEDAL_SPAM].usFrame = S_SPAM;
+	g_Medals[MEDAL_SPAM].text = "Spam!";
+	g_Medals[MEDAL_SPAM].textColor = CR_GREEN;
+	g_Medals[MEDAL_SPAM].announcerEntry = "Spam";
+	g_Medals[MEDAL_SPAM].lowerMedal = &g_Medals[MEDAL_LLAMA];
+	g_Medals[MEDAL_SPAM].sound = "misc/spam";
+
+	// Victory
+	g_Medals[MEDAL_VICTORY].icon = TexMan.CheckForTexture( "VICTA0", FTexture::TEX_MiscPatch );
+	g_Medals[MEDAL_VICTORY].usFrame = S_VICTORY;
+	g_Medals[MEDAL_VICTORY].text = "Victory!";
+	g_Medals[MEDAL_VICTORY].textColor = CR_GREY;
+	g_Medals[MEDAL_VICTORY].announcerEntry = "Victory";
+	g_Medals[MEDAL_VICTORY].lowerMedal = nullptr;
+
+	// Perfect
+	g_Medals[MEDAL_PERFECT].icon = TexMan.CheckForTexture( "PFCTA0", FTexture::TEX_MiscPatch );
+	g_Medals[MEDAL_PERFECT].usFrame = S_PERFECT;
+	g_Medals[MEDAL_PERFECT].text = "Perfect!";
+	g_Medals[MEDAL_PERFECT].textColor = CR_RED;
+	g_Medals[MEDAL_PERFECT].announcerEntry = "Perfect";
+	g_Medals[MEDAL_PERFECT].lowerMedal = &g_Medals[MEDAL_VICTORY];
+
+	// Termination
+	g_Medals[MEDAL_TERMINATION].icon = TexMan.CheckForTexture( "TRMAA0", FTexture::TEX_MiscPatch );
+	g_Medals[MEDAL_TERMINATION].usFrame = S_TERMINATION;
+	g_Medals[MEDAL_TERMINATION].text = "Termination!";
+	g_Medals[MEDAL_TERMINATION].textColor = CR_GREY;
+	g_Medals[MEDAL_TERMINATION].announcerEntry = "Termination";
+	g_Medals[MEDAL_TERMINATION].lowerMedal = nullptr;
+
+	// First frag
+	g_Medals[MEDAL_FIRSTFRAG].icon = TexMan.CheckForTexture( "FFRGA0", FTexture::TEX_MiscPatch );
+	g_Medals[MEDAL_FIRSTFRAG].usFrame = S_FIRSTFRAG;
+	g_Medals[MEDAL_FIRSTFRAG].text = "First frag!";
+	g_Medals[MEDAL_FIRSTFRAG].textColor = CR_GREY;
+	g_Medals[MEDAL_FIRSTFRAG].announcerEntry = "FirstFrag";
+	g_Medals[MEDAL_FIRSTFRAG].lowerMedal = nullptr;
+
+	// Capture
+	g_Medals[MEDAL_CAPTURE].icon = TexMan.CheckForTexture( "CAPTA0", FTexture::TEX_MiscPatch );
+	g_Medals[MEDAL_CAPTURE].usFrame = S_CAPTURE;
+	g_Medals[MEDAL_CAPTURE].text = "Capture!";
+	g_Medals[MEDAL_CAPTURE].textColor = CR_GREY;
+	g_Medals[MEDAL_CAPTURE].announcerEntry = "Capture";
+	g_Medals[MEDAL_CAPTURE].lowerMedal = nullptr;
+
+	// Tag
+	g_Medals[MEDAL_TAG].icon = TexMan.CheckForTexture( "STAGA0", FTexture::TEX_MiscPatch );
+	g_Medals[MEDAL_TAG].usFrame = S_TAG;
+	g_Medals[MEDAL_TAG].text = "Tag!";
+	g_Medals[MEDAL_TAG].textColor = CR_GREY;
+	g_Medals[MEDAL_TAG].announcerEntry = "Tag";
+	g_Medals[MEDAL_TAG].lowerMedal = nullptr;
+
+	// Assist
+	g_Medals[MEDAL_ASSIST].icon = TexMan.CheckForTexture( "ASSTA0", FTexture::TEX_MiscPatch );
+	g_Medals[MEDAL_ASSIST].usFrame = S_ASSIST;
+	g_Medals[MEDAL_ASSIST].text = "Assist!";
+	g_Medals[MEDAL_ASSIST].textColor = CR_GREY;
+	g_Medals[MEDAL_ASSIST].announcerEntry = "Assist";
+	g_Medals[MEDAL_ASSIST].lowerMedal = nullptr;
+
+	// Defense
+	g_Medals[MEDAL_DEFENSE].icon = TexMan.CheckForTexture( "DFNSA0", FTexture::TEX_MiscPatch );
+	g_Medals[MEDAL_DEFENSE].usFrame = S_DEFENSE;
+	g_Medals[MEDAL_DEFENSE].text = "Defense!";
+	g_Medals[MEDAL_DEFENSE].textColor = CR_GREY;
+	g_Medals[MEDAL_DEFENSE].announcerEntry = "Defense";
+	g_Medals[MEDAL_DEFENSE].lowerMedal = nullptr;
+
+	// Fisting
+	g_Medals[MEDAL_FISTING].icon = TexMan.CheckForTexture( "FISTA0", FTexture::TEX_MiscPatch );
+	g_Medals[MEDAL_FISTING].usFrame = S_FISTING;
+	g_Medals[MEDAL_FISTING].text = "Fisting!";
+	g_Medals[MEDAL_FISTING].textColor = CR_GREY;
+	g_Medals[MEDAL_FISTING].announcerEntry = "Fisting";
+	g_Medals[MEDAL_FISTING].lowerMedal = nullptr;
+
 	g_bFirstFragAwarded = false;
 }
 
@@ -234,7 +375,7 @@ void MEDAL_Render( void )
 	const LONG lAlpha = medalQueue[ulPlayer].ticks > TICRATE ? OPAQUE : static_cast<LONG>( OPAQUE * ( static_cast<float>( medalQueue[ulPlayer].ticks ) / TICRATE ));
 
 	// Get the graphic and text name from the global array.
-	FTexture *icon = TexMan[medal->szLumpName];
+	FTexture *icon = TexMan[medal->icon];
 	FString string = medal->text.GetChars( );
 
 	ULONG ulCurXPos = SCREENWIDTH / 2;
@@ -248,13 +389,13 @@ void MEDAL_Render( void )
 	// If that length is greater then the screen width, display the medals as "<icon> <name> X <num>"
 	if ( ulLength >= 320 )
 	{
-		const char *szSecondColor = medal->ulTextColor == CR_RED ? TEXTCOLOR_GRAY : TEXTCOLOR_RED;
+		const char *szSecondColor = medal->textColor == CR_RED ? TEXTCOLOR_GRAY : TEXTCOLOR_RED;
 
 		string.AppendFormat( "%s X %lu", szSecondColor, ulNumMedals );
 		screen->DrawTexture( icon, ulCurXPos, ulCurYPos, DTA_CleanNoMove, true, DTA_Alpha, lAlpha, TAG_DONE );
 
 		ulCurXPos -= CleanXfac * ( SmallFont->StringWidth( string ) / 2 );
-		screen->DrawText( SmallFont, medal->ulTextColor, ulCurXPos, ulCurYPos, string, DTA_CleanNoMove, true, DTA_Alpha, lAlpha, TAG_DONE );
+		screen->DrawText( SmallFont, medal->textColor, ulCurXPos, ulCurYPos, string, DTA_CleanNoMove, true, DTA_Alpha, lAlpha, TAG_DONE );
 	}
 	// Display the medal icon <usNumMedals> times centered on the screen.
 	else
@@ -268,7 +409,7 @@ void MEDAL_Render( void )
 		}
 
 		ulCurXPos = ( SCREENWIDTH - CleanXfac * SmallFont->StringWidth( string )) / 2;
-		screen->DrawText( SmallFont, medal->ulTextColor, ulCurXPos, ulCurYPos, string, DTA_CleanNoMove, true, DTA_Alpha, lAlpha, TAG_DONE );
+		screen->DrawText( SmallFont, medal->textColor, ulCurXPos, ulCurYPos, string, DTA_CleanNoMove, true, DTA_Alpha, lAlpha, TAG_DONE );
 	}
 }
 
@@ -311,8 +452,7 @@ void MEDAL_GiveMedal( ULONG ulPlayer, ULONG ulMedal )
 	// medal gets added to the end of the queue.
 	if ( iterator == queue.end( ))
 	{
-		const unsigned int lowerMedal = medal->ulLowerMedal;
-		iterator = std::find( queue.begin( ), queue.end( ), &g_Medals[lowerMedal] );
+		iterator = std::find( queue.begin( ), queue.end( ), medal->lowerMedal );
 
 		if ( iterator != queue.end( ))
 		{
@@ -354,7 +494,7 @@ void MEDAL_GiveMedal( ULONG ulPlayer, ULONG ulMedal )
 void MEDAL_RenderAllMedals( LONG lYOffset )
 {
 	ULONG ulCurXPos;
-	FString patchName;
+	FTexture *icon;
 
 	if ( players[consoleplayer].camera == NULL )
 		return;
@@ -371,7 +511,7 @@ void MEDAL_RenderAllMedals( LONG lYOffset )
 	for ( ULONG ulMedal = 0; ulMedal < NUM_MEDALS; ulMedal++ )
 	{
 		if ( pPlayer->ulMedalCount[ulMedal] > 0 )
-			ulLength += TexMan[g_Medals[ulMedal].szLumpName]->GetWidth( ) * pPlayer->ulMedalCount[ulMedal];
+			ulLength += TexMan[g_Medals[ulMedal].icon]->GetWidth( ) * pPlayer->ulMedalCount[ulMedal];
 	}
 
 	// Can't fit all the medals on the screen.
@@ -384,7 +524,7 @@ void MEDAL_RenderAllMedals( LONG lYOffset )
 		for ( ULONG ulMedal = 0; ulMedal < NUM_MEDALS; ulMedal++ )
 		{
 			if ( pPlayer->ulMedalCount[ulMedal] > 0 )
-				ulLength += TexMan[g_Medals[ulMedal].szLumpName]->GetWidth( );
+				ulLength += TexMan[g_Medals[ulMedal].icon]->GetWidth( );
 		}
 
 		// If the length of all our medals goes beyond 320, we cannot scale them.
@@ -399,14 +539,14 @@ void MEDAL_RenderAllMedals( LONG lYOffset )
 			if ( pPlayer->ulMedalCount[ulMedal] == 0 )
 				continue;
 
-			patchName = g_Medals[ulMedal].szLumpName;
-			screen->DrawTexture( TexMan[patchName], ulCurXPos + TexMan[patchName]->GetWidth( ) / 2, ulCurYPos, DTA_Clean, bScale, TAG_DONE );
+			icon = TexMan[g_Medals[ulMedal].icon];
+			screen->DrawTexture( icon, ulCurXPos + icon->GetWidth( ) / 2, ulCurYPos, DTA_Clean, bScale, TAG_DONE );
 
-			ULONG ulXOffset = ( SmallFont->StringWidth( string ) + TexMan[patchName]->GetWidth( )) / 2;
+			ULONG ulXOffset = ( SmallFont->StringWidth( string ) + icon->GetWidth( )) / 2;
 			string.Format( "%lu", pPlayer->ulMedalCount[ulMedal] );
 			screen->DrawText( SmallFont, CR_RED, ulCurXPos - ulXOffset, ulCurYPos, string, DTA_Clean, bScale, TAG_DONE );
 
-			ulCurXPos += TexMan[patchName]->GetWidth( );
+			ulCurXPos += icon->GetWidth( );
 		}
 	}
 	else
@@ -414,11 +554,12 @@ void MEDAL_RenderAllMedals( LONG lYOffset )
 		ulCurXPos = 160 - ulLength / 2;
 		for ( ULONG ulMedal = 0; ulMedal < NUM_MEDALS; ulMedal++ )
 		{
-			patchName = g_Medals[ulMedal].szLumpName;
+			icon = TexMan[g_Medals[ulMedal].icon];
+
 			for ( ULONG ulMedalIdx = 0; ulMedalIdx < pPlayer->ulMedalCount[ulMedal]; ulMedalIdx++ )
 			{
-				screen->DrawTexture( TexMan[patchName], ulCurXPos + TexMan[patchName]->GetWidth( ) / 2, ulCurYPos, DTA_Clean, true, TAG_DONE );
-				ulCurXPos += TexMan[patchName]->GetWidth( );
+				screen->DrawTexture( icon, ulCurXPos + icon->GetWidth( ) / 2, ulCurYPos, DTA_Clean, true, TAG_DONE );
+				ulCurXPos += icon->GetWidth( );
 			}
 		}
 	}
@@ -445,7 +586,7 @@ void MEDAL_RenderAllMedalsFullscreen( player_t *pPlayer )
 		if ( pPlayer->ulMedalCount[ulMedal] == 0 )
 			continue;
 
-		ULONG ulHeight = TexMan[g_Medals[ulMedal].szLumpName]->GetHeight( );
+		ULONG ulHeight = TexMan[g_Medals[ulMedal].icon]->GetHeight( );
 
 		if (( ulNumMedal % 2 ) == 0 )
 		{
@@ -458,7 +599,7 @@ void MEDAL_RenderAllMedalsFullscreen( player_t *pPlayer )
 			ulMaxMedalHeight = MAX( ulHeight, ulLastHeight );
 		}
 
-		HUD_DrawTexture( TexMan[g_Medals[ulMedal].szLumpName], ulCurXPos + TexMan[g_Medals[ulMedal].szLumpName]->GetWidth( ) / 2, ulCurYPos + ulHeight, g_bScale );
+		HUD_DrawTexture( TexMan[g_Medals[ulMedal].icon], ulCurXPos + TexMan[g_Medals[ulMedal].icon]->GetWidth( ) / 2, ulCurYPos + ulHeight, g_bScale );
 		HUD_DrawText( SmallFont, CR_RED, ulCurXPos + 48, ulCurYPos + ( ulHeight - SmallFont->GetHeight( )) / 2, "X" );
 
 		string.Format( "%lu", pPlayer->ulMedalCount[ulMedal] );
@@ -697,8 +838,8 @@ void medal_TriggerMedal( ULONG ulPlayer )
 		else
 		{
 			// Play the sound effect associated with this medal type.
-			if ( medal->szSoundName[0] != '\0' )
-				S_Sound( pPlayer->mo, CHAN_AUTO, medal->szSoundName, 1, ATTN_NORM );
+			if ( medal->sound > 0 )
+				S_Sound( pPlayer->mo, CHAN_AUTO, medal->sound, 1.0f, ATTN_NORM );
 		}
 	}
 }

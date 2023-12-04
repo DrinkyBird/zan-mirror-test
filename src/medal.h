@@ -53,6 +53,7 @@
 #include <vector>
 #include "doomdef.h"
 #include "info.h"
+#include "v_font.h"
 
 //*****************************************************************************
 //	DEFINES
@@ -152,25 +153,25 @@ enum
 struct MEDAL_t
 {
 	// Icon that displays on the screen when this medal is received.
-	const char	szLumpName[8];
+	FTextureID		icon;
 
 	// Frame the floaty icon above the player's head is set to.
-	USHORT		usFrame;
+	USHORT			usFrame;
 
 	// Text that appears below the medal icon when received.
-	FString		text;
+	FString			text;
 
 	// Color that text is displayed in.
-	ULONG		ulTextColor;
+	EColorRange		textColor;
 
 	// Announcer entry that's played when this medal is triggered.
-	FString		announcerEntry;
+	FString			announcerEntry;
 
 	// [RC] The "lower" medal that this overrides.
-	ULONG		ulLowerMedal;
+	MEDAL_t			*lowerMedal;
 
 	// Name of sound to play when this medal type is triggered.
-	const char	*szSoundName;
+	FSoundID		sound;
 };
 
 //*****************************************************************************

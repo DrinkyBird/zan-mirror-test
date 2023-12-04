@@ -2892,9 +2892,6 @@ void D_DoomMain (void)
 		// Initialize the join queue module.
 		JOINQUEUE_Construct( );
 
-		// Initialize the medal info.
-		MEDAL_Construct( );
-
 		// Initialize the announcer info.
 		ANNOUNCER_Construct( );
 		ANNOUNCER_ParseAnnouncerInfo( );
@@ -3046,6 +3043,9 @@ void D_DoomMain (void)
 
 		// [TP] Init preferred weapon order
 		PWO_Init();
+
+		// [AK] Initialize the medal definitions.
+		MEDAL_Construct( );
 
 		/* [BB] Zandronum uses different bot code.
 		//Added by MC:
