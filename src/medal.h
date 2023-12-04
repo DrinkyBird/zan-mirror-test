@@ -149,7 +149,7 @@ enum
 //*****************************************************************************
 //	STRUCTURES
 
-typedef struct
+struct MEDAL_t
 {
 	// Icon that displays on the screen when this medal is received.
 	const char	szLumpName[8];
@@ -171,8 +171,7 @@ typedef struct
 
 	// Name of sound to play when this medal type is triggered.
 	const char	*szSoundName;
-
-} MEDAL_t;
+};
 
 //*****************************************************************************
 struct MEDALQUEUE_t
