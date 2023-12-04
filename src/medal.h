@@ -50,6 +50,7 @@
 #ifndef __MEDAL_H__
 #define __MEDAL_H__
 
+#include <vector>
 #include "doomdef.h"
 #include "info.h"
 
@@ -146,9 +147,6 @@ enum
 };
 
 //*****************************************************************************
-#define	MEDALQUEUE_DEPTH			NUM_MEDALS
-
-//*****************************************************************************
 //	STRUCTURES
 
 typedef struct
@@ -177,15 +175,16 @@ typedef struct
 } MEDAL_t;
 
 //*****************************************************************************
-typedef struct
+struct MEDALQUEUE_t
 {
-	// Type of medal in this queue entry.
-	ULONG		ulMedal;
+	// The medals in this queue.
+	std::vector<MEDAL_t *>	medals;
 
 	// Amount of time before the medal display in this queue expires.
-	ULONG		ulTick;
+	unsigned int			ticks;
 
-} MEDALQUEUE_t;
+	MEDALQUEUE_t( void ) : ticks( 0 ) { }
+};
 
 //*****************************************************************************
 //	PROTOTYPES

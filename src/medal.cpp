@@ -110,7 +110,8 @@ static	MEDAL_t	g_Medals[NUM_MEDALS] =
 	{ "FISTA0", S_FISTING, "Fisting!", CR_GRAY, "Fisting", NUM_MEDALS, "", },
 };
 
-static	MEDALQUEUE_t	g_MedalQueue[MAXPLAYERS][MEDALQUEUE_DEPTH];
+// Any medals that players have recently earned that need to be displayed.
+static	MEDALQUEUE_t	medalQueue[MAXPLAYERS];
 
 // Has the first frag medal been awarded this round?
 static	bool			g_bFirstFragAwarded;
@@ -127,10 +128,8 @@ CVAR( Bool, cl_icons, true, CVAR_ARCHIVE )
 //*****************************************************************************
 //	PROTOTYPES
 
-ULONG	medal_AddToQueue( ULONG ulPlayer, ULONG ulMedal );
-void	medal_PopQueue( ULONG ulPlayer );
 ULONG	medal_GetDesiredIcon( player_t *pPlayer, AInventory *&pTeamItem );
-void	medal_TriggerMedal( ULONG ulPlayer, ULONG ulMedal );
+void	medal_TriggerMedal( ULONG ulPlayer );
 void	medal_SelectIcon( ULONG ulPlayer );
 void	medal_CheckForFirstFrag( ULONG ulPlayer );
 void	medal_CheckForDomination( ULONG ulPlayer );
@@ -146,18 +145,6 @@ bool	medal_PlayerHasCarrierIcon( ULONG ulPlayer );
 
 void MEDAL_Construct( void )
 {
-	ULONG	ulIdx;
-	ULONG	ulQueueIdx;
-
-	for ( ulIdx = 0; ulIdx < MAXPLAYERS; ulIdx++ )
-	{
-		for ( ulQueueIdx = 0; ulQueueIdx < MEDALQUEUE_DEPTH; ulQueueIdx++ )
-		{
-			g_MedalQueue[ulIdx][ulQueueIdx].ulMedal = 0;
-			g_MedalQueue[ulIdx][ulQueueIdx].ulTick = 0;
-		}
-	}
-
 	g_bFirstFragAwarded = false;
 }
 
@@ -173,12 +160,24 @@ void MEDAL_Tick( void )
 		if ( playeringame[ulIdx] == false )
 			continue;
 
-		// Tick down the duration of the medal on the top of the queue.
-		if ( g_MedalQueue[ulIdx][0].ulTick )
+		// Tick down the duration of the medal on the top of the queue. If time
+		// has expired on this medal, pop it and potentially trigger a new one.
+		if (( medalQueue[ulIdx].medals.empty( ) == false ) && ( medalQueue[ulIdx].ticks ) && ( --medalQueue[ulIdx].ticks == 0 ))
 		{
-			// If time has expired on this medal, pop it and potentially trigger a new one.
-			if ( --g_MedalQueue[ulIdx][0].ulTick == 0 )
-				medal_PopQueue( ulIdx );
+			medalQueue[ulIdx].medals.erase( medalQueue[ulIdx].medals.begin( ));
+
+			// If a new medal is now at the top of the queue, trigger it.
+			if ( medalQueue[ulIdx].medals.empty( ) == false )
+			{
+				medalQueue[ulIdx].ticks = MEDAL_ICON_DURATION;
+				medal_TriggerMedal( ulIdx );
+			}
+			// If there isn't, just delete the medal that has been displaying.
+			else if ( players[ulIdx].pIcon != nullptr )
+			{
+				players[ulIdx].pIcon->Destroy( );
+				players[ulIdx].pIcon = nullptr;
+			}
 		}
 
 		// [BB] We don't need to know what medal_GetDesiredIcon puts into pTeamItem, but we still need to supply it as argument.
@@ -188,13 +187,13 @@ void MEDAL_Tick( void )
 		// If we're not currently displaying a medal for the player, potentially display
 		// some other type of icon.
 		// [BB] Also let carrier icons override medals.
-		if ( ( g_MedalQueue[ulIdx][0].ulTick == 0 ) || ( ( ulDesiredSprite >= SPRITE_WHITEFLAG ) && ( ulDesiredSprite <= SPRITE_TEAMITEM ) ) )
+		if (( medalQueue[ulIdx].medals.empty( )) || (( ulDesiredSprite >= SPRITE_WHITEFLAG ) && ( ulDesiredSprite <= SPRITE_TEAMITEM )))
 			medal_SelectIcon( ulIdx );
 
 		// [BB] If the player is being awarded a medal at the moment but has no icon, restore the medal.
 		// This happens when the player respawns while being awarded a medal.
-		if ( ( g_MedalQueue[ulIdx][0].ulTick > 0 ) && ( players[ulIdx].pIcon == NULL ) )
-			medal_TriggerMedal( ulIdx, g_MedalQueue[ulIdx][0].ulMedal );
+		if (( medalQueue[ulIdx].medals.empty( ) == false ) && ( players[ulIdx].pIcon == nullptr ))
+			medal_TriggerMedal( ulIdx );
 
 		// [BB] Remove any old carrier icons.
 		medal_PlayerHasCarrierIcon ( ulIdx );
@@ -228,35 +227,34 @@ void MEDAL_Render( void )
 		return;
 
 	// If the player doesn't have a medal to be drawn, don't do anything.
-	if ( g_MedalQueue[ulPlayer][0].ulTick == 0 )
+	if ( medalQueue[ulPlayer].medals.empty( ))
 		return;
 
-	ULONG ulMedal = g_MedalQueue[ulPlayer][0].ulMedal;
-	ULONG ulTick = g_MedalQueue[ulPlayer][0].ulTick;
-	const LONG lAlpha = ulTick > TICRATE ? OPAQUE : static_cast<LONG>( OPAQUE * ( static_cast<float>( ulTick ) / TICRATE ));
+	const MEDAL_t *medal = medalQueue[ulPlayer].medals[0];
+	const LONG lAlpha = medalQueue[ulPlayer].ticks > TICRATE ? OPAQUE : static_cast<LONG>( OPAQUE * ( static_cast<float>( medalQueue[ulPlayer].ticks ) / TICRATE ));
 
 	// Get the graphic and text name from the global array.
-	FString patchName = g_Medals[ulMedal].szLumpName;
-	FString string = g_Medals[ulMedal].szStr;
+	FTexture *icon = TexMan[medal->szLumpName];
+	FString string = medal->szStr;
 
 	ULONG ulCurXPos = SCREENWIDTH / 2;
 	ULONG ulCurYPos = ( viewheight <= ST_Y ? ST_Y : SCREENHEIGHT ) - 11 * CleanYfac;
 
 	// Determine how much actual screen space it will take to render the amount of
 	// medals the player has received up until this point.
-	ULONG ulNumMedals = pPlayer->ulMedalCount[ulMedal];
-	ULONG ulLength = ulNumMedals * TexMan[patchName]->GetWidth( );
+	ULONG ulNumMedals = pPlayer->ulMedalCount[medal - g_Medals];
+	ULONG ulLength = ulNumMedals * icon->GetWidth( );
 
 	// If that length is greater then the screen width, display the medals as "<icon> <name> X <num>"
 	if ( ulLength >= 320 )
 	{
-		const char *szSecondColor = g_Medals[ulMedal].ulTextColor == CR_RED ? TEXTCOLOR_GRAY : TEXTCOLOR_RED;
+		const char *szSecondColor = medal->ulTextColor == CR_RED ? TEXTCOLOR_GRAY : TEXTCOLOR_RED;
 
 		string.AppendFormat( "%s X %lu", szSecondColor, ulNumMedals );
-		screen->DrawTexture( TexMan[patchName], ulCurXPos, ulCurYPos, DTA_CleanNoMove, true, DTA_Alpha, lAlpha, TAG_DONE );
+		screen->DrawTexture( icon, ulCurXPos, ulCurYPos, DTA_CleanNoMove, true, DTA_Alpha, lAlpha, TAG_DONE );
 
 		ulCurXPos -= CleanXfac * ( SmallFont->StringWidth( string ) / 2 );
-		screen->DrawText( SmallFont, g_Medals[ulMedal].ulTextColor, ulCurXPos, ulCurYPos, string, DTA_CleanNoMove, true, DTA_Alpha, lAlpha, TAG_DONE );
+		screen->DrawText( SmallFont, medal->ulTextColor, ulCurXPos, ulCurYPos, string, DTA_CleanNoMove, true, DTA_Alpha, lAlpha, TAG_DONE );
 	}
 	// Display the medal icon <usNumMedals> times centered on the screen.
 	else
@@ -265,12 +263,12 @@ void MEDAL_Render( void )
 
 		for ( ULONG ulMedal = 0; ulMedal < ulNumMedals; ulMedal++ )
 		{
-			screen->DrawTexture( TexMan[patchName], ulCurXPos + CleanXfac * ( TexMan[patchName]->GetWidth( ) / 2 ), ulCurYPos, DTA_CleanNoMove, true, DTA_Alpha, lAlpha, TAG_DONE );
-			ulCurXPos += CleanXfac * TexMan[patchName]->GetWidth( );
+			screen->DrawTexture( icon, ulCurXPos + CleanXfac * ( icon->GetWidth( ) / 2 ), ulCurYPos, DTA_CleanNoMove, true, DTA_Alpha, lAlpha, TAG_DONE );
+			ulCurXPos += CleanXfac * icon->GetWidth( );
 		}
 
 		ulCurXPos = ( SCREENWIDTH - CleanXfac * SmallFont->StringWidth( string )) / 2;
-		screen->DrawText( SmallFont, g_Medals[ulMedal].ulTextColor, ulCurXPos, ulCurYPos, string, DTA_CleanNoMove, true, DTA_Alpha, lAlpha, TAG_DONE );
+		screen->DrawText( SmallFont, medal->ulTextColor, ulCurXPos, ulCurYPos, string, DTA_CleanNoMove, true, DTA_Alpha, lAlpha, TAG_DONE );
 	}
 }
 
@@ -279,9 +277,6 @@ void MEDAL_Render( void )
 //
 void MEDAL_GiveMedal( ULONG ulPlayer, ULONG ulMedal )
 {
-	player_t	*pPlayer;
-	ULONG		ulWhereToInsertMedal = UINT_MAX;
-
 	// [CK] Do not award if it's a countdown sequence
 	if ( GAMEMODE_IsGameInCountdown() )
 		return;
@@ -297,67 +292,49 @@ void MEDAL_GiveMedal( ULONG ulPlayer, ULONG ulMedal )
 		return;
 	}
 
-	pPlayer = &players[ulPlayer];
+	MEDAL_t *const medal = &g_Medals[ulMedal];
 
 	// [CK] Trigger events if a medal is received
 	// [AK] If the event returns 0, then the player doesn't receive the medal.
-	if ( GAMEMODE_HandleEvent( GAMEEVENT_MEDALS, pPlayer->mo, ACS_PushAndReturnDynamicString( g_Medals[ulMedal].szAnnouncerEntry ), 0, true ) == 0 )
+	if ( GAMEMODE_HandleEvent( GAMEEVENT_MEDALS, players[ulPlayer].mo, ACS_PushAndReturnDynamicString( medal->szAnnouncerEntry ), 0, true ) == 0 )
 		return;
 
 	// Increase the player's count of this type of medal.
-	pPlayer->ulMedalCount[ulMedal]++;
+	players[ulPlayer].ulMedalCount[ulMedal]++;
 
-	// The queue is empty, so put this medal first.
-	if ( !g_MedalQueue[ulPlayer][0].ulTick )
-		ulWhereToInsertMedal = 0;
-	else
+	// [AK] Check if the medal being give is already in this player's queue.
+	std::vector<MEDAL_t *> &queue = medalQueue[ulPlayer].medals;
+	auto iterator = std::find( queue.begin( ), queue.end( ), medal );
+
+	// [AK] If not, then check if a suboordinate of the new medal is already in
+	// the list. If so, then the lower medal will be replaced. Otherwise, the new
+	// medal gets added to the end of the queue.
+	if ( iterator == queue.end( ))
 	{
-		// Go through the queue.
-		ULONG ulQueueIdx = 0;
-		while ( ulQueueIdx < MEDALQUEUE_DEPTH - 1 && g_MedalQueue[ulPlayer][ulQueueIdx].ulTick )
-		{
-			// Is this a duplicate/suboordinate of the new medal?
-			if ( g_MedalQueue[ulPlayer][ulQueueIdx].ulMedal == g_Medals[ulMedal].ulLowerMedal ||
-				 g_MedalQueue[ulPlayer][ulQueueIdx].ulMedal == ulMedal )
-			{
-				// Commandeer its slot!
-				if ( ulWhereToInsertMedal == UINT_MAX )
-				{
-					ulWhereToInsertMedal = ulQueueIdx;
-					ulQueueIdx++;
-				}
+		const unsigned int lowerMedal = medal->ulLowerMedal;
+		iterator = std::find( queue.begin( ), queue.end( ), &g_Medals[lowerMedal] );
 
-				// Or remove it, as it's a duplicate.
-				else
-				{
-					// [BB] This is not the most optimal way to remove the medal because also empty slots are copied.
-					for ( ULONG ulIdx = ulQueueIdx; ulIdx < MEDALQUEUE_DEPTH - 1; ++ulIdx ) {
-						g_MedalQueue[ulPlayer][ulIdx].ulMedal		= g_MedalQueue[ulPlayer][ulIdx + 1].ulMedal;
-						g_MedalQueue[ulPlayer][ulIdx].ulTick		= g_MedalQueue[ulPlayer][ulIdx + 1].ulTick;
-					}
-					g_MedalQueue[ulPlayer][MEDALQUEUE_DEPTH - 1].ulMedal = 0;
-					g_MedalQueue[ulPlayer][MEDALQUEUE_DEPTH - 1].ulTick = 0;
-				}
-			}
-			else
-				ulQueueIdx++;
+		if ( iterator != queue.end( ))
+		{
+			*iterator = medal;
+		}
+		else
+		{
+			queue.push_back( medal );
+
+			// [AK] In case the queue was empty before (there's only one element
+			// now, which is what just got added), set the iterator to the start
+			// so the timer gets reset properly.
+			if ( queue.size( ) == 1 )
+				iterator = queue.begin( );
 		}
 	}
 
-	// [RC] No special place for the medal, so just queue it.
-	if ( ulWhereToInsertMedal == UINT_MAX )
-		medal_AddToQueue( ulPlayer, ulMedal );
-	else
+	// [AK] If the new medal is at the start. reset the timer and trigger it.
+	if ( iterator == queue.begin( ))
 	{
-		// Update the slot in line.
-		g_MedalQueue[ulPlayer][ulWhereToInsertMedal].ulTick	= MEDAL_ICON_DURATION;
-		g_MedalQueue[ulPlayer][ulWhereToInsertMedal].ulMedal	= ulMedal;
-
-		// If it's replacing/is the medal on top, play the sound.
-		if ( ulWhereToInsertMedal == 0 )
-		{
-			medal_TriggerMedal( ulPlayer, ulMedal );
-		}
+		medalQueue[ulPlayer].ticks = MEDAL_ICON_DURATION;
+		medal_TriggerMedal( ulPlayer );
 	}
 
 	// If this player is a bot, tell it that it received a medal.
@@ -512,11 +489,8 @@ void MEDAL_RenderAllMedalsFullscreen( player_t *pPlayer )
 //
 ULONG MEDAL_GetDisplayedMedal( ULONG ulPlayer )
 {
-	if( ulPlayer < MAXPLAYERS )
-	{
-		if ( g_MedalQueue[ulPlayer][0].ulTick )
-			return ( g_MedalQueue[ulPlayer][0].ulMedal );
-	}
+	if (( ulPlayer < MAXPLAYERS ) && ( medalQueue[ulPlayer].medals.empty( ) == false ))
+		return ( medalQueue[ulPlayer].medals[0] - g_Medals );
 
 	return ( NUM_MEDALS );
 }
@@ -525,10 +499,11 @@ ULONG MEDAL_GetDisplayedMedal( ULONG ulPlayer )
 //
 void MEDAL_ClearMedalQueue( ULONG ulPlayer )
 {
-	ULONG	ulQueueIdx;
+	if ( ulPlayer >= MAXPLAYERS )
+		return;
 
-	for ( ulQueueIdx = 0; ulQueueIdx < MEDALQUEUE_DEPTH; ulQueueIdx++ )
-		g_MedalQueue[ulPlayer][ulQueueIdx].ulTick = 0;
+	medalQueue[ulPlayer].medals.clear( );
+	medalQueue[ulPlayer].ticks = 0;
 }
 
 //*****************************************************************************
@@ -579,57 +554,6 @@ void MEDAL_ResetFirstFragAwarded( void )
 //*****************************************************************************
 //*****************************************************************************
 //
-ULONG medal_AddToQueue( ULONG ulPlayer, ULONG ulMedal )
-{
-	ULONG	ulQueueIdx;
-
-	// Search for a free slot in this player's medal queue.
-	for ( ulQueueIdx = 0; ulQueueIdx < MEDALQUEUE_DEPTH; ulQueueIdx++ )
-	{
-		// Once we've found a free slot, update its info and break.
-		if ( g_MedalQueue[ulPlayer][ulQueueIdx].ulTick == 0 )
-		{
-			g_MedalQueue[ulPlayer][ulQueueIdx].ulTick = MEDAL_ICON_DURATION;
-			g_MedalQueue[ulPlayer][ulQueueIdx].ulMedal = ulMedal;
-
-			return ( ulQueueIdx );
-		}
-		// If this isn't a free slot, maybe it's a medal of the same type that we're trying to add.
-		// If so, there's no need to do anything.
-		else if ( g_MedalQueue[ulPlayer][ulQueueIdx].ulMedal == ulMedal )
-			return ( ulQueueIdx );
-	}
-
-	return ( ulQueueIdx );
-}
-
-//*****************************************************************************
-//
-void medal_PopQueue( ULONG ulPlayer )
-{
-	ULONG	ulQueueIdx;
-
-	// Shift all items in the queue up one notch.
-	for ( ulQueueIdx = 0; ulQueueIdx < ( MEDALQUEUE_DEPTH - 1 ); ulQueueIdx++ )
-	{
-		g_MedalQueue[ulPlayer][ulQueueIdx].ulMedal	= g_MedalQueue[ulPlayer][ulQueueIdx + 1].ulMedal;
-		g_MedalQueue[ulPlayer][ulQueueIdx].ulTick	= g_MedalQueue[ulPlayer][ulQueueIdx + 1].ulTick;
-	}
-
-	// Also, erase the info in the last slot.
-	g_MedalQueue[ulPlayer][MEDALQUEUE_DEPTH - 1].ulMedal	= 0;
-	g_MedalQueue[ulPlayer][MEDALQUEUE_DEPTH - 1].ulTick		= 0;
-
-	// If a new medal is now at the top of the queue, trigger it.
-	if ( g_MedalQueue[ulPlayer][0].ulTick )
-		medal_TriggerMedal( ulPlayer, g_MedalQueue[ulPlayer][0].ulMedal );
-	// If there isn't, just delete the medal that has been displaying.
-	else if ( players[ulPlayer].pIcon )
-	{
-		players[ulPlayer].pIcon->Destroy( );
-		players[ulPlayer].pIcon = NULL;
-	}
-}
 
 //*****************************************************************************
 // [BB, RC] Returns whether the player wears a carrier icon (flag/skull/hellstone/etc) and removes any invalid ones.
@@ -715,7 +639,7 @@ bool medal_PlayerHasCarrierIcon ( ULONG ulPlayer )
 		players[ulPlayer].pIcon->Destroy( );
 		players[ulPlayer].pIcon = NULL;
 
-		medal_TriggerMedal( ulPlayer, g_MedalQueue[ulPlayer][0].ulMedal );
+		medal_TriggerMedal( ulPlayer );
 	}
 
 	return bHasIcon && !bInvalid;
@@ -723,7 +647,7 @@ bool medal_PlayerHasCarrierIcon ( ULONG ulPlayer )
 
 //*****************************************************************************
 //
-void medal_TriggerMedal( ULONG ulPlayer, ULONG ulMedal )
+void medal_TriggerMedal( ULONG ulPlayer )
 {
 	player_t	*pPlayer;
 
@@ -733,13 +657,11 @@ void medal_TriggerMedal( ULONG ulPlayer, ULONG ulMedal )
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 		return;
 
-	// Shouldn't happen...
-	if ( pPlayer->mo == NULL )
+	// Make sure this player is valid and they have a medal in their queue.
+	if (( pPlayer->mo == NULL ) || ( medalQueue[ulPlayer].medals.empty( )))
 		return;
 
-	// Make sure this medal is valid.
-	if ( ulMedal >= NUM_MEDALS || !g_MedalQueue[ulPlayer][0].ulTick )
-		return;
+	const MEDAL_t *const medal = medalQueue[ulPlayer].medals[0];
 
 	// Medals don't override carrier symbols.
 	if ( !medal_PlayerHasCarrierIcon( ulPlayer) )
@@ -751,32 +673,32 @@ void medal_TriggerMedal( ULONG ulPlayer, ULONG ulMedal )
 		pPlayer->pIcon = Spawn<AFloatyIcon>( pPlayer->mo->x, pPlayer->mo->y, pPlayer->mo->z, NO_REPLACE );
 		if ( pPlayer->pIcon )
 		{
-			pPlayer->pIcon->SetState( pPlayer->pIcon->SpawnState + g_Medals[ulMedal].usFrame );
+			pPlayer->pIcon->SetState( pPlayer->pIcon->SpawnState + medal->usFrame );
 			// [BB] Instead of MEDAL_ICON_DURATION only use the remaining ticks of the medal as ticks for the icon.
 			// It is possible that the medal is just restored because the player respawned or that the medal was
 			// suppressed by a carrier icon.
-			pPlayer->pIcon->lTick = g_MedalQueue[ulPlayer][0].ulTick;
+			pPlayer->pIcon->lTick = medalQueue[ulPlayer].ticks;
 			pPlayer->pIcon->SetTracer( pPlayer->mo );
 		}
 	}
 
 	// [BB] Only announce the medal when it reaches the top of the queue. Otherwise it could be
 	// announced multiple times (for instance when a carrier dies).
-	if ( g_MedalQueue[ulPlayer][0].ulTick == MEDAL_ICON_DURATION )
+	if ( medalQueue[ulPlayer].ticks == MEDAL_ICON_DURATION )
 	{
 		// Also, locally play the announcer sound associated with this medal.
 		// [Dusk] Check coop spy too
 		if ( pPlayer->mo->CheckLocalView( consoleplayer ) )
 		{
-			if ( g_Medals[ulMedal].szAnnouncerEntry[0] )
-				ANNOUNCER_PlayEntry( cl_announcer, g_Medals[ulMedal].szAnnouncerEntry );
+			if ( medal->szAnnouncerEntry[0] )
+				ANNOUNCER_PlayEntry( cl_announcer, medal->szAnnouncerEntry );
 		}
 		// If a player besides the console player got the medal, play the remote sound.
 		else
 		{
 			// Play the sound effect associated with this medal type.
-			if ( g_Medals[ulMedal].szSoundName[0] != '\0' )
-				S_Sound( pPlayer->mo, CHAN_AUTO, g_Medals[ulMedal].szSoundName, 1, ATTN_NORM );
+			if ( medal->szSoundName[0] != '\0' )
+				S_Sound( pPlayer->mo, CHAN_AUTO, medal->szSoundName, 1, ATTN_NORM );
 		}
 	}
 }
