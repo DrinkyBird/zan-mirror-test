@@ -235,7 +235,7 @@ void MEDAL_Render( void )
 
 	// Get the graphic and text name from the global array.
 	FTexture *icon = TexMan[medal->szLumpName];
-	FString string = medal->szStr;
+	FString string = medal->text.GetChars( );
 
 	ULONG ulCurXPos = SCREENWIDTH / 2;
 	ULONG ulCurYPos = ( viewheight <= ST_Y ? ST_Y : SCREENHEIGHT ) - 11 * CleanYfac;
@@ -296,7 +296,7 @@ void MEDAL_GiveMedal( ULONG ulPlayer, ULONG ulMedal )
 
 	// [CK] Trigger events if a medal is received
 	// [AK] If the event returns 0, then the player doesn't receive the medal.
-	if ( GAMEMODE_HandleEvent( GAMEEVENT_MEDALS, players[ulPlayer].mo, ACS_PushAndReturnDynamicString( medal->szAnnouncerEntry ), 0, true ) == 0 )
+	if ( GAMEMODE_HandleEvent( GAMEEVENT_MEDALS, players[ulPlayer].mo, ACS_PushAndReturnDynamicString( medal->announcerEntry ), 0, true ) == 0 )
 		return;
 
 	// Increase the player's count of this type of medal.
@@ -690,8 +690,8 @@ void medal_TriggerMedal( ULONG ulPlayer )
 		// [Dusk] Check coop spy too
 		if ( pPlayer->mo->CheckLocalView( consoleplayer ) )
 		{
-			if ( medal->szAnnouncerEntry[0] )
-				ANNOUNCER_PlayEntry( cl_announcer, medal->szAnnouncerEntry );
+			if ( medal->announcerEntry.IsNotEmpty( ))
+				ANNOUNCER_PlayEntry( cl_announcer, medal->announcerEntry.GetChars( ));
 		}
 		// If a player besides the console player got the medal, play the remote sound.
 		else

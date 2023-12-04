@@ -158,13 +158,13 @@ struct MEDAL_t
 	USHORT		usFrame;
 
 	// Text that appears below the medal icon when received.
-	const char	*szStr;
+	FString		text;
 
 	// Color that text is displayed in.
 	ULONG		ulTextColor;
 
 	// Announcer entry that's played when this medal is triggered.
-	const char	szAnnouncerEntry[32];
+	FString		announcerEntry;
 
 	// [RC] The "lower" medal that this overrides.
 	ULONG		ulLowerMedal;
