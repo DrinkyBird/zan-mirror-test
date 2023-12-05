@@ -116,9 +116,11 @@ bool	medal_PlayerHasCarrierIcon( ULONG ulPlayer );
 
 void MEDAL_Construct( void )
 {
+	FActorInfo *const floatyIconInfo = RUNTIME_CLASS( AFloatyIcon )->ActorInfo;
+
 	// Excellent
 	g_Medals[MEDAL_EXCELLENT].icon = TexMan.CheckForTexture( "EXCLA0", FTexture::TEX_MiscPatch );
-	g_Medals[MEDAL_EXCELLENT].usFrame = S_EXCELLENT;
+	g_Medals[MEDAL_EXCELLENT].iconState = floatyIconInfo->FindStateByString( "Excellent", true );
 	g_Medals[MEDAL_EXCELLENT].text = "Excellent!";
 	g_Medals[MEDAL_EXCELLENT].textColor = CR_GREY;
 	g_Medals[MEDAL_EXCELLENT].announcerEntry = "Excellent";
@@ -126,7 +128,7 @@ void MEDAL_Construct( void )
 
 	// Incredible
 	g_Medals[MEDAL_INCREDIBLE].icon = TexMan.CheckForTexture( "INCRA0", FTexture::TEX_MiscPatch );
-	g_Medals[MEDAL_INCREDIBLE].usFrame = S_INCREDIBLE;
+	g_Medals[MEDAL_INCREDIBLE].iconState = floatyIconInfo->FindStateByString( "Incredible", true );
 	g_Medals[MEDAL_INCREDIBLE].text = "Incredible!";
 	g_Medals[MEDAL_INCREDIBLE].textColor = CR_RED;
 	g_Medals[MEDAL_INCREDIBLE].announcerEntry = "Incredible";
@@ -134,7 +136,7 @@ void MEDAL_Construct( void )
 
 	// Impressive
 	g_Medals[MEDAL_IMPRESSIVE].icon = TexMan.CheckForTexture( "IMPRA0", FTexture::TEX_MiscPatch );
-	g_Medals[MEDAL_IMPRESSIVE].usFrame = S_IMPRESSIVE;
+	g_Medals[MEDAL_IMPRESSIVE].iconState = floatyIconInfo->FindStateByString( "Impressive", true );
 	g_Medals[MEDAL_IMPRESSIVE].text = "Impressive!";
 	g_Medals[MEDAL_IMPRESSIVE].textColor = CR_GREY;
 	g_Medals[MEDAL_IMPRESSIVE].announcerEntry = "Impressive";
@@ -142,7 +144,7 @@ void MEDAL_Construct( void )
 
 	// Most impressive
 	g_Medals[MEDAL_MOSTIMPRESSIVE].icon = TexMan.CheckForTexture( "MIMPA0", FTexture::TEX_MiscPatch );
-	g_Medals[MEDAL_MOSTIMPRESSIVE].usFrame = S_MOST_IMPRESSIVE;
+	g_Medals[MEDAL_MOSTIMPRESSIVE].iconState = floatyIconInfo->FindStateByString( "Most_Impressive", true );
 	g_Medals[MEDAL_MOSTIMPRESSIVE].text = "Most impressive!";
 	g_Medals[MEDAL_MOSTIMPRESSIVE].textColor = CR_RED;
 	g_Medals[MEDAL_MOSTIMPRESSIVE].announcerEntry = "MostImpressive";
@@ -150,7 +152,7 @@ void MEDAL_Construct( void )
 
 	// Domination
 	g_Medals[MEDAL_DOMINATION].icon = TexMan.CheckForTexture( "DOMNA0", FTexture::TEX_MiscPatch );
-	g_Medals[MEDAL_DOMINATION].usFrame = S_DOMINATION;
+	g_Medals[MEDAL_DOMINATION].iconState = floatyIconInfo->FindStateByString( "Domination", true );
 	g_Medals[MEDAL_DOMINATION].text = "Domination!";
 	g_Medals[MEDAL_DOMINATION].textColor = CR_GREY;
 	g_Medals[MEDAL_DOMINATION].announcerEntry = "Domination";
@@ -158,7 +160,7 @@ void MEDAL_Construct( void )
 
 	// Total domination
 	g_Medals[MEDAL_TOTALDOMINATION].icon = TexMan.CheckForTexture( "TDOMA0", FTexture::TEX_MiscPatch );
-	g_Medals[MEDAL_TOTALDOMINATION].usFrame = S_TOTAL_DOMINATION;
+	g_Medals[MEDAL_TOTALDOMINATION].iconState = floatyIconInfo->FindStateByString( "Total_Domination", true );
 	g_Medals[MEDAL_TOTALDOMINATION].text = "Total domination!";
 	g_Medals[MEDAL_TOTALDOMINATION].textColor = CR_RED;
 	g_Medals[MEDAL_TOTALDOMINATION].announcerEntry = "TotalDomination";
@@ -166,7 +168,7 @@ void MEDAL_Construct( void )
 
 	// Accuracy
 	g_Medals[MEDAL_ACCURACY].icon = TexMan.CheckForTexture( "ACCUA0", FTexture::TEX_MiscPatch );
-	g_Medals[MEDAL_ACCURACY].usFrame = S_ACCURACY;
+	g_Medals[MEDAL_ACCURACY].iconState = floatyIconInfo->FindStateByString( "Accuracy", true );
 	g_Medals[MEDAL_ACCURACY].text = "Accuracy!";
 	g_Medals[MEDAL_ACCURACY].textColor = CR_GREY;
 	g_Medals[MEDAL_ACCURACY].announcerEntry = "Accuracy";
@@ -174,7 +176,7 @@ void MEDAL_Construct( void )
 
 	// Precision
 	g_Medals[MEDAL_PRECISION].icon = TexMan.CheckForTexture( "PRECA0", FTexture::TEX_MiscPatch );
-	g_Medals[MEDAL_PRECISION].usFrame = S_PRECISION;
+	g_Medals[MEDAL_PRECISION].iconState = floatyIconInfo->FindStateByString( "Precision", true );
 	g_Medals[MEDAL_PRECISION].text = "Precision!";
 	g_Medals[MEDAL_PRECISION].textColor = CR_RED;
 	g_Medals[MEDAL_PRECISION].announcerEntry = "Precision";
@@ -182,7 +184,7 @@ void MEDAL_Construct( void )
 
 	// You fail it
 	g_Medals[MEDAL_YOUFAILIT].icon = TexMan.CheckForTexture( "FAILA0", FTexture::TEX_MiscPatch );
-	g_Medals[MEDAL_YOUFAILIT].usFrame = S_YOUFAILIT;
+	g_Medals[MEDAL_YOUFAILIT].iconState = floatyIconInfo->FindStateByString( "YouFailIt", true );
 	g_Medals[MEDAL_YOUFAILIT].text = "You fail it!";
 	g_Medals[MEDAL_YOUFAILIT].textColor = CR_GREEN;
 	g_Medals[MEDAL_YOUFAILIT].announcerEntry = "YouFailIt";
@@ -190,7 +192,7 @@ void MEDAL_Construct( void )
 
 	// Your skill is not enough
 	g_Medals[MEDAL_YOURSKILLISNOTENOUGH].icon = TexMan.CheckForTexture( "SKILA0", FTexture::TEX_MiscPatch );
-	g_Medals[MEDAL_YOURSKILLISNOTENOUGH].usFrame = S_YOURSKILLISNOTENOUGH;
+	g_Medals[MEDAL_YOURSKILLISNOTENOUGH].iconState = floatyIconInfo->FindStateByString( "YourSkillIsNotEnough", true );
 	g_Medals[MEDAL_YOURSKILLISNOTENOUGH].text = "Your skill is not enough!";
 	g_Medals[MEDAL_YOURSKILLISNOTENOUGH].textColor = CR_ORANGE;
 	g_Medals[MEDAL_YOURSKILLISNOTENOUGH].announcerEntry = "YourSkillIsNotEnough";
@@ -198,7 +200,7 @@ void MEDAL_Construct( void )
 
 	// Llama
 	g_Medals[MEDAL_LLAMA].icon = TexMan.CheckForTexture( "LLAMA0", FTexture::TEX_MiscPatch );
-	g_Medals[MEDAL_LLAMA].usFrame = S_LLAMA;
+	g_Medals[MEDAL_LLAMA].iconState = floatyIconInfo->FindStateByString( "Llama", true );
 	g_Medals[MEDAL_LLAMA].text = "Llama!";
 	g_Medals[MEDAL_LLAMA].textColor = CR_GREEN;
 	g_Medals[MEDAL_LLAMA].announcerEntry = "Llama";
@@ -207,7 +209,7 @@ void MEDAL_Construct( void )
 
 	// Spam
 	g_Medals[MEDAL_SPAM].icon = TexMan.CheckForTexture( "SPAMA0", FTexture::TEX_MiscPatch );
-	g_Medals[MEDAL_SPAM].usFrame = S_SPAM;
+	g_Medals[MEDAL_SPAM].iconState = floatyIconInfo->FindStateByString( "Spam", true );
 	g_Medals[MEDAL_SPAM].text = "Spam!";
 	g_Medals[MEDAL_SPAM].textColor = CR_GREEN;
 	g_Medals[MEDAL_SPAM].announcerEntry = "Spam";
@@ -216,7 +218,7 @@ void MEDAL_Construct( void )
 
 	// Victory
 	g_Medals[MEDAL_VICTORY].icon = TexMan.CheckForTexture( "VICTA0", FTexture::TEX_MiscPatch );
-	g_Medals[MEDAL_VICTORY].usFrame = S_VICTORY;
+	g_Medals[MEDAL_VICTORY].iconState = floatyIconInfo->FindStateByString( "Victory", true );
 	g_Medals[MEDAL_VICTORY].text = "Victory!";
 	g_Medals[MEDAL_VICTORY].textColor = CR_GREY;
 	g_Medals[MEDAL_VICTORY].announcerEntry = "Victory";
@@ -224,7 +226,7 @@ void MEDAL_Construct( void )
 
 	// Perfect
 	g_Medals[MEDAL_PERFECT].icon = TexMan.CheckForTexture( "PFCTA0", FTexture::TEX_MiscPatch );
-	g_Medals[MEDAL_PERFECT].usFrame = S_PERFECT;
+	g_Medals[MEDAL_PERFECT].iconState = floatyIconInfo->FindStateByString( "Perfect", true );
 	g_Medals[MEDAL_PERFECT].text = "Perfect!";
 	g_Medals[MEDAL_PERFECT].textColor = CR_RED;
 	g_Medals[MEDAL_PERFECT].announcerEntry = "Perfect";
@@ -232,7 +234,7 @@ void MEDAL_Construct( void )
 
 	// Termination
 	g_Medals[MEDAL_TERMINATION].icon = TexMan.CheckForTexture( "TRMAA0", FTexture::TEX_MiscPatch );
-	g_Medals[MEDAL_TERMINATION].usFrame = S_TERMINATION;
+	g_Medals[MEDAL_TERMINATION].iconState = floatyIconInfo->FindStateByString( "Termination", true );
 	g_Medals[MEDAL_TERMINATION].text = "Termination!";
 	g_Medals[MEDAL_TERMINATION].textColor = CR_GREY;
 	g_Medals[MEDAL_TERMINATION].announcerEntry = "Termination";
@@ -240,7 +242,7 @@ void MEDAL_Construct( void )
 
 	// First frag
 	g_Medals[MEDAL_FIRSTFRAG].icon = TexMan.CheckForTexture( "FFRGA0", FTexture::TEX_MiscPatch );
-	g_Medals[MEDAL_FIRSTFRAG].usFrame = S_FIRSTFRAG;
+	g_Medals[MEDAL_FIRSTFRAG].iconState = floatyIconInfo->FindStateByString( "FirstFrag", true );
 	g_Medals[MEDAL_FIRSTFRAG].text = "First frag!";
 	g_Medals[MEDAL_FIRSTFRAG].textColor = CR_GREY;
 	g_Medals[MEDAL_FIRSTFRAG].announcerEntry = "FirstFrag";
@@ -248,7 +250,7 @@ void MEDAL_Construct( void )
 
 	// Capture
 	g_Medals[MEDAL_CAPTURE].icon = TexMan.CheckForTexture( "CAPTA0", FTexture::TEX_MiscPatch );
-	g_Medals[MEDAL_CAPTURE].usFrame = S_CAPTURE;
+	g_Medals[MEDAL_CAPTURE].iconState = floatyIconInfo->FindStateByString( "Capture", true );
 	g_Medals[MEDAL_CAPTURE].text = "Capture!";
 	g_Medals[MEDAL_CAPTURE].textColor = CR_GREY;
 	g_Medals[MEDAL_CAPTURE].announcerEntry = "Capture";
@@ -256,7 +258,7 @@ void MEDAL_Construct( void )
 
 	// Tag
 	g_Medals[MEDAL_TAG].icon = TexMan.CheckForTexture( "STAGA0", FTexture::TEX_MiscPatch );
-	g_Medals[MEDAL_TAG].usFrame = S_TAG;
+	g_Medals[MEDAL_TAG].iconState = floatyIconInfo->FindStateByString( "Tag", true );
 	g_Medals[MEDAL_TAG].text = "Tag!";
 	g_Medals[MEDAL_TAG].textColor = CR_GREY;
 	g_Medals[MEDAL_TAG].announcerEntry = "Tag";
@@ -264,7 +266,7 @@ void MEDAL_Construct( void )
 
 	// Assist
 	g_Medals[MEDAL_ASSIST].icon = TexMan.CheckForTexture( "ASSTA0", FTexture::TEX_MiscPatch );
-	g_Medals[MEDAL_ASSIST].usFrame = S_ASSIST;
+	g_Medals[MEDAL_ASSIST].iconState = floatyIconInfo->FindStateByString( "Assist", true );
 	g_Medals[MEDAL_ASSIST].text = "Assist!";
 	g_Medals[MEDAL_ASSIST].textColor = CR_GREY;
 	g_Medals[MEDAL_ASSIST].announcerEntry = "Assist";
@@ -272,7 +274,7 @@ void MEDAL_Construct( void )
 
 	// Defense
 	g_Medals[MEDAL_DEFENSE].icon = TexMan.CheckForTexture( "DFNSA0", FTexture::TEX_MiscPatch );
-	g_Medals[MEDAL_DEFENSE].usFrame = S_DEFENSE;
+	g_Medals[MEDAL_DEFENSE].iconState = floatyIconInfo->FindStateByString( "Defense", true );
 	g_Medals[MEDAL_DEFENSE].text = "Defense!";
 	g_Medals[MEDAL_DEFENSE].textColor = CR_GREY;
 	g_Medals[MEDAL_DEFENSE].announcerEntry = "Defense";
@@ -280,7 +282,7 @@ void MEDAL_Construct( void )
 
 	// Fisting
 	g_Medals[MEDAL_FISTING].icon = TexMan.CheckForTexture( "FISTA0", FTexture::TEX_MiscPatch );
-	g_Medals[MEDAL_FISTING].usFrame = S_FISTING;
+	g_Medals[MEDAL_FISTING].iconState = floatyIconInfo->FindStateByString( "Fisting", true );
 	g_Medals[MEDAL_FISTING].text = "Fisting!";
 	g_Medals[MEDAL_FISTING].textColor = CR_GREY;
 	g_Medals[MEDAL_FISTING].announcerEntry = "Fisting";
@@ -814,7 +816,7 @@ void medal_TriggerMedal( ULONG ulPlayer )
 		pPlayer->pIcon = Spawn<AFloatyIcon>( pPlayer->mo->x, pPlayer->mo->y, pPlayer->mo->z, NO_REPLACE );
 		if ( pPlayer->pIcon )
 		{
-			pPlayer->pIcon->SetState( pPlayer->pIcon->SpawnState + medal->usFrame );
+			pPlayer->pIcon->SetState( medal->iconState );
 			// [BB] Instead of MEDAL_ICON_DURATION only use the remaining ticks of the medal as ticks for the icon.
 			// It is possible that the medal is just restored because the player respawned or that the medal was
 			// suppressed by a carrier icon.

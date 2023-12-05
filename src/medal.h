@@ -155,8 +155,8 @@ struct MEDAL_t
 	// Icon that displays on the screen when this medal is received.
 	FTextureID		icon;
 
-	// Frame the floaty icon above the player's head is set to.
-	USHORT			usFrame;
+	// State that the floaty icon above the player's head is set to.
+	FState			*iconState;
 
 	// Text that appears below the medal icon when received.
 	FString			text;
