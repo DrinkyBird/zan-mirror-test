@@ -60,43 +60,6 @@
 
 #define	MEDAL_ICON_DURATION			( 3 * TICRATE )
 
-// Same values as defined in AFloatyIcon::States[].
-// [Dusk] Now an enumeration.
-enum
-{
-	S_TERMINATORARTIFACT		= 0,
-	S_CHAT						= ( S_TERMINATORARTIFACT + 4 ),
-	S_VOICECHAT					= ( S_CHAT + 1 ),
-	S_INCONSOLE					= ( S_VOICECHAT + 1 ),
-	S_INMENU					= ( S_INCONSOLE + 2 ),
-	S_ALLY						= ( S_INMENU + 4 ),
-	S_WHITEFLAG					= ( S_ALLY + 1 ),
-	S_EXCELLENT					= ( S_WHITEFLAG + 6 ),
-	S_INCREDIBLE				= ( S_EXCELLENT + 1 ),
-	S_IMPRESSIVE				= ( S_INCREDIBLE + 1 ),
-	S_MOST_IMPRESSIVE			= ( S_IMPRESSIVE + 1 ),
-	S_DOMINATION				= ( S_MOST_IMPRESSIVE + 1 ),
-	S_TOTAL_DOMINATION			= ( S_DOMINATION + 1 ),
-	S_ACCURACY					= ( S_TOTAL_DOMINATION + 1 ),
-	S_PRECISION					= ( S_ACCURACY + 1 ),
-	S_VICTORY					= ( S_PRECISION + 1 ),
-	S_PERFECT					= ( S_VICTORY + 1 ),
-	S_FIRSTFRAG					= ( S_PERFECT + 1 ),
-	S_TERMINATION				= ( S_FIRSTFRAG + 1 ),
-	S_CAPTURE					= ( S_TERMINATION + 1 ),
-	S_TAG						= ( S_CAPTURE + 1 ),
-	S_ASSIST					= ( S_TAG + 1 ),
-	S_DEFENSE					= ( S_ASSIST + 1 ),
-	S_LLAMA						= ( S_DEFENSE + 1 ),
-	S_YOUFAILIT					= ( S_LLAMA + 1 ),
-	S_YOURSKILLISNOTENOUGH		= ( S_YOUFAILIT + 1 ),
-	S_LAG						= ( S_YOURSKILLISNOTENOUGH + 1 ),
-	S_FISTING					= ( S_LAG + 1 ),
-	S_SPAM						= ( S_FISTING + 1 ),
-	S_POSSESSIONARTIFACT		= ( S_SPAM + 1 ),
-};
-
-//*****************************************************************************
 enum
 {
 	MEDAL_EXCELLENT,
