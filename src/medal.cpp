@@ -418,35 +418,33 @@ void MEDAL_Render( void )
 //*****************************************************************************
 //*****************************************************************************
 //
-void MEDAL_GiveMedal( ULONG ulPlayer, ULONG ulMedal )
+void MEDAL_GiveMedal( ULONG player, ULONG medalIndex )
 {
 	// [CK] Do not award if it's a countdown sequence
-	if ( GAMEMODE_IsGameInCountdown() )
+	// [AK] Or if we're playing a cooperative game mode.
+	if (( GAMEMODE_IsGameInCountdown( )) || (( deathmatch || teamgame ) == false ))
 		return;
 
-	// Make sure all inputs are valid first.
-	if (( ulPlayer >= MAXPLAYERS ) ||
-		(( deathmatch || teamgame ) == false ) ||
-		( players[ulPlayer].mo == NULL ) ||
-		(( NETWORK_GetState( ) != NETSTATE_SERVER ) && ( cl_medals == false )) ||
-		( zadmflags & ZADF_NO_MEDALS ) ||
-		( ulMedal >= NUM_MEDALS ))
-	{
+	// [AK] Make sure that the player and medal are valid.
+	if (( player >= MAXPLAYERS ) || ( players[player].mo == nullptr ) || ( medalIndex >= NUM_MEDALS ))
 		return;
-	}
 
-	MEDAL_t *const medal = &g_Medals[ulMedal];
+	// [AK] Make sure that medals are allowed.
+	if ((( NETWORK_GetState( ) != NETSTATE_SERVER ) && ( cl_medals == false )) || ( zadmflags & ZADF_NO_MEDALS ))
+		return;
+
+	MEDAL_t *const medal = &g_Medals[medalIndex];
 
 	// [CK] Trigger events if a medal is received
 	// [AK] If the event returns 0, then the player doesn't receive the medal.
-	if ( GAMEMODE_HandleEvent( GAMEEVENT_MEDALS, players[ulPlayer].mo, ACS_PushAndReturnDynamicString( medal->announcerEntry ), 0, true ) == 0 )
+	if ( GAMEMODE_HandleEvent( GAMEEVENT_MEDALS, players[player].mo, ACS_PushAndReturnDynamicString( medal->announcerEntry ), 0, true ) == 0 )
 		return;
 
 	// Increase the player's count of this type of medal.
-	players[ulPlayer].ulMedalCount[ulMedal]++;
+	players[player].ulMedalCount[medalIndex]++;
 
 	// [AK] Check if the medal being give is already in this player's queue.
-	std::vector<MEDAL_t *> &queue = medalQueue[ulPlayer].medals;
+	std::vector<MEDAL_t *> &queue = medalQueue[player].medals;
 	auto iterator = std::find( queue.begin( ), queue.end( ), medal );
 
 	// [AK] If not, then check if a suboordinate of the new medal is already in
@@ -475,20 +473,20 @@ void MEDAL_GiveMedal( ULONG ulPlayer, ULONG ulMedal )
 	// [AK] If the new medal is at the start. reset the timer and trigger it.
 	if ( iterator == queue.begin( ))
 	{
-		medalQueue[ulPlayer].ticks = MEDAL_ICON_DURATION;
-		medal_TriggerMedal( ulPlayer );
+		medalQueue[player].ticks = MEDAL_ICON_DURATION;
+		medal_TriggerMedal( player );
 	}
 
 	// If this player is a bot, tell it that it received a medal.
-	if ( players[ulPlayer].pSkullBot )
+	if ( players[player].pSkullBot )
 	{
-		players[ulPlayer].pSkullBot->m_ulLastMedalReceived = ulMedal;
-		players[ulPlayer].pSkullBot->PostEvent( BOTEVENT_RECEIVEDMEDAL );
+		players[player].pSkullBot->m_ulLastMedalReceived = medalIndex;
+		players[player].pSkullBot->PostEvent( BOTEVENT_RECEIVEDMEDAL );
 	}
 
 	// [AK] If we're the server, tell clients that this player earned a medal.
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-		SERVERCOMMANDS_GivePlayerMedal( ulPlayer, ulMedal );
+		SERVERCOMMANDS_GivePlayerMedal( player, medalIndex );
 }
 
 //*****************************************************************************
