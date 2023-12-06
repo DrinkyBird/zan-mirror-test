@@ -101,7 +101,7 @@ CVAR( Bool, cl_icons, true, CVAR_ARCHIVE )
 
 ULONG	medal_GetDesiredIcon( player_t *pPlayer, AInventory *&pTeamItem );
 void	medal_TriggerMedal( ULONG ulPlayer );
-void	medal_SelectIcon( ULONG ulPlayer );
+void	medal_SelectIcon( player_t *player );
 void	medal_CheckForFirstFrag( ULONG ulPlayer );
 void	medal_CheckForDomination( ULONG ulPlayer );
 void	medal_CheckForFistingOrSpam( ULONG ulPlayer, int dmgflags );
@@ -331,7 +331,7 @@ void MEDAL_Tick( void )
 		// some other type of icon.
 		// [BB] Also let carrier icons override medals.
 		if (( medalQueue[ulIdx].medals.empty( )) || (( ulDesiredSprite >= SPRITE_WHITEFLAG ) && ( ulDesiredSprite <= SPRITE_TEAMITEM )))
-			medal_SelectIcon( ulIdx );
+			medal_SelectIcon( &players[ulIdx] );
 
 		// [BB] If the player is being awarded a medal at the moment but has no icon, restore the medal.
 		// This happens when the player respawns while being awarded a medal.
@@ -911,31 +911,26 @@ ULONG medal_GetDesiredIcon( player_t *pPlayer, AInventory *&pTeamItem )
 
 //*****************************************************************************
 //
-void medal_SelectIcon( ULONG ulPlayer )
+void medal_SelectIcon( player_t *player )
 {
-	AInventory	*pInventory;
-	player_t	*pPlayer;
-	ULONG		ulActualSprite = NUM_SPRITES;
-	// [BB] If ulPlayer carries a TeamItem, e.g. flag or skull, we store a pointer
-	// to it in pTeamItem and set the floaty icon to the carry (or spawn) state of
+	ULONG actualSprite = NUM_SPRITES;
+
+	// [BB] If player carries a TeamItem, e.g. flag or skull, we store a pointer
+	// to it in teamItem and set the floaty icon to the carry (or spawn) state of
 	// the TeamItem. We also need to copy the Translation of the TeamItem to the
 	// FloatyIcon.
-	AInventory	*pTeamItem = NULL;
+	AInventory	*teamItem = nullptr;
 
-	if ( ulPlayer >= MAXPLAYERS )
-		return;
-
-	pPlayer = &players[ulPlayer];
-	if ( pPlayer->mo == NULL )
+	if (( player == nullptr ) || ( player->mo == nullptr ))
 		return;
 
 	// Allow the user to disable icons.
-	if (( cl_icons == false ) || ( NETWORK_GetState( ) == NETSTATE_SERVER ) || pPlayer->bSpectating )
+	if (( cl_icons == false ) || ( NETWORK_GetState( ) == NETSTATE_SERVER ) || ( player->bSpectating ))
 	{
-		if ( pPlayer->pIcon )
+		if ( player->pIcon )
 		{
-			pPlayer->pIcon->Destroy( );
-			pPlayer->pIcon = NULL;
+			player->pIcon->Destroy( );
+			player->pIcon = nullptr;
 		}
 
 		return;
@@ -943,260 +938,258 @@ void medal_SelectIcon( ULONG ulPlayer )
 
 	// Verify that our current icon is valid. (i.e. We may have had a chat bubble, then
 	// stopped talking, so we need to delete it).
-	if ( pPlayer->pIcon && pPlayer->pIcon->bTeamItemFloatyIcon == false )
+	if ( player->pIcon )
 	{
-		switch ( (ULONG)( pPlayer->pIcon->state - pPlayer->pIcon->SpawnState ))
+		bool deleteIcon = false;
+
+		if ( player->pIcon->bTeamItemFloatyIcon == false )
 		{
-		// Chat icon. Delete it if the player is no longer talking.
-		case S_CHAT:
-
-			if (( pPlayer->statuses & PLAYERSTATUS_CHATTING ) == false )
+			switch ( static_cast<ULONG>( player->pIcon->state - player->pIcon->SpawnState ))
 			{
-				pPlayer->pIcon->Destroy( );
-				pPlayer->pIcon = NULL;
-			}
-			else
-				ulActualSprite = SPRITE_CHAT;
-			break;
-		// Voice chat icon. Delete it if the player is no longer talking.
-		case S_VOICECHAT:
-
-			if (( pPlayer->statuses & PLAYERSTATUS_TALKING ) == false )
-			{
-				pPlayer->pIcon->Destroy( );
-				pPlayer->pIcon = NULL;
-			}
-			else
-				ulActualSprite = SPRITE_VOICECHAT;
-			break;
-		// In console icon. Delete it if the player is no longer in the console.
-		case S_INCONSOLE:
-		case ( S_INCONSOLE + 1):
-
-			if (( pPlayer->statuses & PLAYERSTATUS_INCONSOLE ) == false )
-			{
-				pPlayer->pIcon->Destroy( );
-				pPlayer->pIcon = NULL;
-			}
-			else
-				ulActualSprite = SPRITE_INCONSOLE;
-			break;
-		// In menu icon . Delete it if the player is no longer in the menu.
-		case S_INMENU:
-		case ( S_INMENU + 1 ):
-		case ( S_INMENU + 2 ):
-		case ( S_INMENU + 3 ):
-
-			if (( pPlayer->statuses & PLAYERSTATUS_INMENU ) == false )
-			{
-				pPlayer->pIcon->Destroy();
-				pPlayer->pIcon = NULL;
-			}
-			else
-				ulActualSprite = SPRITE_INMENU;
-			break;
-
-		// Ally icon. Delete it if the player is now our enemy or if we're spectating.
-		// [BB] Dead spectators shall keep the icon for their teammates.
-		case S_ALLY:
-
-			if (( PLAYER_IsTrueSpectator( &players[HUD_GetViewPlayer( )] )) || ( !pPlayer->mo->IsTeammate( players[HUD_GetViewPlayer( )].mo )))
-			{
-				pPlayer->pIcon->Destroy( );
-				pPlayer->pIcon = NULL;
-			}
-			else
-				ulActualSprite = SPRITE_ALLY;
-			break;
-		// Flag/skull icon. Delete it if the player no longer has it.
-		case S_WHITEFLAG:
-		case ( S_WHITEFLAG + 1 ):
-		case ( S_WHITEFLAG + 2 ):
-		case ( S_WHITEFLAG + 3 ):
-		case ( S_WHITEFLAG + 4 ):
-		case ( S_WHITEFLAG + 5 ):
-
-			{
-				bool	bDelete = false;
-
-				// Delete the icon if teamgame has been turned off, or if the player
-				// is not on a team.
-				if (( teamgame == false ) ||
-					( pPlayer->bOnTeam == false ))
+				// Chat icon. Delete it if the player is no longer talking.
+				case S_CHAT:
 				{
-					bDelete = true;
+					if (( player->statuses & PLAYERSTATUS_CHATTING ) == false )
+						deleteIcon = true;
+					else
+						actualSprite = SPRITE_CHAT;
+
+					break;
 				}
 
-				// Delete the white flag if the player no longer has it.
-				pInventory = pPlayer->mo->FindInventory( PClass::FindClass( "WhiteFlag" ), true );
-				if (( oneflagctf ) && ( pInventory == NULL ))
-					bDelete = true;
-
-				// We wish to delete the icon, so do that now.
-				if ( bDelete )
+				// Voice chat icon. Delete it if the player is no longer talking.
+				case S_VOICECHAT:
 				{
-					pPlayer->pIcon->Destroy( );
-					pPlayer->pIcon = NULL;
+					if (( player->statuses & PLAYERSTATUS_TALKING ) == false )
+						deleteIcon = true;
+					else
+						actualSprite = SPRITE_VOICECHAT;
+
+					break;
 				}
-				else
-					ulActualSprite = SPRITE_WHITEFLAG;
+
+				// In console icon. Delete it if the player is no longer in the console.
+				case S_INCONSOLE:
+				case ( S_INCONSOLE + 1 ):
+				{
+					if (( player->statuses & PLAYERSTATUS_INCONSOLE ) == false )
+						deleteIcon = true;
+					else
+						actualSprite = SPRITE_INCONSOLE;
+
+					break;
+				}
+
+				// In menu icon . Delete it if the player is no longer in the menu.
+				case S_INMENU:
+				case ( S_INMENU + 1 ):
+				case ( S_INMENU + 2 ):
+				case ( S_INMENU + 3 ):
+				{
+					if (( player->statuses & PLAYERSTATUS_INMENU ) == false )
+						deleteIcon = true;
+					else
+						actualSprite = SPRITE_INMENU;
+
+					break;
+				}
+
+				// Ally icon. Delete it if the player is now our enemy or if we're spectating.
+				// [BB] Dead spectators shall keep the icon for their teammates.
+				case S_ALLY:
+				{
+					player_t *viewedPlayer = &players[HUD_GetViewPlayer( )];
+
+					if (( PLAYER_IsTrueSpectator( viewedPlayer )) || ( !player->mo->IsTeammate( viewedPlayer->mo )))
+						deleteIcon = true;
+					else
+						actualSprite = SPRITE_ALLY;
+
+					break;
+				}
+
+				// Lag icon. Delete it if the player is no longer lagging.
+				case S_LAG:
+				{
+					if (( NETWORK_InClientMode( ) == false ) || (( player->statuses & PLAYERSTATUS_LAGGING ) == false ))
+						deleteIcon = true;
+					else
+						actualSprite = SPRITE_LAG;
+
+					break;
+				}
+
+
+				// White flag icon. Delete it if the player no longer has it.
+				case S_WHITEFLAG:
+				case ( S_WHITEFLAG + 1 ):
+				case ( S_WHITEFLAG + 2 ):
+				case ( S_WHITEFLAG + 3 ):
+				case ( S_WHITEFLAG + 4 ):
+				case ( S_WHITEFLAG + 5 ):
+				{
+					// Delete the icon if teamgame has been turned off, or if the player
+					// is not on a team.
+					if (( teamgame == false ) || ( player->bOnTeam == false ))
+						deleteIcon = true;
+					// Delete the white flag if the player no longer has it.
+					else if (( oneflagctf ) && ( player->mo->FindInventory( PClass::FindClass( "WhiteFlag" ), true ) == nullptr ))
+						deleteIcon = true;
+					else
+						actualSprite = SPRITE_WHITEFLAG;
+
+					break;
+				}
+
+				// Terminator artifact icon. Delete it if the player no longer has it.
+				case S_TERMINATORARTIFACT:
+				case ( S_TERMINATORARTIFACT + 1 ):
+				case ( S_TERMINATORARTIFACT + 2 ):
+				case ( S_TERMINATORARTIFACT + 3 ):
+				{
+					if (( terminator == false ) || (( player->cheats2 & CF2_TERMINATORARTIFACT ) == false ))
+						deleteIcon = true;
+					else
+						actualSprite = SPRITE_TERMINATORARTIFACT;
+
+					break;
+				}
+
+				// Possession artifact icon. Delete it if the player no longer has it.
+				case S_POSSESSIONARTIFACT:
+				case ( S_POSSESSIONARTIFACT + 1 ):
+				case ( S_POSSESSIONARTIFACT + 2 ):
+				case ( S_POSSESSIONARTIFACT + 3 ):
+				{
+					if ((( possession == false ) && ( teampossession == false )) || (( player->cheats2 & CF2_POSSESSIONARTIFACT ) == false ))
+						deleteIcon = true;
+					else
+						actualSprite = SPRITE_POSSESSIONARTIFACT;
+
+					break;
+				}
+
+				default:
+					break;
 			}
-
-			break;
-		// Terminator artifact icon. Delete it if the player no longer has it.
-		case S_TERMINATORARTIFACT:
-		case ( S_TERMINATORARTIFACT + 1 ):
-		case ( S_TERMINATORARTIFACT + 2 ):
-		case ( S_TERMINATORARTIFACT + 3 ):
-
-			if (( terminator == false ) || (( pPlayer->cheats2 & CF2_TERMINATORARTIFACT ) == false ))
+		}
+		else
+		{
+			// [AK] Team item icon. Delete it if the player no longer has one.
+			if ((( GAMEMODE_GetCurrentFlags( ) & GMF_USETEAMITEM ) == false ) || ( player->bOnTeam == false ) ||
+				( TEAM_FindOpposingTeamsItemInPlayersInventory( player ) == nullptr ))
 			{
-				pPlayer->pIcon->Destroy( );
-				pPlayer->pIcon = NULL;
+				deleteIcon = true;
 			}
 			else
-				ulActualSprite = SPRITE_TERMINATORARTIFACT;
-			break;
-		// Lag icon. Delete it if the player is no longer lagging.
-		case S_LAG:
-
-			if (( NETWORK_InClientMode( ) == false ) || (( pPlayer->statuses & PLAYERSTATUS_LAGGING ) == false ))
 			{
-				pPlayer->pIcon->Destroy( );
-				pPlayer->pIcon = NULL;
+				actualSprite = SPRITE_TEAMITEM;
 			}
-			else
-				ulActualSprite = SPRITE_LAG;
-			break;
-		// Possession artifact icon. Delete it if the player no longer has it.
-		case S_POSSESSIONARTIFACT:
-		case ( S_POSSESSIONARTIFACT + 1 ):
-		case ( S_POSSESSIONARTIFACT + 2 ):
-		case ( S_POSSESSIONARTIFACT + 3 ):
+		}
 
-			if ((( possession == false ) && ( teampossession == false )) || (( pPlayer->cheats2 & CF2_POSSESSIONARTIFACT ) == false ))
-			{
-				pPlayer->pIcon->Destroy( );
-				pPlayer->pIcon = NULL;
-			}
-			else
-				ulActualSprite = SPRITE_POSSESSIONARTIFACT;
-			break;
+		// We wish to delete the icon, so do that now.
+		if ( deleteIcon )
+		{
+			player->pIcon->Destroy( );
+			player->pIcon = nullptr;
 		}
 	}
 
 	// Check if we need to have an icon above us, or change the current icon.
+	const ULONG desiredSprite = medal_GetDesiredIcon( player, teamItem );
+	ULONG frame = UINT_MAX;
+
+	// [BB] Determine the frame based on the desired sprite.
+	switch ( desiredSprite )
 	{
-		if ( pPlayer->pIcon && pPlayer->pIcon->bTeamItemFloatyIcon )
-		{
-			if ( !( GAMEMODE_GetCurrentFlags() & GMF_USETEAMITEM ) || ( pPlayer->bOnTeam == false )
-			     || ( TEAM_FindOpposingTeamsItemInPlayersInventory ( pPlayer ) == NULL ) )
-			{
-				pPlayer->pIcon->Destroy( );
-				pPlayer->pIcon = NULL;
-			}
-			else
-			{
-				ulActualSprite = SPRITE_TEAMITEM;
-			}
-		}
-
-		ULONG	ulFrame = UINT_MAX;
-		const ULONG ulDesiredSprite = medal_GetDesiredIcon ( pPlayer, pTeamItem );
-
-		// [BB] Determine the frame based on the desired sprite.
-		switch ( ulDesiredSprite )
-		{
-		case SPRITE_ALLY:
-			ulFrame = S_ALLY;
-			break;
-
 		case SPRITE_CHAT:
-			ulFrame = S_CHAT;
+			frame = S_CHAT;
 			break;
 
 		case SPRITE_VOICECHAT:
-			ulFrame = S_VOICECHAT;
+			frame = S_VOICECHAT;
 			break;
 
 		case SPRITE_INCONSOLE:
-			ulFrame = S_INCONSOLE;
+			frame = S_INCONSOLE;
 			break;
 
 		case SPRITE_INMENU:
-			ulFrame = S_INMENU;
+			frame = S_INMENU;
+			break;
+
+		case SPRITE_ALLY:
+			frame = S_ALLY;
 			break;
 
 		case SPRITE_LAG:
-			ulFrame = S_LAG;
+			frame = S_LAG;
 			break;
 
 		case SPRITE_WHITEFLAG:
-			ulFrame = S_WHITEFLAG;
-			break;
-
-		case SPRITE_TEAMITEM:
-			ulFrame = 0;
+			frame = S_WHITEFLAG;
 			break;
 
 		case SPRITE_TERMINATORARTIFACT:
-			ulFrame = S_TERMINATORARTIFACT;
+			frame = S_TERMINATORARTIFACT;
 			break;
 
 		case SPRITE_POSSESSIONARTIFACT:
-			ulFrame = S_POSSESSIONARTIFACT;
+			frame = S_POSSESSIONARTIFACT;
+			break;
+
+		case SPRITE_TEAMITEM:
+			frame = 0;
 			break;
 
 		default:
 			break;
+	}
+
+	// We have an icon that needs to be spawned.
+	if ((( frame != UINT_MAX ) && ( desiredSprite != NUM_SPRITES )))
+	{
+		// [BB] If a TeamItem icon replaces an existing non-team icon, we have to delete the old icon first.
+		if (( player->pIcon ) && ( player->pIcon->bTeamItemFloatyIcon == false ) && ( teamItem ))
+		{
+			player->pIcon->Destroy( );
+			player->pIcon = nullptr;
 		}
 
-		// We have an icon that needs to be spawned.
-		if ((( ulFrame != UINT_MAX ) && ( ulDesiredSprite != NUM_SPRITES )))
+		if (( player->pIcon == nullptr ) || ( desiredSprite != actualSprite ))
 		{
-			// [BB] If a TeamItem icon replaces an existing non-team icon, we have to delete the old icon first.
-			if ( pPlayer->pIcon && ( pPlayer->pIcon->bTeamItemFloatyIcon == false ) && pTeamItem )
+			if ( player->pIcon == NULL )
 			{
-				pPlayer->pIcon->Destroy( );
-				pPlayer->pIcon = NULL;
+				player->pIcon = Spawn<AFloatyIcon>( player->mo->x, player->mo->y, player->mo->z + player->mo->height + ( 4 * FRACUNIT ), NO_REPLACE );
+
+				if ( teamItem )
+				{
+					player->pIcon->bTeamItemFloatyIcon = true;
+					FState *carryState = teamItem->FindState( "Carry" );
+
+					// [BB] If the TeamItem has a Carry state (like the built in flags), use it.
+					// Otherwise use the spawn state (the built in skulls don't have a carry state).
+					if ( carryState )
+						player->pIcon->SetState( carryState );
+					else
+						player->pIcon->SetState( teamItem->SpawnState );
+
+					player->pIcon->Translation = teamItem->Translation;
+				}
+				else
+				{
+					player->pIcon->bTeamItemFloatyIcon = false;
+				}
 			}
 
-			if (( pPlayer->pIcon == NULL ) || ( ulDesiredSprite != ulActualSprite ))
+			if ( player->pIcon )
 			{
-				if ( pPlayer->pIcon == NULL )
-				{
-					pPlayer->pIcon = Spawn<AFloatyIcon>( pPlayer->mo->x, pPlayer->mo->y, pPlayer->mo->z + pPlayer->mo->height + ( 4 * FRACUNIT ), NO_REPLACE );
-					if ( pTeamItem )
-					{
-						pPlayer->pIcon->bTeamItemFloatyIcon = true;
+				// [BB] Potentially the new icon overrides an existing medal, so make sure that it doesn't fade out.
+				player->pIcon->lTick = 0;
+				player->pIcon->SetTracer( player->mo );
 
-						FName Name = "Carry";
-
-						FState *CarryState = pTeamItem->FindState( Name );
-
-						// [BB] If the TeamItem has a Carry state (like the built in flags), use it.
-						// Otherwise use the spawn state (the built in skulls don't have a carry state).
-						if ( CarryState )
-							pPlayer->pIcon->SetState( CarryState );
-						else
-							pPlayer->pIcon->SetState( pTeamItem->SpawnState );
-						pPlayer->pIcon->Translation = pTeamItem->Translation;
-					}
-					else
-					{
-						pPlayer->pIcon->bTeamItemFloatyIcon = false;
-					}
-				}
-
-				if ( pPlayer->pIcon )
-				{
-					// [BB] Potentially the new icon overrides an existing medal, so make sure that it doesn't fade out.
-					pPlayer->pIcon->lTick = 0;
-					pPlayer->pIcon->SetTracer( pPlayer->mo );
-
-					if ( pPlayer->pIcon->bTeamItemFloatyIcon == false )
-						pPlayer->pIcon->SetState( pPlayer->pIcon->SpawnState + ulFrame );
-				}
+				if ( player->pIcon->bTeamItemFloatyIcon == false )
+					player->pIcon->SetState( player->pIcon->SpawnState + frame );
 			}
 		}
 	}
