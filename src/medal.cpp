@@ -109,7 +109,7 @@ void	medal_CheckForExcellent( ULONG ulPlayer );
 void	medal_CheckForTermination( ULONG ulDeadPlayer, ULONG ulPlayer );
 void	medal_CheckForLlama( ULONG ulDeadPlayer, ULONG ulPlayer );
 void	medal_CheckForYouFailIt( ULONG ulPlayer );
-bool	medal_PlayerHasCarrierIcon( ULONG ulPlayer );
+bool	medal_PlayerHasCarrierIcon( player_t *player );
 
 //*****************************************************************************
 //	FUNCTIONS
@@ -339,7 +339,7 @@ void MEDAL_Tick( void )
 			medal_TriggerMedal( ulIdx );
 
 		// [BB] Remove any old carrier icons.
-		medal_PlayerHasCarrierIcon ( ulIdx );
+		medal_PlayerHasCarrierIcon( &players[ulIdx] );
 
 		// Don't render icons floating above our own heads.
 		if ( players[ulIdx].pIcon )
@@ -700,92 +700,84 @@ void MEDAL_ResetFirstFragAwarded( void )
 
 //*****************************************************************************
 // [BB, RC] Returns whether the player wears a carrier icon (flag/skull/hellstone/etc) and removes any invalid ones.
-// 
-bool medal_PlayerHasCarrierIcon ( ULONG ulPlayer )
+//
+bool medal_PlayerHasCarrierIcon( player_t *player )
 {
-	player_t *pPlayer = &players[ulPlayer];
-	AInventory	*pInventory = NULL;
-	bool bInvalid = false;
-	bool bHasIcon = true;
+	bool invalid = false;
+	bool hasIcon = true;
 
 	// [BB] If the player has no icon, he obviously doesn't have a carrier icon.
-	if ( pPlayer->pIcon == NULL )
+	if (( player == nullptr ) || ( player->pIcon == nullptr ))
 		return false;
 
 	// Verify that our current icon is valid.
-	if ( pPlayer->pIcon && pPlayer->pIcon->bTeamItemFloatyIcon == false )
+	if ( player->pIcon->bTeamItemFloatyIcon == false )
 	{
-		switch ( (ULONG)( pPlayer->pIcon->state - pPlayer->pIcon->SpawnState ))
+		switch ( static_cast<ULONG>( player->pIcon->state - player->pIcon->SpawnState ))
 		{
-		// Flag/skull icon. Delete it if the player no longer has it.
-		case S_WHITEFLAG:
-		case ( S_WHITEFLAG + 1 ):
-		case ( S_WHITEFLAG + 2 ):
-		case ( S_WHITEFLAG + 3 ):
-		case ( S_WHITEFLAG + 4 ):
-		case ( S_WHITEFLAG + 5 ):
-
+			// White flag icon. Delete it if the player no longer has it.
+			case S_WHITEFLAG:
+			case ( S_WHITEFLAG + 1 ):
+			case ( S_WHITEFLAG + 2 ):
+			case ( S_WHITEFLAG + 3 ):
+			case ( S_WHITEFLAG + 4 ):
+			case ( S_WHITEFLAG + 5 ):
 			{
 				// Delete the icon if teamgame has been turned off, or if the player
 				// is not on a team.
-				if (( teamgame == false ) ||
-					( pPlayer->bOnTeam == false ))
-				{
-					bInvalid = true;
-					break;
-				}
-
+				if (( teamgame == false ) || ( player->bOnTeam == false ))
+					invalid = true;
 				// Delete the white flag if the player no longer has it.
-				pInventory = pPlayer->mo->FindInventory( PClass::FindClass( "WhiteFlag" ), true );
-				if ( pInventory == NULL )
-				{
-					bInvalid = true;
-					break;
-				}
+				else if ( player->mo->FindInventory( PClass::FindClass( "WhiteFlag" ), true ) == nullptr )
+					invalid = true;
 
+				break;
 			}
 
-			break;
-		// Terminator artifact icon. Delete it if the player no longer has it.
-		case S_TERMINATORARTIFACT:
-		case ( S_TERMINATORARTIFACT + 1 ):
-		case ( S_TERMINATORARTIFACT + 2 ):
-		case ( S_TERMINATORARTIFACT + 3 ):
+			// Terminator artifact icon. Delete it if the player no longer has it.
+			case S_TERMINATORARTIFACT:
+			case ( S_TERMINATORARTIFACT + 1 ):
+			case ( S_TERMINATORARTIFACT + 2 ):
+			case ( S_TERMINATORARTIFACT + 3 ):
+			{
+				if (( terminator == false ) || (( player->cheats2 & CF2_TERMINATORARTIFACT ) == false ))
+					invalid = true;
 
-			if (( terminator == false ) || (( pPlayer->cheats2 & CF2_TERMINATORARTIFACT ) == false ))
-				bInvalid = true;
-			break;
-		// Possession artifact icon. Delete it if the player no longer has it.
-		case S_POSSESSIONARTIFACT:
-		case ( S_POSSESSIONARTIFACT + 1 ):
-		case ( S_POSSESSIONARTIFACT + 2 ):
-		case ( S_POSSESSIONARTIFACT + 3 ):
+				break;
+			}
 
-			if ((( possession == false ) && ( teampossession == false )) || (( pPlayer->cheats2 & CF2_POSSESSIONARTIFACT ) == false ))
-				bInvalid = true;
-			break;
-		default:
-			bHasIcon = false;
-			break;
+			// Possession artifact icon. Delete it if the player no longer has it.
+			case S_POSSESSIONARTIFACT:
+			case ( S_POSSESSIONARTIFACT + 1 ):
+			case ( S_POSSESSIONARTIFACT + 2 ):
+			case ( S_POSSESSIONARTIFACT + 3 ):
+			{
+				if ((( possession == false ) && ( teampossession == false )) || (( player->cheats2 & CF2_POSSESSIONARTIFACT ) == false ))
+					invalid = true;
+
+				break;
+			}
+
+			default:
+				hasIcon = false;
+				break;
 		}
 	}
-
-	if ( pPlayer->pIcon && pPlayer->pIcon->bTeamItemFloatyIcon )
+	else if ( GAMEMODE_GetCurrentFlags( ) & GMF_USETEAMITEM )
 	{
-		if ( GAMEMODE_GetCurrentFlags() & GMF_USETEAMITEM )
-			bInvalid = ( TEAM_FindOpposingTeamsItemInPlayersInventory ( pPlayer ) == NULL );
+		invalid = ( TEAM_FindOpposingTeamsItemInPlayersInventory( player ) == nullptr );
 	}
 
 	// Remove it.
-	if ( bInvalid && bHasIcon )
+	if (( invalid ) && ( hasIcon ))
 	{
-		players[ulPlayer].pIcon->Destroy( );
-		players[ulPlayer].pIcon = NULL;
+		player->pIcon->Destroy( );
+		player->pIcon = NULL;
 
-		medal_TriggerMedal( ulPlayer );
+		medal_TriggerMedal( player - players );
 	}
 
-	return bHasIcon && !bInvalid;
+	return ( hasIcon && !invalid );
 }
 
 //*****************************************************************************
@@ -807,7 +799,7 @@ void medal_TriggerMedal( ULONG ulPlayer )
 	const MEDAL_t *const medal = medalQueue[ulPlayer].medals[0];
 
 	// Medals don't override carrier symbols.
-	if ( !medal_PlayerHasCarrierIcon( ulPlayer) )
+	if ( !medal_PlayerHasCarrierIcon( pPlayer ))
 	{
 		if ( pPlayer->pIcon )
 			pPlayer->pIcon->Destroy( );
