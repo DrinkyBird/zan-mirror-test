@@ -466,7 +466,7 @@ void HUD_DrawTargetName( player_t *pPlayer )
 
 	// Break out if we don't want to identify the target, or
 	// a medal has just been awarded and is being displayed.
-	if (( cl_identifytarget == IDENTIFY_TARGET_OFF ) || ( zadmflags & ZADF_NO_IDENTIFY_TARGET ) || ( MEDAL_GetDisplayedMedal( pPlayer->camera->player - players ) != NUM_MEDALS ))
+	if (( cl_identifytarget == IDENTIFY_TARGET_OFF ) || ( zadmflags & ZADF_NO_IDENTIFY_TARGET ) || ( MEDAL_GetDisplayedMedal( pPlayer->camera->player - players ) != nullptr ))
 		return;
 
 	// Don't do any of this while still receiving a snapshot.

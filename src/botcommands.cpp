@@ -2563,7 +2563,7 @@ static void botcmd_GetPlayerName( CSkullBot *pBot )
 //
 static void botcmd_GetReceivedMedal( CSkullBot *pBot )
 {
-	if ( MEDAL_GetDisplayedMedal( pBot->GetPlayer( ) - players ) != NUM_MEDALS )
+	if ( MEDAL_GetDisplayedMedal( pBot->GetPlayer( ) - players ) != nullptr )
 		g_iReturnInt = pBot->m_ulLastMedalReceived;
 	else
 		g_iReturnInt = NUM_MEDALS;

@@ -628,12 +628,12 @@ void MEDAL_RenderAllMedalsFullscreen( player_t *pPlayer )
 
 //*****************************************************************************
 //
-ULONG MEDAL_GetDisplayedMedal( ULONG ulPlayer )
+MEDAL_t *MEDAL_GetDisplayedMedal( const ULONG player )
 {
-	if (( ulPlayer < MAXPLAYERS ) && ( medalQueue[ulPlayer].medals.empty( ) == false ))
-		return ( medalQueue[ulPlayer].medals[0] - g_Medals );
+	if (( player < MAXPLAYERS ) && ( medalQueue[player].medals.empty( ) == false ))
+		return medalQueue[player].medals[0];
 
-	return ( NUM_MEDALS );
+	return nullptr;
 }
 
 //*****************************************************************************

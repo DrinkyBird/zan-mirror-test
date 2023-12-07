@@ -153,16 +153,16 @@ struct MEDALQUEUE_t
 //	PROTOTYPES
 
 // Standard API.
-void	MEDAL_Construct( void );
-void	MEDAL_Tick( void );
-void	MEDAL_Render( void );
+void		MEDAL_Construct( void );
+void		MEDAL_Tick( void );
+void		MEDAL_Render( void );
 
-void	MEDAL_GiveMedal( ULONG player, ULONG medalIndex );
-void	MEDAL_RenderAllMedals( LONG lYOffset );
-void	MEDAL_RenderAllMedalsFullscreen( player_t *pPlayer );
-ULONG	MEDAL_GetDisplayedMedal( ULONG ulPlayer );
-void	MEDAL_ClearMedalQueue( ULONG ulPlayer );
-void	MEDAL_PlayerDied( ULONG ulPlayer, ULONG ulSourcePlayer, int dmgflags );
-void	MEDAL_ResetFirstFragAwarded( void );
+void		MEDAL_GiveMedal( ULONG player, ULONG medalIndex );
+void		MEDAL_RenderAllMedals( LONG lYOffset );
+void		MEDAL_RenderAllMedalsFullscreen( player_t *pPlayer );
+MEDAL_t		*MEDAL_GetDisplayedMedal( const ULONG player );
+void		MEDAL_ClearMedalQueue( ULONG ulPlayer );
+void		MEDAL_PlayerDied( ULONG ulPlayer, ULONG ulSourcePlayer, int dmgflags );
+void		MEDAL_ResetFirstFragAwarded( void );
 
 #endif
