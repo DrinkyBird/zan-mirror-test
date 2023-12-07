@@ -1382,8 +1382,7 @@ void G_DoLoadLevel (int position, bool autosave)
 			players[i].fragcount = 0;
 
 		// Reset the number of medals each player has.
-		memset( players[i].ulMedalCount, 0, sizeof( players[i].ulMedalCount ));
-		MEDAL_ClearMedalQueue( i );
+		MEDAL_ResetPlayerMedals( i );
 
 		// Reset "ready to go on" flag.
 		PLAYER_SetStatus( &players[i], PLAYERSTATUS_READYTOGOON, false, SETPLAYERSTATUS_SERVERCANTSENDUPDATE );

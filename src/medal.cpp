@@ -638,13 +638,16 @@ MEDAL_t *MEDAL_GetDisplayedMedal( const ULONG player )
 
 //*****************************************************************************
 //
-void MEDAL_ClearMedalQueue( ULONG ulPlayer )
+void MEDAL_ResetPlayerMedals( const ULONG player )
 {
-	if ( ulPlayer >= MAXPLAYERS )
+	if ( player >= MAXPLAYERS )
 		return;
 
-	medalQueue[ulPlayer].medals.clear( );
-	medalQueue[ulPlayer].ticks = 0;
+	// Reset the number of medals this player has.
+	memset( players[player].ulMedalCount, 0, sizeof( players[player].ulMedalCount ));
+
+	medalQueue[player].medals.clear( );
+	medalQueue[player].ticks = 0;
 }
 
 //*****************************************************************************

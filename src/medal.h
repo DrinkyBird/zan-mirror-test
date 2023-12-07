@@ -161,7 +161,7 @@ void		MEDAL_GiveMedal( ULONG player, ULONG medalIndex );
 void		MEDAL_RenderAllMedals( LONG lYOffset );
 void		MEDAL_RenderAllMedalsFullscreen( player_t *pPlayer );
 MEDAL_t		*MEDAL_GetDisplayedMedal( const ULONG player );
-void		MEDAL_ClearMedalQueue( ULONG ulPlayer );
+void		MEDAL_ResetPlayerMedals( const ULONG player );
 void		MEDAL_PlayerDied( ULONG ulPlayer, ULONG ulSourcePlayer, int dmgflags );
 void		MEDAL_ResetFirstFragAwarded( void );
 
