@@ -2165,7 +2165,6 @@ void G_PlayerReborn (int player, bool bGiveInventory)
 	ULONG		ulConsecutiveRailgunHits;
 	ULONG		ulDeathsWithoutFrag;
 	ULONG		ulUnrewardedDamageDealt;
-	ULONG		ulMedalCount[NUM_MEDALS];
 	CSkullBot	*pSkullBot;
 	IgnoreComm	ignoreChat;
 	IgnoreComm	ignoreVoice;
@@ -2204,7 +2203,6 @@ void G_PlayerReborn (int player, bool bGiveInventory)
 	ulConsecutiveRailgunHits = p->ulConsecutiveRailgunHits;
 	ulDeathsWithoutFrag = p->ulDeathsWithoutFrag;
 	ulUnrewardedDamageDealt = p->ulUnrewardedDamageDealt;
-	memcpy( &ulMedalCount, &p->ulMedalCount, sizeof( ulMedalCount ));
 	pSkullBot = p->pSkullBot;
 	ignoreChat = p->ignoreChat;
 	ignoreVoice = p->ignoreVoice;
@@ -2267,7 +2265,6 @@ void G_PlayerReborn (int player, bool bGiveInventory)
 	p->ulConsecutiveRailgunHits = ulConsecutiveRailgunHits;
 	p->ulDeathsWithoutFrag = ulDeathsWithoutFrag;
 	p->ulUnrewardedDamageDealt = ulUnrewardedDamageDealt;
-	memcpy( &p->ulMedalCount, &ulMedalCount, sizeof( ulMedalCount ));
 	p->pSkullBot = pSkullBot;
 	p->ignoreChat = ignoreChat;
 	p->ignoreVoice = ignoreVoice;

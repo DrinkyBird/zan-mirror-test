@@ -385,15 +385,14 @@ void MEDAL_Render( void )
 
 	// Determine how much actual screen space it will take to render the amount of
 	// medals the player has received up until this point.
-	ULONG ulNumMedals = pPlayer->ulMedalCount[medal - g_Medals];
-	ULONG ulLength = ulNumMedals * icon->GetWidth( );
+	ULONG ulLength = medal->awardedCount[ulPlayer] * icon->GetWidth( );
 
 	// If that length is greater then the screen width, display the medals as "<icon> <name> X <num>"
 	if ( ulLength >= 320 )
 	{
 		const char *szSecondColor = medal->textColor == CR_RED ? TEXTCOLOR_GRAY : TEXTCOLOR_RED;
 
-		string.AppendFormat( "%s X %lu", szSecondColor, ulNumMedals );
+		string.AppendFormat( "%s X %u", szSecondColor, medal->awardedCount[ulPlayer] );
 		screen->DrawTexture( icon, ulCurXPos, ulCurYPos, DTA_CleanNoMove, true, DTA_Alpha, lAlpha, TAG_DONE );
 
 		ulCurXPos -= CleanXfac * ( SmallFont->StringWidth( string ) / 2 );
@@ -404,7 +403,7 @@ void MEDAL_Render( void )
 	{
 		ulCurXPos -= ( CleanXfac * ulLength ) / 2;
 
-		for ( ULONG ulMedal = 0; ulMedal < ulNumMedals; ulMedal++ )
+		for ( ULONG ulMedal = 0; ulMedal < medal->awardedCount[ulPlayer]; ulMedal++ )
 		{
 			screen->DrawTexture( icon, ulCurXPos + CleanXfac * ( icon->GetWidth( ) / 2 ), ulCurYPos, DTA_CleanNoMove, true, DTA_Alpha, lAlpha, TAG_DONE );
 			ulCurXPos += CleanXfac * icon->GetWidth( );
@@ -441,7 +440,7 @@ void MEDAL_GiveMedal( ULONG player, ULONG medalIndex )
 		return;
 
 	// Increase the player's count of this type of medal.
-	players[player].ulMedalCount[medalIndex]++;
+	medal->awardedCount[player]++;
 
 	// [AK] Check if the medal being give is already in this player's queue.
 	std::vector<MEDAL_t *> &queue = medalQueue[player].medals;
@@ -496,12 +495,10 @@ void MEDAL_RenderAllMedals( LONG lYOffset )
 	ULONG ulCurXPos;
 	FTexture *icon;
 
-	if ( players[consoleplayer].camera == NULL )
+	if (( players[consoleplayer].camera == nullptr ) || ( players[consoleplayer].camera->player == nullptr ))
 		return;
 
-	player_t *pPlayer = players[consoleplayer].camera->player;
-	if ( pPlayer == NULL )
-		return;
+	const unsigned int player = players[consoleplayer].camera->player - players;
 
 	int y0 = ( viewheight <= ST_Y ? ST_Y : SCREENHEIGHT );
 	ULONG ulCurYPos = static_cast<ULONG>(( y0 - 11 * CleanYfac + lYOffset ) / CleanYfac );
@@ -510,8 +507,8 @@ void MEDAL_RenderAllMedals( LONG lYOffset )
 	ULONG ulLength = 0;
 	for ( ULONG ulMedal = 0; ulMedal < NUM_MEDALS; ulMedal++ )
 	{
-		if ( pPlayer->ulMedalCount[ulMedal] > 0 )
-			ulLength += TexMan[g_Medals[ulMedal].icon]->GetWidth( ) * pPlayer->ulMedalCount[ulMedal];
+		if ( g_Medals[ulMedal].awardedCount[player] > 0 )
+			ulLength += TexMan[g_Medals[ulMedal].icon]->GetWidth( ) * g_Medals[ulMedal].awardedCount[player];
 	}
 
 	// Can't fit all the medals on the screen.
@@ -523,7 +520,7 @@ void MEDAL_RenderAllMedals( LONG lYOffset )
 		ulLength = 0;
 		for ( ULONG ulMedal = 0; ulMedal < NUM_MEDALS; ulMedal++ )
 		{
-			if ( pPlayer->ulMedalCount[ulMedal] > 0 )
+			if ( g_Medals[ulMedal].awardedCount[player] > 0 )
 				ulLength += TexMan[g_Medals[ulMedal].icon]->GetWidth( );
 		}
 
@@ -536,14 +533,14 @@ void MEDAL_RenderAllMedals( LONG lYOffset )
 		ulCurXPos = (( bScale ? 320 : SCREENWIDTH ) - ulLength ) / 2;
 		for ( ULONG ulMedal = 0; ulMedal < NUM_MEDALS; ulMedal++ )
 		{
-			if ( pPlayer->ulMedalCount[ulMedal] == 0 )
+			if ( g_Medals[ulMedal].awardedCount[player] == 0 )
 				continue;
 
 			icon = TexMan[g_Medals[ulMedal].icon];
 			screen->DrawTexture( icon, ulCurXPos + icon->GetWidth( ) / 2, ulCurYPos, DTA_Clean, bScale, TAG_DONE );
 
 			ULONG ulXOffset = ( SmallFont->StringWidth( string ) + icon->GetWidth( )) / 2;
-			string.Format( "%lu", pPlayer->ulMedalCount[ulMedal] );
+			string.Format( "%u", g_Medals[ulMedal].awardedCount[player] );
 			screen->DrawText( SmallFont, CR_RED, ulCurXPos - ulXOffset, ulCurYPos, string, DTA_Clean, bScale, TAG_DONE );
 
 			ulCurXPos += icon->GetWidth( );
@@ -556,7 +553,7 @@ void MEDAL_RenderAllMedals( LONG lYOffset )
 		{
 			icon = TexMan[g_Medals[ulMedal].icon];
 
-			for ( ULONG ulMedalIdx = 0; ulMedalIdx < pPlayer->ulMedalCount[ulMedal]; ulMedalIdx++ )
+			for ( ULONG ulMedalIdx = 0; ulMedalIdx < g_Medals[ulMedal].awardedCount[player]; ulMedalIdx++ )
 			{
 				screen->DrawTexture( icon, ulCurXPos + icon->GetWidth( ) / 2, ulCurYPos, DTA_Clean, true, TAG_DONE );
 				ulCurXPos += icon->GetWidth( );
@@ -573,6 +570,11 @@ void MEDAL_RenderAllMedalsFullscreen( player_t *pPlayer )
 	ULONG ulCurYPos = 4;
 	FString string;
 
+	if ( pPlayer == nullptr )
+		return;
+
+	const unsigned int playerIndex = pPlayer - players;
+
 	// Start by drawing "MEDALS" 4 pixels from the top.
 	HUD_DrawTextCentered( BigFont, gameinfo.gametype == GAME_Doom ? CR_RED : CR_UNTRANSLATED, ulCurYPos, "MEDALS", g_bScale );
 	ulCurYPos += BigFont->GetHeight( ) + 30;
@@ -583,7 +585,7 @@ void MEDAL_RenderAllMedalsFullscreen( player_t *pPlayer )
 
 	for ( ULONG ulMedal = 0; ulMedal < NUM_MEDALS; ulMedal++ )
 	{
-		if ( pPlayer->ulMedalCount[ulMedal] == 0 )
+		if ( g_Medals[ulMedal].awardedCount[playerIndex] == 0 )
 			continue;
 
 		ULONG ulHeight = TexMan[g_Medals[ulMedal].icon]->GetHeight( );
@@ -602,7 +604,7 @@ void MEDAL_RenderAllMedalsFullscreen( player_t *pPlayer )
 		HUD_DrawTexture( TexMan[g_Medals[ulMedal].icon], ulCurXPos + TexMan[g_Medals[ulMedal].icon]->GetWidth( ) / 2, ulCurYPos + ulHeight, g_bScale );
 		HUD_DrawText( SmallFont, CR_RED, ulCurXPos + 48, ulCurYPos + ( ulHeight - SmallFont->GetHeight( )) / 2, "X" );
 
-		string.Format( "%lu", pPlayer->ulMedalCount[ulMedal] );
+		string.Format( "%u", g_Medals[ulMedal].awardedCount[playerIndex] );
 		HUD_DrawText( BigFont, CR_RED, ulCurXPos + 64, ulCurYPos + ( ulHeight - BigFont->GetHeight( )) / 2, string );
 
 		if ( ulNumMedal % 2 )
@@ -644,7 +646,8 @@ void MEDAL_ResetPlayerMedals( const ULONG player )
 		return;
 
 	// Reset the number of medals this player has.
-	memset( players[player].ulMedalCount, 0, sizeof( players[player].ulMedalCount ));
+	for ( unsigned int i = 0; i < NUM_MEDALS; i++ )
+		g_Medals[i].awardedCount[player] = 0;
 
 	medalQueue[player].medals.clear( );
 	medalQueue[player].ticks = 0;

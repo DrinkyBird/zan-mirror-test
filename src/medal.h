@@ -135,6 +135,14 @@ struct MEDAL_t
 
 	// Name of sound to play when this medal type is triggered.
 	FSoundID		sound;
+
+	// [AK] How much of this medal that each player currently has.
+	unsigned int	awardedCount[MAXPLAYERS];
+
+	MEDAL_t( void ) : iconState( nullptr ), textColor( CR_UNTRANSLATED ), lowerMedal( nullptr ), awardedCount{ 0 }
+	{
+		icon.SetInvalid( );
+	}
 };
 
 //*****************************************************************************

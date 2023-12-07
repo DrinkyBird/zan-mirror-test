@@ -3161,8 +3161,6 @@ void PLAYER_ResetPlayerData( player_t *pPlayer )
 		CLIENT_PREDICT_Construct();
 	}
 	memset( pPlayer->psprites, 0, sizeof( pPlayer->psprites ));
-
-	memset( &pPlayer->ulMedalCount, 0, sizeof( ULONG ) * NUM_MEDALS );
 }
 
 //*****************************************************************************

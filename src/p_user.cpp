@@ -368,9 +368,6 @@ player_t::player_t()
 	// [BB] Check if this is still necessary.
 	userinfo.Reset();
 	memset (psprites, 0, sizeof(psprites));
-
-	// [BC] Initialize additonal ST properties.
-	memset( &ulMedalCount, 0, sizeof( ULONG ) * NUM_MEDALS );
 }
 
 player_t &player_t::operator=(const player_t &p)
@@ -509,7 +506,6 @@ player_t &player_t::operator=(const player_t &p)
 	ulLivesLeft = p.ulLivesLeft;
 	bStruckPlayer = p.bStruckPlayer;
 	RailgunShots = p.RailgunShots;
-	memcpy(ulMedalCount, &p.ulMedalCount, sizeof( ULONG ) * NUM_MEDALS);
 	pIcon = p.pIcon;
 	MaxHealthBonus = p.MaxHealthBonus;
 	ulWins = p.ulWins;

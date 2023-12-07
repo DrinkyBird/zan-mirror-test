@@ -737,9 +737,6 @@ public:
 	// Number of times the railgun has been fired. Every 4 times, a reload is in order.
 	unsigned int RailgunShots;
 
-	// Number of medals the player currently has of each type.
-	ULONG		ulMedalCount[NUM_MEDALS];
-
 	// Icon currently above this player's head.
 	AFloatyIcon	*pIcon;
 
