@@ -417,7 +417,7 @@ void MEDAL_Render( void )
 //*****************************************************************************
 //*****************************************************************************
 //
-void MEDAL_GiveMedal( ULONG player, ULONG medalIndex )
+void MEDAL_GiveMedal( const ULONG player, const ULONG medalIndex )
 {
 	// [CK] Do not award if it's a countdown sequence
 	// [AK] Or if we're playing a cooperative game mode.

@@ -165,7 +165,7 @@ void		MEDAL_Construct( void );
 void		MEDAL_Tick( void );
 void		MEDAL_Render( void );
 
-void		MEDAL_GiveMedal( ULONG player, ULONG medalIndex );
+void		MEDAL_GiveMedal( const ULONG player, const ULONG medalIndex );
 void		MEDAL_RenderAllMedals( LONG lYOffset );
 void		MEDAL_RenderAllMedalsFullscreen( player_t *pPlayer );
 MEDAL_t		*MEDAL_GetDisplayedMedal( const ULONG player );
