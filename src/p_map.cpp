@@ -4964,7 +4964,7 @@ void P_RailAttack(AActor *source, int damage, int offset_xy, fixed_t offset_z, i
 				// If the player has made 2 straight consecutive hits with the railgun, award a medal.
 				// Award a "Most Impressive" medal if they get 4+ straight hits. Otherwise, award an "Impressive" medal.
 				if (( NETWORK_InClientMode( ) == false ) && (( source->player->ulConsecutiveRailgunHits % 2 ) == 0 ))
-					MEDAL_GiveMedal( static_cast<ULONG>( source->player - players ), source->player->ulConsecutiveRailgunHits >= 4 ? MEDAL_MOSTIMPRESSIVE : MEDAL_IMPRESSIVE );
+					MEDAL_GiveMedal( static_cast<ULONG>( source->player - players ), source->player->ulConsecutiveRailgunHits >= 4 ? "MostImpressive" : "Impressive" );
 			}
 		}
 	}

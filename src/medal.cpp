@@ -79,10 +79,10 @@
 //	VARIABLES
 
 // A list of all defined medals.
-static	MEDAL_t	g_Medals[NUM_MEDALS];
+static	TArray<MEDAL_t *>	medalList;
 
 // Any medals that players have recently earned that need to be displayed.
-static	MEDALQUEUE_t	medalQueue[MAXPLAYERS];
+static	MEDALQUEUE_t		medalQueue[MAXPLAYERS];
 
 // Has the first frag medal been awarded this round?
 static	bool			g_bFirstFragAwarded;
@@ -116,177 +116,111 @@ bool	medal_PlayerHasCarrierIcon( player_t *player );
 
 void MEDAL_Construct( void )
 {
-	FActorInfo *const floatyIconInfo = RUNTIME_CLASS( AFloatyIcon )->ActorInfo;
+	int currentLump, lastLump = 0;
 
-	// Excellent
-	g_Medals[MEDAL_EXCELLENT].icon = TexMan.CheckForTexture( "EXCLA0", FTexture::TEX_MiscPatch );
-	g_Medals[MEDAL_EXCELLENT].iconState = floatyIconInfo->FindStateByString( "Excellent", true );
-	g_Medals[MEDAL_EXCELLENT].text = "Excellent!";
-	g_Medals[MEDAL_EXCELLENT].textColor = CR_GREY;
-	g_Medals[MEDAL_EXCELLENT].announcerEntry = "Excellent";
-	g_Medals[MEDAL_EXCELLENT].lowerMedal = nullptr;
+	while (( currentLump = Wads.FindLump( "MEDALDEF", &lastLump )) != -1 )
+	{
+		FScanner sc( currentLump );
 
-	// Incredible
-	g_Medals[MEDAL_INCREDIBLE].icon = TexMan.CheckForTexture( "INCRA0", FTexture::TEX_MiscPatch );
-	g_Medals[MEDAL_INCREDIBLE].iconState = floatyIconInfo->FindStateByString( "Incredible", true );
-	g_Medals[MEDAL_INCREDIBLE].text = "Incredible!";
-	g_Medals[MEDAL_INCREDIBLE].textColor = CR_RED;
-	g_Medals[MEDAL_INCREDIBLE].announcerEntry = "Incredible";
-	g_Medals[MEDAL_INCREDIBLE].lowerMedal = &g_Medals[MEDAL_EXCELLENT];
+		while ( sc.GetString( ))
+		{
+			MEDAL_t *medal = MEDAL_GetMedal( sc.String );
 
-	// Impressive
-	g_Medals[MEDAL_IMPRESSIVE].icon = TexMan.CheckForTexture( "IMPRA0", FTexture::TEX_MiscPatch );
-	g_Medals[MEDAL_IMPRESSIVE].iconState = floatyIconInfo->FindStateByString( "Impressive", true );
-	g_Medals[MEDAL_IMPRESSIVE].text = "Impressive!";
-	g_Medals[MEDAL_IMPRESSIVE].textColor = CR_GREY;
-	g_Medals[MEDAL_IMPRESSIVE].announcerEntry = "Impressive";
-	g_Medals[MEDAL_IMPRESSIVE].lowerMedal = nullptr;
+			// [AK] If the medal isn't already defined, create a new one.
+			if ( medal == nullptr )
+			{
+				medal = new MEDAL_t( sc.String );
+				medalList.Push( medal );
+			}
 
-	// Most impressive
-	g_Medals[MEDAL_MOSTIMPRESSIVE].icon = TexMan.CheckForTexture( "MIMPA0", FTexture::TEX_MiscPatch );
-	g_Medals[MEDAL_MOSTIMPRESSIVE].iconState = floatyIconInfo->FindStateByString( "Most_Impressive", true );
-	g_Medals[MEDAL_MOSTIMPRESSIVE].text = "Most impressive!";
-	g_Medals[MEDAL_MOSTIMPRESSIVE].textColor = CR_RED;
-	g_Medals[MEDAL_MOSTIMPRESSIVE].announcerEntry = "MostImpressive";
-	g_Medals[MEDAL_MOSTIMPRESSIVE].lowerMedal = &g_Medals[MEDAL_IMPRESSIVE];
+			sc.MustGetToken( '{' );
 
-	// Domination
-	g_Medals[MEDAL_DOMINATION].icon = TexMan.CheckForTexture( "DOMNA0", FTexture::TEX_MiscPatch );
-	g_Medals[MEDAL_DOMINATION].iconState = floatyIconInfo->FindStateByString( "Domination", true );
-	g_Medals[MEDAL_DOMINATION].text = "Domination!";
-	g_Medals[MEDAL_DOMINATION].textColor = CR_GREY;
-	g_Medals[MEDAL_DOMINATION].announcerEntry = "Domination";
-	g_Medals[MEDAL_DOMINATION].lowerMedal = nullptr;
+			while ( sc.CheckToken( '}' ) == false )
+			{
+				sc.MustGetString( );
+				FString command = sc.String;
 
-	// Total domination
-	g_Medals[MEDAL_TOTALDOMINATION].icon = TexMan.CheckForTexture( "TDOMA0", FTexture::TEX_MiscPatch );
-	g_Medals[MEDAL_TOTALDOMINATION].iconState = floatyIconInfo->FindStateByString( "Total_Domination", true );
-	g_Medals[MEDAL_TOTALDOMINATION].text = "Total domination!";
-	g_Medals[MEDAL_TOTALDOMINATION].textColor = CR_RED;
-	g_Medals[MEDAL_TOTALDOMINATION].announcerEntry = "TotalDomination";
-	g_Medals[MEDAL_TOTALDOMINATION].lowerMedal = &g_Medals[MEDAL_DOMINATION];
+				sc.MustGetToken( '=' );
+				sc.MustGetToken( TK_StringConst );
 
-	// Accuracy
-	g_Medals[MEDAL_ACCURACY].icon = TexMan.CheckForTexture( "ACCUA0", FTexture::TEX_MiscPatch );
-	g_Medals[MEDAL_ACCURACY].iconState = floatyIconInfo->FindStateByString( "Accuracy", true );
-	g_Medals[MEDAL_ACCURACY].text = "Accuracy!";
-	g_Medals[MEDAL_ACCURACY].textColor = CR_GREY;
-	g_Medals[MEDAL_ACCURACY].announcerEntry = "Accuracy";
-	g_Medals[MEDAL_ACCURACY].lowerMedal = nullptr;
+				// [AK] Throw a fatal error if an empty value was passed.
+				if ( sc.StringLen == 0 )
+					sc.ScriptError( "Got an empty string for the value of '%s'.", command.GetChars( ));
 
-	// Precision
-	g_Medals[MEDAL_PRECISION].icon = TexMan.CheckForTexture( "PRECA0", FTexture::TEX_MiscPatch );
-	g_Medals[MEDAL_PRECISION].iconState = floatyIconInfo->FindStateByString( "Precision", true );
-	g_Medals[MEDAL_PRECISION].text = "Precision!";
-	g_Medals[MEDAL_PRECISION].textColor = CR_RED;
-	g_Medals[MEDAL_PRECISION].announcerEntry = "Precision";
-	g_Medals[MEDAL_PRECISION].lowerMedal = &g_Medals[MEDAL_ACCURACY];
+				if ( command.CompareNoCase( "icon" ) == 0 )
+				{
+					medal->icon = TexMan.CheckForTexture( sc.String, FTexture::TEX_MiscPatch );
+				}
+				else if ( command.CompareNoCase( "class" ) == 0 )
+				{
+					medal->iconClass = PClass::FindClass( sc.String );
 
-	// You fail it
-	g_Medals[MEDAL_YOUFAILIT].icon = TexMan.CheckForTexture( "FAILA0", FTexture::TEX_MiscPatch );
-	g_Medals[MEDAL_YOUFAILIT].iconState = floatyIconInfo->FindStateByString( "YouFailIt", true );
-	g_Medals[MEDAL_YOUFAILIT].text = "You fail it!";
-	g_Medals[MEDAL_YOUFAILIT].textColor = CR_GREEN;
-	g_Medals[MEDAL_YOUFAILIT].announcerEntry = "YouFailIt";
-	g_Medals[MEDAL_YOUFAILIT].lowerMedal = nullptr;
+					// [AK] Make sure that the class exists.
+					if ( medal->iconClass == nullptr )
+						sc.ScriptError( "Class '%s' wasn't found.", sc.String );
 
-	// Your skill is not enough
-	g_Medals[MEDAL_YOURSKILLISNOTENOUGH].icon = TexMan.CheckForTexture( "SKILA0", FTexture::TEX_MiscPatch );
-	g_Medals[MEDAL_YOURSKILLISNOTENOUGH].iconState = floatyIconInfo->FindStateByString( "YourSkillIsNotEnough", true );
-	g_Medals[MEDAL_YOURSKILLISNOTENOUGH].text = "Your skill is not enough!";
-	g_Medals[MEDAL_YOURSKILLISNOTENOUGH].textColor = CR_ORANGE;
-	g_Medals[MEDAL_YOURSKILLISNOTENOUGH].announcerEntry = "YourSkillIsNotEnough";
-	g_Medals[MEDAL_YOURSKILLISNOTENOUGH].lowerMedal = &g_Medals[MEDAL_YOUFAILIT];
+					// [AK] Also make sure it inherits from FloatyIcon.
+					if ( medal->iconClass->IsDescendantOf( RUNTIME_CLASS( AFloatyIcon )) == false )
+						sc.ScriptError( "Class '%s' is not a descendant of 'FloatyIcon'.", sc.String );
 
-	// Llama
-	g_Medals[MEDAL_LLAMA].icon = TexMan.CheckForTexture( "LLAMA0", FTexture::TEX_MiscPatch );
-	g_Medals[MEDAL_LLAMA].iconState = floatyIconInfo->FindStateByString( "Llama", true );
-	g_Medals[MEDAL_LLAMA].text = "Llama!";
-	g_Medals[MEDAL_LLAMA].textColor = CR_GREEN;
-	g_Medals[MEDAL_LLAMA].announcerEntry = "Llama";
-	g_Medals[MEDAL_LLAMA].lowerMedal = nullptr;
-	g_Medals[MEDAL_LLAMA].sound = "misc/llama";
+					medal->iconState = nullptr;
+				}
+				else if ( command.CompareNoCase( "state" ) == 0 )
+				{
+					if ( medal->iconClass == nullptr )
+						sc.ScriptError( "Medal '%s' needs a class before specifying a state.", medal->name.GetChars( ));
 
-	// Spam
-	g_Medals[MEDAL_SPAM].icon = TexMan.CheckForTexture( "SPAMA0", FTexture::TEX_MiscPatch );
-	g_Medals[MEDAL_SPAM].iconState = floatyIconInfo->FindStateByString( "Spam", true );
-	g_Medals[MEDAL_SPAM].text = "Spam!";
-	g_Medals[MEDAL_SPAM].textColor = CR_GREEN;
-	g_Medals[MEDAL_SPAM].announcerEntry = "Spam";
-	g_Medals[MEDAL_SPAM].lowerMedal = &g_Medals[MEDAL_LLAMA];
-	g_Medals[MEDAL_SPAM].sound = "misc/spam";
+					medal->iconState = medal->iconClass->ActorInfo->FindStateByString( sc.String, true );
 
-	// Victory
-	g_Medals[MEDAL_VICTORY].icon = TexMan.CheckForTexture( "VICTA0", FTexture::TEX_MiscPatch );
-	g_Medals[MEDAL_VICTORY].iconState = floatyIconInfo->FindStateByString( "Victory", true );
-	g_Medals[MEDAL_VICTORY].text = "Victory!";
-	g_Medals[MEDAL_VICTORY].textColor = CR_GREY;
-	g_Medals[MEDAL_VICTORY].announcerEntry = "Victory";
-	g_Medals[MEDAL_VICTORY].lowerMedal = nullptr;
+					// [AK] Make sure that the passed state exists.
+					if ( medal->iconState == nullptr )
+						sc.ScriptError( "State '%s' wasn't found in '%s'.", sc.String, medal->iconClass->TypeName.GetChars( ));
+				}
+				else if ( command.CompareNoCase( "text" ) == 0 )
+				{
+					medal->text = sc.String[0] == '$' ? GStrings( sc.String + 1 ) : sc.String;
+				}
+				else if ( command.CompareNoCase( "textcolor" ) == 0 )
+				{
+					medal->textColor = V_FindFontColor( sc.String );
+				}
+				else if ( command.CompareNoCase( "quantitycolor" ) == 0 )
+				{
+					medal->quantityColor = sc.String;
+				}
+				else if ( command.CompareNoCase( "announcerentry" ) == 0 )
+				{
+					medal->announcerEntry = sc.String;
+				}
+				else if ( command.CompareNoCase( "lowermedal" ) == 0 )
+				{
+					medal->lowerMedal = MEDAL_GetMedal( sc.String );
 
-	// Perfect
-	g_Medals[MEDAL_PERFECT].icon = TexMan.CheckForTexture( "PFCTA0", FTexture::TEX_MiscPatch );
-	g_Medals[MEDAL_PERFECT].iconState = floatyIconInfo->FindStateByString( "Perfect", true );
-	g_Medals[MEDAL_PERFECT].text = "Perfect!";
-	g_Medals[MEDAL_PERFECT].textColor = CR_RED;
-	g_Medals[MEDAL_PERFECT].announcerEntry = "Perfect";
-	g_Medals[MEDAL_PERFECT].lowerMedal = &g_Medals[MEDAL_VICTORY];
+					// [AK] Make sure that the passed medal exists.
+					if ( medal->lowerMedal == nullptr )
+						sc.ScriptError( "Medal '%s' wasn't found.", sc.String );
 
-	// Termination
-	g_Medals[MEDAL_TERMINATION].icon = TexMan.CheckForTexture( "TRMAA0", FTexture::TEX_MiscPatch );
-	g_Medals[MEDAL_TERMINATION].iconState = floatyIconInfo->FindStateByString( "Termination", true );
-	g_Medals[MEDAL_TERMINATION].text = "Termination!";
-	g_Medals[MEDAL_TERMINATION].textColor = CR_GREY;
-	g_Medals[MEDAL_TERMINATION].announcerEntry = "Termination";
-	g_Medals[MEDAL_TERMINATION].lowerMedal = nullptr;
+					// [AK] Don't allow this medal to be its own lower medal.
+					if ( medal->lowerMedal == medal )
+						sc.ScriptError( "Medal '%s' can't be a lower medal of itself.", sc.String );
+				}
+				else if ( command.CompareNoCase( "sound" ) == 0 )
+				{
+					medal->sound = sc.String;
+				}
+				else
+				{
+					sc.ScriptError( "Unknown option '%s'.", command.GetChars( ));
+				}
+			}
 
-	// First frag
-	g_Medals[MEDAL_FIRSTFRAG].icon = TexMan.CheckForTexture( "FFRGA0", FTexture::TEX_MiscPatch );
-	g_Medals[MEDAL_FIRSTFRAG].iconState = floatyIconInfo->FindStateByString( "FirstFrag", true );
-	g_Medals[MEDAL_FIRSTFRAG].text = "First frag!";
-	g_Medals[MEDAL_FIRSTFRAG].textColor = CR_GREY;
-	g_Medals[MEDAL_FIRSTFRAG].announcerEntry = "FirstFrag";
-	g_Medals[MEDAL_FIRSTFRAG].lowerMedal = nullptr;
-
-	// Capture
-	g_Medals[MEDAL_CAPTURE].icon = TexMan.CheckForTexture( "CAPTA0", FTexture::TEX_MiscPatch );
-	g_Medals[MEDAL_CAPTURE].iconState = floatyIconInfo->FindStateByString( "Capture", true );
-	g_Medals[MEDAL_CAPTURE].text = "Capture!";
-	g_Medals[MEDAL_CAPTURE].textColor = CR_GREY;
-	g_Medals[MEDAL_CAPTURE].announcerEntry = "Capture";
-	g_Medals[MEDAL_CAPTURE].lowerMedal = nullptr;
-
-	// Tag
-	g_Medals[MEDAL_TAG].icon = TexMan.CheckForTexture( "STAGA0", FTexture::TEX_MiscPatch );
-	g_Medals[MEDAL_TAG].iconState = floatyIconInfo->FindStateByString( "Tag", true );
-	g_Medals[MEDAL_TAG].text = "Tag!";
-	g_Medals[MEDAL_TAG].textColor = CR_GREY;
-	g_Medals[MEDAL_TAG].announcerEntry = "Tag";
-	g_Medals[MEDAL_TAG].lowerMedal = nullptr;
-
-	// Assist
-	g_Medals[MEDAL_ASSIST].icon = TexMan.CheckForTexture( "ASSTA0", FTexture::TEX_MiscPatch );
-	g_Medals[MEDAL_ASSIST].iconState = floatyIconInfo->FindStateByString( "Assist", true );
-	g_Medals[MEDAL_ASSIST].text = "Assist!";
-	g_Medals[MEDAL_ASSIST].textColor = CR_GREY;
-	g_Medals[MEDAL_ASSIST].announcerEntry = "Assist";
-	g_Medals[MEDAL_ASSIST].lowerMedal = nullptr;
-
-	// Defense
-	g_Medals[MEDAL_DEFENSE].icon = TexMan.CheckForTexture( "DFNSA0", FTexture::TEX_MiscPatch );
-	g_Medals[MEDAL_DEFENSE].iconState = floatyIconInfo->FindStateByString( "Defense", true );
-	g_Medals[MEDAL_DEFENSE].text = "Defense!";
-	g_Medals[MEDAL_DEFENSE].textColor = CR_GREY;
-	g_Medals[MEDAL_DEFENSE].announcerEntry = "Defense";
-	g_Medals[MEDAL_DEFENSE].lowerMedal = nullptr;
-
-	// Fisting
-	g_Medals[MEDAL_FISTING].icon = TexMan.CheckForTexture( "FISTA0", FTexture::TEX_MiscPatch );
-	g_Medals[MEDAL_FISTING].iconState = floatyIconInfo->FindStateByString( "Fisting", true );
-	g_Medals[MEDAL_FISTING].text = "Fisting!";
-	g_Medals[MEDAL_FISTING].textColor = CR_GREY;
-	g_Medals[MEDAL_FISTING].announcerEntry = "Fisting";
-	g_Medals[MEDAL_FISTING].lowerMedal = nullptr;
+			// [AK] Throw a fatal error if this medal has no class or state.
+			if ( medal->iconClass == nullptr )
+				sc.ScriptError( "Medal '%s' has no defined class.", medal->name.GetChars( ));
+			else if ( medal->iconState == nullptr )
+				sc.ScriptError( "Medal '%s' has no defined state.", medal->name.GetChars( ));
+		}
+	}
 
 	g_bFirstFragAwarded = false;
 }
@@ -390,9 +324,13 @@ void MEDAL_Render( void )
 	// If that length is greater then the screen width, display the medals as "<icon> <name> X <num>"
 	if ( ulLength >= 320 )
 	{
-		const char *szSecondColor = medal->textColor == CR_RED ? TEXTCOLOR_GRAY : TEXTCOLOR_RED;
+		if ( medal->quantityColor.IsNotEmpty( ))
+		{
+			string += TEXTCOLOR_ESCAPE;
+			string.AppendFormat( "[%s]", medal->quantityColor.GetChars( ));
+		}
 
-		string.AppendFormat( "%s X %u", szSecondColor, medal->awardedCount[ulPlayer] );
+		string.AppendFormat( " X %u", medal->awardedCount[ulPlayer] );
 		screen->DrawTexture( icon, ulCurXPos, ulCurYPos, DTA_CleanNoMove, true, DTA_Alpha, lAlpha, TAG_DONE );
 
 		ulCurXPos -= CleanXfac * ( SmallFont->StringWidth( string ) / 2 );
@@ -425,18 +363,18 @@ void MEDAL_GiveMedal( const ULONG player, const ULONG medalIndex )
 		return;
 
 	// [AK] Make sure that the player and medal are valid.
-	if (( player >= MAXPLAYERS ) || ( players[player].mo == nullptr ) || ( medalIndex >= NUM_MEDALS ))
+	if (( player >= MAXPLAYERS ) || ( players[player].mo == nullptr ) || ( medalIndex >= medalList.Size( )))
 		return;
 
 	// [AK] Make sure that medals are allowed.
 	if ((( NETWORK_GetState( ) != NETSTATE_SERVER ) && ( cl_medals == false )) || ( zadmflags & ZADF_NO_MEDALS ))
 		return;
 
-	MEDAL_t *const medal = &g_Medals[medalIndex];
+	MEDAL_t *const medal = medalList[medalIndex];
 
 	// [CK] Trigger events if a medal is received
 	// [AK] If the event returns 0, then the player doesn't receive the medal.
-	if ( GAMEMODE_HandleEvent( GAMEEVENT_MEDALS, players[player].mo, ACS_PushAndReturnDynamicString( medal->announcerEntry ), 0, true ) == 0 )
+	if ( GAMEMODE_HandleEvent( GAMEEVENT_MEDALS, players[player].mo, ACS_PushAndReturnDynamicString( medal->name.GetChars( )), 0, true ) == 0 )
 		return;
 
 	// Increase the player's count of this type of medal.
@@ -479,13 +417,23 @@ void MEDAL_GiveMedal( const ULONG player, const ULONG medalIndex )
 	// If this player is a bot, tell it that it received a medal.
 	if ( players[player].pSkullBot )
 	{
-		players[player].pSkullBot->m_ulLastMedalReceived = medalIndex;
+		players[player].pSkullBot->m_lLastMedalReceived = medalIndex;
 		players[player].pSkullBot->PostEvent( BOTEVENT_RECEIVEDMEDAL );
 	}
 
 	// [AK] If we're the server, tell clients that this player earned a medal.
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 		SERVERCOMMANDS_GivePlayerMedal( player, medalIndex );
+}
+
+//*****************************************************************************
+//
+void MEDAL_GiveMedal( const ULONG player, const FName medalName )
+{
+	const int index = MEDAL_GetMedalIndex( medalName );
+
+	if ( index != -1 )
+		MEDAL_GiveMedal( player, index );
 }
 
 //*****************************************************************************
@@ -505,10 +453,10 @@ void MEDAL_RenderAllMedals( LONG lYOffset )
 
 	// Determine length of all medals strung together.
 	ULONG ulLength = 0;
-	for ( ULONG ulMedal = 0; ulMedal < NUM_MEDALS; ulMedal++ )
+	for ( ULONG ulMedal = 0; ulMedal < medalList.Size( ); ulMedal++ )
 	{
-		if ( g_Medals[ulMedal].awardedCount[player] > 0 )
-			ulLength += TexMan[g_Medals[ulMedal].icon]->GetWidth( ) * g_Medals[ulMedal].awardedCount[player];
+		if ( medalList[ulMedal]->awardedCount[player] > 0 )
+			ulLength += TexMan[medalList[ulMedal]->icon]->GetWidth( ) * medalList[ulMedal]->awardedCount[player];
 	}
 
 	// Can't fit all the medals on the screen.
@@ -518,10 +466,10 @@ void MEDAL_RenderAllMedals( LONG lYOffset )
 
 		// Recalculate the length of all the medals strung together.
 		ulLength = 0;
-		for ( ULONG ulMedal = 0; ulMedal < NUM_MEDALS; ulMedal++ )
+		for ( ULONG ulMedal = 0; ulMedal < medalList.Size( ); ulMedal++ )
 		{
-			if ( g_Medals[ulMedal].awardedCount[player] > 0 )
-				ulLength += TexMan[g_Medals[ulMedal].icon]->GetWidth( );
+			if ( medalList[ulMedal]->awardedCount[player] > 0 )
+				ulLength += TexMan[medalList[ulMedal]->icon]->GetWidth( );
 		}
 
 		// If the length of all our medals goes beyond 320, we cannot scale them.
@@ -531,16 +479,16 @@ void MEDAL_RenderAllMedals( LONG lYOffset )
 			ulCurYPos = static_cast<ULONG>( ulCurYPos * CleanYfac );
 
 		ulCurXPos = (( bScale ? 320 : SCREENWIDTH ) - ulLength ) / 2;
-		for ( ULONG ulMedal = 0; ulMedal < NUM_MEDALS; ulMedal++ )
+		for ( ULONG ulMedal = 0; ulMedal < medalList.Size( ); ulMedal++ )
 		{
-			if ( g_Medals[ulMedal].awardedCount[player] == 0 )
+			if ( medalList[ulMedal]->awardedCount[player] == 0 )
 				continue;
 
-			icon = TexMan[g_Medals[ulMedal].icon];
+			icon = TexMan[medalList[ulMedal]->icon];
 			screen->DrawTexture( icon, ulCurXPos + icon->GetWidth( ) / 2, ulCurYPos, DTA_Clean, bScale, TAG_DONE );
 
 			ULONG ulXOffset = ( SmallFont->StringWidth( string ) + icon->GetWidth( )) / 2;
-			string.Format( "%u", g_Medals[ulMedal].awardedCount[player] );
+			string.Format( "%u", medalList[ulMedal]->awardedCount[player] );
 			screen->DrawText( SmallFont, CR_RED, ulCurXPos - ulXOffset, ulCurYPos, string, DTA_Clean, bScale, TAG_DONE );
 
 			ulCurXPos += icon->GetWidth( );
@@ -549,11 +497,11 @@ void MEDAL_RenderAllMedals( LONG lYOffset )
 	else
 	{
 		ulCurXPos = 160 - ulLength / 2;
-		for ( ULONG ulMedal = 0; ulMedal < NUM_MEDALS; ulMedal++ )
+		for ( ULONG ulMedal = 0; ulMedal < medalList.Size( ); ulMedal++ )
 		{
-			icon = TexMan[g_Medals[ulMedal].icon];
+			icon = TexMan[medalList[ulMedal]->icon];
 
-			for ( ULONG ulMedalIdx = 0; ulMedalIdx < g_Medals[ulMedal].awardedCount[player]; ulMedalIdx++ )
+			for ( ULONG ulMedalIdx = 0; ulMedalIdx < medalList[ulMedal]->awardedCount[player]; ulMedalIdx++ )
 			{
 				screen->DrawTexture( icon, ulCurXPos + icon->GetWidth( ) / 2, ulCurYPos, DTA_Clean, true, TAG_DONE );
 				ulCurXPos += icon->GetWidth( );
@@ -583,12 +531,12 @@ void MEDAL_RenderAllMedalsFullscreen( player_t *pPlayer )
 	ULONG ulMaxMedalHeight = 0;
 	ULONG ulLastHeight = 0;
 
-	for ( ULONG ulMedal = 0; ulMedal < NUM_MEDALS; ulMedal++ )
+	for ( ULONG ulMedal = 0; ulMedal < medalList.Size( ); ulMedal++ )
 	{
-		if ( g_Medals[ulMedal].awardedCount[playerIndex] == 0 )
+		if ( medalList[ulMedal]->awardedCount[playerIndex] == 0 )
 			continue;
 
-		ULONG ulHeight = TexMan[g_Medals[ulMedal].icon]->GetHeight( );
+		ULONG ulHeight = TexMan[medalList[ulMedal]->icon]->GetHeight( );
 
 		if (( ulNumMedal % 2 ) == 0 )
 		{
@@ -601,10 +549,10 @@ void MEDAL_RenderAllMedalsFullscreen( player_t *pPlayer )
 			ulMaxMedalHeight = MAX( ulHeight, ulLastHeight );
 		}
 
-		HUD_DrawTexture( TexMan[g_Medals[ulMedal].icon], ulCurXPos + TexMan[g_Medals[ulMedal].icon]->GetWidth( ) / 2, ulCurYPos + ulHeight, g_bScale );
+		HUD_DrawTexture( TexMan[medalList[ulMedal]->icon], ulCurXPos + TexMan[medalList[ulMedal]->icon]->GetWidth( ) / 2, ulCurYPos + ulHeight, g_bScale );
 		HUD_DrawText( SmallFont, CR_RED, ulCurXPos + 48, ulCurYPos + ( ulHeight - SmallFont->GetHeight( )) / 2, "X" );
 
-		string.Format( "%u", g_Medals[ulMedal].awardedCount[playerIndex] );
+		string.Format( "%u", medalList[ulMedal]->awardedCount[playerIndex] );
 		HUD_DrawText( BigFont, CR_RED, ulCurXPos + 64, ulCurYPos + ( ulHeight - BigFont->GetHeight( )) / 2, string );
 
 		if ( ulNumMedal % 2 )
@@ -630,6 +578,27 @@ void MEDAL_RenderAllMedalsFullscreen( player_t *pPlayer )
 
 //*****************************************************************************
 //
+int MEDAL_GetMedalIndex( const FName medalName )
+{
+	for ( unsigned int i = 0; i < medalList.Size( ); i++ )
+	{
+		if ( medalList[i]->name == medalName )
+			return i;
+	}
+
+	return -1;
+}
+
+//*****************************************************************************
+//
+MEDAL_t *MEDAL_GetMedal( const FName medalName )
+{
+	const int index = MEDAL_GetMedalIndex( medalName );
+	return ( index != -1 ? medalList[index] : nullptr );
+}
+
+//*****************************************************************************
+//
 MEDAL_t *MEDAL_GetDisplayedMedal( const ULONG player )
 {
 	if (( player < MAXPLAYERS ) && ( medalQueue[player].medals.empty( ) == false ))
@@ -646,8 +615,8 @@ void MEDAL_ResetPlayerMedals( const ULONG player )
 		return;
 
 	// Reset the number of medals this player has.
-	for ( unsigned int i = 0; i < NUM_MEDALS; i++ )
-		g_Medals[i].awardedCount[player] = 0;
+	for ( unsigned int i = 0; i < medalList.Size( ); i++ )
+		medalList[i]->awardedCount[player] = 0;
 
 	medalQueue[player].medals.clear( );
 	medalQueue[player].ticks = 0;
@@ -798,7 +767,7 @@ void medal_TriggerMedal( ULONG ulPlayer )
 			pPlayer->pIcon->Destroy( );
 
 		// Spawn the medal as an icon above the player and set its properties.
-		pPlayer->pIcon = Spawn<AFloatyIcon>( pPlayer->mo->x, pPlayer->mo->y, pPlayer->mo->z, NO_REPLACE );
+		pPlayer->pIcon = static_cast<AFloatyIcon *>( Spawn( medal->iconClass, pPlayer->mo->x, pPlayer->mo->y, pPlayer->mo->z, NO_REPLACE ));
 		if ( pPlayer->pIcon )
 		{
 			pPlayer->pIcon->SetState( medal->iconState );
@@ -1051,7 +1020,7 @@ void medal_SelectIcon( player_t *player )
 
 	// Check if we need to have an icon above us, or change the current icon.
 	const ULONG desiredSprite = medal_GetDesiredIcon( player, teamItem );
-	const FActorInfo *floatyIconInfo = RUNTIME_CLASS( AFloatyIcon )->ActorInfo;
+	const FActorInfo *floatyIconInfo = RUNTIME_CLASS( AFloatyIcon )->GetReplacement( )->ActorInfo;
 	FState *desiredState = nullptr;
 
 	// [BB] Determine the frame based on the desired sprite.
@@ -1125,7 +1094,7 @@ void medal_SelectIcon( player_t *player )
 		{
 			if ( player->pIcon == NULL )
 			{
-				player->pIcon = Spawn<AFloatyIcon>( player->mo->x, player->mo->y, player->mo->z + player->mo->height + ( 4 * FRACUNIT ), NO_REPLACE );
+				player->pIcon = Spawn<AFloatyIcon>( player->mo->x, player->mo->y, player->mo->z + player->mo->height + ( 4 * FRACUNIT ), ALLOW_REPLACE );
 
 				if ( teamItem )
 				{
@@ -1165,7 +1134,7 @@ void medal_CheckForFirstFrag( ULONG ulPlayer )
 		( teampossession == false ) &&
 		(( duel == false ) || ( DUEL_GetState( ) == DS_INDUEL )))
 	{
-		MEDAL_GiveMedal( ulPlayer, MEDAL_FIRSTFRAG );
+		MEDAL_GiveMedal( ulPlayer, "FirstFrag" );
 
 		// It's been given.
 		g_bFirstFragAwarded = true;
@@ -1179,7 +1148,7 @@ void medal_CheckForDomination( ULONG ulPlayer )
 	// If the player has gotten 5 straight frags without dying, award a medal.
 	// Award a "Total Domination" medal if they get 10+ straight frags without dying. Otherwise, award a "Domination" medal.
 	if (( players[ulPlayer].ulFragsWithoutDeath % 5 ) == 0 )
-		MEDAL_GiveMedal( ulPlayer, players[ulPlayer].ulFragsWithoutDeath >= 10 ? MEDAL_TOTALDOMINATION : MEDAL_DOMINATION );
+		MEDAL_GiveMedal( ulPlayer, players[ulPlayer].ulFragsWithoutDeath >= 10 ? "TotalDomination" : "Domination" );
 }
 
 //*****************************************************************************
@@ -1188,7 +1157,7 @@ void medal_CheckForFistingOrSpam( ULONG ulPlayer, int dmgflags )
 {
 	// [AK] Check if we should award the player with a "fisting" medal.
 	if ( dmgflags & DMG_GIVE_FISTING_MEDAL_ON_FRAG )
-		MEDAL_GiveMedal( ulPlayer, MEDAL_FISTING );
+		MEDAL_GiveMedal( ulPlayer, "Fisting" );
 
 	// [AK] Check if we should award the player with a "spam" medal if this is the second
 	// frag this player has gotten THIS TICK with a projectile or puff that awards one.
@@ -1197,7 +1166,7 @@ void medal_CheckForFistingOrSpam( ULONG ulPlayer, int dmgflags )
 		if ( players[ulPlayer].ulLastSpamTick == static_cast<unsigned> (level.time) )
 		{
 			// Award the medal.
-			MEDAL_GiveMedal( ulPlayer, MEDAL_SPAM );
+			MEDAL_GiveMedal( ulPlayer, "Spam" );
 
 			// Also, cancel out the possibility of getting an Excellent/Incredible medal.
 			players[ulPlayer].ulLastExcellentTick = 0;
@@ -1217,7 +1186,7 @@ void medal_CheckForExcellent( ULONG ulPlayer )
 	if ( ( ( players[ulPlayer].ulLastExcellentTick + ( 2 * TICRATE )) > (ULONG)level.time ) && players[ulPlayer].ulLastExcellentTick )
 	{
 		// Award the incredible.
-		MEDAL_GiveMedal( ulPlayer, MEDAL_INCREDIBLE );
+		MEDAL_GiveMedal( ulPlayer, "Incredible" );
 
 		players[ulPlayer].ulLastExcellentTick = level.time;
 		players[ulPlayer].ulLastFragTick = level.time;
@@ -1227,7 +1196,7 @@ void medal_CheckForExcellent( ULONG ulPlayer )
 	else if ( ( ( players[ulPlayer].ulLastFragTick + ( 2 * TICRATE )) > (ULONG)level.time ) && players[ulPlayer].ulLastFragTick )
 	{
 		// Award the excellent.
-		MEDAL_GiveMedal( ulPlayer, MEDAL_EXCELLENT );
+		MEDAL_GiveMedal( ulPlayer, "Excellent" );
 
 		players[ulPlayer].ulLastExcellentTick = level.time;
 		players[ulPlayer].ulLastFragTick = level.time;
@@ -1240,7 +1209,7 @@ void medal_CheckForTermination( ULONG ulDeadPlayer, ULONG ulPlayer )
 {
 	// If the target player is the terminatior, award a "termination" medal.
 	if ( players[ulDeadPlayer].cheats2 & CF2_TERMINATORARTIFACT )
-		MEDAL_GiveMedal( ulPlayer, MEDAL_TERMINATION );
+		MEDAL_GiveMedal( ulPlayer, "Termination" );
 }
 
 //*****************************************************************************
@@ -1249,7 +1218,7 @@ void medal_CheckForLlama( ULONG ulDeadPlayer, ULONG ulPlayer )
 {
 	// Award a "llama" medal if the victim had been typing, lagging, or in the console.
 	if ( players[ulDeadPlayer].statuses & ( PLAYERSTATUS_CHATTING | PLAYERSTATUS_INCONSOLE | PLAYERSTATUS_INMENU | PLAYERSTATUS_LAGGING ))
-		MEDAL_GiveMedal( ulPlayer, MEDAL_LLAMA );
+		MEDAL_GiveMedal( ulPlayer, "Llama" );
 }
 
 //*****************************************************************************
@@ -1258,19 +1227,17 @@ void medal_CheckForYouFailIt( ULONG ulPlayer )
 {
 	// If the player dies TEN times without getting a frag, award a "Your skill is not enough" medal.
 	if (( players[ulPlayer].ulDeathsWithoutFrag % 10 ) == 0 )
-		MEDAL_GiveMedal( ulPlayer, MEDAL_YOURSKILLISNOTENOUGH );
+		MEDAL_GiveMedal( ulPlayer, "YourSkillIsNotEnough" );
 	// If the player dies five times without getting a frag, award a "You fail it" medal.
 	else if (( players[ulPlayer].ulDeathsWithoutFrag % 5 ) == 0 )
-		MEDAL_GiveMedal( ulPlayer, MEDAL_YOUFAILIT );
+		MEDAL_GiveMedal( ulPlayer, "YouFailIt" );
 }
 
 #ifdef	_DEBUG
 #include "c_dispatch.h"
 CCMD( testgivemedal )
 {
-	ULONG	ulIdx;
-
-	for ( ulIdx = 0; ulIdx < NUM_MEDALS; ulIdx++ )
-		MEDAL_GiveMedal( consoleplayer, ulIdx );
+	for ( unsigned int i = 0; i < medalList.Size( ); i++ )
+		MEDAL_GiveMedal( consoleplayer, i );
 }
 #endif	// _DEBUG

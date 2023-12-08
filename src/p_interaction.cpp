@@ -2999,7 +2999,7 @@ void PLAYER_CheckStruckPlayer( AActor *actor )
 			// If the player has made 5 straight consecutive hits with a weapon, award a medal.
 			// Award a "Precision" medal if they made 10+ consecutive hits. Otherwise, award an "Accuracy" medal.
 			if (( player->ulConsecutiveHits % 5 ) == 0 )
-				MEDAL_GiveMedal( player - players, player->ulConsecutiveHits >= 10 ? MEDAL_PRECISION : MEDAL_ACCURACY );
+				MEDAL_GiveMedal( player - players, player->ulConsecutiveHits >= 10 ? "Precision" : "Accuracy" );
 
 			// Reset the struck player flag.
 			player->bStruckPlayer = false;

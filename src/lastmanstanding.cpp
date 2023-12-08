@@ -455,7 +455,7 @@ void LASTMANSTANDING_DoWinSequence( ULONG ulWinner )
 	// Award a victory or perfect medal to the winner.
 	// If the winner has full health, give him a "Perfect!".
 	if (( lastmanstanding ) && ( NETWORK_InClientMode( ) == false ))
-		MEDAL_GiveMedal( ulWinner, players[ulWinner].health == deh.MegasphereHealth ? MEDAL_PERFECT : MEDAL_VICTORY );
+		MEDAL_GiveMedal( ulWinner, players[ulWinner].health == deh.MegasphereHealth ? "Perfect" : "Victory" );
 
 	for ( ulIdx = 0; ulIdx < MAXPLAYERS; ulIdx++ )
 	{

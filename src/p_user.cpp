@@ -2159,7 +2159,7 @@ void APlayerPawn::DropImportantItems( bool bLeavingGame, AActor *pSource )
 				// Award a "Defense!" medal to the player who fragged this flag carrier.
 				// [BB] but only if the flag belongs to the team of the fragger.
 				if (( pSource ) && ( pSource->player ) && ( pSource->IsTeammate( this ) == false ) && ( pSource->player->Team == i ))
-					MEDAL_GiveMedal( pSource->player - players, MEDAL_DEFENSE );
+					MEDAL_GiveMedal( pSource->player - players, "Defense" );
 			}
 		}
 
@@ -2203,7 +2203,7 @@ void APlayerPawn::DropImportantItems( bool bLeavingGame, AActor *pSource )
 
 			// Award a "Defense!" medal to the player who fragged this flag carrier.
 			if ( pSource && pSource->player && ( pSource->IsTeammate( this ) == false ))
-				MEDAL_GiveMedal( pSource->player - players, MEDAL_DEFENSE );
+				MEDAL_GiveMedal( pSource->player - players, "Defense" );
 		}
 	}
 

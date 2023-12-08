@@ -257,7 +257,7 @@ void DUEL_DoWinSequence( ULONG ulPlayer )
 	// Award a victory or perfect medal to the winner.
 	// If the duel loser doesn't have any frags, give the winner a "Perfect!".
 	if ( NETWORK_InClientMode( ) == false )
-		MEDAL_GiveMedal( ulPlayer, players[g_ulDuelLoser].fragcount <= 0 ? MEDAL_PERFECT : MEDAL_VICTORY );
+		MEDAL_GiveMedal( ulPlayer, players[g_ulDuelLoser].fragcount <= 0 ? "Perfect" : "Victory" );
 	
 	for ( ulIdx = 0; ulIdx < MAXPLAYERS; ulIdx++ )
 	{

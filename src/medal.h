@@ -62,41 +62,6 @@
 
 enum
 {
-	MEDAL_EXCELLENT,
-	MEDAL_INCREDIBLE,
-
-	MEDAL_IMPRESSIVE,
-	MEDAL_MOSTIMPRESSIVE,
-
-	MEDAL_DOMINATION,
-	MEDAL_TOTALDOMINATION,
-
-	MEDAL_ACCURACY,
-	MEDAL_PRECISION,
-
-	MEDAL_YOUFAILIT,
-	MEDAL_YOURSKILLISNOTENOUGH,
-
-	MEDAL_LLAMA,
-	MEDAL_SPAM,
-
-	MEDAL_VICTORY,
-	MEDAL_PERFECT,
-
-	MEDAL_TERMINATION,
-	MEDAL_FIRSTFRAG,
-	MEDAL_CAPTURE,
-	MEDAL_TAG,
-	MEDAL_ASSIST,
-	MEDAL_DEFENSE,
-	MEDAL_FISTING,
-
-	NUM_MEDALS
-};
-
-//*****************************************************************************
-enum
-{
 	SPRITE_CHAT,
 	SPRITE_VOICECHAT,
 	SPRITE_INCONSOLE,
@@ -115,8 +80,14 @@ enum
 
 struct MEDAL_t
 {
+	// [AK] A name used to identify the medal.
+	const FName		name;
+
 	// Icon that displays on the screen when this medal is received.
 	FTextureID		icon;
+
+	// [AK] The floaty icon class to spawn above the player's head.
+	const PClass	*iconClass;
 
 	// State that the floaty icon above the player's head is set to.
 	FState			*iconState;
@@ -126,6 +97,9 @@ struct MEDAL_t
 
 	// Color that text is displayed in.
 	EColorRange		textColor;
+
+	// [AK] Color that the quantity of the medal is displayed in.
+	FString			quantityColor;
 
 	// Announcer entry that's played when this medal is triggered.
 	FString			announcerEntry;
@@ -139,7 +113,7 @@ struct MEDAL_t
 	// [AK] How much of this medal that each player currently has.
 	unsigned int	awardedCount[MAXPLAYERS];
 
-	MEDAL_t( void ) : iconState( nullptr ), textColor( CR_UNTRANSLATED ), lowerMedal( nullptr ), awardedCount{ 0 }
+	MEDAL_t( FName name ) : name( name ), iconClass( nullptr ), iconState( nullptr ), textColor( CR_UNTRANSLATED ), lowerMedal( nullptr ), awardedCount{ 0 }
 	{
 		icon.SetInvalid( );
 	}
@@ -166,8 +140,11 @@ void		MEDAL_Tick( void );
 void		MEDAL_Render( void );
 
 void		MEDAL_GiveMedal( const ULONG player, const ULONG medalIndex );
+void		MEDAL_GiveMedal( const ULONG player, const FName medalName );
 void		MEDAL_RenderAllMedals( LONG lYOffset );
 void		MEDAL_RenderAllMedalsFullscreen( player_t *pPlayer );
+int			MEDAL_GetMedalIndex( const FName medalName );
+MEDAL_t		*MEDAL_GetMedal( const FName medalName );
 MEDAL_t		*MEDAL_GetDisplayedMedal( const ULONG player );
 void		MEDAL_ResetPlayerMedals( const ULONG player );
 void		MEDAL_PlayerDied( ULONG ulPlayer, ULONG ulSourcePlayer, int dmgflags );

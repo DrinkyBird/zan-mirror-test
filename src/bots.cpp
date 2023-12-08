@@ -1703,7 +1703,7 @@ CSkullBot::CSkullBot( const char *pszName, const char *pszTeamName, ULONG ulPlay
 	m_ulLastEnemyPositionTick = 0;
 	m_bSkillIncrease = false;
 	m_bSkillDecrease = false;
-	m_ulLastMedalReceived = NUM_MEDALS;
+	m_lLastMedalReceived = -1;
 	m_lQueueHead = 0;
 	m_lQueueTail = 0;
 	for ( ulIdx = 0; ulIdx < MAX_STORED_EVENTS; ulIdx++ )

@@ -603,7 +603,7 @@ void TEAM_ScoreSkulltagPoint( player_t *pPlayer, ULONG ulNumPoints, AActor *pPil
 	TEAM_SetItemTaken( ulTeamIdx, false );
 
 	// Award the scorer with a "Tag!" medal.
-	MEDAL_GiveMedal( ULONG( pPlayer - players ), MEDAL_TAG );
+	MEDAL_GiveMedal( ULONG( pPlayer - players ), "Tag" );
 
 	// If someone just recently returned the skull, award him with an "Assist!" medal.
 	if ( TEAM_GetAssistPlayer( pPlayer->Team ) != MAXPLAYERS )
@@ -611,7 +611,7 @@ void TEAM_ScoreSkulltagPoint( player_t *pPlayer, ULONG ulNumPoints, AActor *pPil
 		// [AK] Mark the assisting player.
 		playerAssistNumber = TEAM_GetAssistPlayer( pPlayer->Team );
 
-		MEDAL_GiveMedal( playerAssistNumber, MEDAL_ASSIST );
+		MEDAL_GiveMedal( playerAssistNumber, "Assist" );
 		TEAM_SetAssistPlayer( pPlayer->Team, MAXPLAYERS );
 	}
 

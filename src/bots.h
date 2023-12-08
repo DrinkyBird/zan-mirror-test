@@ -593,7 +593,7 @@ public:
 	bool			m_bSkillDecrease;
 
 	// What's the last medal we received?
-	ULONG			m_ulLastMedalReceived;
+	LONG			m_lLastMedalReceived;
 
 private:
 	//*************************************************************************

@@ -446,7 +446,7 @@ bool AFlag::HandlePickup( AInventory *pItem )
 			PLAYER_SetPoints ( Owner->player, Owner->player->lPointCount + 1 );
 
 			// Award the scorer with a "Capture!" medal.
-			MEDAL_GiveMedal( ULONG( Owner->player - players ), MEDAL_CAPTURE );
+			MEDAL_GiveMedal( ULONG( Owner->player - players ), "Capture" );
 
 			// [RC] Clear the 'returned automatically' message. A bit hackish, but leaves the flag structure unchanged.
 			this->ReturnFlag( NULL );
@@ -531,7 +531,7 @@ bool AFlag::HandlePickup( AInventory *pItem )
 				// [CK] Mark the assisting player
 				playerAssistNumber = TEAM_GetAssistPlayer( Owner->player->Team );
 
-				MEDAL_GiveMedal( playerAssistNumber, MEDAL_ASSIST );
+				MEDAL_GiveMedal( playerAssistNumber, "Assist" );
 				TEAM_SetAssistPlayer( Owner->player->Team, MAXPLAYERS );
 			}
 
@@ -853,14 +853,14 @@ bool AWhiteFlag::HandlePickup( AInventory *pItem )
 		PLAYER_SetPoints ( Owner->player, Owner->player->lPointCount + 1 );
 
 		// Award the scorer with a "Capture!" medal.
-		MEDAL_GiveMedal( ULONG( Owner->player - players ), MEDAL_CAPTURE );
+		MEDAL_GiveMedal( ULONG( Owner->player - players ), "Capture" );
 
 		// If someone just recently returned the flag, award him with an "Assist!" medal.
 		if ( TEAM_GetAssistPlayer( Owner->player->Team ) != MAXPLAYERS )
 		{
 			// [AK] Mark the assisting player.
 			playerAssistNumber = TEAM_GetAssistPlayer( Owner->player->Team );
-			MEDAL_GiveMedal( playerAssistNumber, MEDAL_ASSIST );
+			MEDAL_GiveMedal( playerAssistNumber, "Assist" );
 
 			TEAM_SetAssistPlayer( Owner->player->Team, MAXPLAYERS );
 		}
