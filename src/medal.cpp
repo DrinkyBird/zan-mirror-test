@@ -355,27 +355,27 @@ void MEDAL_Render( void )
 //*****************************************************************************
 //*****************************************************************************
 //
-void MEDAL_GiveMedal( const ULONG player, const ULONG medalIndex )
+bool MEDAL_GiveMedal( const ULONG player, const ULONG medalIndex )
 {
 	// [CK] Do not award if it's a countdown sequence
 	// [AK] Or if we're playing a cooperative game mode.
 	if (( GAMEMODE_IsGameInCountdown( )) || (( deathmatch || teamgame ) == false ))
-		return;
+		return false;
 
 	// [AK] Make sure that the player and medal are valid.
 	if (( player >= MAXPLAYERS ) || ( players[player].mo == nullptr ) || ( medalIndex >= medalList.Size( )))
-		return;
+		return false;
 
 	// [AK] Make sure that medals are allowed.
 	if ((( NETWORK_GetState( ) != NETSTATE_SERVER ) && ( cl_medals == false )) || ( zadmflags & ZADF_NO_MEDALS ))
-		return;
+		return false;
 
 	MEDAL_t *const medal = medalList[medalIndex];
 
 	// [CK] Trigger events if a medal is received
 	// [AK] If the event returns 0, then the player doesn't receive the medal.
 	if ( GAMEMODE_HandleEvent( GAMEEVENT_MEDALS, players[player].mo, ACS_PushAndReturnDynamicString( medal->name.GetChars( )), 0, true ) == 0 )
-		return;
+		return false;
 
 	// Increase the player's count of this type of medal.
 	medal->awardedCount[player]++;
@@ -424,16 +424,16 @@ void MEDAL_GiveMedal( const ULONG player, const ULONG medalIndex )
 	// [AK] If we're the server, tell clients that this player earned a medal.
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 		SERVERCOMMANDS_GivePlayerMedal( player, medalIndex );
+
+	return true;
 }
 
 //*****************************************************************************
 //
-void MEDAL_GiveMedal( const ULONG player, const FName medalName )
+bool MEDAL_GiveMedal( const ULONG player, const FName medalName )
 {
 	const int index = MEDAL_GetMedalIndex( medalName );
-
-	if ( index != -1 )
-		MEDAL_GiveMedal( player, index );
+	return ( index != -1 ? MEDAL_GiveMedal( player, index ) : false );
 }
 
 //*****************************************************************************

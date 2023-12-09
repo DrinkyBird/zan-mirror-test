@@ -5469,6 +5469,7 @@ enum EACSFunctions
 	ACSF_GetPlayerSkin,
 	ACSF_GetPlayerCountry,
 	ACSF_SetNextMapPosition,
+	ACSF_GivePlayerMedal,
 
 	// ZDaemon
 	ACSF_GetTeamScore = 19620,	// (int team)
@@ -8681,6 +8682,15 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 			}
 
 			return 0;
+		}
+
+		case ACSF_GivePlayerMedal:
+		{
+			// [AK] Don't let the clients give medals to players.
+			if ( NETWORK_InClientMode( ))
+				return 0;
+
+			return MEDAL_GiveMedal( args[0], FBehavior::StaticLookupString( args[1] ));
 		}
 
 		case ACSF_GetActorFloorTexture:

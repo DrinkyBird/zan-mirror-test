@@ -2209,6 +2209,30 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_GiveToSiblings)
 
 //===========================================================================
 //
+// [AK] A_GivePlayerMedal
+//
+//===========================================================================
+
+DEFINE_ACTION_FUNCTION_PARAMS( AActor, A_GivePlayerMedal )
+{
+	ACTION_PARAM_START( 2 );
+	ACTION_PARAM_NAME( medal, 0 );
+	ACTION_PARAM_INT( receiver, 1 );
+
+	bool result = false;
+
+	// [AK] Use one of the actor's pointers to determine who gets the medal.
+	COPY_AAPTR_NOT_NULL( self, self, receiver );
+
+	// [AK] Don't let the clients give medals to players.
+	if (( NETWORK_InClientMode( ) == false ) && ( self->player != nullptr ))
+		result = MEDAL_GiveMedal( self->player - players, medal );
+
+	ACTION_SET_RESULT( result );
+}
+
+//===========================================================================
+//
 // A_TakeInventory
 //
 //===========================================================================
