@@ -8035,6 +8035,9 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 					lumpNum = Wads.CheckNumForName( name );
 				}
 
+				if(lumpNum < 0)
+					return -1;
+
 				if(ACSLumpHandles.CheckKey( args[0] ) != NULL)
 					return lumpNum;
 
@@ -8174,21 +8177,22 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 						len = args[4];
 				}
 
-				// [TDRR] Null terminate just in case.
 				char *buf = new char[len];
 				FWadLump &lump = ACSLumpHandles[args[0]].lump;
 				lump.Seek( args[1], SEEK_SET );
 
 				lump.Read( buf, len );
-				buf[len] = '\0';
 
 				auto array = args[2];
-				SDWORD arrIdx = 0;
+
+				// [TDRR] This is unsigned for hub/global arrays, which
+				// actually have the entire range of an integer available
+				// to them. The length checks already take care of
+				// local/module arrays.
+				DWORD arrIdx = 0;
 
 				if( argCount > 3 )
-				{
-					arrIdx = (args[3] > 0) ? args[3] : 0;
-				}
+					arrIdx = args[3];
 
 				switch(funcIndex)
 				{
@@ -8227,17 +8231,15 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 					break;
 
 					default:
+					{
 						I_Error( "Invalid lump read function in LumpReadArray." );
-					goto failure;
+						len = 0;
+					}
+					break;
 				}
 
 				delete[] buf;
 				return len;
-
-				failure:
-
-				delete[] buf;
-				return 0;
 			}
 
 		case ACSF_LumpGetInfo:
