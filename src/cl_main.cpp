@@ -3689,8 +3689,9 @@ void ServerCommands::SpawnPlayer::Execute()
 			g_bClientLagging = false;
 	}
 	// [BB] Don't spawn fog when receiving a snapshot.
+	// [AK] Don't spawn fog if ZADF_NO_SPAWN_TELEFOG is enabled.
 	// [WS] Don't spawn fog when a player is morphing. The server will tell us.
-	else if ( CLIENT_GetConnectionState() != CTS_RECEIVINGSNAPSHOT && !isMorphed && !bPlayerWasMorphed )
+	else if ( CLIENT_GetConnectionState() != CTS_RECEIVINGSNAPSHOT && !( zadmflags & ZADF_NO_SPAWN_TELEFOG ) && !isMorphed && !bPlayerWasMorphed )
 	{
 		// Spawn the respawn fog.
 		unsigned an = pActor->angle >> ANGLETOFINESHIFT;

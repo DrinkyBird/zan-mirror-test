@@ -5753,9 +5753,11 @@ APlayerPawn *P_SpawnPlayer (FPlayerStart *mthing, int playernum, int flags)
 	// body to disassociate with their corpse.
 	// [BB] Don't spawn fog for spectators at all.
 	// [BB] Don't spawn fog for temp players.
+	// [AK] Don't spawn fog if ZADF_NO_SPAWN_TELEFOG is enabled.
 	// [EP] Don't spawn fog for facing west spawners offline, if compatflag is on.
 	if (( NETWORK_GetState( ) != NETSTATE_SINGLE ) &&
 		( p->bDeadSpectator == false ) && ( p->bSpectating == false ) && !(flags & SPF_TEMPPLAYER ) &&
+		( !( zadmflags & ZADF_NO_SPAWN_TELEFOG )) &&
 		( !( zacompatflags & ZACOMPATF_SILENT_WEST_SPAWNS ) || mobj->angle != ANGLE_180 ))
 	{
 		unsigned an = mobj->angle >> ANGLETOFINESHIFT;

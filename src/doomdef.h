@@ -398,6 +398,9 @@ enum
 
 	// [AK] Prevents player colors from being overriden.
 	ZADF_DONT_OVERRIDE_PLAYER_COLORS = 1 << 25,
+
+	// [AK] Teleport fog won't be spawned when a player does.
+	ZADF_NO_SPAWN_TELEFOG = 1 << 26,
 };
 
 // [RH] Compatibility flags.
