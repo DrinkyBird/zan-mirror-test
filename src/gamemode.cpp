@@ -1351,6 +1351,9 @@ void GAMEMODE_SetCurrentMode( GAMEMODE_e GameMode )
 	default:
 		break;
 	}
+
+	// [AK] Reset the scoreboard to update the usability of the columns.
+	SCOREBOARD_Reset( );
 }
 
 //*****************************************************************************
