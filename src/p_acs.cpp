@@ -7399,11 +7399,9 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 				// [AK] If everything's okay now, change the gamemode.
 				GAMEMODE_SetCurrentMode( newmode );
 
-				// [AK] We should also start a new game, so just execute the "map" CCMD to do this.
-				FString command;
-				command.Format( "map %s", level.mapname );
-				C_DoCommand( command );
-				
+				// [AK] We should also reset the current level to apply the new game mode safely.
+				// Do this without showing the intermission screen, and reset everyone's health and items.
+				G_ChangeLevel( level.mapname, 0, CHANGELEVEL_NOINTERMISSION | CHANGELEVEL_RESETHEALTH | CHANGELEVEL_RESETINVENTORY );
 				return 1;
 			}
 
