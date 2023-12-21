@@ -104,7 +104,7 @@ void	medal_TriggerMedal( ULONG ulPlayer );
 void	medal_SelectIcon( player_t *player );
 void	medal_CheckForFirstFrag( ULONG ulPlayer );
 void	medal_CheckForDomination( ULONG ulPlayer );
-void	medal_CheckForSpam( ULONG ulPlayer );
+void	medal_CheckForFisting( ULONG ulPlayer );
 void	medal_CheckForExcellent( ULONG ulPlayer );
 void	medal_CheckForTermination( ULONG ulDeadPlayer, ULONG ulPlayer );
 void	medal_CheckForLlama( ULONG ulDeadPlayer, ULONG ulPlayer );
@@ -640,7 +640,7 @@ void MEDAL_PlayerDied( ULONG ulPlayer, ULONG ulSourcePlayer )
 
 		medal_CheckForFirstFrag( ulSourcePlayer );
 		medal_CheckForDomination( ulSourcePlayer );
-		medal_CheckForSpam( ulSourcePlayer );
+		medal_CheckForFisting( ulSourcePlayer );
 		medal_CheckForExcellent( ulSourcePlayer );
 		medal_CheckForTermination( ulPlayer, ulSourcePlayer );
 		medal_CheckForLlama( ulPlayer, ulSourcePlayer );
@@ -1153,20 +1153,24 @@ void medal_CheckForDomination( ULONG ulPlayer )
 
 //*****************************************************************************
 //
-void medal_CheckForSpam( ULONG ulPlayer )
+void medal_CheckForFisting( ULONG ulPlayer )
 {
 	if ( players[ulPlayer].ReadyWeapon == NULL )
 		return;
 
-	// [AK] A weapon shouldn't cause this MeansOfDeath.
+	// [BB/K6] Neither Fist nor BFG9000 will cause this MeansOfDeath.
 	if ( MeansOfDeath == NAME_Telefrag )
 		return;
 
-	// [AK] If this is the second frag this player has gotten THIS TICK with a weapon
-	// that gives the "SPAM!" medal, award the player with one.
-	if ( players[ulPlayer].ReadyWeapon->WeaponFlags & WIF_GIVESPAMMEDAL )
+	// If the player killed him with this fist, award him a "Fisting!" medal.
+	if ( players[ulPlayer].ReadyWeapon->GetClass( ) == PClass::FindClass( "Fist" ))
+		MEDAL_GiveMedal( ulPlayer, "Fisting" );
+
+	// If this is the second frag this player has gotten THIS TICK with the
+	// BFG9000, award him a "SPAM!" medal.
+	if ( players[ulPlayer].ReadyWeapon->GetClass( ) == PClass::FindClass( "BFG9000" ))
 	{
-		if ( players[ulPlayer].ulLastSpamTick == static_cast<unsigned> (level.time) )
+		if ( players[ulPlayer].ulLastBFGFragTick == static_cast<unsigned> (level.time) )
 		{
 			// Award the medal.
 			MEDAL_GiveMedal( ulPlayer, "Spam" );
@@ -1176,7 +1180,7 @@ void medal_CheckForSpam( ULONG ulPlayer )
 			players[ulPlayer].ulLastFragTick = 0;
 		}
 		else
-			players[ulPlayer].ulLastSpamTick = level.time;
+			players[ulPlayer].ulLastBFGFragTick = level.time;
 	}
 }
 
