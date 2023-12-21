@@ -82,6 +82,8 @@ enum
 	VOTECMD_NEXTSECRET,
 	VOTECMD_RESETMAP,
 
+	// [AK] Custom vote definitions start after NUM_VOTECMDS
+	// ( i.e. the first one is indexed with NUM_VOTECMDS + 1 ).
 	NUM_VOTECMDS
 };
 
