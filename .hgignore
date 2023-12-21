@@ -122,11 +122,6 @@ src/xlat/xlat_parser.h
 src/xlat/xlat_parser.out
 src/xlat/*.orig
 
-# /statsmaker/
-statsmaker/Release
-statsmaker/Debug
-statsmaker/*.user
-
 # /tools/fixrtext/
 tools/fixrtext/Release
 tools/fixrtext/Debug
