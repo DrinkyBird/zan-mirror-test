@@ -147,7 +147,7 @@ int			MEDAL_GetMedalIndex( const FName medalName );
 MEDAL_t		*MEDAL_GetMedal( const FName medalName );
 MEDAL_t		*MEDAL_GetDisplayedMedal( const ULONG player );
 void		MEDAL_ResetPlayerMedals( const ULONG player );
-void		MEDAL_PlayerDied( ULONG ulPlayer, ULONG ulSourcePlayer, int dmgflags );
+void		MEDAL_PlayerDied( ULONG ulPlayer, ULONG ulSourcePlayer );
 void		MEDAL_ResetFirstFragAwarded( void );
 
 #endif
