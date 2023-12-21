@@ -24,22 +24,6 @@ __pycache__
 .vscode
 CMakeLists.txt.user.*
 
-# /getwad/
-getwad/*.ncb
-getwad/*.suo
-getwad/*.user
-getwad/debug
-getwad/release
-
-# /getwad/src/
-getwad/src/Debug
-getwad/src/Release
-getwad/src/*.user
-getwad/src/*.obj
-getwad/src/*.dll
-getwad/src/*.lib
-getwad/src/*.res
-
 # /hqnx/
 hqnx/Debug
 hqnx/Release
