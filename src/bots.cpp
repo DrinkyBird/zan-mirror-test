@@ -625,6 +625,9 @@ void BOTS_RemoveBot( ULONG ulPlayerIdx, bool bExitMsg )
 		PLAYER_LeavesGame( ulPlayerIdx );
 	}
 
+	// [SB] Fire event scripts indicating this bot disconnected.
+	GAMEMODE_HandleEvent( GAMEEVENT_PLAYERLEAVESSERVER, nullptr, ulPlayerIdx, LEAVEREASON_KICKED );
+
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 	{
 		// Redo the scoreboard.

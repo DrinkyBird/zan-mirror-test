@@ -3445,7 +3445,7 @@ void P_PlayerThink (player_t *player)
 //				// Don't really bitch here, because this tends to happen if people use the "map"
 //				// rcon command.
 				Printf( "No player %td start\n", player - players + 1 );
-				SERVER_DisconnectClient( player - players, true, true );
+				SERVER_DisconnectClient( player - players, true, true, LEAVEREASON_ERROR );
 				return;
 			}
 			else

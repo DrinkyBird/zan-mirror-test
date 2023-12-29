@@ -1062,7 +1062,7 @@ void SERVER_CheckTimeouts( void )
 			     && ( ( gametic - g_aClients[ulIdx].ulLastCommandTic ) >= ( CLIENT_TIMEOUT * TICRATE ) ) )
 			{
 				Printf( "Unfinished connection from %s timed out.\n", g_aClients[ulIdx].Address.ToString() );
-				SERVER_DisconnectClient( ulIdx, false, false );
+				SERVER_DisconnectClient( ulIdx, false, false, LEAVEREASON_TIMEOUT );
 			}
 			continue;
 		}
@@ -1073,7 +1073,7 @@ void SERVER_CheckTimeouts( void )
 		// disconnect him.
 		if ( lastCommandTicDiff >= CLIENT_TIMEOUT * TICRATE )
 		{
-		    SERVER_DisconnectClient( ulIdx, true, true );
+		    SERVER_DisconnectClient( ulIdx, true, true, LEAVEREASON_TIMEOUT );
 			continue;
 		}
 
@@ -1924,7 +1924,7 @@ void SERVER_SetupNewConnection( BYTESTREAM_s *pByteStream, bool bNewPlayer )
 		lClient = g_lCurrentClient;
 
 	if ( g_aClients[lClient].State >= CLS_SPAWNED_BUT_NEEDS_AUTHENTICATION )
-		SERVER_DisconnectClient( lClient, false, true );
+		SERVER_DisconnectClient( lClient, false, true, LEAVEREASON_RECONNECT );
 
 	// Read in the client version info.
 	clientVersion = pByteStream->ReadString();
@@ -2441,7 +2441,7 @@ void SERVER_ClientError( ULONG ulClient, ULONG ulErrorCode )
 	SERVER_IgnoreIP( g_aClients[ulClient].Address );
 
 	// [BB] Be sure to properly disconnect the client.
-	SERVER_DisconnectClient( ulClient, false, false );
+	SERVER_DisconnectClient( ulClient, false, false, LEAVEREASON_ERROR );
 }
 
 //*****************************************************************************
@@ -3054,7 +3054,7 @@ void SERVER_AdjustPlayersReactiontime( const ULONG ulPlayer )
 
 //*****************************************************************************
 //
-void SERVER_DisconnectClient( ULONG ulClient, bool bBroadcast, bool bSaveInfo )
+void SERVER_DisconnectClient( ULONG ulClient, bool bBroadcast, bool bSaveInfo, LEAVEREASON_e reason )
 {
 	const CLIENTSTATE_e OldState = g_aClients[ulClient].State;
 
@@ -3155,6 +3155,11 @@ void SERVER_DisconnectClient( ULONG ulClient, bool bBroadcast, bool bSaveInfo )
 	// [AK] Only do this if the client is already spawned.
 	if (( OldState >= CLS_SPAWNED_BUT_NEEDS_AUTHENTICATION ) && (( players[ulClient].bSpectating == false ) || ( players[ulClient].bDeadSpectator )))
 		PLAYER_LeavesGame( ulClient );
+
+	// [SB] Fire event scripts indicating this client disconnected.
+	// GAMEEVENT_PLAYERCONNECT is only fired after their state reaches CLS_SPAWNED, so do the same here.
+	if ( OldState >= CLS_SPAWNED )
+		GAMEMODE_HandleEvent( GAMEEVENT_PLAYERLEAVESSERVER, nullptr, ulClient, reason );
 
 	// Redo the scoreboard.
 	SERVERCONSOLE_ReListPlayers( );
@@ -3678,7 +3683,7 @@ void SERVER_ReconnectNewLevel( const char *pszMapName )
 		SERVER_SendClientPacket( ulIdx, true );
 
 		// Disconnect the client.
-		SERVER_DisconnectClient( ulIdx, false, false );
+		SERVER_DisconnectClient( ulIdx, false, false, LEAVEREASON_RECONNECT );
 	}
 }
 
@@ -3772,7 +3777,7 @@ void SERVER_KickPlayer( ULONG ulPlayer, const char *pszReason )
 		g_aClients[ulPlayer].SavedPackets.ClearScheduling();
 
 		// Tell the other players that this player has been kicked.
-		SERVER_DisconnectClient( ulPlayer, true, false );
+		SERVER_DisconnectClient( ulPlayer, true, false, LEAVEREASON_KICKED );
 	}
 }
 
@@ -4837,7 +4842,7 @@ bool SERVER_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 	case CLC_QUIT:
 
 		// Client has left the game.
-		SERVER_DisconnectClient( g_lCurrentClient, true, true );
+		SERVER_DisconnectClient( g_lCurrentClient, true, true, LEAVEREASON_LEFT );
 		break;
 	case CLC_SETSTATUS:
 		{

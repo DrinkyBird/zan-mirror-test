@@ -120,6 +120,7 @@ typedef enum
 	GAMEEVENT_ACTOR_ARMORDAMAGED,
 	GAMEEVENT_DOMINATION_CONTROL,
 	GAMEEVENT_DOMINATION_POINT,
+	GAMEEVENT_PLAYERLEAVESSERVER,
 } GAMEEVENT_e;
 
 //*****************************************************************************
