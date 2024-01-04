@@ -642,7 +642,8 @@ void GLSprite::Process(AActor* thing,sector_t * sector)
 		float spriteheight = FIXED2FLOAT(spritescaleY) * gltexture->GetScaledHeightFloat(GLUSE_SPRITE);
 		
 		// Tests show that this doesn't look good for many decorations and corpses
-		if (spriteheight>0 && gl_spriteclip>0)
+		// [RK] tests also show this looks terrible for floatbob items
+		if (spriteheight>0 && gl_spriteclip>0 && !thing->flags2 & MF2_FLOATBOB)
 		{
 			bool smarterclip = false; // Set to true if one condition triggers the test below
 			if (((thing->player || thing->flags3&MF3_ISMONSTER ||

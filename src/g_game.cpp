@@ -3928,7 +3928,7 @@ void GAME_ResetMap( bool bRunEnterScripts )
 				else if ( pActorInfo->flags2 & MF2_SPAWNFLOAT )
 					Z = FLOATRANDZ;
 				else if ( pActorInfo->flags2 & MF2_FLOATBOB )
-					Z = pActor->SpawnPoint[2];
+					Z = pActor->floorz + pActor->SpawnPoint[2];
 				else
 					Z = ONFLOORZ;
 
@@ -4075,7 +4075,7 @@ void GAME_ResetMap( bool bRunEnterScripts )
 		else if ( pActorInfo->flags2 & MF2_SPAWNFLOAT )
 			Z = FLOATRANDZ;
 		else if ( pActorInfo->flags2 & MF2_FLOATBOB )
-			Z = pActor->SpawnPoint[2];
+			Z = pActor->floorz + pActor->SpawnPoint[2];
 		else
 			Z = ONFLOORZ;
 
