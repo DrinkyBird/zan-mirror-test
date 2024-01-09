@@ -97,6 +97,14 @@ bool P_MorphPlayer (player_t *activator, player_t *p, const PClass *spawntype, i
 	p->PremorphWeapon = p->ReadyWeapon;
 	morphed->special2 = actor->flags & ~MF_JUSTHIT;
 	morphed->player = p;
+	// [Binary] Keep movement if +NOMORPHLIMITATIONS is used.
+	if (morphed->PlayerFlags & PPF_NOMORPHLIMITATIONS)
+	{
+		morphed->velx = actor->velx;
+		morphed->vely = actor->vely;
+		morphed->velz = actor->velz;
+		morphed->pitch = actor->pitch;
+	}
 	if (actor->renderflags & RF_INVISIBLE)
 	{
 		morphed->special2 |= MF_JUSTHIT;
@@ -127,7 +135,11 @@ bool P_MorphPlayer (player_t *activator, player_t *p, const PClass *spawntype, i
 	p->MorphExitFlash = (exit_flash) ? exit_flash : RUNTIME_CLASS(ATeleportFog);
 	p->health = morphed->health;
 	p->mo = morphed;
-	p->velx = p->vely = 0;
+	// [Binary] Keep movement if +NOMORPHLIMITATIONS is used.
+	if (!(morphed->PlayerFlags & PPF_NOMORPHLIMITATIONS))
+	{
+		p->velx = p->vely = 0;
+	}
 	morphed->ObtainInventory (actor);
 	// Remove all armor
 	for (item = morphed->Inventory; item != NULL; )
@@ -178,6 +190,12 @@ bool P_MorphPlayer (player_t *activator, player_t *p, const PClass *spawntype, i
 		SERVERCOMMANDS_SetThingFlags( morphed, FLAGSET_FLAGS3 );
 		if ( morphed->tid != 0 )
 			SERVERCOMMANDS_SetThingTID( morphed );
+		// [Binary] Keep movement if +NOMORPHLIMITATIONS is used.
+		if ( morphed->PlayerFlags & PPF_NOMORPHLIMITATIONS )
+		{
+			SERVERCOMMANDS_MoveLocalPlayer( ulPlayer );
+			SERVERCOMMANDS_MovePlayer( ulPlayer, ulPlayer, SVCF_SKIPTHISCLIENT );
+		}
 	}
 
 	return true;
@@ -253,10 +271,21 @@ bool P_UndoPlayerMorph (player_t *activator, player_t *player, int unmorphflag, 
 	mo->player = player;
 	mo->reactiontime = 18;
 	mo->flags = pmo->special2 & ~MF_JUSTHIT;
-	mo->velx = 0;
-	mo->vely = 0;
-	player->velx = 0;
-	player->vely = 0;
+	// [Binary] Keep movement if +NOMORPHLIMITATIONS is used.
+	if (pmo->PlayerFlags & PPF_NOMORPHLIMITATIONS)
+	{
+		mo->velx = pmo->velx;
+		mo->vely = pmo->vely;
+		mo->velz = pmo->velz;
+		mo->pitch = pmo->pitch;
+	}
+	else
+	{
+		mo->velx = 0;
+		mo->vely = 0;
+		player->velx = 0;
+		player->vely = 0;
+	}
 	mo->velz = pmo->velz;
 	if (!(pmo->special2 & MF_JUSTHIT))
 	{

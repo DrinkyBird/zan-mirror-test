@@ -2266,7 +2266,8 @@ void APlayerPawn::TweakSpeeds (int &forward, int &side)
 	}
 
 	// [BC] This comes out to 50%, so we can use this for the turbosphere.
-	if (!player->morphTics && Inventory != NULL)
+	// [Binary] Allow morphs to use turbosphere / speed powerups with +NOMORPHLIMITATIONS.
+	if (( !player->morphTics || ( PlayerFlags & PPF_NOMORPHLIMITATIONS ) ) && Inventory != NULL)
 	{
 		fixed_t factor = Inventory->GetSpeedFactor ();
 		forward = FixedMul(forward, factor);

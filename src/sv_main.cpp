@@ -6278,7 +6278,8 @@ bool ClientWeaponSelectCommand::process( const ULONG ulClient ) const
 	}
 
 	// [BB] Morph workaround: If the player is morphed, he can't change his weapon.
-	if ( players[ulClient].morphTics )
+	// [Binary] Unless +NOMORPHLIMITATIONS is used
+	if ( players[ulClient].morphTics && !( players[ulClient].mo && (players[ulClient].mo->PlayerFlags & PPF_NOMORPHLIMITATIONS) ) )
 		return false;
 
 	// [BB] Since the server is not giving the player a weapon while spawning, P_BringUpWeapon doesn't call A_Raise for

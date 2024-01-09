@@ -3354,7 +3354,9 @@ static void PlayerLandedOnThing (AActor *mo, AActor *onmobj)
 
 	// [RH] only make noise if alive
 	// [WS/BB] As client only play the sound for the consoleplayer.
-	if (!mo->player->morphTics && mo->health > 0 && NETWORK_IsConsolePlayerOrNotInClientMode( mo->player ))
+	// [Binary] Allow morphs to play sounds if +NOMORPHLIMITATIONS is used.
+	bool canPlayLandSound = ( !mo->player->morphTics || (mo->player->mo && mo->player->mo->PlayerFlags & PPF_NOMORPHLIMITATIONS) );
+	if ( canPlayLandSound && mo->health > 0 && NETWORK_IsConsolePlayerOrNotInClientMode( mo->player ))
 	{
 		grunted = false;
 		// Why should this number vary by gravity?

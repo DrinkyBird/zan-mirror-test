@@ -858,7 +858,8 @@ void P_CheckWeaponSwitch (player_t *player)
 		return;
 	}
 	if ((player->WeaponState & WF_DISABLESWITCH) || // Weapon changing has been disabled.
-		player->morphTics != 0)					// Morphed classes cannot change weapons.
+		( player->morphTics != 0 && // Morphed classes cannot change weapons.
+		!( player->mo && (player->mo->PlayerFlags & PPF_NOMORPHLIMITATIONS) ) )) // [geNia] unless +NOMORPHLIMITATIONS is used
 	{ // ...so throw away any pending weapon requests.
 		player->PendingWeapon = WP_NOCHANGE;
 	}
@@ -1016,7 +1017,8 @@ DEFINE_ACTION_FUNCTION(AInventory, A_Lower)
 		return;
 	}
 
-	if (player->morphTics || player->cheats & CF_INSTANTWEAPSWITCH)
+	// [Binary] Allow morphs to switch weapons if +NOMORPHLIMITATIONS is used.
+	if ( ( player->morphTics && !( player->mo && (player->mo->PlayerFlags & PPF_NOMORPHLIMITATIONS) ) ) || player->cheats & CF_INSTANTWEAPSWITCH)
 	{
 		psp->sy = WEAPONBOTTOM;
 	}
