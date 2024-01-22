@@ -1600,7 +1600,7 @@ void BOTSPAWN_SetTicks( ULONG ulIdx, ULONG ulTicks )
 //*****************************************************************************
 //*****************************************************************************
 //
-CSkullBot::CSkullBot( char *pszName, char *pszTeamName, ULONG ulPlayerNum )
+CSkullBot::CSkullBot( const char *pszName, const char *pszTeamName, ULONG ulPlayerNum )
 {
 	ULONG	ulIdx;
 	char	szColorizedBuffer[256];

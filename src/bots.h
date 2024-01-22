@@ -479,7 +479,7 @@ class CSkullBot
 
 public:
 	//*************************************************************************
-	CSkullBot( char *pszName, char *pszTeamName, ULONG ulPlayerNum );
+	CSkullBot( const char *pszName, const char *pszTeamName, ULONG ulPlayerNum );
 	~CSkullBot( );
 
 	// Used for saving the bot for savegames.
