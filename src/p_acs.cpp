@@ -5403,6 +5403,8 @@ enum EACSFunctions
 	ACSF_LumpReadGlobal,
 	ACSF_LumpGetInfo,
 	ACSF_LumpClose,
+	ACSF_AddBot,
+	ACSF_RemoveBot,
 
 	// ZDaemon
 	ACSF_GetTeamScore = 19620,	// (int team)
@@ -8273,6 +8275,84 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 					ACSLumpHandles.Remove( args[0] );
 
 				return 0;
+			}
+
+		case ACSF_AddBot:
+			{
+				// [AK] Don't add bots on the clients end, or on levels without bot nodes.
+				if (( NETWORK_InClientMode( )) || ( level.flagsZA & LEVEL_ZA_NOBOTNODES ))
+					return 0;
+
+				const unsigned int freePlayerSlot = BOTS_FindFreePlayerSlot( );
+				const char *botName = nullptr;
+				const char *teamName = nullptr;
+
+				// [AK] If there's no more free player slots, then no more bots can be added.
+				if ( freePlayerSlot == MAXPLAYERS )
+					return 0;
+
+				if ( argCount > 0 )
+				{
+					botName = FBehavior::StaticLookupString( args[0] );
+
+					// [AK] An empty string means add a random bot to the game.
+					if ( strlen( botName ) == 0 )
+						botName = nullptr;
+					// [AK] Otherwise, make sure it's a valid bot name.
+					else if ( BOTS_IsValidName( botName ) == false )
+						return 0;
+
+					if ( argCount > 1 )
+					{
+						// [AK] Make sure the current game mode supports teams.
+						if (( GAMEMODE_GetCurrentFlags( ) & GMF_PLAYERSONTEAMS ) == false )
+							return 0;
+
+						// [AK] Also make sure the team is valid.
+						if ( TEAM_CheckIfValid( args[1] ) == false )
+							return 0;
+
+						teamName = TEAM_GetName( args[1] );
+					}
+				}
+
+				CSkullBot *bot = new CSkullBot( botName, teamName, freePlayerSlot );
+				return 1;
+			}
+
+		case ACSF_RemoveBot:
+			{
+				// [AK] Don't remove bots on the clients end, or on levels without bot nodes.
+				if (( NETWORK_InClientMode( )) || ( level.flagsZA & LEVEL_ZA_NOBOTNODES ))
+					return 0;
+
+				// [AK] If a name is provided, remove the bot with that name.
+				if ( argCount > 0 )
+				{
+					const char *botName = FBehavior::StaticLookupString( args[0] );
+
+					for ( unsigned int i = 0; i < MAXPLAYERS; i++ )
+					{
+						if (( playeringame[i] == false ) || ( players[i].bIsBot == false ))
+							continue;
+
+						FString playerName = players[i].userinfo.GetName( );
+						V_UnColorizeString( playerName );
+
+						if ( playerName.CompareNoCase( botName ) == 0 )
+						{
+							BOTS_RemoveBot( i, true );
+							return 1;
+						}
+					}
+
+					return 0;
+				}
+				// [AK] Otherwise, try removing a random bot from the game.
+				else
+				{
+					return BOTS_RemoveRandomBot( );
+				}
 			}
 
 		case ACSF_GetActorFloorTexture:
