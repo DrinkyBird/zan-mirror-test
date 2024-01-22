@@ -694,6 +694,38 @@ void BOTS_RemoveAllBots( bool bExitMsg )
 
 //*****************************************************************************
 //
+bool BOTS_RemoveRandomBot( void )
+{
+	unsigned int randomIndex = MAXPLAYERS;
+	bool botInGame = false;
+
+	// First, verify that there's a bot in the game.
+	for ( unsigned int i = 0; i < MAXPLAYERS; i++ )
+	{
+		if (( playeringame[i] ) && ( players[i].pSkullBot ))
+		{
+			botInGame = true;
+			break;
+		}
+	}
+
+	// If there isn't, return false.
+	if ( botInGame == false )
+		return false;
+
+	// Now randomly select a bot to remove.
+	do
+	{
+		randomIndex = ( BotRemove( ) % MAXPLAYERS );
+	} while (( playeringame[randomIndex] == false ) || ( players[randomIndex].pSkullBot == nullptr ));
+
+	// Now that we've found a valid bot, remove it.
+	BOTS_RemoveBot( randomIndex, true );
+	return true;
+}
+
+//*****************************************************************************
+//
 void BOTS_ResetCyclesCounter( void )
 {
 	g_BotCycles.Reset();
@@ -3932,34 +3964,8 @@ CCMD( removebot )
 	// If we didn't input which bot to remove, remove a random one.
 	if ( argv.argc( ) < 2 )
 	{
-		ULONG	ulRandom;
-		bool	bBotInGame = false;
-
-		// First, verify that there's a bot in the game.
-		for ( ulIdx = 0; ulIdx < MAXPLAYERS; ulIdx++ )
-		{
-			if (( playeringame[ulIdx] ) && ( players[ulIdx].pSkullBot ))
-			{
-				bBotInGame = true;
-				break;
-			}
-		}
-
-		// If there isn't, break.
-		if ( bBotInGame == false )
-		{
+		if ( BOTS_RemoveRandomBot( ) == false )
 			Printf( "No bots found.\n" );
-			return;
-		}
-
-		// Now randomly select a bot to remove.
-		do
-		{
-			ulRandom = ( BotRemove( ) % MAXPLAYERS );
-		} while (( playeringame[ulRandom] == false ) || ( players[ulRandom].pSkullBot == NULL ));
-
-		// Now that we've found a valid bot, remove it.
-		BOTS_RemoveBot( ulRandom, true );
 	}
 	else
 	{
