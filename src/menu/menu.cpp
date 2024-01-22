@@ -904,6 +904,28 @@ bool M_InServerSetupMenu (void)
 
 //=============================================================================
 //
+// [AK] Returns true if the given name points to a valid menu, or false otherwise.
+//
+//=============================================================================
+
+bool M_IsValidMenu( const char *name )
+{
+	if (( name == nullptr ) || ( strlen( name ) == 0 ))
+		return false;
+
+	if ( MenuDescriptors.CheckKey( name ) == nullptr )
+	{
+		const PClass *menuClass = PClass::FindClass( name );
+
+		if (( menuClass == nullptr ) || ( menuClass->IsDescendantOf( RUNTIME_CLASS( DMenu )) == false ))
+			return false;
+	}
+
+	return true;
+}
+
+//=============================================================================
+//
 // [RH] Most menus can now be accessed directly
 // through console commands.
 //

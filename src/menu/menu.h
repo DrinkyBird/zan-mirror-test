@@ -702,6 +702,7 @@ void M_RefreshModesList ();
 void M_InitVideoModesMenu ();
 void M_RconAccessGranted();
 bool M_InServerSetupMenu(); // [AK]
+bool M_IsValidMenu(const char *name); // [AK]
 
 
 

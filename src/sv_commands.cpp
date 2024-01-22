@@ -5273,6 +5273,26 @@ void SERVERCOMMANDS_ResetCustomPlayerValue( PlayerData &Data, ULONG ulPlayer, UL
 }
 
 //*****************************************************************************
+// [AK]
+void SERVERCOMMANDS_OpenMenu( const unsigned int player, const char *menuName )
+{
+	if (( PLAYER_IsValidPlayer( player ) == false ) || ( menuName == nullptr ) || ( strlen( menuName ) == 0 ))
+		return;
+
+	ServerCommands::OpenMenu command;
+	command.SetMenu( menuName );
+	command.sendCommandToClients( player, SVCF_ONLYTHISCLIENT );
+}
+
+//*****************************************************************************
+// [AK]
+void SERVERCOMMANDS_CloseMenu( const unsigned int player )
+{
+	ServerCommands::CloseMenu command;
+	command.sendCommandToClients( player, SVCF_ONLYTHISCLIENT );
+}
+
+//*****************************************************************************
 void APathFollower::SyncWithClient ( const ULONG ulClient )
 {
 	if ( !EnsureActorHasNetID (this) )

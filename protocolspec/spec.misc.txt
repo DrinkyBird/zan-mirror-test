@@ -59,3 +59,12 @@ Command ResetCustomPlayerValue
 	Byte index
 	Byte player
 EndCommand
+
+Command OpenMenu
+	ExtendedCommand
+	String menu
+EndCommand
+
+Command CloseMenu
+	ExtendedCommand
+EndCommand

@@ -4887,6 +4887,26 @@ void ServerCommands::IgnoreLocalPlayer::Execute()
 
 //*****************************************************************************
 //
+void ServerCommands::OpenMenu::Execute()
+{
+	// [AK] We shouldn't trust that the server sent us a valid name for the
+	// menu. We must double-check to make sure we can open it.
+	if ( M_IsValidMenu( menu ) == false )
+		return;
+
+	M_StartControlPanel( true );
+	M_SetMenu( menu, -1 );
+}
+
+//*****************************************************************************
+//
+void ServerCommands::CloseMenu::Execute()
+{
+	M_ClearMenus( );
+}
+
+//*****************************************************************************
+//
 void ServerCommands::SpawnThing::Execute()
 {
 	CLIENT_SpawnThing( type, x, y, z, id, 0 );

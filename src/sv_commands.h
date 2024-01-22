@@ -441,5 +441,7 @@ void	SERVERCOMMANDS_DelFromMapRotation( const char *pszMapName, bool bClear = fa
 void	SERVERCOMMANDS_ResetMapRotation( ULONG ulPlayerExtra = MAXPLAYERS, ServerCommandFlags flags = 0 );
 void	SERVERCOMMANDS_SetCustomPlayerValue( PlayerData &Data, ULONG ulPlayer, ULONG ulPlayerExtra = MAXPLAYERS, ServerCommandFlags flags = 0 );
 void	SERVERCOMMANDS_ResetCustomPlayerValue( PlayerData &Data, ULONG ulPlayer, ULONG ulPlayerExtra = MAXPLAYERS, ServerCommandFlags flags = 0 );
+void	SERVERCOMMANDS_OpenMenu( const unsigned int player, const char *menuName );
+void	SERVERCOMMANDS_CloseMenu( const unsigned int player );
 
 #endif	// __SV_COMMANDS_H__

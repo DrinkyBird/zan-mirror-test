@@ -92,6 +92,7 @@
 #include "chat.h"
 #include "maprotation.h"
 #include "scoreboard.h"
+#include "menu/menu.h"
 
 #include "g_shared/a_pickups.h"
 
@@ -5405,6 +5406,8 @@ enum EACSFunctions
 	ACSF_LumpClose,
 	ACSF_AddBot,
 	ACSF_RemoveBot,
+	ACSF_OpenMenu,
+	ACSF_CloseMenu,
 
 	// ZDaemon
 	ACSF_GetTeamScore = 19620,	// (int team)
@@ -8353,6 +8356,49 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 				{
 					return BOTS_RemoveRandomBot( );
 				}
+			}
+
+		case ACSF_OpenMenu:
+			{
+				const char *menuName = FBehavior::StaticLookupString( args[0] );
+
+				// [AK] Don't try to open a menu that doesn't exist.
+				if ( M_IsValidMenu( menuName ) == false )
+					return 0;
+
+				// [AK] The server will tell the activator (if they're a player) to open the menu.
+				if ( NETWORK_GetState( ) == NETSTATE_SERVER )
+				{
+					if (( activator == nullptr ) || ( activator->player == nullptr ))
+						return 0;
+
+					SERVERCOMMANDS_OpenMenu( activator->player - players, menuName );
+				}
+				else
+				{
+					M_StartControlPanel( true );
+					M_SetMenu( menuName, -1 );
+				}
+
+				return 1;
+			}
+
+		case ACSF_CloseMenu:
+			{
+				// [AK] The server will tell the activator (if they're a player) to close the menu.
+				if ( NETWORK_GetState( ) == NETSTATE_SERVER )
+				{
+					if (( activator == nullptr ) || ( activator->player == nullptr ))
+						return 0;
+
+					SERVERCOMMANDS_CloseMenu( activator->player - players );
+				}
+				else
+				{
+					M_ClearMenus( );
+				}
+
+				return 1;
 			}
 
 		case ACSF_GetActorFloorTexture:
