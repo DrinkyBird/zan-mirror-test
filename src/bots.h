@@ -630,7 +630,7 @@ void		BOTS_Destruct( void );
 
 bool		BOTS_AddBotInfo( BOTINFO_s *pBotInfo );
 void		BOTS_ParseBotInfo( void );
-bool		BOTS_IsValidName( char *pszName );
+bool		BOTS_IsValidName( const char *pszName );
 ULONG		BOTS_FindFreePlayerSlot( void );
 void		BOTS_RemoveBot( ULONG usPlayerIdx, bool bExitMsg );
 void		BOTS_RemoveAllBots( bool bExitMsg );

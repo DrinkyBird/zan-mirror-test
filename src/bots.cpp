@@ -518,7 +518,7 @@ void BOTS_ParseBotInfo( void )
 
 //*****************************************************************************
 //
-bool BOTS_IsValidName( char *pszName )
+bool BOTS_IsValidName( const char *pszName )
 {
 	if ( pszName == NULL )
 		return ( false );
