@@ -217,12 +217,14 @@ static const std::vector<std::string> g_FreedoomPlayPalHashes = {
 	"2e01ae6258f2a0fdad32125537efe1af", // Freedoom PLAYPAL hash
 	"4804c7f34b5285c334a7913dd98fae16", // Freedoom 0.8-beta1 PLAYPAL hash
 	"2e01ae6258f2a0fdad32125537efe1af", // Freedoom 0.11.3 PLAYPAL hash
+	"7fe3ed884aff7774526ed9b61018f6fe", // Freedoom 0.12.0 PLAYPAL hash
 };
 
 static const std::vector<std::string> g_FreedoomColormapHashes = {
 	"bb535e66cae508e3833a5d2de974267b", // Freedoom COLORMAP hash
 	"100c2c81afe87bb6dd1dbcadee9a7e58", // Freedoom 0.8-beta1 COLORMAP hash
 	"4c7d4028a88f7929d9c553f65bb265ba", // Freedoom 0.9 COLORMAP hash
+	"90d4527e1836e373f1cc6f2c9d5e3ba3", // Freedoom 0.12.0 COLORMAP hash
 };
 
 static const std::vector<std::string> g_FreedoomDehackedHashes = {
@@ -231,6 +233,8 @@ static const std::vector<std::string> g_FreedoomDehackedHashes = {
 	"90e9007b1efc1e35eeacc99c5971a15b", // Freedoom 0.9
 	"67b253fe502cbf269e2cd2f6b7e76f17", // Freedoom 0.10
 	"61f49a1c915c7ccaea016b51441bef1d", // Freedoom 0.11.3
+	"4004b707e3bbf28fe58a6d8282784fbc", // Freedoom Phase 1 0.12.0
+	"a87016a0610d8023e6fdae013c8c001c", // Freedoom Phase 2 0.12.0
 };
 
 //*****************************************************************************
