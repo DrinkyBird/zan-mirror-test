@@ -189,8 +189,16 @@ DEFINE_ACTION_FUNCTION(AActor, A_CFlameRotate)
 {
 	int an;
 
+	// [RK] The server handles this.
+	if ( NETWORK_InClientModeAndActorNotClientHandled ( self ))
+		return;
+
 	an = (self->angle+ANG90)>>ANGLETOFINESHIFT;
 	self->velx = self->special1+FixedMul(FLAMEROTSPEED, finecosine[an]);
 	self->vely = self->special2+FixedMul(FLAMEROTSPEED, finesine[an]);
 	self->angle += ANG90/15;
+
+	// [RK] Send the updated actor position to the clients.
+	if ( NETWORK_GetState() == NETSTATE_SERVER )
+		SERVERCOMMANDS_MoveThingExact(self, CM_ANGLE | CM_X | CM_Y | CM_VELX | CM_VELY);
 }
