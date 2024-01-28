@@ -62,8 +62,8 @@ build_linux_serveronly:
         $opensslRoot = $env:ZA_OPENSSL_X64_ROOT ;
       } ;
 
-      mkdir build ;
-      cd build &&
+      mkdir build-$env:CI_JOB_ID &&
+      cd build-$env:CI_JOB_ID &&
       & cmake
         -Tv140_xp
         -G"Visual Studio 14 2015"
@@ -87,7 +87,7 @@ build_linux_serveronly:
   artifacts:
     expire_in: 1 week
     paths:
-      - build/Release/*
+      - build-$CI_JOB_ID/Release/*
 
 build_win32:
   <<: *windows
