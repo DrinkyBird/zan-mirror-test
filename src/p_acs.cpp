@@ -93,11 +93,15 @@
 #include "maprotation.h"
 #include "scoreboard.h"
 #include "menu/menu.h"
+#include "sv_ban.h"
 
 #include "g_shared/a_pickups.h"
 
 // [BB] A std::pair inside TArray inside TArray didn't seem to work.
 std::vector<TArray<std::pair<FString, FString> > > g_dbQueries;
+
+// [Binary] Allow mods to use the BanFromGame function.
+CVAR (Bool, sv_allowacsbanfunction, false, CVAR_SERVERINFO | CVAR_NOSETBYACS)
 
 //
 // [TP] Overridable system time property
@@ -5408,6 +5412,7 @@ enum EACSFunctions
 	ACSF_RemoveBot,
 	ACSF_OpenMenu,
 	ACSF_CloseMenu,
+	ACSF_BanFromGame, // [Binary] Added BanFromGame to function set.
 
 	// ZDaemon
 	ACSF_GetTeamScore = 19620,	// (int team)
@@ -8400,6 +8405,25 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 
 				return 1;
 			}
+
+		// [Binary] Function to temporarily ban players, from 1-60 minutes.
+		case ACSF_BanFromGame:
+		{
+			// Only call the function on the server's end if ACS bans are allowed.
+			if ( NETWORK_GetState() == NETSTATE_SERVER && sv_allowacsbanfunction)
+			{
+				int playerIndex = args[0];
+				if(PLAYER_IsValidPlayer( playerIndex ))
+				{
+					int duration = clamp(args[1], 1, 60);
+					FString Output;
+					Output.Format("%dmin", duration);
+					SERVERBAN_BanPlayer( playerIndex, Output.GetChars( ), (argCount >= 3) ? FBehavior::StaticLookupString( args[2] ) : NULL);
+					return 1;
+				}
+			}
+			return 0;
+		}
 
 		case ACSF_GetActorFloorTexture:
 		{
