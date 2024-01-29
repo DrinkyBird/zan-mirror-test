@@ -106,6 +106,10 @@ bool AArtiPoisonBag3::Use (bool pickup)
 {
 	AActor *mo;
 
+	// [RK] Only the server handles this unlless inventory item is client-sided.
+	if ( NETWORK_InClientModeAndActorNotClientHandled (this))
+		return false;
+
 	mo = Spawn("ThrowingBomb", Owner->x, Owner->y, 
 		Owner->z-Owner->floorclip+35*FRACUNIT + (Owner->player? Owner->player->crouchoffset : 0), ALLOW_REPLACE);
 	if (mo)
@@ -137,6 +141,11 @@ bool AArtiPoisonBag3::Use (bool pickup)
 
 		mo->target = Owner;
 		mo->tics -= pr_poisonbag()&3;
+
+		// [RK] Spawn the flechette on the clients.
+		if ( NETWORK_GetState() == NETSTATE_SERVER )
+			SERVERCOMMANDS_SpawnMissile(mo);
+
 		P_CheckMissileSpawn(mo, Owner->radius);
 		return true;
 	}

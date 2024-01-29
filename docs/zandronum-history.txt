@@ -119,6 +119,7 @@
 -	- Fixed: Floatbob items having incorrect z-height after a map reset and glitchy GL floor clipping (addresses 2361). [Ru5tK1ng]
 -	- Fixed: Monsters spawned by BossBrain cubes would move before being spawned on the clients therefore triggering warning messages (addresses 2655). [Ru5tK1ng]
 -	- Fixed: Cleric's CircleFlame projectile did not rotate properly online (addresses 2101). [Ru5tK1ng]
+-	- Fixed: Fighter's flechettes weren't working properly online (addresses 796, 2948 and 2949). [Ru5tK1ng]
 !	- The result value of GAMEEVENT_MEDALS event scripts can now be used to determine whether or not the player receives the medal. [Kaminsky]
 !	- GAMEMODE flags are now validated after all GAMEMODE lumps have been parsed instead of after each one. The internal game mode name (e.g. "TeamLMS") is now printed with the error message instead of the actual name. [Kaminsky]
 !	- Added an extra check to ensure that game modes have a (short) name. [Kaminsky]
