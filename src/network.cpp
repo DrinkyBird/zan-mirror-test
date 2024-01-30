@@ -218,6 +218,7 @@ static const std::vector<std::string> g_FreedoomPlayPalHashes = {
 	"4804c7f34b5285c334a7913dd98fae16", // Freedoom 0.8-beta1 PLAYPAL hash
 	"2e01ae6258f2a0fdad32125537efe1af", // Freedoom 0.11.3 PLAYPAL hash
 	"7fe3ed884aff7774526ed9b61018f6fe", // Freedoom 0.12.0 PLAYPAL hash
+	"c7ac0dbbebc979a2c948a4c9afd6b4af", // Freedoom 0.13.0 PLAYPAL hash
 };
 
 static const std::vector<std::string> g_FreedoomColormapHashes = {
@@ -235,6 +236,8 @@ static const std::vector<std::string> g_FreedoomDehackedHashes = {
 	"61f49a1c915c7ccaea016b51441bef1d", // Freedoom 0.11.3
 	"4004b707e3bbf28fe58a6d8282784fbc", // Freedoom Phase 1 0.12.0
 	"a87016a0610d8023e6fdae013c8c001c", // Freedoom Phase 2 0.12.0
+	"015a23f11718e5bc2fab7f3d6f946743", // Freedoom Phase 1 0.13.0
+	"0fe45773c7b9eefd1ca07f1f89d34b76", // Freedoom Phase 2 0.13.0
 };
 
 //*****************************************************************************
