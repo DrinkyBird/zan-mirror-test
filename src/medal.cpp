@@ -96,6 +96,24 @@ extern FName MeansOfDeath;
 CVAR( Bool, cl_medals, true, CVAR_ARCHIVE )
 CVAR( Bool, cl_icons, true, CVAR_ARCHIVE )
 
+// [AK] Determines when ally icons should appear.
+CUSTOM_CVAR( Int, cl_showallyicon, SHOW_ICON_TEAMS_ONLY, CVAR_ARCHIVE )
+{
+	const int clampedValue = clamp<int>( self, SHOW_ICON_NEVER, SHOW_ICON_ALWAYS );
+
+	if ( self != clampedValue )
+		self = clampedValue;
+}
+
+// [AK] Determines when enemy icons should appear.
+CUSTOM_CVAR( Int, cl_showenemyicon, SHOW_ICON_NEVER, CVAR_ARCHIVE )
+{
+	const int clampedValue = clamp<int>( self, SHOW_ICON_NEVER, SHOW_ICON_ALWAYS );
+
+	if ( self != clampedValue )
+		self = clampedValue;
+}
+
 //*****************************************************************************
 //	PROTOTYPES
 
@@ -110,6 +128,7 @@ void	medal_CheckForTermination( ULONG ulDeadPlayer, ULONG ulPlayer );
 void	medal_CheckForLlama( ULONG ulDeadPlayer, ULONG ulPlayer );
 void	medal_CheckForYouFailIt( ULONG ulPlayer );
 bool	medal_PlayerHasCarrierIcon( player_t *player );
+bool	medal_CanShowAllyOrEnemyIcon( const bool checkEnemyIcon );
 
 //*****************************************************************************
 //	FUNCTIONS
@@ -744,6 +763,14 @@ bool medal_PlayerHasCarrierIcon( player_t *player )
 
 //*****************************************************************************
 //
+bool medal_CanShowAllyOrEnemyIcon( const bool checkEnemyIcon )
+{
+	const FIntCVar &cvar = checkEnemyIcon ? cl_showenemyicon : cl_showallyicon;
+	return ((( cvar == SHOW_ICON_TEAMS_ONLY ) && ( GAMEMODE_GetCurrentFlags( ) & GMF_PLAYERSONTEAMS )) || ( cvar == SHOW_ICON_ALWAYS ));
+}
+
+//*****************************************************************************
+//
 void medal_TriggerMedal( ULONG ulPlayer )
 {
 	player_t	*pPlayer;
@@ -810,13 +837,25 @@ ULONG medal_GetDesiredIcon( player_t *pPlayer, AInventory *&pTeamItem )
 	if ( ( pPlayer == NULL ) || ( pPlayer->mo == NULL ) )
 		return NUM_SPRITES;
 
-	// Draw an ally icon if this person is on our team. Would this be useful for co-op, too?
-	// [BB] In free spectate mode, we don't have allies (and SCOREBOARD_GetViewPlayer doesn't return a useful value).
-	if ( ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSONTEAMS ) && ( CLIENTDEMO_IsInFreeSpectateMode() == false ) )
+	// [AK] Draw an ally or enemy icon if this person is, or isn't, our teammate.
+	// [BB] In free spectate mode, we don't have allies/enemies (and HUD_GetViewPlayer doesn't return a useful value).
+	if ( CLIENTDEMO_IsInFreeSpectateMode( ) == false )
 	{
-		// [BB] Dead spectators shall see the icon for their teammates.
-		if ( pPlayer->mo->IsTeammate( players[HUD_GetViewPlayer( )].mo ) && !PLAYER_IsTrueSpectator( &players[HUD_GetViewPlayer( )] ) )
-			ulDesiredSprite = SPRITE_ALLY;
+		player_t *viewedPlayer = &players[HUD_GetViewPlayer( )];
+
+		// [BB] Dead spectators shall see the icons for their teammates or enemies.
+		if ( PLAYER_IsTrueSpectator( viewedPlayer ) == false )
+		{
+			if ( pPlayer->mo->IsTeammate( viewedPlayer->mo ))
+			{
+				if ( medal_CanShowAllyOrEnemyIcon( false ))
+					ulDesiredSprite = SPRITE_ALLY;
+			}
+			else if ( medal_CanShowAllyOrEnemyIcon( true ))
+			{
+				ulDesiredSprite = SPRITE_ENEMY;
+			}
+		}
 	}
 
 	// Draw a chat icon over the player if they're typing.
@@ -945,11 +984,23 @@ void medal_SelectIcon( player_t *player )
 				// Ally icon. Delete it if the player is now our enemy or if we're spectating.
 				// [BB] Dead spectators shall keep the icon for their teammates.
 				case SPRITE_ALLY:
+				case SPRITE_ENEMY:
 				{
 					player_t *viewedPlayer = &players[HUD_GetViewPlayer( )];
 
-					if (( PLAYER_IsTrueSpectator( viewedPlayer )) || ( !player->mo->IsTeammate( viewedPlayer->mo )))
+					if ( PLAYER_IsTrueSpectator( viewedPlayer ))
+					{
 						deleteIcon = true;
+					}
+					else if ( player->pIcon->currentSprite == SPRITE_ALLY )
+					{
+						if (( !player->mo->IsTeammate( viewedPlayer->mo )) || ( !medal_CanShowAllyOrEnemyIcon( false )))
+							deleteIcon = true;
+					}
+					else if (( player->mo->IsTeammate( viewedPlayer->mo )) || ( !medal_CanShowAllyOrEnemyIcon( true )))
+					{
+						deleteIcon = true;
+					}
 
 					break;
 				}
@@ -1044,6 +1095,10 @@ void medal_SelectIcon( player_t *player )
 
 		case SPRITE_ALLY:
 			desiredState = floatyIconInfo->FindState( "Ally" );
+			break;
+
+		case SPRITE_ENEMY:
+			desiredState = floatyIconInfo->FindState( "Enemy" );
 			break;
 
 		case SPRITE_LAG:

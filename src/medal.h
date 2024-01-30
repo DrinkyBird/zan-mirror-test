@@ -67,12 +67,26 @@ enum
 	SPRITE_INCONSOLE,
 	SPRITE_INMENU,
 	SPRITE_ALLY,
+	SPRITE_ENEMY,
 	SPRITE_LAG,
 	SPRITE_WHITEFLAG,
 	SPRITE_TERMINATORARTIFACT,
 	SPRITE_POSSESSIONARTIFACT,
 	SPRITE_TEAMITEM,
 	NUM_SPRITES
+};
+
+//*****************************************************************************
+enum
+{
+	// Never show ally/enemy icons.
+	SHOW_ICON_NEVER,
+
+	// Only show ally/enemy icons in team-based game modes.
+	SHOW_ICON_TEAMS_ONLY,
+
+	// Show ally/enemy icons in all game modes.
+	SHOW_ICON_ALWAYS,
 };
 
 //*****************************************************************************
