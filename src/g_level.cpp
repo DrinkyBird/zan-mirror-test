@@ -429,7 +429,9 @@ void G_InitNew (const char *mapname, bool bTitleLevel)
 	BOTSPAWN_ClearTable( );
 
 	// [BC] Clear out the called vote if one is taking place.
-	CALLVOTE_ClearVote( );
+	// [RK] For hubs we'll instruct the clients to end the vote when they authenticate.
+	if( NETWORK_InClientMode() == false || ( NETWORK_InClientMode() && !( level.clusterflags & CLUSTER_HUB )) )
+		CALLVOTE_ClearVote( );
 
 	if ( NETWORK_InClientMode( ) == false )
 	{
@@ -1079,7 +1081,8 @@ void G_DoLoadLevel (int position, bool autosave)
 		JOINQUEUE_PopQueue( -1 );
 
 	// [BB] Going to a new level automatically stops any active vote.
-	if ( CALLVOTE_GetVoteState() == VOTESTATE_INVOTE )
+	// [RK] Except if we're in a hub.
+	if ( CALLVOTE_GetVoteState() == VOTESTATE_INVOTE && !( level.clusterflags & CLUSTER_HUB ))
 		CALLVOTE_ClearVote();
 
 	// [BB] Reset the net traffic measurements when a new map starts.

@@ -3694,6 +3694,14 @@ void SERVERCOMMANDS_VoteEnded( bool bVotePassed, ULONG ulPlayerExtra, ServerComm
 }
 
 //*****************************************************************************
+//
+void SERVERCOMMANDS_ClearVote( ULONG ulPlayerExtra, ServerCommandFlags flags )
+{
+	NetCommand command( SVC2_CLEARVOTE );
+	command.sendCommandToClients( ulPlayerExtra, flags );
+}
+
+//*****************************************************************************
 //*****************************************************************************
 //
 void SERVERCOMMANDS_MapLoad( ULONG ulPlayerExtra, ServerCommandFlags flags )

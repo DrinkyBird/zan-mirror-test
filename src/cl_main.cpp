@@ -232,6 +232,7 @@ static	void	client_TeamFlagDropped( BYTESTREAM_s *pByteStream );
 static	void	client_CallVote( BYTESTREAM_s *pByteStream );
 static	void	client_PlayerVote( BYTESTREAM_s *pByteStream );
 static	void	client_VoteEnded( BYTESTREAM_s *pByteStream );
+static	void	client_ClearVote( BYTESTREAM_s *pByteStream );
 
 // Inventory commands.
 static	void	client_GiveInventory( BYTESTREAM_s *pByteStream );
@@ -2331,6 +2332,12 @@ void CLIENT_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 						}
 					}
 				}
+				break;
+
+			// [RK]
+			case SVC2_CLEARVOTE:
+
+				client_ClearVote( pByteStream );
 				break;
 
 			default:
@@ -7052,6 +7059,13 @@ static void client_VoteEnded( BYTESTREAM_s *pByteStream )
 	bPassed = !!pByteStream->ReadByte();
 
 	CALLVOTE_EndVote( bPassed );
+}
+
+//*****************************************************************************
+//
+static void client_ClearVote( BYTESTREAM_s* pByteStream )
+{
+	CALLVOTE_ClearVote();
 }
 
 //*****************************************************************************

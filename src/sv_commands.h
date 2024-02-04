@@ -307,6 +307,7 @@ void	SERVERCOMMANDS_StopSectorSequence( sector_t *pSector, ULONG ulPlayerExtra =
 void	SERVERCOMMANDS_CallVote( ULONG ulPlayer, FString Command, FString Parameters, FString Reason, ULONG ulPlayerExtra = MAXPLAYERS, ServerCommandFlags flags = 0 );
 void	SERVERCOMMANDS_PlayerVote( ULONG ulPlayer, bool bVoteYes, ULONG ulPlayerExtra = MAXPLAYERS, ServerCommandFlags flags = 0 );
 void	SERVERCOMMANDS_VoteEnded( bool bVotePassed, ULONG ulPlayerExtra = MAXPLAYERS, ServerCommandFlags flags = 0 );
+void	SERVERCOMMANDS_ClearVote( ULONG ulPlayerExtra = MAXPLAYERS, ServerCommandFlags flags = 0 );
 
 // Map commands. These load maps, exit maps, or manipulate some property of the current map.
 void	SERVERCOMMANDS_MapLoad( ULONG ulPlayerExtra = MAXPLAYERS, ServerCommandFlags flags = 0 );

@@ -1472,6 +1472,11 @@ void SERVER_ConnectNewPlayer( BYTESTREAM_s *pByteStream )
 	if ( ( SERVER_CountPlayers( true ) > static_cast<unsigned> (sv_maxclients) ) )
 		SERVERCOMMANDS_PrintMOTD( "Emergency!\n\nYou are joining from localhost even though the server is full.\nDo whatever is necessary to clean the situation and disconnect afterwards.\n", g_lCurrentClient, SVCF_ONLYTHISCLIENT );
 
+	// [RK] Since clients don't end votes when traversing hubs
+	// the vote will be cleared here after a MAP command has executed.
+	if ( CALLVOTE_GetVoteState() == false && level.clusterflags & CLUSTER_HUB )
+		SERVERCOMMANDS_ClearVote( g_lCurrentClient, SVCF_ONLYTHISCLIENT );
+
 	// If we're in a duel or LMS mode, tell him the state of the game mode.
 	if ( duel || lastmanstanding || teamlms || possession || teampossession || survival || invasion )
 	{
