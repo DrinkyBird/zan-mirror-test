@@ -236,8 +236,12 @@ void DPillar::Tick ()
 			SERVERCOMMANDS_SetSectorCeilingPlane( ULONG( m_Sector - sectors ));
 		}
 
-		SN_StopSequence (m_Sector, CHAN_FLOOR);
-		Destroy ();
+		// [RK] Destroy the pillar on the server/host end.
+		if ( NETWORK_InClientMode () == false )
+		{
+			SN_StopSequence(m_Sector, CHAN_FLOOR);
+			Destroy();
+		}
 	}
 	else
 	{
