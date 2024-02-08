@@ -38,6 +38,14 @@ build_linux_serveronly:
   variables:
     SERVERONLY: "ON"
 
+build_linux_serveronly_arm64:
+  <<: *linux
+  image: registry.heptapod.net/zandronum/ci-images/zandronum-build-ubuntu-arm64:latest
+  tags:
+    - arm64
+  variables:
+    SERVERONLY: "ON"
+
 # Windows build currently require a shell runner with the dependencies already set up.
 # Set up as described on the wiki: https://wiki.zandronum.com/Compiling_Zandronum_with_Visual_Studio
 # Then, configure system environment variables pointing to the location of dependencies:
