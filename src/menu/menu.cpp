@@ -341,7 +341,9 @@ void M_StartControlPanel (bool makeSound)
 	BackbuttonTime = 0;
 	BackbuttonAlpha = 0;
 
-	PLAYER_SetStatus( &players[consoleplayer], PLAYERSTATUS_INMENU, true, PLAYERSTATUS_CLIENTSHOULDSENDUPDATE );
+	// [BB] Don't change the displayed menu status when a demo is played.
+	if ( CLIENTDEMO_IsPlaying( ) == false )
+		PLAYER_SetStatus( &players[consoleplayer], PLAYERSTATUS_INMENU, true, PLAYERSTATUS_CLIENTSHOULDSENDUPDATE );
 }
 
 //=============================================================================
@@ -864,7 +866,9 @@ void M_ClearMenus ()
 	ServerSetupMenu = NULL;
 	ServerMenuEnabled = false;
 
-	PLAYER_SetStatus( &players[consoleplayer], PLAYERSTATUS_INMENU, false, PLAYERSTATUS_CLIENTSHOULDSENDUPDATE );
+	// [BB] Don't change the displayed menu status when a demo is played.
+	if ( CLIENTDEMO_IsPlaying( ) == false )
+		PLAYER_SetStatus( &players[consoleplayer], PLAYERSTATUS_INMENU, false, PLAYERSTATUS_CLIENTSHOULDSENDUPDATE );
 }
 
 //=============================================================================

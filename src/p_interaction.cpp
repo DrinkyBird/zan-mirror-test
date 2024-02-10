@@ -2859,39 +2859,58 @@ void PLAYER_SetStatus( player_t *pPlayer, ULONG ulType, bool bEnable, ULONG ulFl
 
 			pPlayer->bChatting = bEnable;
 
-			// [AK] Tell the server we're beginning to or have stopped chatting.
-			if (( NETWORK_GetState( ) == NETSTATE_CLIENT ) && ( ulFlags & PLAYERSTATUS_CLIENTSHOULDSENDUPDATE ))
-				CLIENTCOMMANDS_SetStatus( ulType );
+			if ( ulFlags & PLAYERSTATUS_CLIENTSHOULDSENDUPDATE )
+			{
+				// [AK] Tell the server we're beginning to or have stopped chatting.
+				if ( NETWORK_GetState( ) == NETSTATE_CLIENT )
+					CLIENTCOMMANDS_SetStatus( ulType );
+
+				// [AK] If we're recording a demo, write a command to update our chatting status.
+				if ( CLIENTDEMO_IsRecording( ))
+					CLIENTDEMO_WriteSetStatus( ulType, bEnable );
+			}
 
 			break;
 		}
 
 		case PLAYERSTATUS_INCONSOLE:
 		{
-			// [BB] Don't change the displayed console status when a demo is played.
-			if (( CLIENTDEMO_IsPlaying( )) || ( pPlayer->bInConsole == bEnable ))
+			if ( pPlayer->bInConsole == bEnable )
 				return;
 
 			pPlayer->bInConsole = bEnable;
 
-			// [AK] Tell the server that we entered or exited the console.
-			if (( NETWORK_GetState( ) == NETSTATE_CLIENT ) && ( ulFlags & PLAYERSTATUS_CLIENTSHOULDSENDUPDATE ))
-				CLIENTCOMMANDS_SetStatus( ulType );
+			if ( ulFlags & PLAYERSTATUS_CLIENTSHOULDSENDUPDATE )
+			{
+				// [AK] Tell the server that we entered or exited the console.
+				if ( NETWORK_GetState( ) == NETSTATE_CLIENT )
+					CLIENTCOMMANDS_SetStatus( ulType );
+
+				// [AK] If we're recording a demo, write a command to update our "in console" status.
+				if ( CLIENTDEMO_IsRecording( ))
+					CLIENTDEMO_WriteSetStatus( ulType, bEnable );
+			}
 
 			break;
 		}
 
 		case PLAYERSTATUS_INMENU:
 		{
-			// [BB] Don't change the displayed menu status when a demo is played.
-			if (( CLIENTDEMO_IsPlaying( )) || ( pPlayer->bInMenu == bEnable ))
+			if ( pPlayer->bInMenu == bEnable )
 				return;
 
 			pPlayer->bInMenu = bEnable;
 
-			// [AK] Tell the server that we entered or exited the menu.
-			if (( NETWORK_GetState( ) == NETSTATE_CLIENT ) && ( ulFlags & PLAYERSTATUS_CLIENTSHOULDSENDUPDATE ))
-				CLIENTCOMMANDS_SetStatus( ulType );
+			if ( ulFlags & PLAYERSTATUS_CLIENTSHOULDSENDUPDATE )
+			{
+				// [AK] Tell the server that we entered or exited the menu.
+				if ( NETWORK_GetState( ) == NETSTATE_CLIENT )
+					CLIENTCOMMANDS_SetStatus( ulType );
+
+				// [AK] If we're recording a demo, write a command to update our "in menu" status.
+				if ( CLIENTDEMO_IsRecording( ))
+					CLIENTDEMO_WriteSetStatus( ulType, bEnable );
+			}
 
 			break;
 		}

@@ -1695,14 +1695,18 @@ void C_ToggleConsole ()
 		TabbedLast = false;
 		TabbedList = false;
 
-		PLAYER_SetStatus( &players[consoleplayer], PLAYERSTATUS_INCONSOLE, true, PLAYERSTATUS_CLIENTSHOULDSENDUPDATE );
+		// [BB] Don't change the displayed console status when a demo is played.
+		if ( CLIENTDEMO_IsPlaying( ) == false )
+			PLAYER_SetStatus( &players[consoleplayer], PLAYERSTATUS_INCONSOLE, true, PLAYERSTATUS_CLIENTSHOULDSENDUPDATE );
 	}
 	else if (gamestate != GS_FULLCONSOLE && gamestate != GS_STARTUP)
 	{
 		ConsoleState = c_rising;
 		C_FlushDisplay ();
 
-		PLAYER_SetStatus( &players[consoleplayer], PLAYERSTATUS_INCONSOLE, false, PLAYERSTATUS_CLIENTSHOULDSENDUPDATE );
+		// [BB] Don't change the displayed console status when a demo is played.
+		if ( CLIENTDEMO_IsPlaying( ) == false )
+			PLAYER_SetStatus( &players[consoleplayer], PLAYERSTATUS_INCONSOLE, false, PLAYERSTATUS_CLIENTSHOULDSENDUPDATE );
 	}
 }
 
@@ -1720,7 +1724,8 @@ void C_HideConsole ()
 		HistPos = NULL;
 
 		// [BB] We are not in console anymore, so set bInConsole if necessary.
-		if ( players[consoleplayer].bInConsole )
+		// Don't change the displayed console status when a demo is played.
+		if (( players[consoleplayer].bInConsole ) && ( CLIENTDEMO_IsPlaying( ) == false ))
 		{
 			PLAYER_SetStatus( &players[consoleplayer], PLAYERSTATUS_INCONSOLE, false, PLAYERSTATUS_CLIENTSHOULDSENDUPDATE );
 		}
