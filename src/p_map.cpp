@@ -1297,7 +1297,11 @@ bool PIT_CheckThing(AActor *thing, FCheckPosition &tm)
 						!(tm.thing->flags3 & MF3_BLOODLESSIMPACT) &&
 						(pr_checkthing() < 192))
 					{
-						P_BloodSplatter(tm.thing->x, tm.thing->y, tm.thing->z, thing);
+						// [RK] Clients will use the morph projectile as originator since they destroyed their copy of the thing in P_DamageMobj.
+						if ( NETWORK_GetState() == NETSTATE_SERVER && tm.thing->IsKindOf( RUNTIME_CLASS( AMorphProjectile )))
+							P_BloodSplatter(tm.thing->x, tm.thing->y, tm.thing->z, tm.thing);
+						else
+							P_BloodSplatter(tm.thing->x, tm.thing->y, tm.thing->z, thing);
 					}
 					if (!(tm.thing->flags3 & MF3_BLOODLESSIMPACT))
 					{
