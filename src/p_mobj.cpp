@@ -1521,7 +1521,7 @@ bool AActor::Massacre ()
 //
 //----------------------------------------------------------------------------
 
-void P_ExplodeMissile (AActor *mo, line_t *line, AActor *target)
+void P_ExplodeMissile (AActor *mo, line_t *line, AActor *target, bool bExplodeOnClient ) // [RK] Added bExplodeOnClient
 {
 	if (mo->flags3 & MF3_EXPLOCOUNT)
 	{
@@ -1550,7 +1550,7 @@ void P_ExplodeMissile (AActor *mo, line_t *line, AActor *target)
 	if (nextstate == NULL) nextstate = mo->FindState(NAME_Death);
 
 	// [BC] Tell clients that this missile blew up.
-	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
+	if ( NETWORK_GetState( ) == NETSTATE_SERVER && bExplodeOnClient )
 	{
 		// No need to do this if the line struck a horizon line.
 		if (( line == NULL ) ||
@@ -7083,7 +7083,8 @@ void P_CheckSplash(AActor *self, fixed_t distance)
 //
 //---------------------------------------------------------------------------
 // [WS] Added bExplode.
-bool P_CheckMissileSpawn (AActor* th, fixed_t maxdist, bool bExplode)
+// [RK] Added bClientHasMissile.
+bool P_CheckMissileSpawn (AActor* th, fixed_t maxdist, bool bExplode, bool bClientHasMissile)
 {
 	// [RH] Don't decrement tics if they are already less than 1
 	if ((th->flags4 & MF4_RANDOMIZE) && th->tics > 0)
@@ -7157,7 +7158,7 @@ bool P_CheckMissileSpawn (AActor* th, fixed_t maxdist, bool bExplode)
 
 				// [WS] Can we explode the missile?
 				if (bExplode)
-					P_ExplodeMissile (th, NULL, th->BlockingMobj);
+					P_ExplodeMissile (th, NULL, th->BlockingMobj, bClientHasMissile);
 			}
 			return false;
 		}
@@ -7294,12 +7295,12 @@ AActor *P_SpawnMissileXYZ (fixed_t x, fixed_t y, fixed_t z,
 		th->SetFriendPlayer(owner->player);
 	}
 
-	// [BB]
-	AActor *pMissile = (!checkspawn || P_CheckMissileSpawn (th, source->radius)) ? th : NULL;
-
 	// [BB] If we're the server, tell clients to spawn the missile.
-	if ( bSpawnOnClient && ( NETWORK_GetState( ) == NETSTATE_SERVER ) && ( pMissile ))
-		SERVERCOMMANDS_SpawnMissile( pMissile );
+	if ( bSpawnOnClient && ( NETWORK_GetState( ) == NETSTATE_SERVER ))
+		SERVERCOMMANDS_SpawnMissile( th );
+
+	// [BB]
+	AActor *pMissile = (!checkspawn || P_CheckMissileSpawn (th, source->radius, true, bSpawnOnClient)) ? th : NULL;
 
 	return pMissile;
 }
@@ -7422,12 +7423,12 @@ AActor *P_SpawnMissileAngleZSpeed (AActor *source, fixed_t z,
 		mo->SetFriendPlayer(owner->player);
 	}
 
-	// [BB]
-	AActor *pMissile = (!checkspawn || P_CheckMissileSpawn(mo, source->radius)) ? mo : NULL;
-
 	// [BB] If we're the server, tell clients to spawn the missile.
-	if ( bSpawnOnClient && ( NETWORK_GetState( ) == NETSTATE_SERVER ) && ( pMissile ))
-		SERVERCOMMANDS_SpawnMissile( pMissile );
+	if ( bSpawnOnClient && ( NETWORK_GetState( ) == NETSTATE_SERVER ))
+		SERVERCOMMANDS_SpawnMissile( mo );
+
+	// [BB]
+	AActor *pMissile = (!checkspawn || P_CheckMissileSpawn (mo, source->radius, true, bSpawnOnClient)) ? mo : NULL;
 
 	return pMissile;
 }

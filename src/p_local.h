@@ -143,7 +143,7 @@ void	P_BloodSplatter (fixed_t x, fixed_t y, fixed_t z, AActor *originator);
 void	P_BloodSplatter2 (fixed_t x, fixed_t y, fixed_t z, AActor *originator);
 void	P_RipperBlood (AActor *mo, AActor *bleeder);
 int		P_GetThingFloorType (AActor *thing);
-void	P_ExplodeMissile (AActor *missile, line_t *explodeline, AActor *target);
+void	P_ExplodeMissile (AActor *missile, line_t *explodeline, AActor *target, bool bExplodeOnClient = true); // [RK] Added bExplodeOnClient.
 
 AActor *P_SpawnMissile (AActor* source, AActor* dest, const PClass *type, AActor* owner = NULL, const bool bSpawnOnClient = false ); // [BB] Added bSpawnOnClient.
 AActor *P_SpawnMissileZ (AActor* source, fixed_t z, AActor* dest, const PClass *type, const bool bSpawnOnClient = false); // [BB] Added bSpawnOnClient.
@@ -525,7 +525,7 @@ enum	// P_RailAttack / A_RailAttack / A_CustomRailgun / P_DrawRailTrail flags
 };
 
 
-bool	P_CheckMissileSpawn (AActor *missile, fixed_t maxdist, bool bExplode = true);
+bool	P_CheckMissileSpawn (AActor *missile, fixed_t maxdist, bool bExplode = true, bool bClientHasMissile = true); // [RK] Added bClientHasMissile
 void	P_PlaySpawnSound(AActor *missile, AActor *spawner);
 
 // [AK] Prototypes used to control the free chasecam.
