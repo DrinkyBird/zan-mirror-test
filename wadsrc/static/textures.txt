@@ -712,12 +712,3 @@ graphic "STFLA5", 6, 7
 		translation "154:159=[255,255,0]:[135,67,0]", "230:238=[135,67,0]:[255,255,0]", "56:64=[135,67,0]:[255,255,0]", "43:51=[255,255,0]:[135,67,0]", "131:141=[255,255,0]:[135,67,0]"
 	}
 }
-
-// [AK] Scaled down the voice chat icon to fit over the player's head better.
-sprite "SPKRA0", 96, 75
-{
-	xscale 4
-	yscale 4
-	offset 48, 75
-	patch "SPKRA0", 0, 0
-}
