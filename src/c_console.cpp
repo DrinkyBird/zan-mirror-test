@@ -1725,7 +1725,7 @@ void C_HideConsole ()
 
 		// [BB] We are not in console anymore, so set bInConsole if necessary.
 		// Don't change the displayed console status when a demo is played.
-		if (( players[consoleplayer].bInConsole ) && ( CLIENTDEMO_IsPlaying( ) == false ))
+		if (( players[consoleplayer].statuses & PLAYERSTATUS_INCONSOLE ) && ( CLIENTDEMO_IsPlaying( ) == false ))
 		{
 			PLAYER_SetStatus( &players[consoleplayer], PLAYERSTATUS_INCONSOLE, false, SETPLAYERSTATUS_CLIENTSENDSUPDATE );
 		}

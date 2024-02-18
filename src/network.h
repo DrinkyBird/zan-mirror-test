@@ -220,21 +220,10 @@ enum CreateTranslationType
 	CREATETRANSLATION_DESATURATED,
 };
 
-// [AK] What kind of player status are we trying to update?
-enum PlayerStatusType
-{
-	PLAYERSTATUS_CHATTING,
-	PLAYERSTATUS_INCONSOLE,
-	PLAYERSTATUS_INMENU,
-	PLAYERSTATUS_LAGGING,
-	PLAYERSTATUS_READYTOGOON,
-};
-
 enum SetPlayerStatusFlag
 {
 	SETPLAYERSTATUS_CLIENTSENDSUPDATE		= 1 << 0,
-	SETPLAYERSTATUS_SERVERSKIPSCLIENT		= 1 << 1,
-	SETPLAYERSTATUS_SERVERCANTSENDUPDATE	= 1 << 2,
+	SETPLAYERSTATUS_SERVERCANTSENDUPDATE	= 1 << 1,
 };
 
 // [AK] If we're updating the map rotation then what exactly are we doing?

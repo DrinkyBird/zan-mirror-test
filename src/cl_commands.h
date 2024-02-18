@@ -76,7 +76,7 @@ bool	CLIENT_GetIgnoreWeaponSelect( void );
 bool	CLIENT_AllowSVCheatMessage( void );
 void	CLIENTCOMMANDS_UserInfo( const UserInfoChanges &cvars );
 void	CLIENTCOMMANDS_SendAllUserInfo();
-void	CLIENTCOMMANDS_SetStatus( const ULONG ulType );
+void	CLIENTCOMMANDS_SetStatus( void );
 void	CLIENTCOMMANDS_Say( ULONG ulMode, const char *pszString, ULONG ulPlayer = MAXPLAYERS );
 void	CLIENTCOMMANDS_Ignore( const unsigned int player, const bool ignore, const bool doVoice, const int ticks = -1 );
 void	CLIENTCOMMANDS_ClientMove( void );

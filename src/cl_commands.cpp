@@ -257,32 +257,10 @@ void CLIENTCOMMANDS_UserInfo( const UserInfoChanges &cvars )
 
 //*****************************************************************************
 //
-void CLIENTCOMMANDS_SetStatus( const ULONG ulType )
+void CLIENTCOMMANDS_SetStatus( void )
 {
-	bool bEnable = false;
-
-	// [AK] We should only be concerned with sending our chat, console, or menu status.
-	switch ( ulType )
-	{
-		case PLAYERSTATUS_CHATTING:
-			bEnable = players[consoleplayer].bChatting;
-			break;
-
-		case PLAYERSTATUS_INCONSOLE:
-			bEnable = players[consoleplayer].bInConsole;
-			break;
-
-		case PLAYERSTATUS_INMENU:
-			bEnable = players[consoleplayer].bInMenu;
-			break;
-
-		default:
-			return;
-	}
-
 	CLIENT_GetLocalBuffer( )->ByteStream.WriteByte( CLC_SETSTATUS );
-	CLIENT_GetLocalBuffer( )->ByteStream.WriteShortByte( ulType, 7 );
-	CLIENT_GetLocalBuffer( )->ByteStream.WriteBit( bEnable );
+	CLIENT_GetLocalBuffer( )->ByteStream.WriteByte( players[consoleplayer].statuses );
 }
 
 //*****************************************************************************

@@ -89,7 +89,7 @@ void		CLIENTDEMO_SetGameticOffset( LONG lOffset );
 void		CLIENTDEMO_WriteLocalCommand( ClientDemoLocalCommand command, const char *pszArg );
 void		CLIENTDEMO_WriteCheat( ECheatCommand cheat );
 void		CLIENTDEMO_WriteWarpCheat( fixed_t x, fixed_t y );
-void		CLIENTDEMO_WriteSetStatus( const int status, const bool enable );
+void		CLIENTDEMO_WriteSetStatus( const int statuses, const bool enable );
 void		CLIENTDEMO_ReadDemoWads( void );
 BYTESTREAM_s *CLIENTDEMO_GetDemoStream( void );
 

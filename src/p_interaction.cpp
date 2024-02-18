@@ -2845,114 +2845,39 @@ void PLAYER_SetTime( player_t *pPlayer, ULONG ulTime )
 
 //*****************************************************************************
 //
-void PLAYER_SetStatus( player_t *pPlayer, ULONG ulType, bool bEnable, ULONG ulFlags )
+void PLAYER_SetStatus( player_t *player, const int statuses, const bool enable, const int networkFlags )
 {
-	if ( pPlayer == NULL )
+	if ( player == nullptr )
 		return;
 
-	switch ( ulType )
+	const int oldStatuses = player->statuses;
+
+	if ( enable )
+		player->statuses |= statuses;
+	else
+		player->statuses &= ~statuses;
+
+	// [AK] Don't send updates if none of the statuses changed.
+	if ( player->statuses != oldStatuses )
 	{
-		case PLAYERSTATUS_CHATTING:
+		// [AK] If we're a client, tell the server that our status changed.
+		if ( NETWORK_GetState( ) == NETSTATE_CLIENT )
 		{
-			if ( pPlayer->bChatting == bEnable )
-				return;
-
-			pPlayer->bChatting = bEnable;
-
-			if ( ulFlags & SETPLAYERSTATUS_CLIENTSENDSUPDATE )
-			{
-				// [AK] Tell the server we're beginning to or have stopped chatting.
-				if ( NETWORK_GetState( ) == NETSTATE_CLIENT )
-					CLIENTCOMMANDS_SetStatus( ulType );
-
-				// [AK] If we're recording a demo, write a command to update our chatting status.
-				if ( CLIENTDEMO_IsRecording( ))
-					CLIENTDEMO_WriteSetStatus( ulType, bEnable );
-			}
-
-			break;
+			if ( networkFlags & SETPLAYERSTATUS_CLIENTSENDSUPDATE )
+				CLIENTCOMMANDS_SetStatus( );
+		}
+		// [AK] If we're the server, tell the clients that this player's status
+		// changed, except when sending updates is forbidding, or if we update
+		// this player's "ready to go on" status when everyone's ready to go on now.
+		else if (( NETWORK_GetState( ) == NETSTATE_SERVER ) && (( networkFlags & SETPLAYERSTATUS_SERVERCANTSENDUPDATE ) == false ))
+		{
+			if (( statuses != PLAYERSTATUS_READYTOGOON ) || ( SERVER_IsEveryoneReadyToGoOn( ) == false ))
+				SERVERCOMMANDS_SetPlayerStatus( player - players );
 		}
 
-		case PLAYERSTATUS_INCONSOLE:
-		{
-			if ( pPlayer->bInConsole == bEnable )
-				return;
-
-			pPlayer->bInConsole = bEnable;
-
-			if ( ulFlags & SETPLAYERSTATUS_CLIENTSENDSUPDATE )
-			{
-				// [AK] Tell the server that we entered or exited the console.
-				if ( NETWORK_GetState( ) == NETSTATE_CLIENT )
-					CLIENTCOMMANDS_SetStatus( ulType );
-
-				// [AK] If we're recording a demo, write a command to update our "in console" status.
-				if ( CLIENTDEMO_IsRecording( ))
-					CLIENTDEMO_WriteSetStatus( ulType, bEnable );
-			}
-
-			break;
-		}
-
-		case PLAYERSTATUS_INMENU:
-		{
-			if ( pPlayer->bInMenu == bEnable )
-				return;
-
-			pPlayer->bInMenu = bEnable;
-
-			if ( ulFlags & SETPLAYERSTATUS_CLIENTSENDSUPDATE )
-			{
-				// [AK] Tell the server that we entered or exited the menu.
-				if ( NETWORK_GetState( ) == NETSTATE_CLIENT )
-					CLIENTCOMMANDS_SetStatus( ulType );
-
-				// [AK] If we're recording a demo, write a command to update our "in menu" status.
-				if ( CLIENTDEMO_IsRecording( ))
-					CLIENTDEMO_WriteSetStatus( ulType, bEnable );
-			}
-
-			break;
-		}
-
-		case PLAYERSTATUS_LAGGING:
-		{
-			if ( pPlayer->bLagging == bEnable )
-				return;
-
-			pPlayer->bLagging = bEnable;
-			break;
-		}
-
-		case PLAYERSTATUS_READYTOGOON:
-		{
-			if ( pPlayer->bReadyToGoOn == bEnable )
-				return;
-
-			pPlayer->bReadyToGoOn = bEnable;
-			break;
-		}
-
-		default:
-			return;
-	}
-
-	// [AK] If we're the server, tell the clients that this player's status changed,
-	// except when sending updates is forbidding, or if we update this player's
-	// "ready to go on" status when everyone's ready to go on now.
-	if (( NETWORK_GetState( ) == NETSTATE_SERVER ) && (( ulFlags & SETPLAYERSTATUS_SERVERCANTSENDUPDATE ) == false ))
-	{
-		if (( ulType != PLAYERSTATUS_READYTOGOON ) || ( SERVER_IsEveryoneReadyToGoOn( ) == false ))
-		{
-			const ULONG ulPlayer = pPlayer - players;
-
-			// [AK] Should we skip sending an update to the client whose status we're changing?
-			// This is if the client already changed the status on their end.
-			if ( ulFlags & SETPLAYERSTATUS_SERVERSKIPSCLIENT )
-				SERVERCOMMANDS_SetPlayerStatus( ulPlayer, static_cast<PlayerStatusType>( ulType ), ulPlayer, SVCF_SKIPTHISCLIENT );
-			else
-				SERVERCOMMANDS_SetPlayerStatus( ulPlayer, static_cast<PlayerStatusType>( ulType ));
-		}
+		// [AK] If we're recording a demo, write a command to update our status.
+		if ( CLIENTDEMO_IsRecording( ))
+			CLIENTDEMO_WriteSetStatus( statuses, enable );
 	}
 }
 

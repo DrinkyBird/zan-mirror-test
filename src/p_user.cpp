@@ -331,9 +331,7 @@ player_t::player_t()
   ulFragsWithoutDeath( 0 ),
   ulDeathsWithoutFrag( 0 ),
   ulUnrewardedDamageDealt( 0 ),
-  bChatting( 0 ),
-  bInConsole( 0 ),
-  bInMenu( 0 ),
+  statuses( 0 ),
   bSpectating( 0 ),
   bDeadSpectator( 0 ),
   ulLivesLeft( 0 ),
@@ -347,10 +345,8 @@ player_t::player_t()
   ulPing( 0 ),
   ulPingAverages( 0 ),
   ulCountryIndex( 0 ),
-  bReadyToGoOn( 0 ),
   pCorpse( 0 ),
   OldPendingWeapon( 0 ),
-  bLagging( 0 ),
   bSpawnTelefragged( 0 ),
   ulTime( 0 ),
   bUnarmed( false )
@@ -494,9 +490,7 @@ player_t &player_t::operator=(const player_t &p)
 	ulFragsWithoutDeath = p.ulFragsWithoutDeath;
 	ulDeathsWithoutFrag = p.ulDeathsWithoutFrag;
 	ulUnrewardedDamageDealt = p.ulUnrewardedDamageDealt;
-	bChatting = p.bChatting;
-	bInConsole = p.bInConsole;
-	bInMenu = p.bInMenu;
+	statuses = p.statuses;
 	bSpectating = p.bSpectating;
 	bDeadSpectator = p.bDeadSpectator;
 	ulLivesLeft = p.ulLivesLeft;
@@ -513,12 +507,10 @@ player_t &player_t::operator=(const player_t &p)
 	ulPing = p.ulPing;
 	ulPingAverages = p.ulPingAverages;
 	ulCountryIndex = p.ulCountryIndex;
-	bReadyToGoOn = p.bReadyToGoOn;
 	pCorpse = p.pCorpse;
 	OldPendingWeapon = p.OldPendingWeapon;
 	StartingWeaponName = p.StartingWeaponName;
 	bClientSelectedWeapon = p.bClientSelectedWeapon;
-	bLagging = p.bLagging;
 	bSpawnTelefragged = p.bSpawnTelefragged;
 	ulTime = p.ulTime;
 	bUnarmed = p.bUnarmed;
@@ -4212,9 +4204,7 @@ void player_t::Serialize (FArchive &arc)
 		// [BB] Skulltag additions - start
 		<< bOnTeam
 		<< Team
-		<< bChatting
-		<< bInConsole
-		<< bInMenu
+		<< statuses
 		<< RailgunShots
 		<< MaxHealthBonus
 		<< cheats2

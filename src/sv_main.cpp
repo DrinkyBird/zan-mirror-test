@@ -1084,13 +1084,13 @@ void SERVER_CheckTimeouts( void )
 		{
 			// Have not heard from the client in at least one second; mark him as
 			// lagging and tell clients.
-			if ( players[ulIdx].bLagging == false )
+			if (( players[ulIdx].statuses & PLAYERSTATUS_LAGGING ) == false )
 				PLAYER_SetStatus( &players[ulIdx], PLAYERSTATUS_LAGGING, true );
 		}
 		else
 		{
 			// Player is no longer lagging. Tell clients.
-			if ( players[ulIdx].bLagging )
+			if ( players[ulIdx].statuses & PLAYERSTATUS_LAGGING )
 				PLAYER_SetStatus( &players[ulIdx], PLAYERSTATUS_LAGGING, false );
 		}
 	}
@@ -2563,13 +2563,8 @@ void SERVER_SendFullUpdate( ULONG ulClient )
 		// [BB] Send the number of lives left.
 		SERVERCOMMANDS_SetPlayerLivesLeft( ulIdx, ulClient, SVCF_ONLYTHISCLIENT );
 
-		// [BB] Also tell this player's chat / console status to the new client.
-		// [AK] Tell the client whether this player is lagging or not. This prevents the client from
-		// seeing players with the lag icon over their head indefinitely after a level change.
-		SERVERCOMMANDS_SetPlayerStatus( ulIdx, PLAYERSTATUS_CHATTING, ulClient, SVCF_ONLYTHISCLIENT );
-		SERVERCOMMANDS_SetPlayerStatus( ulIdx, PLAYERSTATUS_INCONSOLE, ulClient, SVCF_ONLYTHISCLIENT );
-		SERVERCOMMANDS_SetPlayerStatus( ulIdx, PLAYERSTATUS_INMENU, ulClient, SVCF_ONLYTHISCLIENT );
-		SERVERCOMMANDS_SetPlayerStatus( ulIdx, PLAYERSTATUS_LAGGING, ulClient, SVCF_ONLYTHISCLIENT );
+		// [BB] Send this player's statuses to the new client.
+		SERVERCOMMANDS_SetPlayerStatus( ulIdx, ulClient, SVCF_ONLYTHISCLIENT );
 
 		// [BB] If this player has any cheats, also inform the new client.
 		if( players[ulIdx].cheats )
@@ -3874,14 +3869,14 @@ bool SERVER_IsEveryoneReadyToGoOn( void )
 
 			// If there's a valid player in game who is not ready to go on, we
 			// know we can't proceed.
-			if ( players[ulIdx].bReadyToGoOn == false )
+			if (( players[ulIdx].statuses & PLAYERSTATUS_READYTOGOON ) == false )
 				return ( false );
 		}
 		else
 		{
 			// Else if we're dealing with a spectator, we must handle it in a
 			// different way.
-			if ( players[ulIdx].bReadyToGoOn == true )
+			if ( players[ulIdx].statuses & PLAYERSTATUS_READYTOGOON )
 				ulSpectatorCountReady++;
 		}
 	}
@@ -4859,23 +4854,24 @@ bool SERVER_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 		break;
 	case CLC_SETSTATUS:
 		{
-			const PlayerStatusType type = static_cast<PlayerStatusType>( pByteStream->ReadShortByte( 7 ));
-			const bool bEnable = pByteStream->ReadBit( );
+			const int statuses = pByteStream->ReadByte( );
 
 			// [BB] If the client is flooding the server with commands, the client is
 			// kicked and we don't need to handle the command.
 			if ( server_CheckForClientMinorCommandFlood ( g_lCurrentClient ) == true )
 				return ( true );
 
-			// [AK] We can't always trust that the client sent the correct status type.
-			// Double check to make sure that it's valid, and kick them if it isn't.
-			if (( type != PLAYERSTATUS_CHATTING ) && ( type != PLAYERSTATUS_INCONSOLE ) && ( type != PLAYERSTATUS_INMENU ))
-			{
-				SERVER_KickPlayer( g_lCurrentClient, "Sent an invalid player status type." );
-				return ( true );
-			}
+			const int oldStatuses = players[g_lCurrentClient].statuses;
+			const int mask = PLAYERSTATUS_CHATTING | PLAYERSTATUS_INCONSOLE | PLAYERSTATUS_INMENU;
 
-			PLAYER_SetStatus( &players[g_lCurrentClient], type, bEnable, SETPLAYERSTATUS_SERVERSKIPSCLIENT );
+			// [AK] The only statuses the client needs to sync with the server are the
+			// "chatting" and "in console/menu" ones. First, reset these bits to zero,
+			// then set them to whatever the client sent us.
+			players[g_lCurrentClient].statuses &= ~mask;
+			players[g_lCurrentClient].statuses |= ( statuses & mask );
+
+			if ( players[g_lCurrentClient].statuses != oldStatuses )
+				SERVERCOMMANDS_SetPlayerStatus( g_lCurrentClient, g_lCurrentClient, SVCF_SKIPTHISCLIENT );
 		}
 		break;
 	case CLC_IGNORE:
@@ -4964,7 +4960,7 @@ bool SERVER_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 	case CLC_READYTOGOON:
 
 		// Users can only toggle if they haven't yet, and we must be in intermission.
-		if ( gamestate != GS_INTERMISSION || players[g_lCurrentClient].bReadyToGoOn )
+		if ( gamestate != GS_INTERMISSION || ( players[g_lCurrentClient].statuses & PLAYERSTATUS_READYTOGOON ))
 			return ( false );
 
 		// Toggle this player (specator)'s "ready to go on" status.
@@ -6179,14 +6175,7 @@ bool ClientMoveCommand::process( const ULONG ulClient ) const
 		// [K6/BB] The client is pressing a button, so not afk.
 		g_aClients[ulClient].lLastActionTic = gametic;
 
-		if ( pPlayer->bChatting )
-			PLAYER_SetStatus( &players[ulClient], PLAYERSTATUS_CHATTING, false );
-
-		if ( pPlayer->bInConsole )
-			PLAYER_SetStatus( &players[ulClient], PLAYERSTATUS_INCONSOLE, false );
-
-		if ( pPlayer->bInMenu )
-			PLAYER_SetStatus( &players[ulClient], PLAYERSTATUS_INMENU, false );
+		PLAYER_SetStatus( &players[ulClient], PLAYERSTATUS_CHATTING | PLAYERSTATUS_INCONSOLE | PLAYERSTATUS_INMENU, false );
 	}
 
 	return ( false );
@@ -7175,9 +7164,8 @@ static bool server_AuthenticateLevel( BYTESTREAM_s *pByteStream )
 	// weapon changes again.
 	SERVERCOMMANDS_SetIgnoreWeaponSelect( g_lCurrentClient, false );
 
-	// [AK] Update this player's own lagging status (this doen't happen in the full update).
-	// This prevents the client from having a lagging icon over their head indefinitely after a level change.
-	SERVERCOMMANDS_SetPlayerStatus( g_lCurrentClient, PLAYERSTATUS_LAGGING, g_lCurrentClient, SVCF_ONLYTHISCLIENT );
+	// [AK] Update this player's own statuses.
+	SERVERCOMMANDS_SetPlayerStatus( g_lCurrentClient, g_lCurrentClient, SVCF_ONLYTHISCLIENT );
 
 	// Send a snapshot of the level.
 	SERVER_SendFullUpdate( g_lCurrentClient );

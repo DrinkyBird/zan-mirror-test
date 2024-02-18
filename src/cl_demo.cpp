@@ -576,9 +576,9 @@ void CLIENTDEMO_ReadPacket( void )
 			case CLD_LCMD_SETSTATUS:
 
 				{
-					const int status = g_ByteStream.ReadByte( );
+					const int statuses = g_ByteStream.ReadByte( );
 					const bool enable = !!g_ByteStream.ReadByte( );
-					PLAYER_SetStatus( &players[consoleplayer], status, !!enable );
+					PLAYER_SetStatus( &players[consoleplayer], statuses, !!enable );
 				}
 				break;
 			}
@@ -773,12 +773,12 @@ void CLIENTDEMO_WriteWarpCheat ( fixed_t x, fixed_t y )
 
 //*****************************************************************************
 //
-void CLIENTDEMO_WriteSetStatus ( const int status, const bool enable )
+void CLIENTDEMO_WriteSetStatus ( const int statuses, const bool enable )
 {
 	clientdemo_CheckDemoBuffer( 4 );
 	g_ByteStream.WriteByte( CLD_LOCALCOMMAND );
 	g_ByteStream.WriteByte( CLD_LCMD_SETSTATUS );
-	g_ByteStream.WriteByte( status );
+	g_ByteStream.WriteByte( statuses );
 	g_ByteStream.WriteByte( enable );
 }
 

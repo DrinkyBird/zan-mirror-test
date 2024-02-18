@@ -2143,6 +2143,7 @@ void G_PlayerReborn (int player, bool bGiveInventory)
 	const PClass *cls;
 	FString		log;
 	bool		bOnTeam;
+	int			statuses;
 	bool		bSpectating;
 	bool		bDeadSpectator;
 	ULONG		ulLivesLeft;
@@ -2179,9 +2180,7 @@ void G_PlayerReborn (int player, bool bGiveInventory)
 	chasecam = p->cheats & CF_CHASECAM;
 
 	bOnTeam = p->bOnTeam;
-	const bool bChatting = p->bChatting;
-	const bool bInConsole = p->bInConsole;
-	const bool bInMenu = p->bInMenu;
+	statuses = p->statuses;
 	bSpectating = p->bSpectating;
 	bDeadSpectator = p->bDeadSpectator;
 	ulLivesLeft = p->ulLivesLeft;
@@ -2203,7 +2202,6 @@ void G_PlayerReborn (int player, bool bGiveInventory)
 	ulTime = p->ulTime;
 	timefreezer = p->timefreezer;
 	StartingWeaponName = p->StartingWeaponName;
-	const bool bLagging = p->bLagging;
 
 	// [AK] Get the weapons the player was using before they respawn.
 	if ( NETWORK_GetState() != NETSTATE_SERVER )
@@ -2243,9 +2241,7 @@ void G_PlayerReborn (int player, bool bGiveInventory)
 	p->original_oldbuttons = ~0;
 
 	p->bOnTeam = bOnTeam;
-	p->bChatting = bChatting;
-	p->bInConsole = bInConsole;
-	p->bInMenu = bInMenu;
+	p->statuses = statuses;
 	p->bSpectating = bSpectating;
 	p->bDeadSpectator = bDeadSpectator;
 	p->ulLivesLeft = ulLivesLeft;
@@ -2269,7 +2265,6 @@ void G_PlayerReborn (int player, bool bGiveInventory)
 	// should also be able to do so after being reborn.
 	p->timefreezer = timefreezer;
 	p->StartingWeaponName = StartingWeaponName;
-	p->bLagging = bLagging;
 	p->bIsBot = p->pSkullBot ? true : false;
 
 	p->playerstate = PST_LIVE;

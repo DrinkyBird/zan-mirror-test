@@ -1553,20 +1553,20 @@ PlayerValue DataScoreColumn::GetValue( const ULONG ulPlayer ) const
 			}
 
 			case COLUMNTYPE_STATUSICON:
-				if (( players[ulPlayer].bLagging ) && ( gamestate == GS_LEVEL ))
+				if (( players[ulPlayer].statuses & PLAYERSTATUS_LAGGING ) && ( gamestate == GS_LEVEL ))
 					Result.SetValue<FTexture *>( TexMan.FindTexture( "LAGMINI" ));
 				else if ( VOIPController::GetInstance( ).IsPlayerTalking( ulPlayer ))
 					Result.SetValue<FTexture *>( TexMan.FindTexture( "SPKRMINI" ));
-				else if ( players[ulPlayer].bChatting )
+				else if ( players[ulPlayer].statuses & PLAYERSTATUS_CHATTING )
 					Result.SetValue<FTexture *>( TexMan.FindTexture( "TLKMINI" ));
-				else if ( players[ulPlayer].bInConsole )
+				else if ( players[ulPlayer].statuses & PLAYERSTATUS_INCONSOLE )
 					Result.SetValue<FTexture *>( TexMan.FindTexture( "CONSMINI" ));
-				else if ( players[ulPlayer].bInMenu )
+				else if ( players[ulPlayer].statuses & PLAYERSTATUS_INMENU )
 					Result.SetValue<FTexture *>( TexMan.FindTexture( "MENUMINI" ));
 				break;
 
 			case COLUMNTYPE_READYTOGOICON:
-				if ( players[ulPlayer].bReadyToGoOn )
+				if ( players[ulPlayer].statuses & PLAYERSTATUS_READYTOGOON )
 					Result.SetValue<FTexture *>( TexMan.FindTexture( "RDYTOGO" ));
 				break;
 

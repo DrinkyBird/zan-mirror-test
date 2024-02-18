@@ -145,9 +145,7 @@ EndCommand
 
 Command SetPlayerStatus
 	Player player
-	# [AK] Ideally, we want to fit the status we're updating and its value into a single byte.
-	ShortByte<7> type
-	Bool value
+	Byte statuses
 EndCommand
 
 Command SetPlayerTeam

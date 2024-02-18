@@ -266,6 +266,18 @@ typedef enum
 	CF2_SPREAD			= 1 << 2,
 } cheat2_t;
 
+//
+// [AK] Player status flags, indicating what the player is doing.
+//
+enum
+{
+	PLAYERSTATUS_CHATTING		= 1 << 0,	// Player is chatting.
+	PLAYERSTATUS_INCONSOLE		= 1 << 1,	// Player is in the console.
+	PLAYERSTATUS_INMENU			= 1 << 2,	// Player is in the menu.
+	PLAYERSTATUS_LAGGING		= 1 << 3,	// Player is lagging to the server?
+	PLAYERSTATUS_READYTOGOON	= 1 << 4,	// Player is ready for the next map? (intermission).
+};
+
 enum
 {
 	WF_WEAPONREADY		= 1 << 0,		// [RH] Weapon is in the ready state and can fire its primary attack
@@ -703,14 +715,8 @@ public:
 	// [BB] Amount of damage dealt, that has not been converted to points (kills) yet.
 	ULONG		ulUnrewardedDamageDealt;
 
-	// This player is chatting.
-	bool		bChatting;
-
-	// [RC] This player is in the console.
-	bool		bInConsole;
-
-	// [RC] This player is in the menu.
-	bool		bInMenu;
+	// [AK] A bitfield of all of this player's statuses.
+	int			statuses;
 
 	// This player is currently spectating.
 	bool		bSpectating;
@@ -764,9 +770,6 @@ public:
 	// Last tick this player received a packet.
 //	ULONG		ulLastTick;
 
-	// Is this player ready for the next map? (intermission)
-	bool		bReadyToGoOn;
-
 	// [AK] Pointer to our corpse in case we became a dead spectator. This is in case DF2_SAME_SPAWN_SPOT is enabled.
 	AActor		*pCorpse;
 
@@ -779,9 +782,6 @@ public:
 
 	// [BB] Did the client already select a weapon with CLIENTCOMMANDS_WeaponSelect? (only the server keeps track of this)
 	bool		bClientSelectedWeapon;
-
-	// Is this player lagging to the server?
-	bool		bLagging;
 
 	// If this player was telefragged at the beginning of a round, allow him to respawn normally
 	// in LMS games.
@@ -853,7 +853,7 @@ void	PLAYER_SetWins( player_t *pPlayer, ULONG ulWins );
 void	PLAYER_SetKills( player_t *pPlayer, ULONG ulKills );
 void	PLAYER_SetDeaths( player_t *pPlayer, ULONG ulDeaths, bool bInformClients = true );
 void	PLAYER_SetTime( player_t *pPlayer, ULONG ulTime );
-void	PLAYER_SetStatus( player_t *pPlayer, ULONG ulType, bool bEnable, ULONG ulFlags = 0 );
+void	PLAYER_SetStatus( player_t *player, const int statuses, const bool enable, const int networkFlags = 0 );
 // [BB] PLAYER_GetHealth and PLAYER_GetLivesLeft are helper functions for PLAYER_GetPlayerWithSingleHighestValue.
 LONG	PLAYER_GetHealth( ULONG ulPlayer );
 LONG	PLAYER_GetLivesLeft( ULONG ulPlayer );

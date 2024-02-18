@@ -716,39 +716,12 @@ void SERVERCOMMANDS_SetPlayerKillCount( ULONG ulPlayer, ULONG ulPlayerExtra, Ser
 
 //*****************************************************************************
 //
-void SERVERCOMMANDS_SetPlayerStatus( ULONG ulPlayer, PlayerStatusType type, ULONG ulPlayerExtra, ServerCommandFlags flags )
+void SERVERCOMMANDS_SetPlayerStatus( const unsigned int player, const unsigned int playerExtra, ServerCommandFlags flags )
 {
-	bool bEnable;
-
-	// [AK] Get the value of whatever status we're trying to update.
-	switch ( type )
-	{
-		case PLAYERSTATUS_CHATTING:
-			bEnable = players[ulPlayer].bChatting;
-			break;
-
-		case PLAYERSTATUS_INCONSOLE:
-			bEnable = players[ulPlayer].bInConsole;
-			break;
-
-		case PLAYERSTATUS_INMENU:
-			bEnable = players[ulPlayer].bInMenu;
-			break;
-
-		case PLAYERSTATUS_LAGGING:
-			bEnable = players[ulPlayer].bLagging;
-			break;
-
-		case PLAYERSTATUS_READYTOGOON:
-			bEnable = players[ulPlayer].bReadyToGoOn;
-			break;
-	}
-
 	ServerCommands::SetPlayerStatus command;
-	command.SetPlayer( &players[ulPlayer] );
-	command.SetType( type );
-	command.SetValue( bEnable );
-	command.sendCommandToClients( ulPlayerExtra, flags );
+	command.SetPlayer( &players[player] );
+	command.SetStatuses( players[player].statuses );
+	command.sendCommandToClients( playerExtra, flags );
 }
 
 //*****************************************************************************

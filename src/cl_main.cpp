@@ -596,7 +596,7 @@ void CLIENT_Tick( void )
 		// [BB] This will cause the server to send another reliable packet.
 		// This way, we notice whether we are missing the latest packets
 		// from the server.
-		CLIENTCOMMANDS_SetStatus( PLAYERSTATUS_CHATTING );
+		CLIENTCOMMANDS_SetStatus( );
 
 		break;
 
@@ -2508,8 +2508,11 @@ void CLIENT_SendCmd( void )
 		DWORD oldButtons = players[consoleplayer].oldbuttons;
 
 		// [AK] Also toggle our "ready to go" status if we have auto-ready enabled, but do this only once.
-		if (( players[consoleplayer].bReadyToGoOn == false ) && (( cl_autoready ) || (( buttons ^ oldButtons ) && ( buttons & oldButtons ) == oldButtons )))
+		if ((( players[consoleplayer].statuses & PLAYERSTATUS_READYTOGOON ) == false ) &&
+			(( cl_autoready ) || (( buttons ^ oldButtons ) && ( buttons & oldButtons ) == oldButtons )))
+		{
 			CLIENTCOMMANDS_ReadyToGoOn( );
+		}
 
 		players[consoleplayer].oldbuttons = players[consoleplayer].cmd.ucmd.buttons;
 		return;
@@ -3064,9 +3067,7 @@ void PLAYER_ResetPlayerData( player_t *pPlayer )
 	pPlayer->lPointCount = 0;
 	pPlayer->ulDeathCount = 0;
 	PLAYER_ResetSpecialCounters ( pPlayer );
-	pPlayer->bChatting = 0;
-	pPlayer->bInConsole = 0;
-	pPlayer->bInMenu = 0;
+	pPlayer->statuses = 0;
 	pPlayer->bSpectating = 0;
 	pPlayer->ignoreChat.Reset( );
 	pPlayer->ignoreVoice.Reset( );
@@ -3081,10 +3082,8 @@ void PLAYER_ResetPlayerData( player_t *pPlayer )
 	pPlayer->ulPing = 0;
 	pPlayer->ulPingAverages = 0;
 	pPlayer->ulCountryIndex = 0;
-	pPlayer->bReadyToGoOn = 0;
 	pPlayer->pCorpse = NULL;
 	pPlayer->OldPendingWeapon = 0;
-	pPlayer->bLagging = 0;
 	pPlayer->bSpawnTelefragged = 0;
 	pPlayer->ulTime = 0;
 
@@ -4232,7 +4231,7 @@ void ServerCommands::SetPlayerKillCount::Execute()
 //
 void ServerCommands::SetPlayerStatus::Execute()
 {
-	PLAYER_SetStatus( player, type, value );
+	player->statuses = statuses;
 }
 
 //*****************************************************************************

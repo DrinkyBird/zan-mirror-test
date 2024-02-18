@@ -362,11 +362,11 @@ void P_Ticker (void)
 
 		// Clients "think" every time we process a movement command.
 		// [BB] The server has to think for lagging clients, otherwise they aren't affected by things like sector damage.
-		if (( NETWORK_GetState( ) == NETSTATE_SERVER ) && ( players[ulIdx].bIsBot == false ) && ( players[ulIdx].bLagging == false ) )
+		if (( NETWORK_GetState( ) == NETSTATE_SERVER ) && ( players[ulIdx].bIsBot == false ) && !( players[ulIdx].statuses & PLAYERSTATUS_LAGGING ))
 			continue;
 
 		// [BB] Assume lagging players are not pressing any buttons.
-		if (( NETWORK_GetState( ) == NETSTATE_SERVER ) && ( players[ulIdx].bIsBot == false ) && ( players[ulIdx].bLagging ) )
+		if (( NETWORK_GetState( ) == NETSTATE_SERVER ) && ( players[ulIdx].bIsBot == false ) && ( players[ulIdx].statuses & PLAYERSTATUS_LAGGING ))
 			memset( &(players[ulIdx].cmd), 0, sizeof( ticcmd_t ));
 
 		// Console player thinking is handled by player prediction.
