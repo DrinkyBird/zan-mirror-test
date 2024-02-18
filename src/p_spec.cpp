@@ -929,49 +929,48 @@ void P_UpdateSpecials ()
 				// End the level after one second.
 				else
 				{
-					ULONG				ulIdx;
-					LONG				lWinner;
-					LONG				lHighestFrags;
-					bool				bTied;
-					char				szString[64];
+					int winner = -1;
+					int highestFrags = INT_MIN;
+					bool tied = false;
+					EColorRange color = CR_RED;
+					FString message;
 
 					NETWORK_Printf( "%s\n", GStrings( "TXT_TIMELIMIT" ));
 					GAME_SetEndLevelDelay( 1 * TICRATE );
 
 					// Determine the winner.
-					lWinner = -1;
-					lHighestFrags = INT_MIN;
-					bTied = false;
-					for ( ulIdx = 0; ulIdx < MAXPLAYERS; ulIdx++ )
+					for ( unsigned int i = 0; i < MAXPLAYERS; i++ )
 					{
 						// [BB] Spectators can't win.
-						if ( ( playeringame[ulIdx] == false ) || players[ulIdx].bSpectating )
+						if ( ( playeringame[i] == false ) || players[i].bSpectating )
 							continue;
 
-						if ( players[ulIdx].fragcount > lHighestFrags )
+						if ( players[i].fragcount > highestFrags )
 						{
-							lWinner = ulIdx;
-							lHighestFrags = players[ulIdx].fragcount;
-							bTied = false;
+							winner = i;
+							highestFrags = players[i].fragcount;
+							tied = false;
 						}
-						else if ( players[ulIdx].fragcount == lHighestFrags )
-							bTied = true;
+						else if ( players[i].fragcount == highestFrags )
+							tied = true;
 					}
 
-					// [BB] In case there are no active players (only spectators), lWinner is -1.
-					if ( bTied || ( lWinner == -1 ) )
-						sprintf( szString, "\\cdDRAW GAME!" );
+					// [BB] In case there are no active players (only spectators), winner is -1.
+					if ( tied || ( winner == -1 ) )
+					{
+						message = "DRAW GAME!";
+						color = CR_GREEN;
+					}
 					else
 					{
-						if (( NETWORK_GetState( ) == NETSTATE_SINGLE_MULTIPLAYER ) && ( players[consoleplayer].mo->CheckLocalView( lWinner )))
-							sprintf( szString, "YOU WIN!" );
+						if (( NETWORK_GetState( ) == NETSTATE_SINGLE_MULTIPLAYER ) && ( players[consoleplayer].mo->CheckLocalView( winner )))
+							message = "YOU WIN!";
 						else
-							sprintf( szString, "%s \\c-WINS!", players[lWinner].userinfo.GetName() );
+							message.Format( "%s WINS!", players[winner].userinfo.GetName( ));
 					}
-					V_ColorizeString( szString );
 
 					// Display "%s WINS!" HUD message.
-					HUD_DrawStandardMessage( szString, CR_RED, false, 3.0f, 2.0f, true );
+					HUD_DrawStandardMessage( message.GetChars( ), color, false, 3.0f, 2.0f, true );
 
 					GAME_SetEndLevelDelay( 5 * TICRATE );
 				}
