@@ -4875,7 +4875,7 @@ bool SERVER_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 				return ( true );
 			}
 
-			PLAYER_SetStatus( &players[g_lCurrentClient], type, bEnable, PLAYERSTATUS_SERVERSHOULDSKIPCLIENT );
+			PLAYER_SetStatus( &players[g_lCurrentClient], type, bEnable, SETPLAYERSTATUS_SERVERSKIPSCLIENT );
 		}
 		break;
 	case CLC_IGNORE:

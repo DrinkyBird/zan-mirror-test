@@ -844,14 +844,14 @@ void CHAT_SetChatMode( ULONG ulMode )
 
 		if ( ulMode != CHATMODE_NONE )
 		{
-			PLAYER_SetStatus( pPlayer, PLAYERSTATUS_CHATTING, true, PLAYERSTATUS_CLIENTSHOULDSENDUPDATE );
+			PLAYER_SetStatus( pPlayer, PLAYERSTATUS_CHATTING, true, SETPLAYERSTATUS_CLIENTSENDSUPDATE );
 
 			// [AK] Ensure that the cursor starts off as white.
 			g_ulChatTicker = 0;
 		}
 		else
 		{
-			PLAYER_SetStatus( pPlayer, PLAYERSTATUS_CHATTING, false, PLAYERSTATUS_CLIENTSHOULDSENDUPDATE );
+			PLAYER_SetStatus( pPlayer, PLAYERSTATUS_CHATTING, false, SETPLAYERSTATUS_CLIENTSENDSUPDATE );
 		}
 
 	}

@@ -2859,7 +2859,7 @@ void PLAYER_SetStatus( player_t *pPlayer, ULONG ulType, bool bEnable, ULONG ulFl
 
 			pPlayer->bChatting = bEnable;
 
-			if ( ulFlags & PLAYERSTATUS_CLIENTSHOULDSENDUPDATE )
+			if ( ulFlags & SETPLAYERSTATUS_CLIENTSENDSUPDATE )
 			{
 				// [AK] Tell the server we're beginning to or have stopped chatting.
 				if ( NETWORK_GetState( ) == NETSTATE_CLIENT )
@@ -2880,7 +2880,7 @@ void PLAYER_SetStatus( player_t *pPlayer, ULONG ulType, bool bEnable, ULONG ulFl
 
 			pPlayer->bInConsole = bEnable;
 
-			if ( ulFlags & PLAYERSTATUS_CLIENTSHOULDSENDUPDATE )
+			if ( ulFlags & SETPLAYERSTATUS_CLIENTSENDSUPDATE )
 			{
 				// [AK] Tell the server that we entered or exited the console.
 				if ( NETWORK_GetState( ) == NETSTATE_CLIENT )
@@ -2901,7 +2901,7 @@ void PLAYER_SetStatus( player_t *pPlayer, ULONG ulType, bool bEnable, ULONG ulFl
 
 			pPlayer->bInMenu = bEnable;
 
-			if ( ulFlags & PLAYERSTATUS_CLIENTSHOULDSENDUPDATE )
+			if ( ulFlags & SETPLAYERSTATUS_CLIENTSENDSUPDATE )
 			{
 				// [AK] Tell the server that we entered or exited the menu.
 				if ( NETWORK_GetState( ) == NETSTATE_CLIENT )
@@ -2947,7 +2947,7 @@ void PLAYER_SetStatus( player_t *pPlayer, ULONG ulType, bool bEnable, ULONG ulFl
 
 			// [AK] Should we skip sending an update to the client whose status we're changing?
 			// This is if the client already changed the status on their end.
-			if ( ulFlags & PLAYERSTATUS_SERVERSHOULDSKIPCLIENT )
+			if ( ulFlags & SETPLAYERSTATUS_SERVERSKIPSCLIENT )
 				SERVERCOMMANDS_SetPlayerStatus( ulPlayer, static_cast<PlayerStatusType>( ulType ), ulPlayer, SVCF_SKIPTHISCLIENT );
 			else
 				SERVERCOMMANDS_SetPlayerStatus( ulPlayer, static_cast<PlayerStatusType>( ulType ));

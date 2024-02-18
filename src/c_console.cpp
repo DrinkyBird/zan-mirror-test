@@ -1697,7 +1697,7 @@ void C_ToggleConsole ()
 
 		// [BB] Don't change the displayed console status when a demo is played.
 		if ( CLIENTDEMO_IsPlaying( ) == false )
-			PLAYER_SetStatus( &players[consoleplayer], PLAYERSTATUS_INCONSOLE, true, PLAYERSTATUS_CLIENTSHOULDSENDUPDATE );
+			PLAYER_SetStatus( &players[consoleplayer], PLAYERSTATUS_INCONSOLE, true, SETPLAYERSTATUS_CLIENTSENDSUPDATE );
 	}
 	else if (gamestate != GS_FULLCONSOLE && gamestate != GS_STARTUP)
 	{
@@ -1706,7 +1706,7 @@ void C_ToggleConsole ()
 
 		// [BB] Don't change the displayed console status when a demo is played.
 		if ( CLIENTDEMO_IsPlaying( ) == false )
-			PLAYER_SetStatus( &players[consoleplayer], PLAYERSTATUS_INCONSOLE, false, PLAYERSTATUS_CLIENTSHOULDSENDUPDATE );
+			PLAYER_SetStatus( &players[consoleplayer], PLAYERSTATUS_INCONSOLE, false, SETPLAYERSTATUS_CLIENTSENDSUPDATE );
 	}
 }
 
@@ -1727,7 +1727,7 @@ void C_HideConsole ()
 		// Don't change the displayed console status when a demo is played.
 		if (( players[consoleplayer].bInConsole ) && ( CLIENTDEMO_IsPlaying( ) == false ))
 		{
-			PLAYER_SetStatus( &players[consoleplayer], PLAYERSTATUS_INCONSOLE, false, PLAYERSTATUS_CLIENTSHOULDSENDUPDATE );
+			PLAYER_SetStatus( &players[consoleplayer], PLAYERSTATUS_INCONSOLE, false, SETPLAYERSTATUS_CLIENTSENDSUPDATE );
 		}
 	}
 }

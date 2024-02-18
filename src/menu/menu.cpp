@@ -343,7 +343,7 @@ void M_StartControlPanel (bool makeSound)
 
 	// [BB] Don't change the displayed menu status when a demo is played.
 	if ( CLIENTDEMO_IsPlaying( ) == false )
-		PLAYER_SetStatus( &players[consoleplayer], PLAYERSTATUS_INMENU, true, PLAYERSTATUS_CLIENTSHOULDSENDUPDATE );
+		PLAYER_SetStatus( &players[consoleplayer], PLAYERSTATUS_INMENU, true, SETPLAYERSTATUS_CLIENTSENDSUPDATE );
 }
 
 //=============================================================================
@@ -868,7 +868,7 @@ void M_ClearMenus ()
 
 	// [BB] Don't change the displayed menu status when a demo is played.
 	if ( CLIENTDEMO_IsPlaying( ) == false )
-		PLAYER_SetStatus( &players[consoleplayer], PLAYERSTATUS_INMENU, false, PLAYERSTATUS_CLIENTSHOULDSENDUPDATE );
+		PLAYER_SetStatus( &players[consoleplayer], PLAYERSTATUS_INMENU, false, SETPLAYERSTATUS_CLIENTSENDSUPDATE );
 }
 
 //=============================================================================

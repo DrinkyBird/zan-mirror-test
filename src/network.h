@@ -230,10 +230,10 @@ enum PlayerStatusType
 	PLAYERSTATUS_READYTOGOON,
 };
 
-enum PlayerStatusFlag
+enum SetPlayerStatusFlag
 {
-	PLAYERSTATUS_CLIENTSHOULDSENDUPDATE = 1 << 0,
-	PLAYERSTATUS_SERVERSHOULDSKIPCLIENT = 1 << 1,
+	SETPLAYERSTATUS_CLIENTSENDSUPDATE = 1 << 0,
+	SETPLAYERSTATUS_SERVERSKIPSCLIENT = 1 << 1,
 };
 
 // [AK] If we're updating the map rotation then what exactly are we doing?
