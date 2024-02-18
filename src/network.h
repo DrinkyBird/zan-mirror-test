@@ -212,18 +212,18 @@ enum ActorScaleFlag
 	ACTORSCALE_Y = 2
 };
 
+enum SetPlayerStatusFlag
+{
+	SETPLAYERSTATUS_CLIENTSENDSUPDATE		= 1 << 0,
+	SETPLAYERSTATUS_SERVERCANTSENDUPDATE	= 1 << 1,
+};
+
 // [AK] What kind of translation are we sending to clients?
 enum CreateTranslationType
 {
 	CREATETRANSLATION_PALETTE,
 	CREATETRANSLATION_RGB,
 	CREATETRANSLATION_DESATURATED,
-};
-
-enum SetPlayerStatusFlag
-{
-	SETPLAYERSTATUS_CLIENTSENDSUPDATE		= 1 << 0,
-	SETPLAYERSTATUS_SERVERCANTSENDUPDATE	= 1 << 1,
 };
 
 // [AK] If we're updating the map rotation then what exactly are we doing?
