@@ -2776,7 +2776,7 @@ void WI_Start (wbstartstruct_t *wbstartstruct)
 		if (( playeringame[ulIdx] == false ) || ( players[ulIdx].bIsBot == false ))
 			continue;
 
-		players[ulIdx].bReadyToGoOn = true;
+		PLAYER_SetStatus( &players[ulIdx], PLAYERSTATUS_READYTOGOON, true, SETPLAYERSTATUS_SERVERCANTSENDUPDATE );
 
 		if ( players[ulIdx].pSkullBot )
 			players[ulIdx].pSkullBot->PostEvent( BOTEVENT_INTERMISSION );

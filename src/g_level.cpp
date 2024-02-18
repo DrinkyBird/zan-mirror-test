@@ -1371,7 +1371,7 @@ void G_DoLoadLevel (int position, bool autosave)
 		MEDAL_ClearMedalQueue( i );
 
 		// Reset "ready to go on" flag.
-		players[i].bReadyToGoOn = false;
+		PLAYER_SetStatus( &players[i], PLAYERSTATUS_READYTOGOON, false, SETPLAYERSTATUS_SERVERCANTSENDUPDATE );
 
 		// Reset a bunch of other stuff too.
 		players[i].ulDeathCount = 0;

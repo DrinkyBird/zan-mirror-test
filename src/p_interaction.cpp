@@ -2938,8 +2938,9 @@ void PLAYER_SetStatus( player_t *pPlayer, ULONG ulType, bool bEnable, ULONG ulFl
 	}
 
 	// [AK] If we're the server, tell the clients that this player's status changed,
-	// except when we update this player's "ready to go on" status if everyone's ready.
-	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
+	// except when sending updates is forbidding, or if we update this player's
+	// "ready to go on" status when everyone's ready to go on now.
+	if (( NETWORK_GetState( ) == NETSTATE_SERVER ) && (( ulFlags & SETPLAYERSTATUS_SERVERCANTSENDUPDATE ) == false ))
 	{
 		if (( ulType != PLAYERSTATUS_READYTOGOON ) || ( SERVER_IsEveryoneReadyToGoOn( ) == false ))
 		{
