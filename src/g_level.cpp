@@ -1817,6 +1817,7 @@ void G_FinishTravel ()
 	AInventory *inv;
 	// [BC]
 	LONG	lSavedNetID;
+	bool	doSweep = false; // [RK] Do a GC sweep
 
 	next = it.Next ();
 	while ( (pawn = next) != NULL)
@@ -1892,6 +1893,24 @@ void G_FinishTravel ()
 			pawn->NetID = lSavedNetID;
 			g_ActorNetIDList.useID ( pawn->NetID, pawn );
 
+			// [RK] Since the player wasn't spawned in during level load, the thinker GC sweep called in G_UnSnapshot
+			// couldn't catch the ACS thinkers associated with the players. So any ACS thinkers will be destroyed here.
+			// We'll create an iterator and cycle through the thinkers and remove them.
+			if ( NETWORK_GetState() == NETSTATE_SERVER && ( level.clusterflags & CLUSTER_HUB ))
+			{
+				TThinkerIterator<DACSThinker> it2;
+				DACSThinker *next2 = it2.Next();
+
+				while (( next2 ) != NULL)
+				{
+					if ( !doSweep )
+						doSweep = true;
+
+					next2->Destroy();
+					next2 = it2.Next();
+				}
+			}
+
 			for (inv = pawn->Inventory; inv != NULL; inv = inv->Inventory)
 			{
 				inv->ChangeStatNum (STAT_INVENTORY);
@@ -1912,6 +1931,9 @@ void G_FinishTravel ()
 			}
 		}
 	}
+	// [RK] Sweep all the ACS thinkers that were destroyed.
+	if( doSweep )
+		GC::FullGC();
 }
  
 //==========================================================================
