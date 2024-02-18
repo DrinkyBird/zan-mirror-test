@@ -4865,8 +4865,10 @@ bool SERVER_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 			const int mask = PLAYERSTATUS_CHATTING | PLAYERSTATUS_INCONSOLE | PLAYERSTATUS_INMENU;
 
 			// [AK] The only statuses the client needs to sync with the server are the
-			// "chatting" and "in console/menu" ones. First, reset these bits to zero,
-			// then set them to whatever the client sent us.
+			// "chatting" and "in console/menu" ones. This is intended to prevent
+			// malicious clients from changing the "lagging" or "ready to go" statuses
+			// to pretend they're lagging or unready themselves on the intermission
+			// screen. Reset these bits to zero, then set them to whatever they sent us.
 			players[g_lCurrentClient].statuses &= ~mask;
 			players[g_lCurrentClient].statuses |= ( statuses & mask );
 
