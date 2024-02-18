@@ -1555,7 +1555,7 @@ PlayerValue DataScoreColumn::GetValue( const ULONG ulPlayer ) const
 			case COLUMNTYPE_STATUSICON:
 				if (( players[ulPlayer].statuses & PLAYERSTATUS_LAGGING ) && ( gamestate == GS_LEVEL ))
 					Result.SetValue<FTexture *>( TexMan.FindTexture( "LAGMINI" ));
-				else if ( VOIPController::GetInstance( ).IsPlayerTalking( ulPlayer ))
+				else if ( players[ulPlayer].statuses & PLAYERSTATUS_TALKING )
 					Result.SetValue<FTexture *>( TexMan.FindTexture( "SPKRMINI" ));
 				else if ( players[ulPlayer].statuses & PLAYERSTATUS_CHATTING )
 					Result.SetValue<FTexture *>( TexMan.FindTexture( "TLKMINI" ));

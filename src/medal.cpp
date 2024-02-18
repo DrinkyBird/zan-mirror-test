@@ -828,7 +828,7 @@ ULONG medal_GetDesiredIcon( player_t *pPlayer, AInventory *&pTeamItem )
 		ulDesiredSprite = SPRITE_INMENU;
 
 	// Draw a speaker icon over the player if they're talking.
-	if ( VOIPController::GetInstance( ).IsPlayerTalking( pPlayer - players ))
+	if ( pPlayer->statuses & PLAYERSTATUS_TALKING )
 		ulDesiredSprite = SPRITE_VOICECHAT;
 
 	// Draw a lag icon over their head if they're lagging.
@@ -919,7 +919,7 @@ void medal_SelectIcon( ULONG ulPlayer )
 		// Voice chat icon. Delete it if the player is no longer talking.
 		case S_VOICECHAT:
 
-			if ( VOIPController::GetInstance( ).IsPlayerTalking( pPlayer - players ) == false )
+			if (( pPlayer->statuses & PLAYERSTATUS_TALKING ) == false )
 			{
 				pPlayer->pIcon->Destroy( );
 				pPlayer->pIcon = NULL;

@@ -4231,7 +4231,13 @@ void ServerCommands::SetPlayerKillCount::Execute()
 //
 void ServerCommands::SetPlayerStatus::Execute()
 {
+	const bool isTalking = !!( player->statuses & PLAYERSTATUS_TALKING );
+
 	player->statuses = statuses;
+
+	// [AK] The server doesn't keep track of a player's "talking" status, so we
+	// must ensure that this status can't be changed here.
+	PLAYER_SetStatus( player, PLAYERSTATUS_TALKING, isTalking );
 }
 
 //*****************************************************************************

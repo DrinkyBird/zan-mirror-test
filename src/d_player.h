@@ -272,10 +272,11 @@ typedef enum
 enum
 {
 	PLAYERSTATUS_CHATTING		= 1 << 0,	// Player is chatting.
-	PLAYERSTATUS_INCONSOLE		= 1 << 1,	// Player is in the console.
-	PLAYERSTATUS_INMENU			= 1 << 2,	// Player is in the menu.
-	PLAYERSTATUS_LAGGING		= 1 << 3,	// Player is lagging to the server?
-	PLAYERSTATUS_READYTOGOON	= 1 << 4,	// Player is ready for the next map? (intermission).
+	PLAYERSTATUS_TALKING		= 1 << 1,	// Player is talking on the microphone.
+	PLAYERSTATUS_INCONSOLE		= 1 << 2,	// Player is in the console.
+	PLAYERSTATUS_INMENU			= 1 << 3,	// Player is in the menu.
+	PLAYERSTATUS_LAGGING		= 1 << 4,	// Player is lagging to the server?
+	PLAYERSTATUS_READYTOGOON	= 1 << 5,	// Player is ready for the next map? (intermission).
 };
 
 enum

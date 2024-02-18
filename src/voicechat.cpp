@@ -687,6 +687,17 @@ void VOIPController::Tick( void )
 	// [AK] Tick through all VoIP channels for each player.
 	for ( unsigned int i = 0; i < MAXPLAYERS; i++ )
 	{
+		// [AK] Update everyone's "talking" status accordingly.
+		if ( IsPlayerTalking( i ))
+		{
+			if (( players[i].statuses & PLAYERSTATUS_TALKING ) == false )
+				PLAYER_SetStatus( &players[i], PLAYERSTATUS_TALKING, true );
+		}
+		else if ( players[i].statuses & PLAYERSTATUS_TALKING )
+		{
+			PLAYER_SetStatus( &players[i], PLAYERSTATUS_TALKING, false );
+		}
+
 		if ( VoIPChannels[i] == nullptr )
 			continue;
 
@@ -1411,6 +1422,9 @@ void VOIPController::RemoveVoIPChannel( const unsigned int player )
 	{
 		delete VoIPChannels[player];
 		VoIPChannels[player] = nullptr;
+
+		// [AK] Set their "talking" status to false.
+		PLAYER_SetStatus( &players[player], PLAYERSTATUS_TALKING, false );
 	}
 }
 
