@@ -5413,6 +5413,7 @@ enum EACSFunctions
 	ACSF_OpenMenu,
 	ACSF_CloseMenu,
 	ACSF_BanFromGame, // [Binary] Added BanFromGame to function set.
+	ACSF_GetPlayerStatus,
 
 	// ZDaemon
 	ACSF_GetTeamScore = 19620,	// (int team)
@@ -8423,6 +8424,11 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 				}
 			}
 			return 0;
+		}
+
+		case ACSF_GetPlayerStatus:
+		{
+			return PLAYER_IsValidPlayer( args[0] ) ? players[args[0]].statuses : 0;
 		}
 
 		case ACSF_GetActorFloorTexture:

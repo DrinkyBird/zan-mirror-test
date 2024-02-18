@@ -51,6 +51,7 @@
 +	- The authentication mechanism for non-map related lumps now allows Freedoom 0.12.x and 0.13.0/Doom clients to join Doom/Freedoom 0.12.x and 0.13.0 servers. [DrinkyBird]
 +	- Added ACS functions: "OpenMenu" and "CloseMenu", to open or close menus defined in MENUDEF. [Kaminsky]
 +	- Added the BanFromGame ACS function, allowing mods to give timed bans to players if sv_allowacsbanfunction is set to true. [Binary]
++	- Added ACS function: "GetPlayerStatus", which returns a bitfield of all the player's statuses (i.e. typing a chat message, talking on the microphone, in the console/menu, or lagging). [Kaminsky]
 -	- Fixed: clients didn't initialize a sector's friction properly in some cases due to a superfluous check that wasn't removed earlier. [Kaminsky]
 -	- Fixed: the server wouldn't initialize compatflags and compatflags2 properly if entered as command line parameters. [Kaminsky]
 -	- Fixed: serverinfo CVars entered on the command line were restored in reverse order. [Kaminsky]
