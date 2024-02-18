@@ -274,7 +274,9 @@ static void SURVIVAL_RefreshLives( void )
 	SURVIVAL_SetState( SURVS_INPROGRESS );
 
 	// Share keys so that resurrected dead spectators can get them.
-	SERVER_SyncSharedKeys( MAXPLAYERS, false );
+	// [RK] Except if we're supposed to lose keys.
+	if( !( dmflags & DF_COOP_LOSE_INVENTORY) && !( dmflags & DF_COOP_LOSE_KEYS ))
+		SERVER_SyncSharedKeys( MAXPLAYERS, false );
 }
 
 void SURVIVAL_RestartMission( void )

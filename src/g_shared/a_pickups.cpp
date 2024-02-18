@@ -34,6 +34,7 @@
 #include "cooperative.h"
 #include "p_acs.h"
 #include "a_keys.h"
+#include "d_dehacked.h"
 
 static FRandom pr_restore ("RestorePos");
 
@@ -1088,6 +1089,8 @@ static void PrintPickupMessage (const char *str)
 void AInventory::Touch (AActor *toucher)
 {
 	AInventory	*pInventory;
+	// [RK] Added for handling of DEHACKED keys
+	AInventory *realItem = NULL;
 
 	// [BC] If this item was a bot's goal item, and it's reaching it, let the bot know that.
 	if ( toucher->player && toucher->player->pSkullBot )
@@ -1212,6 +1215,13 @@ void AInventory::Touch (AActor *toucher)
 	}
 
 	// [RH] Execute an attached special (if any)
+	// [RK] If the pickup is a DEHACKED item that replaces a key we'll grab the
+	// info of the real key before the pickup is destroyed in DoPickupSpecial.
+	if ( GetClass()->IsDescendantOf( RUNTIME_CLASS( ADehackedPickup )) && GetClass()->ActorInfo->GetReplacee()->Class->IsDescendantOf( RUNTIME_CLASS( AKey )))
+		realItem = static_cast< ADehackedPickup* >( this )->GetRealPickup();
+	else
+		realItem = this;
+
 	DoPickupSpecial (toucher);
 
 	// [BC] If this item was spawned from an invasion spot, tell the spot that the item
@@ -1268,16 +1278,16 @@ void AInventory::Touch (AActor *toucher)
 	// we store the key as having been found even if shared keys is off. This
 	// way the server still remembers what keys were found and begins sharing
 	// them when sv_sharekeys is toggled on.
-	if (( NETWORK_GetState( ) == NETSTATE_SERVER ) &&
-		( IsKindOf( RUNTIME_CLASS( AKey ))) &&
-		( toucher->player != NULL ))
+	if (( NETWORK_GetState( ) == NETSTATE_SERVER ) && ( toucher->player != NULL ) && ( realItem != NULL ) &&
+		( realItem->IsKindOf( RUNTIME_CLASS( AKey )) ||
+		realItem->GetClass()->IsDescendantOf( RUNTIME_CLASS( APuzzleItem )))) // [RK] Hexen Puzzle item class
 	{
 		// [Dusk] Check if the key has not been picked up yet.
 		bool pickedup = false;
 
 		for ( unsigned int i = 0; i < g_keysFound.Size(); ++i )
 		{
-			if ( g_keysFound[i] == GetClass()->getActorNetworkIndex() )
+			if( g_keysFound[i] == realItem->GetClass()->getActorNetworkIndex() )
 			{
 				pickedup = true;
 				break;
@@ -1289,13 +1299,13 @@ void AInventory::Touch (AActor *toucher)
 			// [Dusk] Store this key as having been found. For some reason
 			// storing the raw PClass pointer crashes Zandronum when sharing
 			// the keys later on so we store the actor network index instead.
-			g_keysFound.Push( GetClass()->getActorNetworkIndex() );
+			g_keysFound.Push( realItem->GetClass()->getActorNetworkIndex() );
 
 			if ( zadmflags & ZADF_SHARE_KEYS )
 			{
 				// [Dusk] Announcement message
 				SERVER_Printf( TEXTCOLOR_GREEN "%s" TEXTCOLOR_NORMAL " has found the " TEXTCOLOR_GOLD "%s!\n",
-					toucher->player->userinfo.GetName(), GetTag() );
+					toucher->player->userinfo.GetName(), realItem->GetTag() );
 
 				// [Dusk] Audio cue - skip the player picking the key because he
 				// hears the pickup sound from the original key. The little *bloop*

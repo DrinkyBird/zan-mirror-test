@@ -7321,6 +7321,7 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 					// [BB] Revive the player.
 					players[ulPlayer].bSpectating = false;
 					players[ulPlayer].bDeadSpectator = false;
+					players[ulPlayer].bDeadSpectatorKeySync = true; // [RK] Allow to sync the keys.
 					if ( GAMEMODE_GetCurrentFlags() & GMF_USEMAXLIVES )
 						PLAYER_SetLivesLeft ( &players[ulPlayer], GAMEMODE_GetMaxLives() - 1 );
 					players[ulPlayer].playerstate = ( zadmflags & ZADF_DEAD_PLAYERS_CAN_KEEP_INVENTORY ) ? PST_REBORN : PST_REBORNNOINVENTORY;

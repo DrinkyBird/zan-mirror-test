@@ -1309,7 +1309,9 @@ void G_DoLoadLevel (int position, bool autosave)
 		teamplay = false;
 
 	// [Dusk] Clear keys found
-	g_keysFound.Clear();
+	// [RK] Since PuzzleItems are tracked don't do this for hubs.
+	if( !( level.clusterflags & CLUSTER_HUB ) || autosave == false ) // Resets with map command
+		g_keysFound.Clear();
 
 	// [BC] In server mode, display the level name slightly differently.
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )

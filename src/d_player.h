@@ -725,6 +725,9 @@ public:
 	// This player is currently spectating after dying in LMS or survival co-op.
 	bool		bDeadSpectator;
 
+	// [RK] This is set when a dead spectator is revived through SetDeadSpectator.
+	bool		bDeadSpectatorKeySync;
+
 	// [BB] Number of times the player may still respawn in LMS or survival co-op.
 	ULONG		ulLivesLeft;
 
