@@ -106,9 +106,11 @@ bool AArtiPoisonBag3::Use (bool pickup)
 {
 	AActor *mo;
 
-	// [RK] Only the server handles this unlless inventory item is client-sided.
-	if ( NETWORK_InClientModeAndActorNotClientHandled (this))
-		return false;
+	// [RK] Only the server handles the spawning and client-side handling will be ignored.
+	// We'll return true for the client since the server handles the inventory use amount.
+	// Plus we still want to play the inventory use sound for the client as well.
+	if ( NETWORK_InClientMode() )
+		return true;
 
 	mo = Spawn("ThrowingBomb", Owner->x, Owner->y, 
 		Owner->z-Owner->floorclip+35*FRACUNIT + (Owner->player? Owner->player->crouchoffset : 0), ALLOW_REPLACE);
