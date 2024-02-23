@@ -58,3 +58,10 @@ Command WeaponRailgun
 		Float drift
 	EndIf
 EndCommand
+
+Command SetWeaponZoomFactor
+	ExtendedCommand
+	Player player with MoTest
+	Float zoom
+	Byte flags
+EndCommand

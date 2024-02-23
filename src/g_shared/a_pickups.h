@@ -89,6 +89,7 @@ void P_PlaybackKeyConfWeapons(FWeaponSlots *slots);
 void Net_WriteWeapon(const PClass *type);
 const PClass *Net_ReadWeapon(BYTE **stream);
 
+bool P_SetPlayerWeaponZoomFactor(player_t *player, float zoom, const int flags); // [AK]
 void P_SetupWeapons_ntohton();
 void P_WriteDemoWeaponsChunk(BYTE **demo);
 void P_ReadDemoWeaponsChunk(BYTE **demo);

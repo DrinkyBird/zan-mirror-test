@@ -1989,6 +1989,38 @@ const PClass *Net_ReadWeapon(BYTE **stream)
 
 //===========================================================================
 //
+// [AK] P_SetPlayerWeaponZoomFactor
+//
+// A helper function originally taken from A_ZoomFactor that is also used by
+// the ACS function SetPlayerWeaponZoomFactor without any duplicate code.
+//
+// Returns true if the zoom factor was changed and false otherwise.
+//
+//===========================================================================
+
+bool P_SetPlayerWeaponZoomFactor(player_t *player, float zoom, const int flags)
+{
+	if (player != NULL && player->ReadyWeapon != NULL)
+	{
+		zoom = 1 / clamp(zoom, 0.1f, 50.f);
+		if (flags & 1)
+		{ // Make the zoom instant.
+			player->FOV = player->DesiredFOV * zoom;
+		}
+		if (flags & 2)
+		{ // Disable pitch/yaw scaling.
+			zoom = -zoom;
+		}
+		player->ReadyWeapon->FOVScale = zoom;
+
+		return true;
+	}
+
+	return false;
+}
+
+//===========================================================================
+//
 // A_ZoomFactor
 //
 //===========================================================================
@@ -1999,19 +2031,8 @@ DEFINE_ACTION_FUNCTION_PARAMS(AWeapon, A_ZoomFactor)
 	ACTION_PARAM_FLOAT(zoom, 0);
 	ACTION_PARAM_INT(flags, 1);
 
-	if (self->player != NULL && self->player->ReadyWeapon != NULL)
-	{
-		zoom = 1 / clamp(zoom, 0.1f, 50.f);
-		if (flags & 1)
-		{ // Make the zoom instant.
-			self->player->FOV = self->player->DesiredFOV * zoom;
-		}
-		if (flags & 2)
-		{ // Disable pitch/yaw scaling.
-			zoom = -zoom;
-		}
-		self->player->ReadyWeapon->FOVScale = zoom;
-	}
+	// [AK] Moved the code into a helper function.
+	P_SetPlayerWeaponZoomFactor(self->player, zoom, flags);
 }
 
 //===========================================================================

@@ -5414,6 +5414,7 @@ enum EACSFunctions
 	ACSF_CloseMenu,
 	ACSF_BanFromGame, // [Binary] Added BanFromGame to function set.
 	ACSF_GetPlayerStatus,
+	ACSF_SetPlayerWeaponZoomFactor,
 
 	// ZDaemon
 	ACSF_GetTeamScore = 19620,	// (int team)
@@ -8430,6 +8431,28 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 		case ACSF_GetPlayerStatus:
 		{
 			return PLAYER_IsValidPlayer( args[0] ) ? players[args[0]].statuses : 0;
+		}
+
+		case ACSF_SetPlayerWeaponZoomFactor:
+		{
+			const unsigned int playerIndex = args[0];
+
+			// [geNia] No adjustment while dead.
+			if (( PLAYER_IsValidPlayer( playerIndex )) && ( players[playerIndex].playerstate != PST_DEAD ))
+			{
+				float zoom = FIXED2FLOAT( args[1] );
+				const int flags = argCount > 2 ? args[2] : 0;
+
+				if ( P_SetPlayerWeaponZoomFactor( &players[playerIndex], zoom, flags ))
+				{
+					if ( NETWORK_GetState( ) == NETSTATE_SERVER )
+						SERVERCOMMANDS_SetWeaponZoomFactor( playerIndex, zoom, flags );
+
+					return 1;
+				}
+			}
+
+			return 0;
 		}
 
 		case ACSF_GetActorFloorTexture:

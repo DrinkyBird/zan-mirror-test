@@ -2849,6 +2849,20 @@ void SERVERCOMMANDS_WeaponRailgun( AActor *source, const FVector3 &start, const 
 }
 
 //*****************************************************************************
+//
+void SERVERCOMMANDS_SetWeaponZoomFactor( const unsigned int player, const float zoom, const int zoomFlags, const unsigned int playerExtra, ServerCommandFlags flags )
+{
+	if (( PLAYER_IsValidPlayer( player ) == false ) || ( players[player].ReadyWeapon == nullptr ))
+		return;
+
+	ServerCommands::SetWeaponZoomFactor command;
+	command.SetPlayer( &players[player] );
+	command.SetZoom( zoom );
+	command.SetFlags( zoomFlags );
+	command.sendCommandToClients( playerExtra, flags );
+}
+
+//*****************************************************************************
 //*****************************************************************************
 //
 void SERVERCOMMANDS_SetSectorFloorPlane( ULONG ulSector, ULONG ulPlayerExtra, ServerCommandFlags flags )

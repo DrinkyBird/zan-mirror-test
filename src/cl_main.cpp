@@ -6457,6 +6457,13 @@ void ServerCommands::WeaponRailgun::Execute()
 
 //*****************************************************************************
 //
+void ServerCommands::SetWeaponZoomFactor::Execute()
+{
+	P_SetPlayerWeaponZoomFactor( player, zoom, flags );
+}
+
+//*****************************************************************************
+//
 void ServerCommands::SetSectorFloorPlane::Execute()
 {
 	// Calculate the change in floor height.
