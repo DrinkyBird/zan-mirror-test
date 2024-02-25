@@ -4426,6 +4426,14 @@ void ServerCommands::SetPlayerLivesLeft::Execute()
 
 //*****************************************************************************
 //
+void ServerCommands::SetPlayerACSSkin::Execute()
+{
+	player->ACSSkin = skinName;
+	player->ACSSkinOverridesWeaponSkin = overrideWeaponSkin;
+}
+
+//*****************************************************************************
+//
 void ServerCommands::UpdatePlayerPing::Execute()
 {
 	player->ulPing = ping;

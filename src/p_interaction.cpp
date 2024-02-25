@@ -3201,17 +3201,35 @@ void PLAYER_ClearWeapon( player_t *pPlayer )
 
 //*****************************************************************************
 //
-int PLAYER_GetWeaponSkin( player_t *player )
+int PLAYER_GetOverrideSkin( player_t *player )
 {
 	int skin = -1;
 
-	if (( player != nullptr ) && ( player->ReadyWeapon != nullptr ) && ( player->ReadyWeapon->PreferredSkin != NAME_None ))
+	if ( player != nullptr )
 	{
-		int weaponSkin = R_FindSkin( player->ReadyWeapon->PreferredSkin, player->CurrentPlayerClass );
+		int overrideSkin = player->CurrentPlayerClass;
 
-		// [AK] Check if the weapon's PreferredSkin actually exists.
-		if ( weaponSkin != player->CurrentPlayerClass )
-			skin = weaponSkin;
+		// [AK] Check if the player's skin was overridden from ACS.
+		if ( player->ACSSkin != NAME_None )
+			overrideSkin = R_FindSkin( player->ACSSkin, player->CurrentPlayerClass );
+
+		// [AK] Next, check if the player's current weapon has its own preferred
+		// skin. Only apply this skin if the skin from ACS doesn't override it.
+		if (( player->ReadyWeapon != nullptr ) && ( player->ReadyWeapon->PreferredSkin != NAME_None ))
+		{
+			if (( overrideSkin == player->CurrentPlayerClass ) || ( player->ACSSkinOverridesWeaponSkin == false ))
+			{
+				int weaponSkin = R_FindSkin( player->ReadyWeapon->PreferredSkin, player->CurrentPlayerClass );
+
+				// [AK] Check if the weapon's PreferredSkin actually exists.
+				if ( weaponSkin != player->CurrentPlayerClass )
+					overrideSkin = weaponSkin;
+			}
+		}
+
+		// [AK] Make sure that the overridden skin actually exists.
+		if ( overrideSkin != player->CurrentPlayerClass )
+			skin = overrideSkin;
 	}
 
 	return skin;
@@ -3219,39 +3237,55 @@ int PLAYER_GetWeaponSkin( player_t *player )
 
 //*****************************************************************************
 //
-void PLAYER_ApplySkinScaleToBody( player_t *pPlayer, AActor *pBody, AWeapon *pWeapon )
+void PLAYER_ApplySkinScaleToBody( player_t *player, AActor *body, AWeapon *weapon )
 {
-	bool bUsingWeaponSkin = false;
+	bool usingOverrideSkin = false;
 	int skinIdx = 0;
 
-	// [AK] Check if the weapon's PreferredSkin actually exists.
-	if (( pWeapon ) && ( pWeapon->PreferredSkin != NAME_None ))
+	// [AK] Check if the player's skin was overridden from ACS and actually exists.
+	if ( player->ACSSkin != NAME_None )
 	{
-		const int weaponSkin = R_FindSkin( pWeapon->PreferredSkin, pPlayer->CurrentPlayerClass );
+		const int acsSkin = R_FindSkin( player->ACSSkin, player->CurrentPlayerClass );
 
-		if ( weaponSkin != pPlayer->CurrentPlayerClass )
+		if ( acsSkin != player->CurrentPlayerClass )
 		{
-			skinIdx = weaponSkin;
-			bUsingWeaponSkin = true;
+			skinIdx = acsSkin;
+			usingOverrideSkin = true;
 		}
 	}
 
-	// [AK] If the player isn't using a PreferredSkin, then use their personal skin instead.
-	if ( bUsingWeaponSkin == false )
-		skinIdx = pPlayer->userinfo.GetSkin( );
+	// [AK] Next, check if the weapon's PreferredSkin actually exists. Only apply
+	// this skin if the skin from ACS doesn't override it.
+	if (( weapon ) && ( weapon->PreferredSkin != NAME_None ))
+	{
+		if (( usingOverrideSkin == false ) || ( player->ACSSkinOverridesWeaponSkin == false ))
+		{
+			const int weaponSkin = R_FindSkin( weapon->PreferredSkin, player->CurrentPlayerClass );
 
-	// [AK] PreferredSkin overrides NOSKIN.
-	if (( bUsingWeaponSkin ) || ( skinIdx != 0 && ( pBody->flags4 & MF4_NOSKIN ) == false ))
+			if ( weaponSkin != player->CurrentPlayerClass )
+			{
+				skinIdx = weaponSkin;
+				usingOverrideSkin = true;
+			}
+		}
+	}
+
+	// [AK] If the player isn't using an overridden skin, use their personal skin instead.
+	if ( usingOverrideSkin == false )
+		skinIdx = player->userinfo.GetSkin( );
+
+	// [AK] An overridden skin also overrides NOSKIN.
+	if (( usingOverrideSkin ) || ( skinIdx != 0 && ( body->flags4 & MF4_NOSKIN ) == false ))
 	{
 		const FPlayerSkin &skin = skins[skinIdx];
 
 		// [AK] Don't apply a skin's scale to the body if it's not supposed to be visible.
-		if ( skin.sprite == pBody->sprite )
+		if ( skin.sprite == body->sprite )
 		{
-			const AActor *const defaultActor = pBody->GetDefault( );
+			const AActor *const defaultActor = body->GetDefault( );
 
-			pBody->scaleX = Scale( pBody->scaleX, skin.ScaleX, defaultActor->scaleX );
-			pBody->scaleY = Scale( pBody->scaleY, skin.ScaleY, defaultActor->scaleY );
+			body->scaleX = Scale( body->scaleX, skin.ScaleX, defaultActor->scaleX );
+			body->scaleY = Scale( body->scaleY, skin.ScaleY, defaultActor->scaleY );
 		}
 	}
 }

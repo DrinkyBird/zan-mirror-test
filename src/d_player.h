@@ -797,6 +797,12 @@ public:
 	// [BL] Should the player be able to use weapons?
 	bool		bUnarmed;
 
+	// [geNia] Force override the player skin. This can only be set from ACS.
+	FNameNoInit	ACSSkin;
+
+	// [geNia] Should the skin set from ACS also override a weapon's preferred skin?
+	bool		ACSSkinOverridesWeaponSkin;
+
 	// [Spleen] Store old information about the player for unlagged support
 	// [AK] Converted the position members into TVector3 objects.
 	TVector3<fixed_t>	unlaggedPos[UNLAGGEDTICS];
@@ -873,8 +879,8 @@ LONG	PLAYER_GetRailgunColor( player_t *pPlayer );
 void	PLAYER_AwardDamagePointsForAllPlayers( void );
 void	PLAYER_SetWeapon( player_t *pPlayer, AWeapon *pWeapon, bool bClearWeaponForClientOnServer = false );
 void	PLAYER_ClearWeapon( player_t *pPlayer );
-int		PLAYER_GetWeaponSkin( player_t *player );
-void	PLAYER_ApplySkinScaleToBody( player_t *pPlayer, AActor *pActor, AWeapon *pWeapon );
+int		PLAYER_GetOverrideSkin( player_t *player );
+void	PLAYER_ApplySkinScaleToBody( player_t *player, AActor *body, AWeapon *weapon );
 void	PLAYER_SetLivesLeft( player_t *pPlayer, ULONG ulLivesLeft );
 bool	PLAYER_IsAliveOrCanRespawn( player_t *pPlayer );
 void	PLAYER_RemoveFriends( const ULONG ulPlayer );

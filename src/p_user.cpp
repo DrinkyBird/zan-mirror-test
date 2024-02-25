@@ -349,7 +349,8 @@ player_t::player_t()
   OldPendingWeapon( 0 ),
   bSpawnTelefragged( 0 ),
   ulTime( 0 ),
-  bUnarmed( false )
+  bUnarmed( false ),
+  ACSSkinOverridesWeaponSkin( false )
 {
 	memset (&cmd, 0, sizeof(cmd));
 	// [BB] Check if this is still necessary.
@@ -514,6 +515,8 @@ player_t &player_t::operator=(const player_t &p)
 	bSpawnTelefragged = p.bSpawnTelefragged;
 	ulTime = p.ulTime;
 	bUnarmed = p.bUnarmed;
+	ACSSkin = p.ACSSkin;
+	ACSSkinOverridesWeaponSkin = p.ACSSkinOverridesWeaponSkin;
 
 	// [AK] Copy the old positions for the unlagged.
 	for ( unsigned int i = 0; i < UNLAGGEDTICS; i++ )
@@ -2510,20 +2513,20 @@ void P_CheckPlayerSprite(AActor *actor, int &spritenum, fixed_t &scalex, fixed_t
 		return;
 
 	// [BC] Because of cl_skins, we might not necessarily use the player's desired skin.
-	const int weaponSkin = PLAYER_GetWeaponSkin( player ); // [AK]
+	const int overrideSkin = PLAYER_GetOverrideSkin( player ); // [AK]
 	int skin = player->userinfo.GetSkin();
 
 	// [BB] MF4_NOSKIN should force the player to have the base skin too, the same is true for morphed players.
 	if (( cl_skins <= 0 ) || ((( cl_skins >= 2 ) && ( skins[player->userinfo.GetSkin()].bCheat ))) || (actor->flags4 & MF4_NOSKIN) || player->morphTics )
 		skin = R_FindSkin( "base", player->CurrentPlayerClass );
 
-	// [BB] If the weapon has a PreferredSkin defined, make the player use it here.
-	if (( weaponSkin != -1 ) && ( weaponSkin != skin ))
+	// [BB/AK] If the skin was overridden from ACS, or the weapon has a PreferredSkin defined, make the player use it here.
+	if (( overrideSkin != -1 ) && ( overrideSkin != skin ))
 	{
-		skin = weaponSkin;
+		skin = overrideSkin;
 		spritenum = skins[skin].sprite;
 	}
-	// [BB] No longer using a weapon with a preferred skin, reset the sprite.
+	// [BB/AK] No longer using an overridden skin, reset the sprite.
 	else if ( ( spritenum != skins[skin].sprite ) && ( spritenum != skins[skin].crouchsprite )
 			&& ( spritenum != actor->state->sprite ) && (actor->state->sprite != SPR_NOCHANGE) && 
 			(actor->state->sprite != SPR_FIXED))
@@ -2531,8 +2534,8 @@ void P_CheckPlayerSprite(AActor *actor, int &spritenum, fixed_t &scalex, fixed_t
 		spritenum = skins[skin].sprite;
 	}
 
-	// [BB] PreferredSkin overrides NOSKIN.
-	if (skin != 0 && ( !(player->mo->flags4 & MF4_NOSKIN) || ( weaponSkin != -1 ) ) )
+	// [BB/AK] An overridden skin also overrides NOSKIN.
+	if (skin != 0 && ( !(player->mo->flags4 & MF4_NOSKIN) || ( overrideSkin != -1 ) ) )
 	{
 		// Convert from default scale to skin scale.
 		fixed_t defscaleY = actor->GetDefault()->scaleY;
@@ -2548,8 +2551,8 @@ void P_CheckPlayerSprite(AActor *actor, int &spritenum, fixed_t &scalex, fixed_t
 		{
 			crouchspriteno = player->mo->crouchsprite;
 		}
-		// [BB] PreferredSkin overrides NOSKIN.
-		else if ( ( !(actor->flags4 & MF4_NOSKIN) || ( weaponSkin != -1 ) ) &&
+		// [BB/AK] An overridden skin also overrides NOSKIN.
+		else if ( ( !(actor->flags4 & MF4_NOSKIN) || ( overrideSkin != -1 ) ) &&
 				(spritenum == skins[skin].sprite ||
 				 spritenum == skins[skin].crouchsprite))
 		{
@@ -4200,6 +4203,8 @@ void player_t::Serialize (FArchive &arc)
 		<< RailgunShots
 		<< MaxHealthBonus
 		<< cheats2
+		<< ACSSkin
+		<< ACSSkinOverridesWeaponSkin
 		// [BB] Skulltag additions - end
 		;
 	if (SaveVersion < 3427)

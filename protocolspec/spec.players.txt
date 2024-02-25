@@ -204,6 +204,13 @@ Command SetPlayerLivesLeft
 	Byte livesLeft
 EndCommand
 
+Command SetPlayerACSSkin
+	ExtendedCommand
+	Player player
+	Name skinName
+	bool overrideWeaponSkin
+EndCommand
+
 Command UpdatePlayerPing
 	UnreliableCommand
 	Player player

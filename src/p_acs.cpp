@@ -5415,6 +5415,7 @@ enum EACSFunctions
 	ACSF_BanFromGame, // [Binary] Added BanFromGame to function set.
 	ACSF_GetPlayerStatus,
 	ACSF_SetPlayerWeaponZoomFactor,
+	ACSF_SetPlayerSkin,
 
 	// ZDaemon
 	ACSF_GetTeamScore = 19620,	// (int team)
@@ -8450,6 +8451,32 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 
 					return 1;
 				}
+			}
+
+			return 0;
+		}
+
+		case ACSF_SetPlayerSkin:
+		{
+			const unsigned int playerIndex = args[0];
+
+			if ( PLAYER_IsValidPlayer( playerIndex ))
+			{
+				const char *skinName = FBehavior::StaticLookupString( args[1] );
+				const bool overrideWeaponPreferredSkin = argCount > 2 ? !!args[2] : false;
+
+				// [AK] If an empty string is used, then it should remove the skin.
+				if ( strlen( skinName ) > 0 )
+					players[playerIndex].ACSSkin = skinName;
+				else
+					players[playerIndex].ACSSkin = NAME_None;
+
+				players[playerIndex].ACSSkinOverridesWeaponSkin = overrideWeaponPreferredSkin;
+
+				if ( NETWORK_GetState( ) == NETSTATE_SERVER )
+					SERVERCOMMANDS_SetPlayerACSSkin( playerIndex );
+
+				return 1;
 			}
 
 			return 0;

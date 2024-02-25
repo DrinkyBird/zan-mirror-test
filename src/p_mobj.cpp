@@ -549,10 +549,10 @@ bool AActor::SetState (FState *newstate, bool nofunction)
 			}
 			if (newsprite != SPR_NOCHANGE)
 			{ // okay to change sprite
-				// [AK] Check if the player is using a weapon with its own preferred skin, which overrides NOSKIN.
-				const int weaponSkin = PLAYER_GetWeaponSkin( this->player );
+				// [AK] Check if the player is using a skin that overrides NOSKIN.
+				const int overrideSkin = PLAYER_GetOverrideSkin( this->player );
 				// [AK] Don't change to the skin's sprite if the new sprite is TNT1A0.
-				if ((!(flags4 & MF4_NOSKIN) || weaponSkin != -1) && newsprite == SpawnState->sprite && newsprite != SPR_TNT1)
+				if ((!(flags4 & MF4_NOSKIN) || overrideSkin != -1) && newsprite == SpawnState->sprite && newsprite != SPR_TNT1)
 				{ // [RH] If the new sprite is the same as the original sprite, and
 				// this actor is attached to a player, use the player's skin's
 				// sprite. If a player is not attached, do not change the sprite
@@ -562,9 +562,9 @@ bool AActor::SetState (FState *newstate, bool nofunction)
 				// for Dehacked, I would move sprite changing out of the states
 				// altogether, since actors rarely change their sprites after
 				// spawning.
-					if ( weaponSkin != -1 ) // [AK] Show a weapon's preferred skin first if valid.
+					if ( overrideSkin != -1 ) // [AK] Show the overridden skin first if valid.
 					{
-						sprite = skins[weaponSkin].sprite;
+						sprite = skins[overrideSkin].sprite;
 					}
 					else if (player != NULL && ( skins.Size() > static_cast<unsigned int> ( player->userinfo.GetSkin() ) ) ) // [BB] Adapted the skins check
 					{

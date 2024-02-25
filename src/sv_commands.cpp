@@ -650,6 +650,19 @@ void SERVERCOMMANDS_SetPlayerAccountName( ULONG ulPlayer, ULONG ulPlayerExtra, S
 }
 
 //*****************************************************************************
+void SERVERCOMMANDS_SetPlayerACSSkin( const unsigned int player, const unsigned int playerExtra, ServerCommandFlags flags )
+{
+	if ( PLAYER_IsValidPlayer( player ) == false )
+		return;
+
+	ServerCommands::SetPlayerACSSkin command;
+	command.SetPlayer( &players[player] );
+	command.SetSkinName( players[player].ACSSkin );
+	command.SetOverrideWeaponSkin( players[player].ACSSkinOverridesWeaponSkin );
+	command.sendCommandToClients( playerExtra, flags );
+}
+
+//*****************************************************************************
 //
 void SERVERCOMMANDS_SetPlayerFrags( ULONG ulPlayer, ULONG ulPlayerExtra, ServerCommandFlags flags )
 {

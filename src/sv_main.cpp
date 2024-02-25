@@ -2557,6 +2557,9 @@ void SERVER_SendFullUpdate( ULONG ulClient )
 		// [BB] Clients need to know the active weapons of other players, so send it.
 		SERVERCOMMANDS_WeaponChange( ulIdx, ulClient, SVCF_ONLYTHISCLIENT );
 
+		// [geNia] Clients need to know player's current skin in ACS.
+		SERVERCOMMANDS_SetPlayerACSSkin( ulIdx, ulClient, SVCF_ONLYTHISCLIENT );
+
 		// [BB] It's possible that the MaxHealth property was changed dynamically with ACS, so send it.
 		SERVERCOMMANDS_SetPlayerMaxHealth( ulIdx, ulClient, SVCF_ONLYTHISCLIENT );
 
