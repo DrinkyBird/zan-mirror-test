@@ -3201,20 +3201,20 @@ void PLAYER_ClearWeapon( player_t *pPlayer )
 
 //*****************************************************************************
 //
-bool PLAYER_IsUsingWeaponSkin( AActor *pActor )
+int PLAYER_GetWeaponSkin( player_t *player )
 {
-	// [AK] Only players can use weapons.
-	if (( pActor ) && ( pActor->player ) && ( pActor->player->ReadyWeapon ))
+	int skin = -1;
+
+	if (( player != nullptr ) && ( player->ReadyWeapon != nullptr ) && ( player->ReadyWeapon->PreferredSkin != NAME_None ))
 	{
-		if ( pActor->player->ReadyWeapon->PreferredSkin != NAME_None )
-		{
-			// [AK] Check if the weapon's PreferredSkin actually exists.
-			const int skin = R_FindSkin( pActor->player->ReadyWeapon->PreferredSkin, pActor->player->CurrentPlayerClass );
-			return ( skin != pActor->player->CurrentPlayerClass );
-		}
+		int weaponSkin = R_FindSkin( player->ReadyWeapon->PreferredSkin, player->CurrentPlayerClass );
+
+		// [AK] Check if the weapon's PreferredSkin actually exists.
+		if ( weaponSkin != player->CurrentPlayerClass )
+			skin = weaponSkin;
 	}
 
-	return ( false );
+	return skin;
 }
 
 //*****************************************************************************
