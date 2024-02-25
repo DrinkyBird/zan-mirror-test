@@ -5416,6 +5416,7 @@ enum EACSFunctions
 	ACSF_GetPlayerStatus,
 	ACSF_SetPlayerWeaponZoomFactor,
 	ACSF_SetPlayerSkin,
+	ACSF_GetPlayerSkin,
 
 	// ZDaemon
 	ACSF_GetTeamScore = 19620,	// (int team)
@@ -8480,6 +8481,75 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 			}
 
 			return 0;
+		}
+
+		case ACSF_GetPlayerSkin:
+		{
+			enum
+			{
+				GETPLAYERSKIN_USERINFO,
+				GETPLAYERSKIN_WEAPON,
+				GETPLAYERSKIN_ACS,
+				GETPLAYERSKIN_VISIBLE,
+			};
+
+			if ( PLAYER_IsValidPlayer( args[0] ))
+			{
+				player_t *const player = &players[args[0]];
+				const int type = args[1];
+
+				// [AK] By default, the skin's index is set to their class index (i.e. "Base").
+				int skinIndex = player->CurrentPlayerClass;
+
+				// [AK] Get the player's personal skin.
+				if ( type == GETPLAYERSKIN_USERINFO )
+				{
+					skinIndex = player->userinfo.GetSkin( );
+				}
+				// [AK] ...or their weapon's preferred skin or the skin overridden from ACS.
+				else if (( type == GETPLAYERSKIN_WEAPON ) || ( type == GETPLAYERSKIN_ACS ))
+				{
+					const char *skinName = nullptr;
+
+					if ( type == GETPLAYERSKIN_WEAPON )
+					{
+						if ( player->ReadyWeapon )
+							skinName = player->ReadyWeapon->PreferredSkin.GetChars( );
+					}
+					else
+					{
+						skinName = player->ACSSkin.GetChars( );
+					}
+
+					if (( skinName != nullptr ) && ( strlen( skinName ) > 0 ))
+						skinIndex = R_FindSkin( skinName, player->CurrentPlayerClass );
+
+					// [AK] If the skin doesn't exist, return an empty string.
+					if ( skinIndex == player->CurrentPlayerClass )
+						return GlobalACSStrings.AddString( "" );
+				}
+				// [AK] ...or if we want to know the skin that's visible using without any
+				// guess and check, then use their overridden skin (i.e. weapon preferred skin
+				// or from ACS) first if available, and their personal skin last.
+				else if ( type == GETPLAYERSKIN_VISIBLE )
+				{
+					const int overrideSkin = PLAYER_GetOverrideSkin( player );
+
+					if ( overrideSkin != -1 )
+						skinIndex = overrideSkin;
+					else
+						skinIndex = player->userinfo.GetSkin( );
+				}
+
+				// [AK] Return the name of their skin if they're using one, or "Base" if not.
+				if ( skinIndex != player->CurrentPlayerClass )
+					return GlobalACSStrings.AddString( skins[skinIndex].name );
+				else
+					return GlobalACSStrings.AddString( "Base" );
+			}
+
+			// [AK] Return an empty string for invalid players instead.
+			return GlobalACSStrings.AddString( "" );
 		}
 
 		case ACSF_GetActorFloorTexture:
