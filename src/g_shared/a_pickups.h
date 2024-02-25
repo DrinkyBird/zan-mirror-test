@@ -281,6 +281,11 @@ public:
 	fixed_t BobSpeed;						// [XA] Bobbing speed. Defines how quickly a weapon bobs.
 	fixed_t BobRangeX, BobRangeY;			// [XA] Bobbing range. Defines how far a weapon bobs in either direction.
 
+	fixed_t SwaySpeed;						// [JM] Sway Speed
+	int SwayStyle;							// [JM] Sway Style
+	fixed_t ViewPitchOffset;				// [JM] View Pitch Offset
+	int ViewPitchStyle;						// [JM] View Pitch Style
+
 	// [BB] When a player uses this weapon and a skin with name equal to the PreferredSkin value exists for
 	// his/her player class, the player is forced to use this skin, overriding any personal skin settings.
 	FNameNoInit PreferredSkin;

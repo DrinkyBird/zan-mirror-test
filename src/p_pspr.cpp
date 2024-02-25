@@ -81,6 +81,8 @@ CUSTOM_CVAR( Int, sv_fastweapons, 0, CVAR_SERVERINFO | CVAR_GAMEPLAYSETTING )
 // [AK] CVars that control how the weapon bobs, sways, or offsets based on the player's pitch. 
 CVAR( Bool, cl_alwaysbob, false, CVAR_ARCHIVE )
 CVAR( Bool, cl_usecustombob, false, CVAR_ARCHIVE )
+CVAR( Bool, cl_usecustomsway, false, CVAR_ARCHIVE )
+CVAR( Bool, cl_usecustompitch, false, CVAR_ARCHIVE )
 CVAR( Float, cl_bobspeed, 1.0f, CVAR_ARCHIVE )
 CVAR( Float, cl_swayspeed, 0.0f, CVAR_ARCHIVE )
 CVAR( Float, cl_viewpitchoffset, 0.0f, CVAR_ARCHIVE )
@@ -108,8 +110,8 @@ CUSTOM_CVAR( Int, cl_viewpitchstyle, WEAPON_PITCH_FULL, CVAR_ARCHIVE )
 {
 	if (self < WEAPON_PITCH_FULL)
 		self = WEAPON_PITCH_FULL;
-	else if (self > WEAPON_PITCH_LOWERANDUPPER)
-		self = WEAPON_PITCH_LOWERANDUPPER;
+	else if (self > WEAPON_PITCH_CENTERED)
+		self = WEAPON_PITCH_CENTERED;
 }
 
 // PRIVATE DATA DEFINITIONS ------------------------------------------------
@@ -583,15 +585,18 @@ void P_BobWeapon (player_t *player, pspdef_t *psp, fixed_t *x, fixed_t *y)
 		*y = 0;
 	}
 
+	int swaystyle = cl_usecustomsway ? cl_swaystyle : weapon->SwayStyle;
+	float swayspeed = cl_usecustomsway ? cl_swayspeed : FIXED2FLOAT(weapon->SwaySpeed);
+
 	// [AK] Sway the weapon if the multiplier is a non-zero value.
-	if (cl_swayspeed != 0.0f)
+	if (swayspeed != 0.0f)
 	{
 		// [AK] Don't reposition the sprite while the ticker is paused or while the server is lagging.
 		if ((paused == false) && (P_CheckTickerPaused() == false) && (CLIENT_GetServerLagging() == false))
 		{
 			fixed_t nswaypos[2];
-			nswaypos[0] = FLOAT2FIXED(FIXED2FLOAT(player->mo->AngleDelta) * cl_swayspeed / 256.0f);
-			nswaypos[1] = FLOAT2FIXED(FIXED2FLOAT(player->mo->PitchDelta) * cl_swayspeed / 256.0f);
+			nswaypos[0] = FLOAT2FIXED(FIXED2FLOAT(player->mo->AngleDelta) * swayspeed / 256.0f);
+			nswaypos[1] = FLOAT2FIXED(FIXED2FLOAT(player->mo->PitchDelta) * swayspeed / 256.0f);
 
 			for (int i = 0; i <= 1; i++)
 			{
@@ -609,7 +614,7 @@ void P_BobWeapon (player_t *player, pspdef_t *psp, fixed_t *x, fixed_t *y)
 
 		*x += swaypos[0];
 
-		switch (cl_swaystyle)
+		switch (swaystyle)
 		{
 		case WEAPON_SWAY_NORMAL:
 			*y += swaypos[1];
@@ -625,32 +630,39 @@ void P_BobWeapon (player_t *player, pspdef_t *psp, fixed_t *x, fixed_t *y)
 		}
 	}
 
+	int viewpitchstyle = cl_usecustompitch ? cl_viewpitchstyle : weapon->ViewPitchStyle;
+	float viewpitchoffset = cl_usecustompitch ? cl_viewpitchoffset : FIXED2FLOAT(weapon->ViewPitchOffset);
+
 	// [AK] Offset the weapon based on the player's pitch if the multiplier is a non-zero value.
-	if (cl_viewpitchoffset != 0.0f)
+	if (viewpitchoffset != 0.0f)
 	{
 		fixed_t halfmin = FIXED_MIN >> 1;
 		fixed_t value;
 
-		switch (cl_viewpitchstyle)
+		switch (viewpitchstyle)
 		{
 		case WEAPON_PITCH_FULL:
 			value = FixedDiv(halfmin + player->mo->pitch, FIXED_MIN);
 			break;
 
-		case WEAPON_PITCH_LOWERONLY:
+		case WEAPON_PITCH_UPONLY:
 			value = FixedDiv(MIN<fixed_t>(0, player->mo->pitch), halfmin);
 			break;
 
-		case WEAPON_PITCH_UPPERONLY:
+		case WEAPON_PITCH_DOWNONLY:
 			value = -FixedDiv(MAX<fixed_t>(0, player->mo->pitch), halfmin);
 			break;
 
-		case WEAPON_PITCH_LOWERANDUPPER:
+		case WEAPON_PITCH_DOWNANDUP:
 			value = -FixedDiv(abs(player->mo->pitch), halfmin);
+			break;
+
+		case WEAPON_PITCH_CENTERED: // [JM] Dark Forces style, where facing forward is no offset.
+			value = -FixedDiv(player->mo->pitch, halfmin);
 			break;
 		}
 
-		*y -= FixedMul(value, FLOAT2FIXED(cl_viewpitchoffset)) + MIN<fixed_t>(0, FLOAT2FIXED(cl_viewpitchoffset));
+		*y -= FixedMul(value, FLOAT2FIXED(viewpitchoffset)) + MIN<fixed_t>(0, FLOAT2FIXED(viewpitchoffset));
 	}
 }
 

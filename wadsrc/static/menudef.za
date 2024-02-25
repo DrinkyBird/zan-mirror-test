@@ -603,10 +603,11 @@ OptionValue "ZA_WeaponSwayStyle"
 
 OptionValue "ZA_WeaponPitchStyle"
 {
-	0, "Full"
-	1, "Lower-half only"
-	2, "Upper-half only"
-	3, "Both upper and lower"
+	0, "Full Range"
+	1, "Raise looking up only"
+	2, "Raise looking down only"
+	3, "Raise looking up & down"
+	4, "Centered"
 }
 
 OptionMenu ZA_WeaponSetup
@@ -624,9 +625,11 @@ OptionMenu ZA_WeaponSetup
 	Option		"Bob style",			"cl_bobstyle",					"ZA_WeaponBobStyle"
 	Slider		"Bob speed",			"cl_bobspeed",					0.0, 2.0, 0.1
 	StaticText	" "
+	Option		"Use custom sway",		"cl_usecustomsway",				"YesNo"
 	Option		"Sway weapon",			"cl_swaystyle",					"ZA_WeaponSwayStyle"
 	Slider		"Sway multiplier",		"cl_swayspeed",					-5.0, 5.0, 0.5
 	StaticText	" "
+	Option		"Use custom pitch",		"cl_usecustompitch",			"YesNo"
 	Option		"Offset weapon pitch",	"cl_viewpitchstyle",			"ZA_WeaponPitchStyle"
 	Slider		"Offset multiplier",	"cl_viewpitchoffset",			-16.0, 16.0, 1.0
 
