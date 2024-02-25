@@ -3242,6 +3242,9 @@ void PLAYER_ApplySkinScaleToBody( player_t *player, AActor *body, AWeapon *weapo
 	bool usingOverrideSkin = false;
 	int skinIdx = 0;
 
+	if (( player == nullptr ) || ( body == nullptr ))
+		return;
+
 	// [AK] Check if the player's skin was overridden from ACS and actually exists.
 	if ( player->ACSSkin != NAME_None )
 	{
