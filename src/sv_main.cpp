@@ -193,7 +193,11 @@ static	CLIENT_s		g_aClients[MAXPLAYERS];
 static	LONG			g_lCurrentClient;
 
 // Number of ticks that have passed since start of... level?
-static	LONG			g_lGameTime = 0;
+static	unsigned int	g_GameTime = 0;
+
+// [AK] How many ticks to shift to ensure that the tick rate remains at 35 ticks per
+// second if overflows occur when getting "new" and "previous" ticks in SERVER_Tick.
+static	double			g_GameTicShift = 0.0;
 
 #ifndef NO_SERVER_GUI
 // Storage for commands issued through various menu options to be executed all at once.
@@ -634,35 +638,80 @@ void SERVER_Destruct( void )
 //DWORD	g_LastMS, g_LastSec, g_FrameCount, g_LastCount, g_LastTic;
 
 void			SERVERCONSOLE_UpdateStatistics( void );
+void			SERVERCONSOLE_UpdateScoreboard( void );
 
 //*****************************************************************************
 //
-void SERVERCONSOLE_UpdateScoreboard( void );
+unsigned int server_GetDeltaTicks( unsigned int &nowTime, const unsigned int previousTics )
+{
+	static bool alreadyShiftedGameTic = false;
+	unsigned int newTics = 0;
+
+	nowTime = I_MSTime( );
+
+	// [AK] Check if an integer overflow occurred in the timer (i.e. the "now"
+	// time suddenly became smaller than the "previous" time). This happens once
+	// every ~49 days when the server runs constantly.
+	if ( nowTime < g_GameTime )
+	{
+		// [AK] First, get the "max" number of ticks if I_MSTime returns its
+		// maxiumum possible value. This should be equal to 150323855.325.
+		const double maxTics = UINT_MAX / MS_PER_TIC;
+		double wholePortion = 0.0;
+
+		// [AK] Next, split the whole (150323855) and fractional (0.325) portions
+		// of maxTics from each other.
+		const double fractionPortion = std::modf( maxTics, &wholePortion );
+
+		// [AK] Remember that maxTics doesn't round to a whole number completely,
+		// meaning that when the overflow occurs, we must compensate for an extra
+		// 0.325 of a tic (~11 ms). If we don't do this, the tick rate will briefly
+		// become ~1011 ms for 35 ticks, which can cause discrepancies between the
+		// server and clients.
+		//
+		// By adding this to a global tic shift variable, and then calculating our
+		// "new" and "previous" ticks based on this shift, we ensure that the tick
+		// rate always stays at ~1000 ms for 35 ticks, which is what we want.
+		if ( alreadyShiftedGameTic == false )
+		{
+			g_GameTicShift += fractionPortion;
+			alreadyShiftedGameTic = true;
+		}
+
+		newTics = static_cast<unsigned>( wholePortion + g_GameTicShift + nowTime / MS_PER_TIC );
+	}
+	else
+	{
+		// [AK] Reset this boolean after the integer overflow fixes itself.
+		if ( alreadyShiftedGameTic )
+			alreadyShiftedGameTic = false;
+
+		newTics = static_cast<unsigned>( g_GameTicShift + nowTime / MS_PER_TIC );
+	}
+
+	return newTics - previousTics;
+}
+
+//*****************************************************************************
+//
 void SERVER_Tick( void )
 {
-	LONG			lNowTime;
-	LONG			lNewTics;
-	LONG			lPreviousTics;
-	LONG			lCurTics;
-	ULONG			ulIdx;
+	unsigned int nowTime = 0;
+	ULONG ulIdx;
 
 	I_DoSelect();
-	lPreviousTics = static_cast<LONG> ( g_lGameTime / (( 1.0 / TICRATE ) * 1000.0 ) );
 
-	lNowTime = I_MSTime( );
-	lNewTics = static_cast<LONG> ( lNowTime / (( 1.0 / TICRATE ) * 1000.0 ) );
+	const unsigned int previousTics = static_cast<unsigned>( g_GameTicShift + g_GameTime / MS_PER_TIC );
+	unsigned int deltaTics = server_GetDeltaTicks( nowTime, previousTics );
 
-	lCurTics = lNewTics - lPreviousTics;
-	while ( lCurTics <= 0 )
+	while ( deltaTics == 0 )
 	{
 		// [BB] Recieve packets whenever possible (not only once each tic) to allow
 		// for an accurate ping measurement.
 		SERVER_GetPackets( );
 
 		I_Sleep( 1 );
-		lNowTime = I_MSTime( );
-		lNewTics = static_cast<LONG> ( lNowTime / (( 1.0 / TICRATE ) * 1000.0 ) );
-		lCurTics = lNewTics - lPreviousTics;
+		deltaTics = server_GetDeltaTicks( nowTime, previousTics );
 	}
 
 #ifdef NO_SERVER_GUI
@@ -678,7 +727,7 @@ void SERVER_Tick( void )
 #endif
 	
 	int iOldTime = level.time;
-	while ( lCurTics-- )
+	while ( deltaTics-- )
 	{
 		//DObject::BeginFrame ();
 
@@ -839,10 +888,10 @@ void SERVER_Tick( void )
 		g_LastMS = ms;
 	}
 */
-	g_lGameTime = lNowTime;
+	g_GameTime = nowTime;
 
 	// [BB] Remove IP adresses from g_floodProtectionIPQueue that have been in there long enough.
-	g_floodProtectionIPQueue.adjustHead ( g_lGameTime / 1000 );
+	g_floodProtectionIPQueue.adjustHead ( g_GameTime / 1000 );
 
 	for ( ulIdx = 0; ulIdx < MAXPLAYERS; ulIdx++ )
 	{
@@ -4470,7 +4519,7 @@ void SERVER_SyncServerModCVars ( const int PlayerToSync )
 //
 void SERVER_IgnoreIP( NETADDRESS_s Address )
 {
-	g_floodProtectionIPQueue.addAddress( Address, g_lGameTime / 1000 );
+	g_floodProtectionIPQueue.addAddress( Address, g_GameTime / 1000 );
 }
 
 //*****************************************************************************
