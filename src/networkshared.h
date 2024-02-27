@@ -516,7 +516,7 @@ class QueryIPQueue
 		NETADDRESS_s		Address;
 
 		// Expiration date.
-		long				lNextAllowedTime;
+		unsigned long		nextAllowedTime;
 
 	};
 
@@ -539,9 +539,9 @@ public:
 	{
 	}
 
-	void	adjustHead( const LONG CurrentTime );
+	void	adjustHead( const unsigned long currentTime );
 	bool	addressInQueue( const NETADDRESS_s AddressFrom ) const;
-	void	addAddress( const NETADDRESS_s AddressFrom, const LONG lCurrentTime, std::ostream *errorOut = NULL );
+	void	addAddress( const NETADDRESS_s AddressFrom, const unsigned long currentTime, std::ostream *errorOut = NULL );
 	bool	isFull( ) const;
 };
 
