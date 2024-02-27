@@ -527,15 +527,15 @@ class QueryIPQueue
 	STORED_QUERY_IP_t			_IPQueue[MAX_QUERY_IPS];
 
 	// Head and tail of the queue.
-	unsigned int				_iQueueHead;
-	unsigned int				_iQueueTail;
+	unsigned int				_queueHead;
+	unsigned int				_queueTail;
 
 	// How long entries will last (seconds).
-	unsigned int				_iEntryLength;
+	unsigned int				_entryLength;
 
 //*************************************************************************
 public:
-	QueryIPQueue( int iEntryLength ) : _iQueueHead( 0 ), _iQueueTail( 0 ), _iEntryLength( iEntryLength )
+	QueryIPQueue( int entryLength ) : _queueHead( 0 ), _queueTail( 0 ), _entryLength( entryLength )
 	{
 	}
 
