@@ -1294,7 +1294,7 @@ bool P_IsVisible(AActor *lookee, AActor *other, INTBOOL allaround, FLookExParams
 	{
 		maxdist = params->maxdist;
 		mindist = params->mindist;
-		fov = params->fov;
+		fov = allaround ? 0 : params->fov; // [RK] Account for LOOKALLAROUND flag.
 	}
 	else
 	{
@@ -2224,7 +2224,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_LookEx)
 
 	if (!(flags & LOF_NOSIGHTCHECK))
 	{
-		if (!P_LookForPlayers(self, true, &params))
+		if (!P_LookForPlayers(self, (self->flags4 & MF4_LOOKALLAROUND), &params)) // [RK] Passing true for allround should only occur if the flag is actually set.
 			return;
 	}
 	else
