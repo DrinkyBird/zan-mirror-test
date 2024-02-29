@@ -7265,6 +7265,11 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 			{
 				char buffer[1024];
 				time_t timer = args[0];
+
+				// [RK] Clamp timer if it's less than zero.
+				if ( timer < 0 )
+					timer = 0;
+
 				FString format = FBehavior::StaticLookupString( args[1] );
 				bool utc = argCount >= 3 ? !!args[2] : false;
 				struct tm* timeinfo = ( utc ? gmtime : localtime )( &timer );

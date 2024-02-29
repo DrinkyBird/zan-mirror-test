@@ -130,6 +130,7 @@
 -	- Fixed: ShareKeys was not working properly with dehacked keys, with puzzle items, in hubs and would ignore losekeys when maps didn't reset in survival (addresses 4183). [Ru5tK1ng]
 -	- Fixed: Enter scripts would stack repeatedly in hubs each time a map was visted and exited causing multiple instances of the script(s) (addresses 2977). [Ru5tK1ng]
 -	- Fixed: a player with an incredibly long name that won the game after the timer expired could crash the game. [Kaminsky]
+-	- Fixed: STRFTIME would crash Zandronum if a negative was passed into the first argument (addresses 4144). [Ru5tK1ng]
 !	- The result value of GAMEEVENT_MEDALS event scripts can now be used to determine whether or not the player receives the medal. [Kaminsky]
 !	- GAMEMODE flags are now validated after all GAMEMODE lumps have been parsed instead of after each one. The internal game mode name (e.g. "TeamLMS") is now printed with the error message instead of the actual name. [Kaminsky]
 !	- Added an extra check to ensure that game modes have a (short) name. [Kaminsky]
