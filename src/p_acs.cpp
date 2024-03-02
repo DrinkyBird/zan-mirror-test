@@ -100,8 +100,13 @@
 // [BB] A std::pair inside TArray inside TArray didn't seem to work.
 std::vector<TArray<std::pair<FString, FString> > > g_dbQueries;
 
-// [Binary] Allow mods to use the BanFromGame function.
-CVAR (Bool, sv_allowacsbanfunction, false, CVAR_SERVERINFO | CVAR_NOSETBYACS)
+// [Binary/AK] The maximum number of minutes a mod can ban a player for with BanFromGame.
+// A value of zero means that the server forbids use of the function.
+CUSTOM_CVAR( Int, sv_maxacsbanduration, 0, CVAR_SERVERINFO | CVAR_NOSETBYACS )
+{
+	if ( self < 0 )
+		self = 0;
+}
 
 //
 // [TP] Overridable system time property
@@ -8411,16 +8416,16 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 				return 1;
 			}
 
-		// [Binary] Function to temporarily ban players, from 1-60 minutes.
+		// [Binary] Function to temporarily ban players, up to whatever sv_maxacsbanduration allows.
 		case ACSF_BanFromGame:
 		{
 			// Only call the function on the server's end if ACS bans are allowed.
-			if ( NETWORK_GetState() == NETSTATE_SERVER && sv_allowacsbanfunction)
+			if (( NETWORK_GetState( ) == NETSTATE_SERVER ) && ( sv_maxacsbanduration > 0 ))
 			{
 				int playerIndex = args[0];
 				if(PLAYER_IsValidPlayer( playerIndex ))
 				{
-					int duration = clamp(args[1], 1, 60);
+					int duration = clamp<int>( args[1], 1, sv_maxacsbanduration );
 					FString Output;
 					Output.Format("%dmin", duration);
 					SERVERBAN_BanPlayer( playerIndex, Output.GetChars( ), (argCount >= 3) ? FBehavior::StaticLookupString( args[2] ) : NULL);

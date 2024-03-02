@@ -50,7 +50,7 @@
 +	- Added ACS functions: "AddBot" and "RemoveBot", to add or remove bots from the game. [Kaminsky]
 +	- The authentication mechanism for non-map related lumps now allows Freedoom 0.12.x and 0.13.0/Doom clients to join Doom/Freedoom 0.12.x and 0.13.0 servers. [DrinkyBird]
 +	- Added ACS functions: "OpenMenu" and "CloseMenu", to open or close menus defined in MENUDEF. [Kaminsky]
-+	- Added the BanFromGame ACS function, allowing mods to give timed bans to players if sv_allowacsbanfunction is set to true. [Binary]
++	- Added the BanFromGame ACS function, allowing mods to give timed bans to players up to whatever the CVar "sv_maxacsbanduration" allows. A value of zero means that the server forbids use of the function. [Binary/Kaminsky]
 +	- Added ACS function: "GetPlayerStatus", which returns a bitfield of all the player's statuses (i.e. typing a chat message, talking on the microphone, in the console/menu, or lagging). [Kaminsky]
 +	- Added ACS function: "SetPlayerWeaponZoomFactor" from Q-Zandronum, the ACS-equivalent to the A_ZoomFactor DECORATE function. [Kaminsky]
 +	- Added SwayStyle, SwaySpeed, ViewPitchStyle, and ViewPitchOffset properties for DECORATE weapons. [StrikerTheHedgefox]
