@@ -697,7 +697,6 @@ unsigned int server_GetDeltaTicks( unsigned int &nowTime, const unsigned int pre
 void SERVER_Tick( void )
 {
 	unsigned int nowTime = 0;
-	ULONG ulIdx;
 
 	I_DoSelect();
 
@@ -725,8 +724,9 @@ void SERVER_Tick( void )
 	while ( g_ServerCommandQueue.Size( ))
 		SERVER_DeleteCommand( );
 #endif
-	
-	int iOldTime = level.time;
+
+	int oldTime = level.time;
+
 	while ( deltaTics-- )
 	{
 		//DObject::BeginFrame ();
@@ -750,10 +750,10 @@ void SERVER_Tick( void )
 		maketic++;
 
 		// Update the scoreboard if we have a new second to display.
-		if ( timelimit && (( level.time % TICRATE ) == 0 ) && ( level.time != iOldTime ))
+		if ( timelimit && (( level.time % TICRATE ) == 0 ) && ( level.time != oldTime ))
 		{
 			SERVERCONSOLE_UpdateScoreboard( );
-			iOldTime = level.time;
+			oldTime = level.time;
 		}
 
 		if ( g_lMapRestartTimer > 0 )
@@ -789,12 +789,12 @@ void SERVER_Tick( void )
 		SERVER_SendOutPackets( );
 
 		// [BB] Send out sheduled packets, respecting sv_maxpacketspertick.
-		for ( ulIdx = 0; ulIdx < MAXPLAYERS; ulIdx++ )
+		for ( unsigned int i = 0; i < MAXPLAYERS; i++ )
 		{
-			if ( g_aClients[ulIdx].State == CLS_FREE )
+			if ( g_aClients[i].State == CLS_FREE )
 				continue;
 
-			SERVER_GetClient ( ulIdx )->SavedPackets.Tick ( );
+			SERVER_GetClient ( i )->SavedPackets.Tick ( );
 		}
 
 		// Potentially send an update to the master server.
@@ -812,21 +812,21 @@ void SERVER_Tick( void )
 		// Print stats and get out.
 		FStat::PrintStat( );
 
-		for ( ulIdx = 0; ulIdx < MAXPLAYERS; ulIdx++ )
+		for ( unsigned int i = 0; i < MAXPLAYERS; i++ )
 		{
-			if (( SERVER_IsValidClient( ulIdx ) == false ) || ( players[ulIdx].bSpectating ))
+			if (( SERVER_IsValidClient( i ) == false ) || ( players[i].bSpectating ))
 				continue;
 
-			if ( g_aClients[ulIdx].lLastMoveTick != gametic && g_aClients[ulIdx].lOverMovementLevel > -MAX_OVERMOVEMENT_LEVEL )
+			if ( g_aClients[i].lLastMoveTick != gametic && g_aClients[i].lOverMovementLevel > -MAX_OVERMOVEMENT_LEVEL )
 			{
-				g_aClients[ulIdx].lOverMovementLevel--;
-//					Printf( "%s: -- (%d)\n", players[ulIdx].userinfo.GetName(), g_aClients[ulIdx].lOverMovementLevel );
+				g_aClients[i].lOverMovementLevel--;
+//					Printf( "%s: -- (%d)\n", players[i].userinfo.GetName(), g_aClients[i].lOverMovementLevel );
 			}
 
 			// [BB] If the client didn't authenticate the new map by now, likely his authentication packet was lost.
 			// Ask him to authenticate again.
-			if ( ( SERVER_GetClient( ulIdx )->State == CLS_SPAWNED_BUT_NEEDS_AUTHENTICATION ) && ( ( level.maptime % ( 2 * TICRATE ) ) == 0 ) )
-				SERVERCOMMANDS_MapAuthenticate ( level.mapname, ulIdx, SVCF_ONLYTHISCLIENT );
+			if ( ( SERVER_GetClient( i )->State == CLS_SPAWNED_BUT_NEEDS_AUTHENTICATION ) && ( ( level.maptime % ( 2 * TICRATE ) ) == 0 ) )
+				SERVERCOMMANDS_MapAuthenticate ( level.mapname, i, SVCF_ONLYTHISCLIENT );
 		}
 
 		// Do some statistic stuff every second.
@@ -836,19 +836,19 @@ void SERVER_Tick( void )
 			g_lTotalServerSeconds++;
 
 			// Count the number of active players.
-			LONG lCurrentNumPlayers = 0;
-			for ( ulIdx = 0; ulIdx < MAXPLAYERS; ulIdx++ )
+			LONG currentNumPlayers = 0;
+			for ( unsigned int i = 0; i < MAXPLAYERS; i++ )
 			{
-				if ( SERVER_IsValidClient( ulIdx ) == false )
+				if ( SERVER_IsValidClient( i ) == false )
 					continue;
 
 				g_lTotalNumPlayers++; // Divided by g_lTotalServerSeconds to form an average.
-				lCurrentNumPlayers++;
+				currentNumPlayers++;
 			}
 
 			// Check for new peak records!
-			if ( lCurrentNumPlayers > g_lMaxNumPlayers )
-				g_lMaxNumPlayers = lCurrentNumPlayers;
+			if ( currentNumPlayers > g_lMaxNumPlayers )
+				g_lMaxNumPlayers = currentNumPlayers;
 			if ( g_lCurrentOutboundDataTransfer > g_lMaxOutboundDataTransfer )
 				g_lMaxOutboundDataTransfer = g_lCurrentOutboundDataTransfer;
 			if ( g_lCurrentInboundDataTransfer > g_lMaxInboundDataTransfer )
@@ -893,13 +893,13 @@ void SERVER_Tick( void )
 	// [BB] Remove IP adresses from g_floodProtectionIPQueue that have been in there long enough.
 	g_floodProtectionIPQueue.adjustHead ( g_GameTime / 1000 );
 
-	for ( ulIdx = 0; ulIdx < MAXPLAYERS; ulIdx++ )
+	for ( unsigned int i = 0; i < MAXPLAYERS; i++ )
 	{
-		if (( SERVER_IsValidClient( ulIdx ) == false ) || ( players[ulIdx].bSpectating ))
+		if (( SERVER_IsValidClient( i ) == false ) || ( players[i].bSpectating ))
 			continue;
 
-		if ( g_aClients[ulIdx].lOverMovementLevel >= MAX_OVERMOVEMENT_LEVEL )
-			SERVER_KickPlayer( ulIdx, "Abnormal level of movement commands detected!" );
+		if ( g_aClients[i].lOverMovementLevel >= MAX_OVERMOVEMENT_LEVEL )
+			SERVER_KickPlayer( i, "Abnormal level of movement commands detected!" );
 	}
 }
 
