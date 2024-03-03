@@ -8514,7 +8514,8 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 				// [AK] Get the player's personal skin.
 				if ( type == GETPLAYERSKIN_USERINFO )
 				{
-					skinIndex = player->userinfo.GetSkin( );
+					if ( PLAYER_ShouldForceBaseSkin( player ) == false )
+						skinIndex = player->userinfo.GetSkin( );
 				}
 				// [AK] ...or their weapon's preferred skin or the skin overridden from ACS.
 				else if (( type == GETPLAYERSKIN_WEAPON ) || ( type == GETPLAYERSKIN_ACS ))
@@ -8547,7 +8548,7 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 
 					if ( overrideSkin != -1 )
 						skinIndex = overrideSkin;
-					else
+					else if ( PLAYER_ShouldForceBaseSkin( player ) == false )
 						skinIndex = player->userinfo.GetSkin( );
 				}
 

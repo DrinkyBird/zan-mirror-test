@@ -3237,6 +3237,29 @@ int PLAYER_GetOverrideSkin( player_t *player )
 
 //*****************************************************************************
 //
+bool PLAYER_ShouldForceBaseSkin( player_t *player )
+{
+	if ( player == nullptr )
+		return true;
+
+	// [AK] Force the base skin when all skins are disabled, or if only cheat
+	// skins are are supposed to be disabled and the player's using one.
+	if ( NETWORK_GetState( ) != NETSTATE_SERVER )
+	{
+		if (( cl_skins <= 0 ) || (( cl_skins >= 2 ) && ( skins[player->userinfo.GetSkin( )].bCheat )))
+			return true;
+	}
+
+	// [BB] MF4_NOSKIN should force the player to have the base skin too, the
+	// same is true for morphed players.
+	if ((( player->mo != nullptr ) && ( player->mo->flags & MF4_NOSKIN )) || ( player->morphTics ))
+		return true;
+
+	return false;
+}
+
+//*****************************************************************************
+//
 void PLAYER_ApplySkinScaleToBody( player_t *player, AActor *body, AWeapon *weapon )
 {
 	bool usingOverrideSkin = false;

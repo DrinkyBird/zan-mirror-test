@@ -880,6 +880,7 @@ void	PLAYER_AwardDamagePointsForAllPlayers( void );
 void	PLAYER_SetWeapon( player_t *pPlayer, AWeapon *pWeapon, bool bClearWeaponForClientOnServer = false );
 void	PLAYER_ClearWeapon( player_t *pPlayer );
 int		PLAYER_GetOverrideSkin( player_t *player );
+bool	PLAYER_ShouldForceBaseSkin( player_t *player );
 void	PLAYER_ApplySkinScaleToBody( player_t *player, AActor *body, AWeapon *weapon );
 void	PLAYER_SetLivesLeft( player_t *pPlayer, ULONG ulLivesLeft );
 bool	PLAYER_IsAliveOrCanRespawn( player_t *pPlayer );

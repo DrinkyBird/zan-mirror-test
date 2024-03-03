@@ -2516,8 +2516,8 @@ void P_CheckPlayerSprite(AActor *actor, int &spritenum, fixed_t &scalex, fixed_t
 	const int overrideSkin = PLAYER_GetOverrideSkin( player ); // [AK]
 	int skin = player->userinfo.GetSkin();
 
-	// [BB] MF4_NOSKIN should force the player to have the base skin too, the same is true for morphed players.
-	if (( cl_skins <= 0 ) || ((( cl_skins >= 2 ) && ( skins[player->userinfo.GetSkin()].bCheat ))) || (actor->flags4 & MF4_NOSKIN) || player->morphTics )
+	// [AK] Check if the player's base skin should be used instead of their personal skin.
+	if ( PLAYER_ShouldForceBaseSkin( player ))
 		skin = R_FindSkin( "base", player->CurrentPlayerClass );
 
 	// [BB/AK] If the skin was overridden from ACS, or the weapon has a PreferredSkin defined, make the player use it here.
