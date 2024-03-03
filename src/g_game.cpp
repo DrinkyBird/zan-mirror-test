@@ -3933,7 +3933,7 @@ void GAME_ResetMap( bool bRunEnterScripts )
 				else if ( pActorInfo->flags2 & MF2_SPAWNFLOAT )
 					Z = FLOATRANDZ;
 				else if ( pActorInfo->flags2 & MF2_FLOATBOB )
-					Z = pActor->floorz + pActor->SpawnPoint[2];
+					Z = pActor->Sector->e->XFloor.ffloors.Size() > 0 ? pActor->SpawnPoint[2] : pActor->floorz + pActor->SpawnPoint[2]; // [RK] Check if on 3dfloor
 				else
 					Z = ONFLOORZ;
 
@@ -4080,7 +4080,7 @@ void GAME_ResetMap( bool bRunEnterScripts )
 		else if ( pActorInfo->flags2 & MF2_SPAWNFLOAT )
 			Z = FLOATRANDZ;
 		else if ( pActorInfo->flags2 & MF2_FLOATBOB )
-			Z = pActor->floorz + pActor->SpawnPoint[2];
+			Z = pActor->Sector->e->XFloor.ffloors.Size() > 0 ? pActor->SpawnPoint[2] : pActor->floorz + pActor->SpawnPoint[2]; // [RK] Check if on 3dfloor
 		else
 			Z = ONFLOORZ;
 
