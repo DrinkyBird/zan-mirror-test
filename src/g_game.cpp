@@ -2591,7 +2591,17 @@ void G_DeathMatchSpawnPlayer( int playernum, bool bClientUpdate )
 	selections = deathmatchstarts.Size ();
 	// [RH] We can get by with just 1 deathmatch start
 	if (selections < 1)
-		I_Error( "No deathmatch starts!" );
+	{
+		// [RK] If the mode is something like TDM or TLMS, try to use the team spawns
+		// in the map and without limiting a player to using only their team color.
+		if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSONTEAMS )
+		{
+			G_TemporaryTeamSpawnPlayer( playernum, bClientUpdate );
+			return;
+		}
+		else
+			I_Error("No deathmatch starts!");
+	}
 
 	if ( teamlms && ( players[playernum].bOnTeam ))
 	{
