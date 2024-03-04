@@ -129,6 +129,7 @@
 #include "menu/menu.h"
 #include "v_text.h"
 #include "maprotation.h"
+#include "p_conversation.h"
 #include "st_hud.h"
 #include "voicechat.h"
 
@@ -9456,6 +9457,28 @@ void ServerCommands::ResetCustomPlayerValue::Execute( )
 
 	if ( pData != NULL )
 		pData->ResetToDefault( player, false );
+}
+
+//*****************************************************************************
+// [SB]
+void ServerCommands::StartConversation::Execute( )
+{
+	npc->Conversation = StrifeDialogues[node];
+	P_StartConversation( npc, player->mo, facetalker, saveangle );
+}
+
+//*****************************************************************************
+// [SB]
+void ServerCommands::ConversationReply::Execute( )
+{
+	P_ConversationReply( player - players, node, reply );
+}
+
+//*****************************************************************************
+// [SB]
+void ServerCommands::EndConversation::Execute( )
+{
+	P_ConversationClose( player - players );
 }
 
 //*****************************************************************************

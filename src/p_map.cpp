@@ -5213,7 +5213,8 @@ bool P_TalkFacing(AActor *player)
 	{
 		return false;
 	}
-	if (linetarget->Conversation != NULL)
+	// [SB] In multiplayer, the server initiates conversations.
+	if (linetarget->Conversation != NULL && !NETWORK_InClientMode())
 	{
 		// Give the NPC a chance to play a brief animation
 		linetarget->ConversationAnimation(0);

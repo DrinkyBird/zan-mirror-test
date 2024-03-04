@@ -385,3 +385,24 @@ Command SpawnPuffNoNetID
 		Long translation
 	EndIf
 EndCommand
+
+Command StartConversation
+	ExtendedCommand
+	Actor npc
+	Player player with MoTest
+	Long node
+	Bool facetalker
+	Bool saveangle
+EndCommand
+
+Command ConversationReply
+	ExtendedCommand
+	Player player with MoTest
+	Long node
+	Long reply
+EndCommand
+
+Command EndConversation
+	ExtendedCommand
+	Player player
+EndCommand

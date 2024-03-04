@@ -117,5 +117,7 @@ void	CLIENTCOMMANDS_SetVideoResolution();
 void	CLIENTCOMMANDS_RCONSetCVar( const char *cvarName, const char *cvarValue );
 void	CLIENTCOMMANDS_VoIPAudioPacket( const unsigned int frame, const unsigned char *data, const unsigned int length );
 void	CLIENTCOMMANDS_SetVoIPChannelVolume( const unsigned int player, const float volume );
+void	CLIENTCOMMANDS_ConversationReply( int selection );
+void	CLIENTCOMMANDS_ConversationClose( );
 
 #endif	// __CL_COMMANDS_H__

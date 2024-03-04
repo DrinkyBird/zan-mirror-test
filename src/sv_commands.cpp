@@ -5310,6 +5310,48 @@ void SERVERCOMMANDS_CloseMenu( const unsigned int player )
 }
 
 //*****************************************************************************
+// [SB]
+void SERVERCOMMANDS_StartConversation( AActor *npc, ULONG player, int nodenum, bool facetalker, bool saveangle )
+{
+	if ( !EnsureActorHasNetID( npc ) || !PLAYER_IsValidPlayerWithMo( player ) )
+		return;
+
+	ServerCommands::StartConversation command;
+	command.SetNpc( npc );
+	command.SetPlayer( &players[player] );
+	command.SetNode( nodenum );
+	command.SetFacetalker( facetalker );
+	command.SetSaveangle( saveangle );
+	command.sendCommandToClients();
+}
+
+//*****************************************************************************
+// [SB]
+void SERVERCOMMANDS_ConversationReply( ULONG player, int nodenum, int replynum )
+{
+	if ( !PLAYER_IsValidPlayerWithMo( player ) )
+		return;
+
+	ServerCommands::ConversationReply command;
+	command.SetPlayer( &players[player] );
+	command.SetNode( nodenum );
+	command.SetReply( replynum );
+	command.sendCommandToClients();
+}
+
+//*****************************************************************************
+// [SB]
+void SERVERCOMMANDS_EndConversation( ULONG player )
+{
+	if ( !PLAYER_IsValidPlayerWithMo( player ) )
+		return;
+
+	ServerCommands::EndConversation command;
+	command.SetPlayer( &players[player] );
+	command.sendCommandToClients();
+}
+
+//*****************************************************************************
 void APathFollower::SyncWithClient ( const ULONG ulClient )
 {
 	if ( !EnsureActorHasNetID (this) )

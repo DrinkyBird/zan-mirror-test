@@ -447,5 +447,8 @@ void	SERVERCOMMANDS_SetCustomPlayerValue( PlayerData &Data, ULONG ulPlayer, ULON
 void	SERVERCOMMANDS_ResetCustomPlayerValue( PlayerData &Data, ULONG ulPlayer, ULONG ulPlayerExtra = MAXPLAYERS, ServerCommandFlags flags = 0 );
 void	SERVERCOMMANDS_OpenMenu( const unsigned int player, const char *menuName );
 void	SERVERCOMMANDS_CloseMenu( const unsigned int player );
+void	SERVERCOMMANDS_StartConversation( AActor *npc, ULONG player, int nodenum, bool facetalker, bool saveangle );
+void	SERVERCOMMANDS_ConversationReply( ULONG player, int nodenum, int replynum );
+void	SERVERCOMMANDS_EndConversation( ULONG player );
 
 #endif	// __SV_COMMANDS_H__

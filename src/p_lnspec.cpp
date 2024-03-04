@@ -3525,7 +3525,8 @@ FUNC(LS_StartConversation)
 	{
 		return false;
 	}
-	if (target->Conversation != NULL)
+	// [SB] In multiplayer, the server initiates conversations.
+	if (target->Conversation != NULL && !NETWORK_InClientMode())
 	{
 		// Give the NPC a chance to play a brief animation
 		target->ConversationAnimation (0);

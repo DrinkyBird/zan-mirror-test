@@ -118,6 +118,7 @@
 #include "r_data/colormaps.h"
 #include "network_enums.h"
 #include "d_protocol.h"
+#include "p_conversation.h"
 #include "p_enemy.h"
 #include "network/packetarchive.h"
 #include "p_lnspec.h"
@@ -5264,6 +5265,27 @@ bool SERVER_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 		}
 		break;
 
+	// [SB] Strife conversation stuff
+	case CLC_CONVERSATIONREPLY:
+		{
+			const int selection = pByteStream->ReadLong( );
+
+			auto npc = players[g_lCurrentClient].ConversationNPC;
+			if ( npc != nullptr && npc->Conversation != nullptr )
+			{
+				P_ConversationReply( g_lCurrentClient, npc->Conversation->ThisNodeNum, selection );
+			}
+
+			break;
+		}
+
+	case CLC_CONVERSATIONCLOSE:
+		{
+			P_ConversationClose( g_lCurrentClient );
+
+			break;
+		}
+		
 	default:
 
 		Printf( PRINT_HIGH, "SERVER_ParseCommands: Unknown client message: %d\n", static_cast<int> (lCommand) );

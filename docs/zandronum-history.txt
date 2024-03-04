@@ -55,6 +55,7 @@
 +	- Added ACS function: "SetPlayerWeaponZoomFactor" from Q-Zandronum, the ACS-equivalent to the A_ZoomFactor DECORATE function. [Kaminsky]
 +	- Added SwayStyle, SwaySpeed, ViewPitchStyle, and ViewPitchOffset properties for DECORATE weapons. [StrikerTheHedgefox]
 +	- Added ACS functions: "SetPlayerSkin" (from Q-Zandronum) and "GetPlayerSkin", to change or retrieve the name of a player's skin. [Kaminsky]
++	- Added client-server netcode for Strife conversations. [DrinkyBird]
 -	- Fixed: clients didn't initialize a sector's friction properly in some cases due to a superfluous check that wasn't removed earlier. [Kaminsky]
 -	- Fixed: the server wouldn't initialize compatflags and compatflags2 properly if entered as command line parameters. [Kaminsky]
 -	- Fixed: serverinfo CVars entered on the command line were restored in reverse order. [Kaminsky]

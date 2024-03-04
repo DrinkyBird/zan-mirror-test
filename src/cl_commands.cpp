@@ -900,3 +900,18 @@ void CLIENTCOMMANDS_SetVoIPChannelVolume( const unsigned int player, const float
 	CLIENT_GetLocalBuffer( )->ByteStream.WriteByte( player );
 	CLIENT_GetLocalBuffer( )->ByteStream.WriteFloat( volume );
 }
+
+//*****************************************************************************
+// [SB]
+void CLIENTCOMMANDS_ConversationReply( int selection )
+{
+	CLIENT_GetLocalBuffer( )->ByteStream.WriteByte( CLC_CONVERSATIONREPLY );
+	CLIENT_GetLocalBuffer( )->ByteStream.WriteLong( selection );
+}
+
+//*****************************************************************************
+// [SB]
+void CLIENTCOMMANDS_ConversationClose( )
+{
+	CLIENT_GetLocalBuffer( )->ByteStream.WriteByte( CLC_CONVERSATIONCLOSE );
+}
