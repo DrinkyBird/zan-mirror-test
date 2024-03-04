@@ -7011,6 +7011,13 @@ void ServerCommands::StopSound::Execute()
 
 //*****************************************************************************
 //
+void ServerCommands::StopOriginlessSound::Execute()
+{
+	S_StopSound( channel );
+}
+
+//*****************************************************************************
+//
 void ServerCommands::StartSectorSequence::Execute()
 {
 	SN_StartSequence( sector, channel, sequence.GetChars(), modeNum );

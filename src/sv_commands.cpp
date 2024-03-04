@@ -3628,6 +3628,15 @@ void SERVERCOMMANDS_StopSound( AActor *pActor, LONG lChannel, ULONG ulPlayerExtr
 }
 
 //*****************************************************************************
+// [SB]
+void SERVERCOMMANDS_StopOriginlessSound( LONG lChannel, ULONG ulPlayerExtra, ServerCommandFlags flags )
+{
+	ServerCommands::StopOriginlessSound command;
+	command.SetChannel( lChannel & 0xFF );
+	command.sendCommandToClients( ulPlayerExtra, flags );
+}
+
+//*****************************************************************************
 //*****************************************************************************
 //
 void SERVERCOMMANDS_StartSectorSequence( sector_t *pSector, const int Channel, const char *pszSequence, const int Modenum, ULONG ulPlayerExtra, ServerCommandFlags flags )
