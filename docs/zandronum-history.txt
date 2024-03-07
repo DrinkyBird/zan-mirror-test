@@ -133,6 +133,7 @@
 -	- Fixed: STRFTIME would crash Zandronum if a negative was passed into the first argument (addresses 4144). [Ru5tK1ng]
 -	- Fixed: the server would freeze after running for long enough (e.g. 24 days on Windows) due to an integer overflow in SERVER_Tick. [Kaminsky]
 -	- Fixed: the SendToCommunicator special didn't stop the previous sound when online. [DrinkyBird]
+-	- Fixed: a spectator could still kill themselves if they committed suicide in the same tick as when they spectated (e.g. typing "kill; spectate" in the console). [Kaminsky]
 !	- The result value of GAMEEVENT_MEDALS event scripts can now be used to determine whether or not the player receives the medal. [Kaminsky]
 !	- GAMEMODE flags are now validated after all GAMEMODE lumps have been parsed instead of after each one. The internal game mode name (e.g. "TeamLMS") is now printed with the error message instead of the actual name. [Kaminsky]
 !	- Added an extra check to ensure that game modes have a (short) name. [Kaminsky]

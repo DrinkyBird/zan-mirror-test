@@ -1204,7 +1204,8 @@ public:
 	void Tick()
 	{
 		// [BB] Added safety check.
-		if ( Pawn )
+		// [AK] Also make sure that a spectator can't suicide here.
+		if (( Pawn ) && ( Pawn->player ) && ( Pawn->player->bSpectating == false ))
 		{
 			Pawn->flags |= MF_SHOOTABLE;
 			Pawn->flags2 &= ~MF2_INVULNERABLE;
