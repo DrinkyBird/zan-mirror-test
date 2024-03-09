@@ -1140,7 +1140,7 @@ void DBaseStatusBar::DrawCrosshair ()
 	int w, h;
 
 	// [AK] The crosshair doesn't look good while using the free chasecam, so don't draw it.
-	if (P_IsUsingFreeChasecam(players[consoleplayer].camera))
+	if (FreeChasecam::IsBeingUsed())
 		return;
 
 	// Don't draw the crosshair in chasecam mode

@@ -481,7 +481,7 @@ CCMD (chase)
 				players[i].cheats |= CF_CHASECAM;
 
 			// [AK] Reset the free chasecam's orientation when we enable the chasecam.
-			P_ResetFreeChasecamView();
+			FreeChasecam::Reset();
 		}
 		R_ResetViewInterpolation ();
 	}

@@ -760,7 +760,7 @@ void R_SetupFrame (AActor *actor)
 	player_t *player = actor->player;
 	unsigned int newblend;
 	InterpolationViewer *iview;
-	bool bUseFreeChasecam = false; // [AK]
+	bool usingFreeChasecam = false; // [AK]
 
 	if (player != NULL && player->mo == actor)
 	{	// [RH] Use camera instead of viewplayer
@@ -805,7 +805,7 @@ void R_SetupFrame (AActor *actor)
 		r_showviewer = true;
 
 		// [AK] Check if we're supposed to be using the free chasecam.
-		bUseFreeChasecam = P_IsUsingFreeChasecam(camera);
+		usingFreeChasecam = FreeChasecam::IsBeingUsed();
 	}
 	else
 	{
@@ -818,7 +818,7 @@ void R_SetupFrame (AActor *actor)
 
 	// [AK] If we're using the free chasecam, calculate the pitch of the view based on its
 	// distance from the actor we're spying on.
-	if (bUseFreeChasecam)
+	if (usingFreeChasecam)
 	{
 		float fX = FIXED2FLOAT(camera->x - iview->nviewx);
 		float fY = FIXED2FLOAT(camera->y - iview->nviewy);
@@ -841,7 +841,7 @@ void R_SetupFrame (AActor *actor)
 	}
 
 	// [AK] If we're using the free chasecam, use our own angle instead of the actor's who we're spying.
-	iview->nviewangle = bUseFreeChasecam ? P_GetFreeChasecamActor()->angle : camera->angle;
+	iview->nviewangle = usingFreeChasecam ? FreeChasecam::cameraAngle : camera->angle;
 
 	if (iview->otic == -1 || r_NoInterpolate)
 	{

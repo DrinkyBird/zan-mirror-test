@@ -1177,7 +1177,7 @@ void G_FinishChangeSpy( ULONG ulPlayer )
 
 	// [AK] If we're using the free chasecam, reset the orientation so that it's facing
 	// in the same direction of whoever we're spying.
-	P_ResetFreeChasecamView( );
+	FreeChasecam::Reset( );
 
 	// [TP] Rebuild translations if we're overriding player colors, they
 	// may very likely have changed by now.

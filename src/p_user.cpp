@@ -2867,22 +2867,48 @@ void P_MovePlayer (player_t *player)
 	// [Leo] cl_spectatormove is now applied here to avoid code duplication.
 	fixed_t spectatormove = FLOAT2FIXED(cl_spectatormove);
 
-	// [AK] Save the player's angle before we update it.
-	fixed_t oldAngle = mo->angle;
+	// [AK] The player doesn't look around while using the free chasecam,
+	// so while playing a demo, make sure to not update the local player's
+	// angle during the moments they were using it.
+	if ((player != &players[consoleplayer]) || (CLIENTDEMO_IsPlaying() == false) || (FreeChasecam::enabled == false))
+	{
+		// [AK] Save the player's angle before we update it.
+		const bool usingFreeChasecam = FreeChasecam::IsBeingUsed(player);
+		fixed_t oldAngle = mo->angle;
 
-	// [RH] 180-degree turn overrides all other yaws
-	if (player->turnticks)
+		// [AK] If using the free chasecam, temporarily set the player's angle
+		// to that of the free chasecam.
+		if (usingFreeChasecam)
+			mo->angle = FreeChasecam::cameraAngle;
+
+		// [RH] 180-degree turn overrides all other yaws
+		if (player->turnticks)
+		{
+			player->turnticks--;
+			mo->angle += (ANGLE_180 / TURN180_TICKS);
+		}
+		else
+		{
+			mo->angle += cmd->ucmd.yaw << 16;
+		}
+
+		// [AK] If being used, update the free chasecam's angle to the new one,
+		// then reset the player's angle back to what it was before. This way,
+		// the player isn't also looking around while using the free chasecam.
+		if (usingFreeChasecam)
+		{
+			FreeChasecam::cameraAngle = mo->angle;
+			mo->angle = oldAngle;
+		}
+
+		// [AK] Calculate how much the player's angle changed.
+		mo->AngleDelta = mo->angle - oldAngle;
+	}
+	// [AK] Their turn ticks still need to be decremented.
+	else if (player->turnticks)
 	{
 		player->turnticks--;
-		mo->angle += (ANGLE_180 / TURN180_TICKS);
 	}
-	else
-	{
-		mo->angle += cmd->ucmd.yaw << 16;
-	}
-
-	// [AK] Calculate how much the player's angle changed.
-	mo->AngleDelta = mo->angle - oldAngle;
 
 	// [TP] Allow spectators to move freely even if the game is suspended.
 	if ( GAME_GetEndLevelDelay( ) && ( player->bSpectating == false ))
@@ -3698,79 +3724,121 @@ void P_PlayerThink (player_t *player)
 		player->mo->MorphPlayerThink ();
 	}
 
-	// [AK] Save the player's pitch before we update it.
-	fixed_t oldPlayerPitch = player->mo->pitch;
-
-	// [Leo] Spectators shouldn't be limited by the server settings.
-	// [RH] Look up/down stuff
-	if (!level.IsFreelookAllowed() && player->bSpectating == false)
+	// [AK] While recording a demo, check if the local player's using the free
+	// chasecam and update its status accordingly. Also send their current angle
+	// so it gets synced properly during demo playback (i.e. the player presses
+	// the turn-180 degrees button then quickly changes between using the free
+	// chasecam or not).
+	if ((CLIENTDEMO_IsRecording()) && (player == &players[consoleplayer]))
 	{
-		player->mo->pitch = 0;
-	}
-	else
-	{
-		// Servers read in the pitch value. It is not calculated.
-		if (( NETWORK_GetState( ) != NETSTATE_SERVER ) || ( player->pSkullBot != NULL ))
+		if (FreeChasecam::IsBeingUsed())
 		{
-			int look = cmd->ucmd.pitch << 16;
-
-			// The player's view pitch is clamped between -32 and +56 degrees,
-			// which translates to about half a screen height up and (more than)
-			// one full screen height down from straight ahead when view panning
-			// is used.
-			if (look)
+			if (FreeChasecam::enabled == false)
 			{
-				if (look == -32768 << 16)
-				{ // center view
-					player->mo->pitch = 0;
-				}
-				else
-				{
-					fixed_t oldpitch = player->mo->pitch;
-					player->mo->pitch -= look;
-					if (look > 0)
-					{ // look up
-						// [BB] Zandronum handles pitch differently.
-						const fixed_t pitchLimit = - ( ( NETWORK_GetState( ) != NETSTATE_SERVER ) ? Renderer->GetMaxViewPitch(false) : 32 ) * ANGLE_1;
-						player->mo->pitch = MAX(player->mo->pitch, pitchLimit );
-						if (player->mo->pitch > oldpitch)
-						{
-							player->mo->pitch = pitchLimit;
-						}
-					}
-					else
-					{ // look down
-						// [BB] Zandronum handles pitch differently.
-						const fixed_t pitchLimit = ( ( NETWORK_GetState( ) != NETSTATE_SERVER ) ? Renderer->GetMaxViewPitch(true) : 56 ) * ANGLE_1;
-						player->mo->pitch = MIN(player->mo->pitch, pitchLimit );
-						if (player->mo->pitch < oldpitch)
-						{
-							player->mo->pitch = pitchLimit;
-						}
-					}
-				}
+				CLIENTDEMO_WriteFreeChasecam(true, players[consoleplayer].mo->angle);
+				FreeChasecam::enabled = true;
 			}
 		}
-	}
-	if (player->centering)
-	{
-		if (abs(player->mo->pitch) > 2*ANGLE_1)
+		else if (FreeChasecam::enabled)
 		{
-			player->mo->pitch = FixedMul(player->mo->pitch, FRACUNIT*2/3);
+			CLIENTDEMO_WriteFreeChasecam(false, players[consoleplayer].mo->angle);
+			FreeChasecam::enabled = false;
+		}
+	}
+
+	// [AK] As with their angle, don't update the local player's pitch during
+	// the moments they're using the free chasecam while playing a demo.
+	if ((player != &players[consoleplayer]) || (CLIENTDEMO_IsPlaying() == false) || (FreeChasecam::enabled == false))
+	{
+		// [AK] Save the player's pitch before we update it.
+		const bool usingFreeChasecam = FreeChasecam::IsBeingUsed(player);
+		fixed_t oldPlayerPitch = player->mo->pitch;
+
+		// [AK] If using the free chasecam, temporarily set the player's pitch
+		// to that of the free chasecam.
+		if (usingFreeChasecam)
+			player->mo->pitch = FreeChasecam::cameraPitch;
+
+		// [Leo] Spectators shouldn't be limited by the server settings.
+		// [RH] Look up/down stuff
+		if (!level.IsFreelookAllowed() && player->bSpectating == false)
+		{
+			player->mo->pitch = 0;
 		}
 		else
 		{
-			player->mo->pitch = 0;
-			player->centering = false;
-			if (player - players == consoleplayer)
+			// Servers read in the pitch value. It is not calculated.
+			if (( NETWORK_GetState( ) != NETSTATE_SERVER ) || ( player->pSkullBot != NULL ))
 			{
-				LocalViewPitch = 0;
+				int look = cmd->ucmd.pitch << 16;
+
+				// The player's view pitch is clamped between -32 and +56 degrees,
+				// which translates to about half a screen height up and (more than)
+				// one full screen height down from straight ahead when view panning
+				// is used.
+				if (look)
+				{
+					if (look == -32768 << 16)
+					{ // center view
+						player->mo->pitch = 0;
+					}
+					else
+					{
+						fixed_t oldpitch = player->mo->pitch;
+						player->mo->pitch -= look;
+						if (look > 0)
+						{ // look up
+							// [BB] Zandronum handles pitch differently.
+							const fixed_t pitchLimit = - ( ( NETWORK_GetState( ) != NETSTATE_SERVER ) ? Renderer->GetMaxViewPitch(false) : 32 ) * ANGLE_1;
+							player->mo->pitch = MAX(player->mo->pitch, pitchLimit );
+							if (player->mo->pitch > oldpitch)
+							{
+								player->mo->pitch = pitchLimit;
+							}
+						}
+						else
+						{ // look down
+							// [BB] Zandronum handles pitch differently.
+							const fixed_t pitchLimit = ( ( NETWORK_GetState( ) != NETSTATE_SERVER ) ? Renderer->GetMaxViewPitch(true) : 56 ) * ANGLE_1;
+							player->mo->pitch = MIN(player->mo->pitch, pitchLimit );
+							if (player->mo->pitch < oldpitch)
+							{
+								player->mo->pitch = pitchLimit;
+							}
+						}
+					}
+				}
 			}
 		}
-	}
+		if (player->centering)
+		{
+			if (abs(player->mo->pitch) > 2*ANGLE_1)
+			{
+				player->mo->pitch = FixedMul(player->mo->pitch, FRACUNIT*2/3);
+			}
+			else
+			{
+				player->mo->pitch = 0;
+				player->centering = false;
+				if (player - players == consoleplayer)
+				{
+					LocalViewPitch = 0;
+				}
+			}
+		}
 
-	// [AK] Calculate how much the player's pitch changed.
-	player->mo->PitchDelta = player->mo->pitch - oldPlayerPitch;
+		// [AK] If being used, update the free chasecam's pitch to the new one,
+		// then reset the player's pitch back to what it was before. This way,
+		// the player isn't also looking around while using the free chasecam.
+		if (usingFreeChasecam)
+		{
+			FreeChasecam::cameraPitch = player->mo->pitch;
+			player->mo->pitch = oldPlayerPitch;
+		}
+
+		// [AK] Calculate how much the player's pitch changed.
+		player->mo->PitchDelta = player->mo->pitch - oldPlayerPitch;
+	}
 
 	// [RH] Check for fast turn around
 	if (cmd->ucmd.buttons & BT_TURN180 && !(player->oldbuttons & BT_TURN180))

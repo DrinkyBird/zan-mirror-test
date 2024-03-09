@@ -66,6 +66,7 @@ enum ClientDemoLocalCommand
 	CLD_LCMD_CHEAT,
 	CLD_LCMD_WARPCHEAT,
 	CLD_LCMD_SETSTATUS,
+	CLD_LCMD_FREECHASECAM,
 };
 
 //*****************************************************************************
@@ -90,6 +91,7 @@ void		CLIENTDEMO_WriteLocalCommand( ClientDemoLocalCommand command, const char *
 void		CLIENTDEMO_WriteCheat( ECheatCommand cheat );
 void		CLIENTDEMO_WriteWarpCheat( fixed_t x, fixed_t y );
 void		CLIENTDEMO_WriteSetStatus( const int statuses, const bool enable );
+void		CLIENTDEMO_WriteFreeChasecam( const bool enable, const fixed_t angle );
 void		CLIENTDEMO_ReadDemoWads( void );
 BYTESTREAM_s *CLIENTDEMO_GetDemoStream( void );
 
