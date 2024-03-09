@@ -2910,6 +2910,12 @@ void P_MovePlayer (player_t *player)
 		player->turnticks--;
 	}
 
+	// [AK] Stop here if the player is dead. They only reason this should happen
+	// is because they're the local player and they're using the free chasecam,
+	// so their angle had to be updated.
+	if (player->playerstate == PST_DEAD)
+		return;
+
 	// [TP] Allow spectators to move freely even if the game is suspended.
 	if ( GAME_GetEndLevelDelay( ) && ( player->bSpectating == false ))
 		memset( cmd, 0, sizeof( ticcmd_t ));
@@ -3707,21 +3713,36 @@ void P_PlayerThink (player_t *player)
 		player->Uncrouch();
 		P_DeathThink (player);
 
+		// [AK] Check if the player pressed the turn-180 degrees button.
+		const bool pressedTurn180 = ((cmd->ucmd.buttons & BT_TURN180) && !(player->oldbuttons & BT_TURN180));
+
 		// [BC] Update oldbuttons.
 		player->oldbuttons = player->cmd.ucmd.buttons;
-		return;
+
+		// [AK] Don't exit the function yet if the local player is using the free chasecam.
+		// Their angle and pitch must still be updated to move the camera.
+		if ((player != &players[consoleplayer]) || (FreeChasecam::IsBeingUsed() == false))
+			return;
+
+		// [AK] Set the dead player's turn ticks so that they can still turn 180-degrees.
+		if (pressedTurn180)
+			player->turnticks = TURN180_TICKS;
 	}
-	if (player->jumpTics != 0)
+	// [AK] The local player doesn't execute these if using the free chasecam while dead.
+	else
 	{
-		player->jumpTics--;
-		if (player->onground && player->jumpTics < -18)
+		if (player->jumpTics != 0)
 		{
-			player->jumpTics = 0;
+			player->jumpTics--;
+			if (player->onground && player->jumpTics < -18)
+			{
+				player->jumpTics = 0;
+			}
 		}
-	}
-	if (player->morphTics)// && !(player->cheats & CF_PREDICTING))
-	{
-		player->mo->MorphPlayerThink ();
+		if (player->morphTics)// && !(player->cheats & CF_PREDICTING))
+		{
+			player->mo->MorphPlayerThink ();
+		}
 	}
 
 	// [AK] While recording a demo, check if the local player's using the free
@@ -3844,6 +3865,15 @@ void P_PlayerThink (player_t *player)
 	if (cmd->ucmd.buttons & BT_TURN180 && !(player->oldbuttons & BT_TURN180))
 	{
 		player->turnticks = TURN180_TICKS;
+	}
+
+	// [AK] The only reason that a dead player reached here is because they're
+	// the local player and they're using the free chasecam, so their pitch had
+	// to be updated. Update their angle now, then stop here.
+	if (player->playerstate == PST_DEAD)
+	{
+		P_MovePlayer(player);
+		return;
 	}
 
 	// Handle movement
