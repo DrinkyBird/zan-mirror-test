@@ -1458,7 +1458,7 @@ int P_DamageMobj (AActor *target, AActor *inflictor, AActor *source, int damage,
 	// [RH] Avoid friendly fire if enabled
 	if (!(flags & DMG_FORCED) && source != NULL &&
 		((player && player != source->player) || (!player && target != source)) &&
-		target->IsTeammate (source))
+		((target->IsTeammate (source)) || ( target->IsFriend(source) && (zadmflags & ZADF_SHOOT_THROUGH_ALLIES)))) // [RK] Treat allied monsters like teammates with shoot through.
 	{
 		// [BL] Some adjustments for Skulltag
 		if (player && (( teamlms || survival ) && ( MeansOfDeath == NAME_SpawnTelefrag )) == false )
