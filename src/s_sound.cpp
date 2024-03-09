@@ -2106,8 +2106,36 @@ void S_UpdateSounds (AActor *listenactor)
 		S_ActivatePlayList(false);
 	}
 
+	// [AK] Variables that are only relevant when using the free chasecam.
+	bool usingFreeChasecam = false;
+	fixed_t oldAngle = 0;
+	fixed_t oldPitch = 0;
+
+	// [AK] If the free chasecam is being used by the listening actor, set
+	// their angle and pitch to match that of the free chasecam.
+	if ((listenactor != nullptr) && (listenactor == players[consoleplayer].camera))
+	{
+		usingFreeChasecam = FreeChasecam::IsBeingUsed();
+
+		if (usingFreeChasecam)
+		{
+			oldAngle = listenactor->angle;
+			listenactor->angle = FreeChasecam::cameraAngle;
+
+			oldPitch = listenactor->pitch;
+			listenactor->pitch = FreeChasecam::cameraPitch;
+		}
+	}
+
 	// should never happen
 	S_SetListener(listener, listenactor);
+
+	// [AK] Restore the listening actor's angle and pitch if necessary.
+	if (usingFreeChasecam)
+	{
+		listenactor->angle = oldAngle;
+		listenactor->pitch = oldPitch;
+	}
 
 	for (FSoundChan *chan = Channels; chan != NULL; chan = chan->NextChan)
 	{
