@@ -3776,6 +3776,10 @@ void ServerCommands::SpawnPlayer::Execute()
 		}
 	}
 
+	// [AK] Reset the player's time and death count upon joining the game.
+	if ( priorState == PST_ENTER )
+		pPlayer->ulTime = pPlayer->ulDeathCount = 0;
+
 	// [TP] If we're overriding colors, rebuild translations now.
 	// If we just joined the game, rebuild all translations,
 	// otherwise recoloring the player in question is sufficient.
