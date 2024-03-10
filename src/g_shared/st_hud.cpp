@@ -365,8 +365,7 @@ void HUD_Refresh( void )
 	g_bIsTied = HUD_IsTied( ulPlayer );
 
 	// [AK] Count how many players are in the game.
-	g_ulNumPlayers = SERVER_CalcNumNonSpectatingPlayers( MAXPLAYERS );
-	g_ulNumSpectators = SERVER_CountPlayers( true ) - g_ulNumPlayers;
+	HUD_RefreshPlayerCounts( );
 
 	// "x opponents left", "x allies alive", etc
 	if ( GAMEMODE_GetCurrentFlags( ) & GMF_DEADSPECTATORS )
@@ -395,6 +394,14 @@ void HUD_Refresh( void )
 			}
 		}
 	}
+}
+
+//*****************************************************************************
+//
+void HUD_RefreshPlayerCounts( void )
+{
+	g_ulNumPlayers = SERVER_CalcNumNonSpectatingPlayers( MAXPLAYERS );
+	g_ulNumSpectators = SERVER_CountPlayers( true ) - g_ulNumPlayers;
 }
 
 //*****************************************************************************

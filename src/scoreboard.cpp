@@ -2895,6 +2895,11 @@ void Scoreboard::Refresh( const ULONG ulDisplayPlayer )
 {
 	ulRowHeightToUse = lRowHeight;
 
+	// [AK] The scoreboard needs the player and spectator counts in "st_hud.cpp".
+	// Since the HUD doesn't refresh during intermissions, update the counts here.
+	if ( gamestate == GS_INTERMISSION )
+		HUD_RefreshPlayerCounts( );
+
 	// [AK] Refresh all of the scoreboard's columns, then update the widths of any active columns.
 	for ( unsigned int i = 0; i < ColumnOrder.Size( ); i++ )
 	{
