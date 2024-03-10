@@ -3566,16 +3566,49 @@ void DACSThinker::Tick ()
 	}
 }
 
-void DACSThinker::StopScriptsFor (AActor *actor)
+//=====================================================================
+// [RK]
+// Changes the activator of running scripts to new actor.
+// 
+//=====================================================================
+
+void DACSThinker::ReplaceActivator (AActor *actor, AActor *newactor)
 {
 	DLevelScript *script = Scripts;
 
 	while (script != NULL)
 	{
-		DLevelScript *next = script->next;
+		DLevelScript* next = script->next;
 		if (script->activator == actor)
 		{
+			script->activator = newactor;
+		}
+		script = next;
+	}
+}
+
+//======================================================================
+//
+// [RK] Added bRemoveNow if we're planning for GC soon and 'activation'
+// to only change scripts that match the specified type such as 'OPEN'.
+
+void DACSThinker::StopScriptsFor (AActor *actor, bool bRemoveNow, int activation)
+{
+	DLevelScript *script = Scripts;
+	FBehavior *pModule = NULL; // [RK] Added for StaticFindScript
+
+	while (script != NULL)
+	{
+		DLevelScript *next = script->next;
+		const ScriptPtr* pScriptData = FBehavior::StaticFindScript(script->script, pModule); // [RK] Grab the activation type.
+
+		// [RK] If activation is passed, then check for the type of activation.
+		if ( script->activator == actor && ( !activation || pScriptData->Type == activation ))
+		{
 			script->SetState (DLevelScript::SCRIPT_PleaseRemove);
+
+			if (bRemoveNow)
+				script->RunScript();
 		}
 		script = next;
 	}

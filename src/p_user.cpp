@@ -2460,6 +2460,25 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_SkullPop)
 	mo->velz = 2*FRACUNIT + (pr_skullpop() << 6);
 	// Attach player mobj to bloody skull
 	player = self->player;
+
+	// [RK] Before we set the old player to NULL we have to transfer over the
+	// new actor to any running scripts that have the old body as the activator.
+	if (player != NULL)
+	{
+		TThinkerIterator<DACSThinker> it;
+		DACSThinker* next = it.Next();
+
+		while (next != NULL)
+		{
+			next->ReplaceActivator(self, mo);
+			next = it.Next();
+		}
+	}
+	// [RK] If for some reason the player is NULL the scripts have
+	// to be stopped to prevent them from lingering around.
+	else
+		FBehavior::StaticStopMyScripts(self);
+
 	self->player = NULL;
 	mo->ObtainInventory (self);
 	mo->player = player;

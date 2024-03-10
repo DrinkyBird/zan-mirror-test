@@ -1906,7 +1906,7 @@ void G_FinishTravel ()
 					if ( !doSweep )
 						doSweep = true;
 
-					next2->Destroy();
+					next2->StopScriptsFor(pawn, doSweep, SCRIPT_Enter);
 					next2 = it2.Next();
 				}
 			}

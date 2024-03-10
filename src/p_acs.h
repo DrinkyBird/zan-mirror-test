@@ -1150,9 +1150,11 @@ public:
 	static TObjPtr<DACSThinker> ActiveThinker;
 
 	void DumpScriptStatus();
-	void StopScriptsFor (AActor *actor);
+	void StopScriptsFor (AActor *actor, bool bRemoveNow = false, int activation = 0); // [RK] Added bRemoveNow and activation
 	// [BB] Added StopAndDestroyAllScripts, which is needed in GAME_ResetMap.
 	void StopAndDestroyAllScripts ();
+	// [RK] Added ReplaceActivator which is needed in A_SkullPop since a new body is spawned.
+	void ReplaceActivator(AActor* actor, AActor *newactor);
 
 private:
 	DLevelScript *LastScript;
