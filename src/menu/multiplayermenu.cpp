@@ -980,6 +980,18 @@ void M_RconAccessGranted()
 //
 // =================================================================================================
 
+void M_SetLastRconAccessRequest( int tic )
+{
+	g_LastRconAccessRequest = tic;
+}
+
+// =================================================================================================
+//
+//
+//
+//
+// =================================================================================================
+
 CCMD ( menu_startskirmish )
 {
 	M_StartSkirmishGame();
@@ -1116,6 +1128,6 @@ CCMD ( menu_rconlogin )
 		FString command;
 		command.Format ("send_password \"%s\"", *menu_rconpassword );
 		C_DoCommand( command );
-		g_LastRconAccessRequest = gametic;
+		M_SetLastRconAccessRequest( gametic );
 	}
 }

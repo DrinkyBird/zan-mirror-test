@@ -9704,7 +9704,10 @@ CCMD( send_password )
 	}
 
 	if ( g_ConnectionState == CTS_ACTIVE )
+	{
 		CLIENTCOMMANDS_ChangeRCONStatus( true, argv[1] );
+		M_SetLastRconAccessRequest( -1 );
+	}
 }
 
 //*****************************************************************************
