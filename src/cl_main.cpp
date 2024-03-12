@@ -4154,10 +4154,17 @@ void ServerCommands::SetPlayerUserInfo::Execute()
 		// Other info.
 		else if ( name == NAME_Gender )
 			player->userinfo.GenderNumChanged ( value.ToLong() );
-		else if ( name == NAME_Color )
-			player->userinfo.ColorChanged ( value );
-		else if ( name == NAME_ColorSet )
-			player->userinfo.ColorSetChanged ( value.ToLong() );
+		else if (( name == NAME_Color ) || ( name == NAME_ColorSet ))
+		{
+			if ( name == NAME_Color )
+				player->userinfo.ColorChanged ( value );
+			else
+				player->userinfo.ColorSetChanged ( value.ToLong() );
+
+			// [AK] Update the status bar so that the new color appears right away.
+			if (( StatusBar != nullptr ) && ( StatusBar->GetPlayer( ) == player - players ))
+				StatusBar->AttachToPlayer( player );
+		}
 		else if ( name == NAME_RailColor )
 			player->userinfo.RailColorChanged ( value.ToLong() );
 		// Make sure the skin is valid.
