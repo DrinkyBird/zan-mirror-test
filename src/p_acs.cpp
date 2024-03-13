@@ -8099,6 +8099,7 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 					return lumpNum;
 
 				ACSLumpHandles[lumpNum].lump = Wads.OpenLumpNum(lumpNum);
+				ACSLumpHandles[lumpNum].refCount++;
 				return lumpNum;
 			}
 
@@ -8328,7 +8329,7 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 
 				ACSLumpHandles[args[0]].refCount--;
 
-				if(ACSLumpHandles[args[0]].refCount <= 0)
+				if(ACSLumpHandles[args[0]].refCount == 0)
 					ACSLumpHandles.Remove( args[0] );
 
 				return 0;
