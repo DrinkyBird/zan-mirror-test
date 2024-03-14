@@ -171,6 +171,7 @@
 !	- Voting will no longer end when traversing through maps and portals when in a hub. This will prevent a player from purposely cancelling a vote on the server (addresses 711). [Ru5tK1ng]
 !	- Changed the color of the "SPKRA0" sprite to orange and made it low-res to fit with Doom's aesthetics better. [Kaminsky]
 !	- Maps that have team spawns but no deathmatch spawns should load and spawn the players in when running modes like TeamDM or TeamLMS (addresses 1327). [Ru5tK1ng]
+!	- A server's settings (i.e. any serverinfo CVars the server syncs with the client) are now discarded when the client disconnects and won't be saved into their config file. [Kaminsky] 
 
 
 3.1

@@ -132,6 +132,7 @@
 #include "p_conversation.h"
 #include "st_hud.h"
 #include "voicechat.h"
+#include "gameconfigfile.h"
 
 //*****************************************************************************
 //	MISC CRAP THAT SHOULDN'T BE HERE BUT HAS TO BE BECAUSE OF SLOPPY CODING
@@ -2415,6 +2416,46 @@ void CLIENT_PrintCommand( LONG lCommand )
 
 //*****************************************************************************
 //
+void CLIENT_RestoreServerInfoCVars( void )
+{
+	const char *serverInfoSections[2] = { "LocalServerInfo", "LocalServerInfo.Mod" };
+
+	// [AK] Reset all serverinfo CVars to their default values first. This is
+	// in case the server synced any CVars to us that aren't archived yet.
+	for ( FBaseCVar *cvar = CVars; cvar != nullptr; cvar = cvar->GetNext( ))
+	{
+		if ( cvar->GetFlags( ) & CVAR_SERVERINFO )
+			cvar->ResetToDefault( );
+	}
+
+	// [AK] Read from both local serverinfo sections in the config file and
+	// restore the values of any serverinfo CVars to whatever's saved in them.
+	for ( unsigned int i = 0; i < 2; i++ )
+	{
+		FString section;
+		const char *key, *value;
+		UCVarValue val;
+
+		section.Format( "%s.%s", gameinfo.ConfigName.GetChars( ), serverInfoSections[i] );
+
+		if ( GameConfig->SetSection( section ))
+		{
+			while ( GameConfig->NextInSection( key, value ))
+			{
+				FBaseCVar *cvar = FindCVar( key, nullptr );
+
+				if ( cvar != nullptr )
+				{
+					val.String = const_cast<char *>( value );
+					cvar->SetGenericRep( val, CVAR_String );
+				}
+			}
+		}
+	}
+}
+
+//*****************************************************************************
+//
 void CLIENT_QuitNetworkGame( const char *pszString )
 {
 	if ( pszString )
@@ -2477,6 +2518,11 @@ void CLIENT_QuitNetworkGame( const char *pszString )
 	// since the server sent us level.gravity instead of its own sv_gravity value,
 	// see SERVERCOMMANDS_SetGameModeLimits.
 	sv_gravity.ResetToDefault();
+
+	// [AK] We'll also restore any serverinfo CVars saved in our config and discard
+	// all of the server's settings. This is especially so that the server's settings
+	// don't overwrite ours if they're archived later.
+	CLIENT_RestoreServerInfoCVars( );
 
 	// If we're recording a demo, then finish it!
 	if ( CLIENTDEMO_IsRecording( ))
