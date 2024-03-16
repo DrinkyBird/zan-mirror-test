@@ -8530,10 +8530,10 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 		{
 			enum
 			{
-				GETPLAYERSKIN_USERINFO,
-				GETPLAYERSKIN_WEAPON,
-				GETPLAYERSKIN_ACS,
-				GETPLAYERSKIN_VISIBLE,
+				PLAYERSKIN_USERINFO,
+				PLAYERSKIN_WEAPON,
+				PLAYERSKIN_ACS,
+				PLAYERSKIN_VISIBLE,
 			};
 
 			if ( PLAYER_IsValidPlayer( args[0] ))
@@ -8545,17 +8545,17 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 				int skinIndex = player->CurrentPlayerClass;
 
 				// [AK] Get the player's personal skin.
-				if ( type == GETPLAYERSKIN_USERINFO )
+				if ( type == PLAYERSKIN_USERINFO )
 				{
 					if ( PLAYER_ShouldForceBaseSkin( player ) == false )
 						skinIndex = player->userinfo.GetSkin( );
 				}
 				// [AK] ...or their weapon's preferred skin or the skin overridden from ACS.
-				else if (( type == GETPLAYERSKIN_WEAPON ) || ( type == GETPLAYERSKIN_ACS ))
+				else if (( type == PLAYERSKIN_WEAPON ) || ( type == PLAYERSKIN_ACS ))
 				{
 					const char *skinName = nullptr;
 
-					if ( type == GETPLAYERSKIN_WEAPON )
+					if ( type == PLAYERSKIN_WEAPON )
 					{
 						if ( player->ReadyWeapon )
 							skinName = player->ReadyWeapon->PreferredSkin.GetChars( );
@@ -8575,7 +8575,7 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 				// [AK] ...or if we want to know the skin that's visible using without any
 				// guess and check, then use their overridden skin (i.e. weapon preferred skin
 				// or from ACS) first if available, and their personal skin last.
-				else if ( type == GETPLAYERSKIN_VISIBLE )
+				else if ( type == PLAYERSKIN_VISIBLE )
 				{
 					const int overrideSkin = PLAYER_GetOverrideSkin( player );
 
