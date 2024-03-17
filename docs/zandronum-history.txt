@@ -28,7 +28,7 @@
 +	- Added the CVar "snd_lockmusic" which prevents any music changes as if a playlist was playing, based on a feature from ZCC. [Kaminsky]
 +	- Added the CVar "blood_fade_usemaxhealth", which scales the intensity of the blood based on the player's max health instead of a hardcoded health of 100, unless the server wants to force max blood on the screen. [Kaminsky]
 +	- Added the AAPTR_PLAYER_GETCAMERA constant that returns the actor a player is looking from. [Kaminsky]
-+	- Added an argument to GAMEEVENT_ACTOR_SPAWNED that indicates if the actor was spawned by the level or not. [Kaminsky]
++	- Added an argument to GAMEEVENT_ACTOR_SPAWNED representing a bitfield that indicates how the actor was spawned. [Kaminsky]
 +	- Added the dmflag "sv_donthidestats" to show an enemy player's stats. [DoomJoshuaBoy]
 +	- Added a new SelfObituary actor property for when a player kills themselves with an actor. This replaces Skulltag's hardcoded self obituaries for the BFG10K and Grenades. [Sean]
 +	- Added the DECORATE flags GIVEFISTINGMEDAL and GIVESPAMMEDAL. Projectiles or puffs with these flags will award the player with the "fisting" and "spam" medals respectively upon killing an enemy player. [Kaminsky]

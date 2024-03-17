@@ -449,6 +449,9 @@ enum
 	STFL_GIVEFISTINGMEDAL		= 0x20000000,
 	STFL_GIVESPAMMEDAL			= 0x40000000,
 
+	// [AK] This actor was spawned by a random spawner.
+	STFL_RANDOMSPAWNED			= 0x80000000,
+
 // More flags for Skulltag... these having to do with the network.
 
 	// This object does not have a network ID.

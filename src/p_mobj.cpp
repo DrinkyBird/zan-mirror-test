@@ -5204,8 +5204,31 @@ void AActor::PostBeginPlay ()
 		// [AK] If we want to force GAMEEVENT_ACTOR_SPAWNED on every actor, then at least ignore 
 		// the less imporant actors unless they have the USESPAWNEVENTSCRIPT flag enabled.
 		if (( STFlags & STFL_USESPAWNEVENTSCRIPT ) || (( gameinfo.bForceSpawnEventScripts ) && ( bNotImportant == false )))
-			GAMEMODE_HandleEvent( GAMEEVENT_ACTOR_SPAWNED, this, !!( STFlags & STFL_LEVELSPAWNED ), 0, true );
+		{
+			enum
+			{
+				GAMEEVENT_SPAWN_LEVELSPAWNED	= 1 << 0,
+				GAMEEVENT_SPAWN_RANDOMSPAWNED	= 1 << 1,
+			};
+
+			unsigned int spawnEventFlags = 0;
+
+			if ( STFlags & STFL_LEVELSPAWNED )
+				spawnEventFlags |= GAMEEVENT_SPAWN_LEVELSPAWNED;
+
+			if ( STFlags & STFL_RANDOMSPAWNED )
+				spawnEventFlags |= GAMEEVENT_SPAWN_RANDOMSPAWNED;
+
+			GAMEMODE_HandleEvent( GAMEEVENT_ACTOR_SPAWNED, this, spawnEventFlags, 0, true );
+		}
 	}
+
+	// [AK] If the actor was spawned by a random spawner, then STFL_LEVELSPAWNED
+	// might be temporarily enabled for the purpose of indicating that the actor
+	// was (to an extent) spawned by the level in GAMEEVENT_ACTOR_SPAWNED. The
+	// flag must be disabled after that.
+	if (( STFlags & STFL_RANDOMSPAWNED ) && ( STFlags & STFL_LEVELSPAWNED ))
+		STFlags &= ~STFL_LEVELSPAWNED;
 }
 
 void AActor::MarkPrecacheSounds() const
