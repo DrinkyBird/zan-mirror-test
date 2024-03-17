@@ -483,8 +483,6 @@ void P_DropWeapon (player_t *player)
 void P_BobWeapon (player_t *player, pspdef_t *psp, fixed_t *x, fixed_t *y)
 {
 	static fixed_t curbob;
-	// [AK] The position of the weapon while it's swaying (0 = x, 1 = y).
-	static fixed_t swaypos[2];
 
 	AWeapon *weapon;
 	fixed_t bobtarget;
@@ -591,8 +589,11 @@ void P_BobWeapon (player_t *player, pspdef_t *psp, fixed_t *x, fixed_t *y)
 	// [AK] Sway the weapon if the multiplier is a non-zero value.
 	if (swayspeed != 0.0f)
 	{
+		static fixed_t swaypos[2];
+		static int lastSwayTime = 0;
+
 		// [AK] Don't reposition the sprite while the ticker is paused or while the server is lagging.
-		if ((paused == false) && (P_CheckTickerPaused() == false) && (CLIENT_GetServerLagging() == false))
+		if ((lastSwayTime != level.time) && (paused == false) && (P_CheckTickerPaused() == false) && (CLIENT_GetServerLagging() == false))
 		{
 			fixed_t nswaypos[2];
 			nswaypos[0] = FLOAT2FIXED(FIXED2FLOAT(player->mo->AngleDelta) * swayspeed / 256.0f);
@@ -600,16 +601,18 @@ void P_BobWeapon (player_t *player, pspdef_t *psp, fixed_t *x, fixed_t *y)
 
 			for (int i = 0; i <= 1; i++)
 			{
-				if (abs(nswaypos[i] - swaypos[i]) <= 1024)
+				if (abs(nswaypos[i] - swaypos[i]) <= 256)
 				{
 					swaypos[i] = nswaypos[i];
 				}
 				else
 				{
-					fixed_t zoom = MAX<fixed_t>(1024, abs(swaypos[i] - nswaypos[i]) / 40);
+					fixed_t zoom = MAX<fixed_t>(256, abs(swaypos[i] - nswaypos[i]) / 10);
 					swaypos[i] += zoom * (swaypos[i] > nswaypos[i] ? -1 : 1);
 				}
 			}
+
+			lastSwayTime = level.time;
 		}
 
 		*x += swaypos[0];

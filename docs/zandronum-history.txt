@@ -175,6 +175,7 @@
 !	- Changed the color of the "SPKRA0" sprite to orange and made it low-res to fit with Doom's aesthetics better. [Kaminsky]
 !	- Maps that have team spawns but no deathmatch spawns should load and spawn the players in when running modes like TeamDM or TeamLMS (addresses 1327). [Ru5tK1ng]
 !	- A server's settings (i.e. any serverinfo CVars the server syncs with the client) are now discarded when the client disconnects and won't be saved into their config file. [Kaminsky] 
+!	- The position of the weapon sprite while swaying now only updates at 35 Hz instead of at the refresh rate. [Kaminsky]
 
 
 3.1
