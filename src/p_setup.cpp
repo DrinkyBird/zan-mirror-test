@@ -4364,7 +4364,10 @@ void P_SetupLevel (char *lumpname, int position)
 // not assumed to be from this one.
 
 	for (i = 0; i < BODYQUESIZE; i++)
+	{
 		bodyque[i] = NULL;
+		bodyquePlayer[i] = nullptr; // [AK]
+	}
 
 	deathmatchstarts.Clear();
 	AllPlayerStarts.Clear();

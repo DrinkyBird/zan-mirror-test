@@ -266,6 +266,9 @@ FString			shotfile;
 AActor* 		bodyque[BODYQUESIZE]; 
 int 			bodyqueslot; 
 
+// [AK] The player that a corpse in the same slot belonged to.
+player_t		*bodyquePlayer[BODYQUESIZE];
+
 void R_ExecuteSetViewSize (void);
 
 FString savename;
@@ -2783,8 +2786,10 @@ FPlayerStart *G_PickPlayerStart(int playernum, int flags)
 	if (bodyqueslot >= BODYQUESIZE && bodyque[modslot] != NULL)
 	{
 		bodyque[modslot]->Destroy ();
+		bodyquePlayer[modslot] = nullptr; // [AK] Nullify the player slot too.
 	}
 	bodyque[modslot] = body;
+	bodyquePlayer[modslot] = body->player; // [AK] Queue the player that owned the corpse too.
 
 	// Copy the player's translation, so that if they change their color later, only
 	// their current body will change and not all their old corpses.
@@ -2800,6 +2805,25 @@ FPlayerStart *G_PickPlayerStart(int playernum, int flags)
 	PLAYER_ApplySkinScaleToBody( body->player, body, body->player->ReadyWeapon );
 
 	bodyqueslot++;
+}
+
+// [AK] Only useful in A_PlayerScream and A_XScream. If this actor is a corpse, then
+// this (temporarily) assigns its player pointer to whoever owned the corpse.
+bool G_TransferPlayerFromCorpse (AActor *actor)
+{
+	if ((actor != nullptr) && (actor->player == nullptr))
+	{
+		for (unsigned int i = 0; i < BODYQUESIZE; i++)
+		{
+			if ((actor == bodyque[i]) && (playeringame[bodyquePlayer[i] - players]))
+			{
+				actor->player = bodyquePlayer[i];
+				return true;
+			}
+		}
+	}
+
+	return false;
 }
 
 //

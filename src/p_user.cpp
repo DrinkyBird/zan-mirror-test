@@ -1367,9 +1367,21 @@ void APlayerPawn::FilterCoopRespawnInventory (APlayerPawn *oldplayer)
 
 const char *APlayerPawn::GetSoundClass() const
 {
+	// [AK] If this is a corpse, check which player it originally belonged to.
+	player_t *corpsePlayer = nullptr;
+	for ( unsigned int i = 0; i < BODYQUESIZE; i++ )
+	{
+		if ( this == bodyque[i] )
+		{
+			corpsePlayer = bodyquePlayer[i];
+			break;
+		}
+	}
+
 	// [BC] If this player's skin is disabled, just use the base sound class.
 	// [BB] Voodoo dolls don't have valid userinfo.
-	if (( player != NULL ) && ( player->mo == this ) &&
+	// [AK] Also use the player's skin if this is a corpse that belonged to them.
+	if (( player != NULL ) && (( player->mo == this ) || ( player == corpsePlayer )) &&
 		(( cl_skins == 1 ) || (( cl_skins >= 2 ) &&
 		( player->userinfo.GetSkin() < static_cast<signed> (skins.Size()) ) &&
 		( skins[player->userinfo.GetSkin()].bCheat == false ))))
@@ -2369,6 +2381,12 @@ DEFINE_ACTION_FUNCTION(AActor, A_PlayerScream)
 	int sound = 0;
 	int chan = CHAN_VOICE;
 
+	// [AK] If the actor used have a valid player pointer, but doesn't anymore
+	// because the player respawned, then temporarily set the pointer to the
+	// old player. This way, we can still play their skin's death sound(s) and
+	// not have to alter the code below.
+	const bool usedOldPlayer = G_TransferPlayerFromCorpse(self);
+
 	if (self->player == NULL || self->DeathSound != 0)
 	{
 		if (self->DeathSound != 0)
@@ -2379,6 +2397,12 @@ DEFINE_ACTION_FUNCTION(AActor, A_PlayerScream)
 		{
 			S_Sound (self, CHAN_VOICE, "*death", 1, ATTN_NORM);
 		}
+
+		// [AK] If self->player was a null pointer before and had to be changed
+		// temporarily, reset it back before exiting the function.
+		if (usedOldPlayer)
+			self->player = nullptr;
+
 		return;
 	}
 
@@ -2428,6 +2452,11 @@ DEFINE_ACTION_FUNCTION(AActor, A_PlayerScream)
 		}
 	}
 	S_Sound (self, chan, sound, 1, ATTN_NORM);
+
+	// [AK] After playing the death sound, if self->player was a null pointer
+	// before and had to be changed temporarily, reset it back.
+	if (usedOldPlayer)
+		self->player = nullptr;
 }
 
 

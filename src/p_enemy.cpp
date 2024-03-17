@@ -3345,10 +3345,20 @@ DEFINE_ACTION_FUNCTION(AActor, A_Scream)
 
 DEFINE_ACTION_FUNCTION(AActor, A_XScream)
 {
+	// [AK] If the actor used have a valid player pointer, but doesn't anymore
+	// because the player respawned, then temporarily set the pointer to the
+	// old player. This way, we can still play their skin's gibbed sound.
+	const bool usedOldPlayer = G_TransferPlayerFromCorpse(self);
+
 	if (self->player)
 		S_Sound (self, CHAN_VOICE, "*gibbed", 1, ATTN_NORM);
 	else
 		S_Sound (self, CHAN_VOICE, "misc/gibbed", 1, ATTN_NORM);
+
+	// [AK] After playing the gibbed sound, if self->player was a null pointer
+	// before and had to be changed temporarily, reset it back.
+	if (usedOldPlayer)
+		self->player = nullptr;
 }
 
 //===========================================================================

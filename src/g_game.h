@@ -138,7 +138,9 @@ void G_FinishChangeSpy ( ULONG ulPlayer );
 
 #define BODYQUESIZE 	32
 class AActor;
+class player_t; // [AK]
 extern AActor *bodyque[BODYQUESIZE]; 
+extern player_t *bodyquePlayer[BODYQUESIZE]; // [AK]
 extern int bodyqueslot; 
 class AInventory;
 extern const AInventory *SendItemUse, *SendItemDrop;
@@ -151,6 +153,9 @@ extern PClass *LastWeaponSelected;
 
 // [BB] Exported G_QueueBody.
 void G_QueueBody (AActor *body);
+
+// [AK] Only useful in A_PlayerScream and A_XScream.
+bool G_TransferPlayerFromCorpse (AActor *actor);
 
 // [TP]
 const char* G_DescribeJoinMenuKey();
