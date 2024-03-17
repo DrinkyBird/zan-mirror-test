@@ -988,7 +988,7 @@ bool PIT_CheckThing(AActor *thing, FCheckPosition &tm)
 		}
 	}
 
-	if (tm.thing->player == NULL) // || !(tm.thing->player->cheats & CF_PREDICTING)) // [BB]
+	if ((tm.thing->player == NULL) || (thing->flags6 & MF6_TOUCHY) || (tm.thing->flags6 & MF6_TOUCHY)) // || !(tm.thing->player->cheats & CF_PREDICTING)) // [BB] // [RK] Added checks.
 	{
 		// touchy object is alive, toucher is solid
 		if (thing->flags6 & MF6_TOUCHY && tm.thing->flags & MF_SOLID && thing->health > 0 &&

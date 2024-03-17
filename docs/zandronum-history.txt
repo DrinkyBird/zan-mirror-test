@@ -144,6 +144,7 @@
 -	- Fixed: if the wrong password was used to log into RCON through the menu, and then the correct password was sent through the console, the server setup menu suddenly popped up again despite being closed. [Kaminsky]
 -	- Fixed: serverinfo CVars didn't always save into the "LocalServerInfo" subsection of a config file in offline games (e.g. when multiplayer emulation is on). [Kaminsky]
 -	- Fixed: when a player changed their color or colorset, it didn't immediately update the status bar correctly in online games. [Kaminsky]
+-	- Fixed: A regression from a codebase update was introduced that caused +TOUCHY to no longer work at all (addresses 4172). [Ru5tK1ng]
 !	- The result value of GAMEEVENT_MEDALS event scripts can now be used to determine whether or not the player receives the medal. [Kaminsky]
 !	- GAMEMODE flags are now validated after all GAMEMODE lumps have been parsed instead of after each one. The internal game mode name (e.g. "TeamLMS") is now printed with the error message instead of the actual name. [Kaminsky]
 !	- Added an extra check to ensure that game modes have a (short) name. [Kaminsky]
