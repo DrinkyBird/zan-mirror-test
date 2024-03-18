@@ -2470,11 +2470,9 @@ void PLAYER_SetSpectator( player_t *pPlayer, bool bBroadcast, bool bDeadSpectato
 
 	// [BB] Morphed players need to be unmorphed before being changed to spectators.
 	// [WS] This needs to be done before we turn our player into a spectator.
-	if (( pPlayer->morphTics ) &&
-		( NETWORK_InClientMode() == false ))
-	{
+	// [AK] Don't do this yet if they're turning into a dead spectator.
+	if (( pPlayer->morphTics ) && ( NETWORK_InClientMode( ) == false ) && ( bDeadSpectator == false ))
 		P_UndoPlayerMorph ( pPlayer, pPlayer );
-	}
 
 	// Flag this player as being a spectator.
 	pPlayer->bSpectating = true;
@@ -2572,6 +2570,13 @@ void PLAYER_SetSpectator( player_t *pPlayer, bool bBroadcast, bool bDeadSpectato
 
 				// [AK] Apply the skin's scale to the old body's scale.
 				PLAYER_ApplySkinScaleToBody( pPlayer, pOldBody, pOldWeapon );
+			}
+
+			// [AK] If the player was morphed before turning into a dead spectator, unmorph them now.
+			if (( pPlayer->morphTics ) && ( NETWORK_InClientMode( ) == false ))
+			{
+				pPlayer->MorphExitFlash = nullptr;
+				P_UndoPlayerMorph( pPlayer, pPlayer );
 			}
 		}
 		// [BB] In case the player is not respawned as dead spectator, we have to manually clear its TID.
