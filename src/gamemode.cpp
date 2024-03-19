@@ -1207,6 +1207,49 @@ LONG GAMEMODE_HandleEvent ( const GAMEEVENT_e Event, AActor *pActivator, const i
 
 //*****************************************************************************
 //
+void GAMEMODE_HandleSpawnEvent ( AActor *actor )
+{
+	if ( actor == nullptr )
+		return;
+
+	// [AK] We shouldn't need to execute this for players since we already have
+	// special script types like ENTER, RETURN, and RESPAWN.
+	if (( actor->player == nullptr ) && (( actor->STFlags & STFL_NOSPAWNEVENTSCRIPT ) == false ))
+	{
+		bool notImportant = false;
+
+		// [AK] Projectiles and BulletPuffs can have NOBLOCKMAP enabled but that
+		// doesn't make them unimportant.
+		if (( actor->flags & MF_NOBLOCKMAP ) && ((( actor->flags & MF_MISSILE ) == false ) && ( actor->IsKindOf( PClass::FindClass( NAME_BulletPuff )) == false )))
+			notImportant = true;
+		else if (( actor->flags & MF_NOSECTOR ) || ( actor->IsKindOf( RUNTIME_CLASS( AHexenArmor ))))
+			notImportant = true;
+
+		// [AK] If we want to force GAMEEVENT_ACTOR_SPAWNED on every actor, then
+		// ignore less important actors unless they enabled USESPAWNEVENTSCRIPT.
+		if (( actor->STFlags & STFL_USESPAWNEVENTSCRIPT ) || (( gameinfo.bForceSpawnEventScripts ) && ( notImportant == false )))
+		{
+			enum
+			{
+				GAMEEVENT_SPAWN_LEVELSPAWNED	= 1 << 0,
+				GAMEEVENT_SPAWN_RANDOMSPAWNED	= 1 << 1,
+			};
+
+			unsigned int spawnEventFlags = 0;
+
+			if ( actor->STFlags & STFL_LEVELSPAWNED )
+				spawnEventFlags |= GAMEEVENT_SPAWN_LEVELSPAWNED;
+
+			if ( actor->STFlags & STFL_RANDOMSPAWNED )
+				spawnEventFlags |= GAMEEVENT_SPAWN_RANDOMSPAWNED;
+
+			GAMEMODE_HandleEvent( GAMEEVENT_ACTOR_SPAWNED, actor, spawnEventFlags, 0, true );
+		}
+	}
+}
+
+//*****************************************************************************
+//
 bool GAMEMODE_HandleDamageEvent ( AActor *target, AActor *inflictor, AActor *source, int &damage, FName mod, bool bBeforeArmor )
 {
 	// [AK] Don't run any scripts if the target doesn't allow executing GAMEEVENT_ACTOR_DAMAGED.

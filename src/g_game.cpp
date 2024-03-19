@@ -3419,6 +3419,7 @@ void GAME_ResetMap( bool bRunEnterScripts )
 	fixed_t							Y;
 	fixed_t							Z;
 	TThinkerIterator<AActor>		ActorIterator;
+	TArray<AActor *>				untouchedActors;
 
 	// Unload decals.
 	DECAL_ClearDecals( );
@@ -4082,6 +4083,8 @@ void GAME_ResetMap( bool bRunEnterScripts )
 				pActor->tid = pActor->SavedTID;
 				pActor->AddToHash();
 			}
+
+			untouchedActors.Push( pActor );
 			continue;
 		}
 
@@ -4294,6 +4297,11 @@ void GAME_ResetMap( bool bRunEnterScripts )
 			}
 		}
 	}
+
+	// [AK] For any actors that weren't respawned, AActor::PostBeginPlay won't
+	// be executed and trigger GAMEEVENT_ACTOR_SPAWNED normally, so do it here.
+	for ( unsigned int i = 0; i < untouchedActors.Size( ); i++ )
+		GAMEMODE_HandleSpawnEvent( untouchedActors[i] );
 }
 
 //*****************************************************************************

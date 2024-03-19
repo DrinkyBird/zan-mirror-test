@@ -5189,40 +5189,8 @@ void AActor::PostBeginPlay ()
 	PrevAngle = angle;
 	flags7 |= MF7_HANDLENODELAY;
 
-	// [AK] Trigger an event script indicating that the actor has spawned. We
-	// shouldn't need to execute this for players since we already have special
-	// script types like ENTER, RETURN, and RESPAWN.
-	if (( player == NULL ) && (( STFlags & STFL_NOSPAWNEVENTSCRIPT ) == false ))
-	{
-		bool bNotImportant = false;
-
-		// [AK] Projectiles and BulletPuffs can have NOBLOCKMAP enabled but that doesn't make them unimportant.
-		if (( flags & MF_NOBLOCKMAP ) && ((( flags & MF_MISSILE ) == false ) && ( IsKindOf( PClass::FindClass( NAME_BulletPuff )) == false )))
-			bNotImportant = true;
-		else if (( flags & MF_NOSECTOR ) || ( IsKindOf( RUNTIME_CLASS( AHexenArmor ))))
-			bNotImportant = true;
-
-		// [AK] If we want to force GAMEEVENT_ACTOR_SPAWNED on every actor, then at least ignore 
-		// the less imporant actors unless they have the USESPAWNEVENTSCRIPT flag enabled.
-		if (( STFlags & STFL_USESPAWNEVENTSCRIPT ) || (( gameinfo.bForceSpawnEventScripts ) && ( bNotImportant == false )))
-		{
-			enum
-			{
-				GAMEEVENT_SPAWN_LEVELSPAWNED	= 1 << 0,
-				GAMEEVENT_SPAWN_RANDOMSPAWNED	= 1 << 1,
-			};
-
-			unsigned int spawnEventFlags = 0;
-
-			if ( STFlags & STFL_LEVELSPAWNED )
-				spawnEventFlags |= GAMEEVENT_SPAWN_LEVELSPAWNED;
-
-			if ( STFlags & STFL_RANDOMSPAWNED )
-				spawnEventFlags |= GAMEEVENT_SPAWN_RANDOMSPAWNED;
-
-			GAMEMODE_HandleEvent( GAMEEVENT_ACTOR_SPAWNED, this, spawnEventFlags, 0, true );
-		}
-	}
+	// [AK] Trigger an event script indicating that the actor has spawned.
+	GAMEMODE_HandleSpawnEvent( this );
 
 	// [AK] If the actor was spawned by a random spawner, then STFL_LEVELSPAWNED
 	// might be temporarily enabled for the purpose of indicating that the actor
