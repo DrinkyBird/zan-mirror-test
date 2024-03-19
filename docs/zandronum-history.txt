@@ -148,6 +148,7 @@
 -	- Fixed: a skin's death sound didn't get used if the player respawned before the death sound could play on the corpse. [Kaminsky]
 -	- Fixed: Player_SetTeam would cause players to select the fist instead of the Pistol depending on PWO settings (addresses 2897). [Ru5tK1ng]
 -	- Fixed: a dummy player would be spawned behind if a morphed player dies and is forced to dead spectate in a gamemode with dead spectators. [Kaminsky]
+-	- Fixed: a dummy sprite of the player's overridden skin (e.g. their weapon's preferred skin) appeared when they bursted into chunks after dying from ice. [Kaminsky]
 !	- The result value of GAMEEVENT_MEDALS event scripts can now be used to determine whether or not the player receives the medal. [Kaminsky]
 !	- GAMEMODE flags are now validated after all GAMEMODE lumps have been parsed instead of after each one. The internal game mode name (e.g. "TeamLMS") is now printed with the error message instead of the actual name. [Kaminsky]
 !	- Added an extra check to ensure that game modes have a (short) name. [Kaminsky]
