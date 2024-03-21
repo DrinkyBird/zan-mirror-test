@@ -2846,6 +2846,24 @@ DEFINE_CLASS_PROPERTY_PREFIX( player, maxskinsizefactor, F_F, PlayerPawn )
 }
 
 //==========================================================================
+// [AK]
+//==========================================================================
+DEFINE_CLASS_PROPERTY(stillbobspeed, F, Weapon)
+{
+	PROP_FIXED_PARM(i, 0);
+	defaults->StillBobSpeed = i;
+}
+
+//==========================================================================
+// [AK]
+//==========================================================================
+DEFINE_CLASS_PROPERTY(stillbobrange, F, Weapon)
+{
+	PROP_FIXED_PARM(i, 0);
+	defaults->StillBobRange = i;
+}
+
+//==========================================================================
 // [JM]
 //==========================================================================
 DEFINE_CLASS_PROPERTY(swaystyle, S, Weapon)

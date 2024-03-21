@@ -82,6 +82,8 @@ CUSTOM_CVAR( Int, sv_fastweapons, 0, CVAR_SERVERINFO | CVAR_GAMEPLAYSETTING )
 CVAR( Bool, cl_alwaysbob, false, CVAR_ARCHIVE )
 CVAR( Bool, cl_usecustombob, false, CVAR_ARCHIVE )
 CVAR( Float, cl_bobspeed, 1.0f, CVAR_ARCHIVE )
+CVAR( Float, cl_stillbobspeed, 0.0f, CVAR_ARCHIVE )
+CVAR( Float, cl_stillbobrange, 0.0f, CVAR_ARCHIVE )
 
 // [AK] CVars that control how the weapon sways.
 CVAR( Bool, cl_usecustomsway, false, CVAR_ARCHIVE )
@@ -587,6 +589,18 @@ void P_BobWeapon (player_t *player, pspdef_t *psp, fixed_t *x, fixed_t *y)
 	{
 		*x = 0;
 		*y = 0;
+	}
+
+	const fixed_t stillBobRange = (cl_usecustombob ? FLOAT2FIXED(cl_stillbobrange) : weapon->StillBobRange) - bobtarget;
+
+	// [AK] Also bob the weapon up and down while the player's standing still.
+	// Make the transition between "still" and "regular" bobbing smooth.
+	if (((player->WeaponState & WF_WEAPONBOBBING) || (cl_alwaysbob)) && (stillBobRange > 0))
+	{
+		const fixed_t stillBobSpeed = ((cl_usecustombob ? FLOAT2FIXED(cl_stillbobspeed) : weapon->StillBobSpeed) * 128) >> FRACBITS;
+		const fixed_t stillBobAngle = (stillBobSpeed * level.time) & FINEMASK;
+
+		*y += FixedMul(stillBobRange, finesine[stillBobAngle & (FINEANGLES / 2 - 1)]);
 	}
 
 	float viewSwaySpeed = 0.0f;

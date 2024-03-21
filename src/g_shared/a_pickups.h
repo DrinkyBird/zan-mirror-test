@@ -281,6 +281,8 @@ public:
 	fixed_t BobSpeed;						// [XA] Bobbing speed. Defines how quickly a weapon bobs.
 	fixed_t BobRangeX, BobRangeY;			// [XA] Bobbing range. Defines how far a weapon bobs in either direction.
 
+	fixed_t StillBobSpeed;					// [AK] How quickly the weapon bobs up and down while standing still.
+	fixed_t StillBobRange;					// [AK] How far the weapon bobs up and down while standing still.
 	fixed_t ViewSwaySpeed;					// [JM] Sway speed when the player looks around.
 	fixed_t MotionSwaySpeed;				// [AK] Sway speed when the player moves or crouches up or down.
 	fixed_t JumpSwaySpeed;					// [AK] Sway speed when the player jumps up or down.
