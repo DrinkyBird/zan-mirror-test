@@ -85,7 +85,7 @@ CVAR( Float, cl_bobspeed, 1.0f, CVAR_ARCHIVE )
 
 // [AK] CVars that control how the weapon sways.
 CVAR( Bool, cl_usecustomsway, false, CVAR_ARCHIVE )
-CVAR( Float, cl_swayspeed, 0.0f, CVAR_ARCHIVE )
+CVAR( Float, cl_viewswayspeed, 0.0f, CVAR_ARCHIVE )
 CVAR( Float, cl_motionswayspeed, 0.0f, CVAR_ARCHIVE )
 CVAR( Float, cl_jumpswayspeed, 0.0f, CVAR_ARCHIVE )
 
@@ -589,26 +589,26 @@ void P_BobWeapon (player_t *player, pspdef_t *psp, fixed_t *x, fixed_t *y)
 		*y = 0;
 	}
 
-	float swaySpeed = 0.0f;
+	float viewSwaySpeed = 0.0f;
 	fixed_t motionSwaySpeed = 0;
 	fixed_t jumpSwaySpeed = 0;
 
 	// [AK] Choose between the client's settings or the weapon's properties.
 	if (cl_usecustomsway)
 	{
-		swaySpeed = cl_swayspeed;
+		viewSwaySpeed = cl_viewswayspeed;
 		motionSwaySpeed = FLOAT2FIXED(cl_motionswayspeed);
 		jumpSwaySpeed = FLOAT2FIXED(cl_jumpswayspeed);
 	}
 	else
 	{
-		swaySpeed = FIXED2FLOAT(weapon->SwaySpeed);
+		viewSwaySpeed = FIXED2FLOAT(weapon->ViewSwaySpeed);
 		motionSwaySpeed = weapon->MotionSwaySpeed;
 		jumpSwaySpeed = weapon->JumpSwaySpeed;
 	}
 
 	// [AK] Sway the weapon if any of the multipliers are non-zero values.
-	if ((swaySpeed != 0.0f) || (motionSwaySpeed != 0) || (jumpSwaySpeed != 0))
+	if ((viewSwaySpeed != 0.0f) || (motionSwaySpeed != 0) || (jumpSwaySpeed != 0))
 	{
 		static fixed_t swaypos[2];
 		static int lastSwayTime = 0;
@@ -619,10 +619,10 @@ void P_BobWeapon (player_t *player, pspdef_t *psp, fixed_t *x, fixed_t *y)
 		{
 			fixed_t nswaypos[2] = {0, 0};
 
-			if (swaySpeed != 0.0f)
+			if (viewSwaySpeed != 0.0f)
 			{
-				nswaypos[0] += FLOAT2FIXED(FIXED2FLOAT(player->mo->AngleDelta) * swaySpeed / 256.0f);
-				nswaypos[1] += FLOAT2FIXED(FIXED2FLOAT(player->mo->PitchDelta) * swaySpeed / 256.0f);
+				nswaypos[0] += FLOAT2FIXED(FIXED2FLOAT(player->mo->AngleDelta) * viewSwaySpeed / 256.0f);
+				nswaypos[1] += FLOAT2FIXED(FIXED2FLOAT(player->mo->PitchDelta) * viewSwaySpeed / 256.0f);
 			}
 
 			// [AK] Add additional vertical sway when the player jumps in the air. Don't do this after

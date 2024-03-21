@@ -53,7 +53,7 @@
 +	- Added the BanFromGame ACS function, allowing mods to give timed bans to players up to whatever the CVar "sv_maxacsbanduration" allows. A value of zero means that the server forbids use of the function. [Binary/Kaminsky]
 +	- Added ACS function: "GetPlayerStatus", which returns a bitfield of all the player's statuses (i.e. typing a chat message, talking on the microphone, in the console/menu, or lagging). [Kaminsky]
 +	- Added ACS function: "SetPlayerWeaponZoomFactor" from Q-Zandronum, the ACS-equivalent to the A_ZoomFactor DECORATE function. [Kaminsky]
-+	- Added SwayStyle, SwaySpeed, ViewPitchStyle, and ViewPitchOffset properties for DECORATE weapons. [StrikerTheHedgefox]
++	- Added SwayStyle, ViewSwaySpeed, ViewPitchStyle, and ViewPitchOffset properties for DECORATE weapons. [StrikerTheHedgefox]
 +	- Added ACS functions: "SetPlayerSkin" (from Q-Zandronum) and "GetPlayerSkin", to change or retrieve the name of a player's skin. [Kaminsky]
 +	- Added client-server netcode for Strife conversations. [Sean]
 +	- Added ACS function: "GetPlayerCountry", to return the alpha-2 or alpha-3 code, or full name, of the country a player's connecting from. This also respects a player's choice to hide their country. [Kaminsky]
@@ -184,6 +184,7 @@
 !	- Maps that have team spawns but no deathmatch spawns should load and spawn the players in when running modes like TeamDM or TeamLMS (addresses 1327). [Ru5tK1ng]
 !	- A server's settings (i.e. any serverinfo CVars the server syncs with the client) are now discarded when the client disconnects and won't be saved into their config file. [Kaminsky] 
 !	- The position of the weapon sprite while swaying now only updates at 35 Hz instead of at the refresh rate. [Kaminsky]
+!	- Renamed "cl_swayspeed" to "cl_viewswayspeed", to distinguish it from the new weapon sway speeds (i.e. motion and jump). [Kaminsky]
 
 
 3.1

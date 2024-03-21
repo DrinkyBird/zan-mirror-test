@@ -627,7 +627,7 @@ OptionMenu ZA_WeaponSetup
 	StaticText	" "
 	Option		"Use custom sway",		"cl_usecustomsway",				"YesNo"
 	Option		"Sway weapon",			"cl_swaystyle",					"ZA_WeaponSwayStyle"
-	Slider		"Sway multiplier",		"cl_swayspeed",					-5.0, 5.0, 0.5
+	Slider		"View sway speed",		"cl_viewswayspeed",				-5.0, 5.0, 0.5
 	Slider		"Motion sway speed",		"cl_motionswayspeed",				-5.0, 5.0, 0.5
 	Slider		"Jump sway speed",		"cl_jumpswayspeed",				-5.0, 5.0, 0.5
 	StaticText	" "

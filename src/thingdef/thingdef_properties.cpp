@@ -2865,10 +2865,10 @@ DEFINE_CLASS_PROPERTY(swaystyle, S, Weapon)
 //==========================================================================
 // [JM]
 //==========================================================================
-DEFINE_CLASS_PROPERTY(swayspeed, F, Weapon)
+DEFINE_CLASS_PROPERTY(viewswayspeed, F, Weapon)
 {
 	PROP_FIXED_PARM(i, 0);
-	defaults->SwaySpeed = i;
+	defaults->ViewSwaySpeed = i;
 }
 
 //==========================================================================
