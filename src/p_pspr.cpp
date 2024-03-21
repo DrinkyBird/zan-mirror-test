@@ -78,13 +78,19 @@ CUSTOM_CVAR( Int, sv_fastweapons, 0, CVAR_SERVERINFO | CVAR_GAMEPLAYSETTING )
 	SERVER_SettingChanged( self, false );
 }
 
-// [AK] CVars that control how the weapon bobs, sways, or offsets based on the player's pitch. 
+// [AK] CVars that control how the weapon bobs.
 CVAR( Bool, cl_alwaysbob, false, CVAR_ARCHIVE )
 CVAR( Bool, cl_usecustombob, false, CVAR_ARCHIVE )
-CVAR( Bool, cl_usecustomsway, false, CVAR_ARCHIVE )
-CVAR( Bool, cl_usecustompitch, false, CVAR_ARCHIVE )
 CVAR( Float, cl_bobspeed, 1.0f, CVAR_ARCHIVE )
+
+// [AK] CVars that control how the weapon sways.
+CVAR( Bool, cl_usecustomsway, false, CVAR_ARCHIVE )
 CVAR( Float, cl_swayspeed, 0.0f, CVAR_ARCHIVE )
+CVAR( Float, cl_motionswayspeed, 0.0f, CVAR_ARCHIVE )
+CVAR( Float, cl_jumpswayspeed, 0.0f, CVAR_ARCHIVE )
+
+// [AK] CVars that control how the weapon offsets based on the player's pitch.
+CVAR( Bool, cl_usecustompitch, false, CVAR_ARCHIVE )
 CVAR( Float, cl_viewpitchoffset, 0.0f, CVAR_ARCHIVE )
 
 // [AK] Allows a different bob style to be used than what the weapon uses.
@@ -583,21 +589,49 @@ void P_BobWeapon (player_t *player, pspdef_t *psp, fixed_t *x, fixed_t *y)
 		*y = 0;
 	}
 
-	int swaystyle = cl_usecustomsway ? cl_swaystyle : weapon->SwayStyle;
-	float swayspeed = cl_usecustomsway ? cl_swayspeed : FIXED2FLOAT(weapon->SwaySpeed);
+	float swaySpeed = 0.0f;
+	fixed_t motionSwaySpeed = 0;
+	fixed_t jumpSwaySpeed = 0;
 
-	// [AK] Sway the weapon if the multiplier is a non-zero value.
-	if (swayspeed != 0.0f)
+	// [AK] Choose between the client's settings or the weapon's properties.
+	if (cl_usecustomsway)
+	{
+		swaySpeed = cl_swayspeed;
+		motionSwaySpeed = FLOAT2FIXED(cl_motionswayspeed);
+		jumpSwaySpeed = FLOAT2FIXED(cl_jumpswayspeed);
+	}
+	else
+	{
+		swaySpeed = FIXED2FLOAT(weapon->SwaySpeed);
+		motionSwaySpeed = weapon->MotionSwaySpeed;
+		jumpSwaySpeed = weapon->JumpSwaySpeed;
+	}
+
+	// [AK] Sway the weapon if any of the multipliers are non-zero values.
+	if ((swaySpeed != 0.0f) || (motionSwaySpeed != 0) || (jumpSwaySpeed != 0))
 	{
 		static fixed_t swaypos[2];
 		static int lastSwayTime = 0;
+		const int swayStyle = cl_usecustomsway ? cl_swaystyle : weapon->SwayStyle;
 
 		// [AK] Don't reposition the sprite while the ticker is paused or while the server is lagging.
 		if ((lastSwayTime != level.time) && (paused == false) && (P_CheckTickerPaused() == false) && (CLIENT_GetServerLagging() == false))
 		{
-			fixed_t nswaypos[2];
-			nswaypos[0] = FLOAT2FIXED(FIXED2FLOAT(player->mo->AngleDelta) * swayspeed / 256.0f);
-			nswaypos[1] = FLOAT2FIXED(FIXED2FLOAT(player->mo->PitchDelta) * swayspeed / 256.0f);
+			fixed_t nswaypos[2] = {0, 0};
+
+			if (swaySpeed != 0.0f)
+			{
+				nswaypos[0] += FLOAT2FIXED(FIXED2FLOAT(player->mo->AngleDelta) * swaySpeed / 256.0f);
+				nswaypos[1] += FLOAT2FIXED(FIXED2FLOAT(player->mo->PitchDelta) * swaySpeed / 256.0f);
+			}
+
+			// [AK] Add additional vertical sway when the player jumps in the air. Don't do this after
+			// the player's speed in the z-axis is greater than their jump speed.
+			if ((jumpSwaySpeed != 0) && (player->onground == false) && (player->jumpTics != 0) && (abs(player->mo->velz) <= player->mo->CalcJumpVelz()))
+				nswaypos[1] += FixedMul(player->mo->velz, jumpSwaySpeed);
+			// [AK] Add additional vertical sway when the player moves and/or crouches up or down.
+			else if (motionSwaySpeed != 0)
+				nswaypos[1] += FixedMul(player->mo->z - player->mo->PrevZ + player->crouchviewdelta / 2, motionSwaySpeed);
 
 			for (int i = 0; i <= 1; i++)
 			{
@@ -617,7 +651,7 @@ void P_BobWeapon (player_t *player, pspdef_t *psp, fixed_t *x, fixed_t *y)
 
 		*x += swaypos[0];
 
-		switch (swaystyle)
+		switch (swayStyle)
 		{
 		case WEAPON_SWAY_NORMAL:
 			*y += swaypos[1];

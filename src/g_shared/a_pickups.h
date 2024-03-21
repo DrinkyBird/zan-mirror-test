@@ -282,6 +282,8 @@ public:
 	fixed_t BobRangeX, BobRangeY;			// [XA] Bobbing range. Defines how far a weapon bobs in either direction.
 
 	fixed_t SwaySpeed;						// [JM] Sway Speed
+	fixed_t MotionSwaySpeed;				// [AK] Sway speed when the player moves or crouches up or down.
+	fixed_t JumpSwaySpeed;					// [AK] Sway speed when the player jumps up or down.
 	int SwayStyle;							// [JM] Sway Style
 	fixed_t ViewPitchOffset;				// [JM] View Pitch Offset
 	int ViewPitchStyle;						// [JM] View Pitch Style
