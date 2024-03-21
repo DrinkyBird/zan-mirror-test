@@ -150,6 +150,7 @@
 -	- Fixed: a dummy player would be spawned behind if a morphed player dies and is forced to dead spectate in a gamemode with dead spectators. [Kaminsky]
 -	- Fixed: a dummy sprite of the player's overridden skin (e.g. their weapon's preferred skin) appeared when they bursted into chunks after dying from ice. [Kaminsky]
 -	- Fixed: actors that didn't need to respawn upon resetting the map didn't trigger GAMEEVENT_ACTOR_SPAWNED. [Kaminsky]
+-	- Fixed: Monsters in sectors marked with Damage_End (e1m8) weren't being removed from the monster count when sv_nocountendmonst was true (addresses 3475). [Ru5tK1ng]
 !	- The result value of GAMEEVENT_MEDALS event scripts can now be used to determine whether or not the player receives the medal. [Kaminsky]
 !	- GAMEMODE flags are now validated after all GAMEMODE lumps have been parsed instead of after each one. The internal game mode name (e.g. "TeamLMS") is now printed with the error message instead of the actual name. [Kaminsky]
 !	- Added an extra check to ensure that game modes have a (short) name. [Kaminsky]

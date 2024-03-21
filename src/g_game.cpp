@@ -4245,6 +4245,24 @@ void GAME_ResetMap( bool bRunEnterScripts )
 		}
 	}
 
+	// [RK] This is ran for P_Setup but we need to run it here for resets.
+	if (dmflags2 & DF2_NOCOUNTENDMONST)
+	{
+		TThinkerIterator<AActor> it;
+		AActor* mo;
+
+		while ((mo = it.Next()))
+		{
+			if (mo->flags & MF_COUNTKILL)
+			{
+				if (mo->Sector->special == 75) // 75 = dDamage_End
+				{
+					mo->ClearCounters();
+				}
+			}
+		}
+	}
+
 	// [BB] Restore the special gamemode actors that were not spawned by the map, e.g. terminator sphere or hellstone.
 	GAMEMODE_SpawnSpecialGamemodeThings();
 
