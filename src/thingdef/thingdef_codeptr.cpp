@@ -5847,8 +5847,10 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_RadiusGive)
 	FBlockThingsIterator it(FBoundingBox(self->x, self->y, distance));
 	double distsquared = double(distance) * double(distance);
 
+	TThinkerIterator<AActor> it_missiles; // [JM] Iterator for missiles. (Temporary, until Zandronum catches up with later ZDoom revisions.)
+
 	AActor *thing;
-	while ((thing = it.Next()))
+	while ((thing = (flags & RGF_MISSILES) ? it_missiles.Next() : it.Next())) // [JM] Use TThinkerIterator for RGF_MISSILES, like later ZDoom revisions.
 	{
 		// Don't give to inventory items
 		if (thing->flags & MF_SPECIAL)
