@@ -2365,7 +2365,7 @@ void PLAYER_SetTeam( player_t *pPlayer, ULONG ulTeam, bool bNoBroadcast )
 		if ( NETWORK_GetState() == NETSTATE_SERVER )
 		{
 			const ULONG ulPlayer = static_cast<ULONG>( pPlayer-players );
-			SERVER_ResetInventory( ulPlayer );
+			SERVER_ResetInventory( ulPlayer, true, false ); // [RK] Don't give out inventory in reverse order.
 			// [BB] SERVER_ResetInventory only informs the player ulPlayer. Let the others know of at least the ammo of the player.
 			SERVERCOMMANDS_SyncPlayerAmmoAmount ( ulPlayer, ulPlayer, SVCF_SKIPTHISCLIENT );
 		}

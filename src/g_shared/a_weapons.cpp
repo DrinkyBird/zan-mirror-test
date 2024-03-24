@@ -396,7 +396,11 @@ void AWeapon::AttachToOwner (AActor *other)
 			// we always want to switch our weapon when we pickup a new one.
 			else if ( (Owner->player->userinfo.GetSwitchOnPickup() == 2) || ( zacompatflags & ZACOMPATF_OLD_WEAPON_SWITCH ) )
 			{
-				shouldSwitch  = true;
+				// [RK] Since there aren't any fist/staff pickups, this is probably being given in Server_ResetInventory.
+				if ((( GetClass()->IsDescendantOf( PClass::FindClass("Fist")) ) || ( GetClass()->IsDescendantOf( PClass::FindClass("Staff")) )) && pCompareWeapon != NULL)
+					shouldSwitch = false;
+				else
+					shouldSwitch = true;
 			}
 			// [BB] Because of ST's special switchonpickup == 1 handling, we have to make sure here
 			// that we don't pick a powered up version, if we don't have a PowerWeaponLevel2 active.
@@ -410,6 +414,10 @@ void AWeapon::AttachToOwner (AActor *other)
 				else if ( PWO_IsActive( Owner->player ))
 				{
 					shouldSwitch = PWO_ShouldSwitch( pCompareWeapon, this );
+
+					// [RK] Since there aren't any fist/staff pickups, this is probably being given in Server_ResetInventory.
+					if ( shouldSwitch && (( GetClass()->IsDescendantOf(PClass::FindClass("Fist")) ) || ( GetClass()->IsDescendantOf(PClass::FindClass("Staff")) )))
+						shouldSwitch = false;
 				}
 				// If it's 1, then only switch if it ranks higher than our current weapon.
 				else if (( Owner->player->userinfo.GetSwitchOnPickup() == 1 ) && ( SelectionOrder < pCompareWeapon->SelectionOrder ))

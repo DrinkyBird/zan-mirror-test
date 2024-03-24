@@ -4111,7 +4111,7 @@ void SERVER_SetMapMusic( const char *pszMusic, int order )
 
 //*****************************************************************************
 //
-void SERVER_ResetInventory( ULONG ulClient, const bool bChangeClientWeapon )
+void SERVER_ResetInventory( ULONG ulClient, const bool bChangeClientWeapon, bool bGiveReverseOrder )
 {
 	AInventory	*pInventory;
 
@@ -4136,7 +4136,13 @@ void SERVER_ResetInventory( ULONG ulClient, const bool bChangeClientWeapon )
 	TArray<AInventory *> inventory;
 	// [BB] First but the stuff into a TArray.
 	for ( pInventory = players[ulClient].mo->Inventory; pInventory != NULL; pInventory = pInventory->Inventory )
-		inventory.Push ( pInventory );
+	{
+		// [RK] Determine if we want to give the inventory backwards if true or fowards if false.
+		if ( bGiveReverseOrder )
+			inventory.Push( pInventory );
+		else
+			inventory.Insert( 0, pInventory );
+	}
 	// [BB] Then give them in reverse order.
 	while ( inventory.Size() )
 	{
