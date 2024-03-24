@@ -5646,7 +5646,8 @@ void P_RadiusAttack(AActor *bombspot, AActor *bombsource, int bombdamage, int bo
 
 		// [AK] Don't push this player if ZADF_DONT_PUSH_ALLIES is enabled and the
 		// other player who caused the explosion is their teammate.
-		if ( PLAYER_CannotAffectAllyWith( bombsource, thing, bombspot, ZADF_DONT_PUSH_ALLIES ))
+		// [RK] We still need to push voodoo dolls though.
+		if ( PLAYER_CannotAffectAllyWith( bombsource, thing, bombspot, ZADF_DONT_PUSH_ALLIES ) && !( thing->player == COOP_GetVoodooDollDummyPlayer() ))
 			continue;
 
 		// Barrels always use the original code, since this makes

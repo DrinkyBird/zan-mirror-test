@@ -1160,8 +1160,12 @@ int P_DamageMobj (AActor *target, AActor *inflictor, AActor *source, int damage,
 	}
 
 	// [BB] For the time being, unassigned voodoo dolls can't be damaged.
+	// [RK] But we should thrust them about if they're being used to trigger line actions.
 	if ( target->player == COOP_GetVoodooDollDummyPlayer() )
-		return -1;
+		if ( source && inflictor )
+			goto thrust;
+		else
+			return -1;
 
 	// Spectral targets only take damage from spectral projectiles.
 	if (target->flags4 & MF4_SPECTRAL && damage < TELEFRAG_DAMAGE)
@@ -1358,7 +1362,8 @@ int P_DamageMobj (AActor *target, AActor *inflictor, AActor *source, int damage,
 			MeansOfDeath = mod;
 		}
 	}
-
+// [RK] This label is for voodoo dolls online to be pushed since we aren't damaging them.
+thrust:
 	// Push the target unless the source's weapon's kickback is 0.
 	// (i.e. Gauntlets/Chainsaw)
 	// [BB] The server handles this.
@@ -1368,7 +1373,7 @@ int P_DamageMobj (AActor *target, AActor *inflictor, AActor *source, int damage,
 		&& !(inflictor->flags2 & MF2_NODMGTHRUST)
 		&& !(flags & DMG_THRUSTLESS)
 		&& (source == NULL || source->player == NULL || !(source->flags2 & MF2_NODMGTHRUST))
-		&& ( PLAYER_CannotAffectAllyWith( source, target, inflictor, ZADF_DONT_PUSH_ALLIES ) == false )
+		&& (( PLAYER_CannotAffectAllyWith( source, target, inflictor, ZADF_DONT_PUSH_ALLIES ) == false ) || ( target->player == COOP_GetVoodooDollDummyPlayer() )) // [RK] Dolls need to be pushed.
 		&& ( NETWORK_InClientMode() == false ) )
 	{
 		int kickback;
@@ -1454,6 +1459,9 @@ int P_DamageMobj (AActor *target, AActor *inflictor, AActor *source, int damage,
 			}
 		}
 	}
+	// [RK] This is all we need to do for voodoo dolls.
+	if ( target->player == COOP_GetVoodooDollDummyPlayer() )
+		return -1;
 
 	// [RH] Avoid friendly fire if enabled
 	if (!(flags & DMG_FORCED) && source != NULL &&
@@ -3558,6 +3566,10 @@ bool PLAYER_CannotAffectAllyWith( AActor *pActor1, AActor *pActor2, AActor *pInf
 {
 	// [AK] Check if we have the corresponding zadmflag enabled.
 	if (( zadmflags & flag ) == false )
+		return false;
+
+	// [RK] Voodoo dolls still need to be affected since they're not really an 'ally'.
+	if ( pActor2 && pActor2->player && (pActor2->player->mo != pActor2 ))
 		return false;
 
 	// [AK] If the inflicting actor (e.g. projectile) is forced to affect allied players
