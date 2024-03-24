@@ -440,6 +440,10 @@ CCMD (weapnext)
 	if (( players[consoleplayer].bSpectating ) || ( players[consoleplayer].playerstate != PST_LIVE ))
 		return;
 
+	// [RK] If player is holding a hellstone, don't allow to send the command.
+	if ( players[consoleplayer].cheats2 & CF2_POSSESSIONARTIFACT )
+		return;
+
 	SendItemUse = players[consoleplayer].weapons.PickNextWeapon (&players[consoleplayer]);
  	// [BC] Option to display the name of the weapon being cycled to.
  	if ((displaynametags & 2) && StatusBar && SmallFont && SendItemUse)
@@ -460,6 +464,10 @@ CCMD (weapprev)
 
 	// [Zandronum] No weapprev when player is spectating or not alive.
 	if (( players[consoleplayer].bSpectating ) || ( players[consoleplayer].playerstate != PST_LIVE ))
+		return;
+
+	// [RK] If player is holding a hellstone, don't allow to send the command.
+	if ( players[consoleplayer].cheats2 & CF2_POSSESSIONARTIFACT )
 		return;
 
 	SendItemUse = players[consoleplayer].weapons.PickPrevWeapon (&players[consoleplayer]);
