@@ -5501,7 +5501,7 @@ void ServerCommands::SetThingSpecial1::Execute()
 //
 void ServerCommands::SetThingSpecial2::Execute()
 {
-	actor->special1 = special2;
+	actor->special2 = special2;
 }
 
 //*****************************************************************************
