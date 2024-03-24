@@ -1331,10 +1331,14 @@ void S_Sound (const FPolyObj *poly, int channel, FSoundID sound_id, float volume
 //
 //==========================================================================
 
-void S_Sound (fixed_t x, fixed_t y, fixed_t z, int channel, FSoundID sound_id, float volume, float attenuation)
+void S_Sound (fixed_t x, fixed_t y, fixed_t z, int channel, FSoundID sound_id, float volume, float attenuation, bool bSoundOnClient) // [RK] Added bSoundOnClient.
 {
 	FVector3 pt(FIXED2FLOAT(x), FIXED2FLOAT(z), FIXED2FLOAT(y));
 	S_StartSound (NULL, NULL, NULL, &pt, channel, sound_id, volume, attenuation);
+
+	// [RK] Instruct the clients to play the sound.
+	if (bSoundOnClient && (NETWORK_GetState() == NETSTATE_SERVER))
+		SERVERCOMMANDS_SoundPoint(x, y, z, channel, S_GetName(sound_id), volume, attenuation);
 }
 
 //==========================================================================
