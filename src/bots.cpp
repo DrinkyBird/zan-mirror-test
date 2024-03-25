@@ -56,6 +56,7 @@
 #include "cl_demo.h"
 #include "cmdlib.h"
 #include "configfile.h"
+#include "d_player.h"
 #include "deathmatch.h"
 #include "doomdef.h"
 #include "doomstat.h"
@@ -3426,7 +3427,7 @@ void CSkullBot::PreDelete( void )
 //
 void CSkullBot::HandleAiming( void )
 {
-	if (( m_bAimAtEnemy ) && ( m_ulPlayerEnemy != MAXPLAYERS ) && ( players[m_ulPlayerEnemy].mo ))
+	if (( m_bAimAtEnemy ) && ( m_ulPlayerEnemy != MAXPLAYERS ) && ( players[m_ulPlayerEnemy].mo ) && !(m_pPlayer->cheats & CF_TOTALLYFROZEN))
 	{
 		fixed_t	Distance;
 		fixed_t	ShootZ;

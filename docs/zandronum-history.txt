@@ -161,6 +161,7 @@
 -	- Fixed: ThingCountNameSector would count spectators that were present in the tagged sector (addresses 2447). [Ru5tK1ng]
 -	- Fixed: The removebot commands could crash singleplayer when using OpenGL (addresses 1112) and would not stop scripts (addresses 802). [Ru5tK1ng]
 -	- Fixed: gl_PrintStartupLog wasn't being called when not compiled with MSVC (addresses 4128). [TDRR]
+-	- Fixed: Bots would continue aiming at players even when fully frozen [TDRR]
 !	- The result value of GAMEEVENT_MEDALS event scripts can now be used to determine whether or not the player receives the medal. [Kaminsky]
 !	- GAMEMODE flags are now validated after all GAMEMODE lumps have been parsed instead of after each one. The internal game mode name (e.g. "TeamLMS") is now printed with the error message instead of the actual name. [Kaminsky]
 !	- Added an extra check to ensure that game modes have a (short) name. [Kaminsky]
