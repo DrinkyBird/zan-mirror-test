@@ -3625,6 +3625,13 @@ void P_PlayerThink (player_t *player)
 
 	bool totallyfrozen = P_IsPlayerTotallyFrozen(player);
 
+	// [AK] Check if the local player is using the free chasecam. If they are,
+	// then we must also preserve their yaw and pitch inputs even when they're
+	// normally zeroed (i.e. totally frozen or while the game is suspended).
+	// This way, they can still move the camera around.
+	const bool localPlayerUsingFreeChasecam = ((player == &players[consoleplayer]) && (FreeChasecam::IsBeingUsed(player)));
+	bool mustZeroYawAndPitch = false;
+
 	// [BB] Why should a predicting client ignore CF_TOTALLYFROZEN and CF_FROZEN?
 	//if ( CLIENT_PREDICT_IsPredicting( ) == false )
 	{
@@ -3639,8 +3646,18 @@ void P_PlayerThink (player_t *player)
 			{
 				cmd->ucmd.buttons &= BT_USE;
 			}
-			cmd->ucmd.pitch = 0;
-			cmd->ucmd.yaw = 0;
+
+			// [AK] Don't zero the yaw/pitch if the local player's using the free chasecam.
+			if (localPlayerUsingFreeChasecam == false)
+			{
+				cmd->ucmd.pitch = 0;
+				cmd->ucmd.yaw = 0;
+			}
+			else
+			{
+				mustZeroYawAndPitch = true;
+			}
+
 			cmd->ucmd.roll = 0;
 			cmd->ucmd.forwardmove = 0;
 			cmd->ucmd.sidemove = 0;
@@ -3663,7 +3680,20 @@ void P_PlayerThink (player_t *player)
 	// Note: This needs to be done after ticking the bot, otherwise the bot could still act.
 	// [TP] Allow spectators to move freely even if the game is suspended.
 	if ( GAME_GetEndLevelDelay( ) && ( player->bSpectating == false ))
+	{
+		const int savedYaw = cmd->ucmd.yaw;
+		const int savedPitch = cmd->ucmd.pitch;
+
 		memset( cmd, 0, sizeof( ticcmd_t ));
+
+		// [AK] If the local player's using the free chasecam, restore the yaw/pitch.
+		if ( localPlayerUsingFreeChasecam )
+		{
+			cmd->ucmd.yaw = savedYaw;
+			cmd->ucmd.pitch = savedPitch;
+			mustZeroYawAndPitch = true;
+		}
+	}
 
 	// Handle crouching
 	if (player->cmd.ucmd.buttons & BT_JUMP)
@@ -3721,7 +3751,7 @@ void P_PlayerThink (player_t *player)
 
 		// [AK] Don't exit the function yet if the local player is using the free chasecam.
 		// Their angle and pitch must still be updated to move the camera.
-		if ((player != &players[consoleplayer]) || (FreeChasecam::IsBeingUsed() == false))
+		if (localPlayerUsingFreeChasecam == false)
 			return;
 
 		// [AK] Set the dead player's turn ticks so that they can still turn 180-degrees.
@@ -3931,6 +3961,11 @@ void P_PlayerThink (player_t *player)
 			}
 		}
 	}
+
+	// [AK] If the local player's yaw and pitch inputs are supposed to be zero
+	// but aren't because they're using the free chasecam, zero them now.
+	if (mustZeroYawAndPitch)
+		cmd->ucmd.yaw = cmd->ucmd.pitch = 0;
 
 	P_CalcHeight (player);
 
