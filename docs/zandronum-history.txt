@@ -194,6 +194,7 @@
 !	- The position of the weapon sprite while swaying now only updates at 35 Hz instead of at the refresh rate. [Kaminsky]
 !	- Renamed "cl_swayspeed" to "cl_viewswayspeed", to distinguish it from the new weapon sway speeds (i.e. motion and jump). [Kaminsky]
 !	- Made the mini flag icons that appear on the HUD and scoreboard bigger and easier to see. [Kaminsky]
+!	- Make GL extension printing optional (using the developer CVAR) [TDRR]
 
 
 3.1
