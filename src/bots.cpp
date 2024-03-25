@@ -2078,7 +2078,7 @@ void CSkullBot::Tick( void )
 		return;
 
 	// [BB] Don't run their script if they are frozen either.
-	if ( ( m_pPlayer->cheats & CF_TOTALLYFROZEN ) || ( m_pPlayer->cheats & CF_FROZEN ) )
+	if ( m_pPlayer->cheats & CF_TOTALLYFROZEN )
 	{
 		// [BB] Don't freeze dead bots. Otherwise they can't respawn.
 		if ( m_pPlayer->mo && m_pPlayer->mo->health > 0 )
