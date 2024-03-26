@@ -377,8 +377,8 @@ void MEDAL_Render( void )
 bool MEDAL_GiveMedal( const ULONG player, const ULONG medalIndex )
 {
 	// [CK] Do not award if it's a countdown sequence
-	// [AK] Or if we're playing a cooperative game mode.
-	if (( GAMEMODE_IsGameInCountdown( )) || (( deathmatch || teamgame ) == false ))
+	// [AK] Or if we're playing a game mode where players don't earn medals.
+	if (( GAMEMODE_IsGameInCountdown( )) || (( GAMEMODE_GetCurrentFlags( ) & GMF_PLAYERSEARNMEDALS ) == false ))
 		return false;
 
 	// [AK] Make sure that the player and medal are valid.

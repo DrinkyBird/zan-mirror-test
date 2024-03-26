@@ -1078,7 +1078,7 @@ drawfullconsole:
 
 				// Render all medals the player currently has.
 				// [AK] Only on game modes that players can earn medals in.
-				if (( Button_ShowMedals.bDown ) && ( cooperative == false ))
+				if (( Button_ShowMedals.bDown ) && ( GAMEMODE_GetCurrentFlags( ) & GMF_PLAYERSEARNMEDALS ))
 				{
 					if (( players[consoleplayer].camera != NULL ) && ( players[consoleplayer].camera->player != NULL ))
 						MEDAL_RenderAllMedalsFullscreen( players[consoleplayer].camera->player ); // [CK] Fixed 'mo' to 'camera' (which was probably intended)
@@ -1098,7 +1098,7 @@ drawfullconsole:
 
 			// Render all medals the player currently has.
 			// [AK] Only on game modes that players can earn medals in.
-			if (( Button_ShowMedals.bDown ) && ( cooperative == false ))
+			if (( Button_ShowMedals.bDown ) && ( GAMEMODE_GetCurrentFlags( ) & GMF_PLAYERSEARNMEDALS ))
 			{
 				if (( players[consoleplayer].camera != NULL ) && ( players[consoleplayer].camera->player != NULL ))
 					MEDAL_RenderAllMedalsFullscreen( players[consoleplayer].camera->player );

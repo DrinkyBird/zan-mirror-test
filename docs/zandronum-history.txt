@@ -65,6 +65,7 @@
 +	- Added A_ClientsideACSExecute which allows non-clientside actors to execute clientside scripts from within actor states, without using any network traffic. Useful for per-client effects. [StrikerTheHedgefox]
 +	- Added ACS function: "SetNextMapPosition", to change what the next entry in the map rotation will be. [Kaminsky]
 +	- Added the enemy icon back and added the CVars "cl_showallyicon" and "cl_showenemyicon" to control when the ally/enemy icons appear. [Kaminsky]
++	- Added the PLAYERSEARNMEDALS game mode flag, offering more control over which game modes the players earn medals in. [Kaminsky]
 -	- Fixed: clients didn't initialize a sector's friction properly in some cases due to a superfluous check that wasn't removed earlier. [Kaminsky]
 -	- Fixed: the server wouldn't initialize compatflags and compatflags2 properly if entered as command line parameters. [Kaminsky]
 -	- Fixed: serverinfo CVars entered on the command line were restored in reverse order. [Kaminsky]
