@@ -153,8 +153,8 @@ void		MEDAL_Construct( void );
 void		MEDAL_Tick( void );
 void		MEDAL_Render( void );
 
-bool		MEDAL_GiveMedal( const ULONG player, const ULONG medalIndex );
-bool		MEDAL_GiveMedal( const ULONG player, const FName medalName );
+bool		MEDAL_GiveMedal( const ULONG player, const ULONG medalIndex, const bool silent = false );
+bool		MEDAL_GiveMedal( const ULONG player, const FName medalName, const bool silent = false );
 void		MEDAL_RenderAllMedals( LONG lYOffset );
 void		MEDAL_RenderAllMedalsFullscreen( player_t *pPlayer );
 int			MEDAL_GetMedalIndex( const FName medalName );

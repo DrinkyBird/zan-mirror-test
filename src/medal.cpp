@@ -374,7 +374,7 @@ void MEDAL_Render( void )
 //*****************************************************************************
 //*****************************************************************************
 //
-bool MEDAL_GiveMedal( const ULONG player, const ULONG medalIndex )
+bool MEDAL_GiveMedal( const ULONG player, const ULONG medalIndex, const bool silent )
 {
 	// [CK] Do not award if it's a countdown sequence
 	// [AK] Or if we're playing a game mode where players don't earn medals.
@@ -399,38 +399,41 @@ bool MEDAL_GiveMedal( const ULONG player, const ULONG medalIndex )
 	// Increase the player's count of this type of medal.
 	medal->awardedCount[player]++;
 
-	// [AK] Check if the medal being give is already in this player's queue.
-	std::vector<MEDAL_t *> &queue = medalQueue[player].medals;
-	auto iterator = std::find( queue.begin( ), queue.end( ), medal );
-
-	// [AK] If not, then check if a suboordinate of the new medal is already in
-	// the list. If so, then the lower medal will be replaced. Otherwise, the new
-	// medal gets added to the end of the queue.
-	if ( iterator == queue.end( ))
+	if ( silent == false )
 	{
-		iterator = std::find( queue.begin( ), queue.end( ), medal->lowerMedal );
+		// [AK] Check if the medal being give is already in this player's queue.
+		std::vector<MEDAL_t *> &queue = medalQueue[player].medals;
+		auto iterator = std::find( queue.begin( ), queue.end( ), medal );
 
-		if ( iterator != queue.end( ))
+		// [AK] If not, then check if a suboordinate of the new medal is already
+		// in the list. If so, then the lower medal will be replaced. Otherwise,
+		// the new medal gets added to the end of the queue.
+		if ( iterator == queue.end( ))
 		{
-			*iterator = medal;
+			iterator = std::find( queue.begin( ), queue.end( ), medal->lowerMedal );
+
+			if ( iterator != queue.end( ))
+			{
+				*iterator = medal;
+			}
+			else
+			{
+				queue.push_back( medal );
+
+				// [AK] In case the queue was empty before (there's only one
+				// element now, which is what just got added), set the iterator
+				// to the start so the timer gets reset properly.
+				if ( queue.size( ) == 1 )
+					iterator = queue.begin( );
+			}
 		}
-		else
+
+		// [AK] If the new medal is at the start. reset the timer and trigger it.
+		if ( iterator == queue.begin( ))
 		{
-			queue.push_back( medal );
-
-			// [AK] In case the queue was empty before (there's only one element
-			// now, which is what just got added), set the iterator to the start
-			// so the timer gets reset properly.
-			if ( queue.size( ) == 1 )
-				iterator = queue.begin( );
+			medalQueue[player].ticks = MEDAL_ICON_DURATION;
+			medal_TriggerMedal( player );
 		}
-	}
-
-	// [AK] If the new medal is at the start. reset the timer and trigger it.
-	if ( iterator == queue.begin( ))
-	{
-		medalQueue[player].ticks = MEDAL_ICON_DURATION;
-		medal_TriggerMedal( player );
 	}
 
 	// If this player is a bot, tell it that it received a medal.
@@ -442,17 +445,17 @@ bool MEDAL_GiveMedal( const ULONG player, const ULONG medalIndex )
 
 	// [AK] If we're the server, tell clients that this player earned a medal.
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-		SERVERCOMMANDS_GivePlayerMedal( player, medalIndex );
+		SERVERCOMMANDS_GivePlayerMedal( player, medalIndex, silent );
 
 	return true;
 }
 
 //*****************************************************************************
 //
-bool MEDAL_GiveMedal( const ULONG player, const FName medalName )
+bool MEDAL_GiveMedal( const ULONG player, const FName medalName, const bool silent )
 {
 	const int index = MEDAL_GetMedalIndex( medalName );
-	return ( index != -1 ? MEDAL_GiveMedal( player, index ) : false );
+	return ( index != -1 ? MEDAL_GiveMedal( player, index, silent ) : false );
 }
 
 //*****************************************************************************
@@ -1300,6 +1303,6 @@ void medal_CheckForYouFailIt( ULONG ulPlayer )
 CCMD( testgivemedal )
 {
 	for ( unsigned int i = 0; i < medalList.Size( ); i++ )
-		MEDAL_GiveMedal( consoleplayer, i );
+		MEDAL_GiveMedal( consoleplayer, i, false );
 }
 #endif	// _DEBUG

@@ -8690,7 +8690,7 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 			if ( NETWORK_InClientMode( ))
 				return 0;
 
-			return MEDAL_GiveMedal( args[0], FBehavior::StaticLookupString( args[1] ));
+			return MEDAL_GiveMedal( args[0], FBehavior::StaticLookupString( args[1] ), !!args[2] );
 		}
 
 		case ACSF_GetActorFloorTexture:

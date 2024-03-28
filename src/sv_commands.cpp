@@ -1080,15 +1080,16 @@ void SERVERCOMMANDS_ConsolePlayerKicked( ULONG ulPlayer )
 
 //*****************************************************************************
 //
-void SERVERCOMMANDS_GivePlayerMedal( ULONG ulPlayer, ULONG ulMedal, ULONG ulPlayerExtra, ServerCommandFlags flags )
+void SERVERCOMMANDS_GivePlayerMedal( const unsigned int player, const unsigned int medal, const bool silent, const unsigned int playerExtra, ServerCommandFlags flags )
 {
-	if ( PLAYER_IsValidPlayer( ulPlayer ) == false )
+	if ( PLAYER_IsValidPlayer( player ) == false )
 		return;
 
 	ServerCommands::GivePlayerMedal command;
-	command.SetPlayer( &players[ulPlayer] );
-	command.SetMedal( ulMedal );
-	command.sendCommandToClients( ulPlayerExtra, flags );
+	command.SetPlayer( &players[player] );
+	command.SetMedal( medal );
+	command.SetSilent( silent );
+	command.sendCommandToClients( playerExtra, flags );
 }
 
 //*****************************************************************************

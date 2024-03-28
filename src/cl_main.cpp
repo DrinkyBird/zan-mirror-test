@@ -4740,7 +4740,7 @@ void ServerCommands::ConsolePlayerKicked::Execute()
 //
 void ServerCommands::GivePlayerMedal::Execute()
 {
-	MEDAL_GiveMedal( player - players, medal );
+	MEDAL_GiveMedal( player - players, medal, silent );
 }
 
 //*****************************************************************************

@@ -267,6 +267,7 @@ EndCommand
 Command GivePlayerMedal
 	Player player
 	Byte medal
+	Bool silent
 EndCommand
 
 Command ResetAllPlayersFragcount

@@ -2215,9 +2215,10 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_GiveToSiblings)
 
 DEFINE_ACTION_FUNCTION_PARAMS( AActor, A_GivePlayerMedal )
 {
-	ACTION_PARAM_START( 2 );
+	ACTION_PARAM_START( 3 );
 	ACTION_PARAM_NAME( medal, 0 );
-	ACTION_PARAM_INT( receiver, 1 );
+	ACTION_PARAM_BOOL( silent, 1 );
+	ACTION_PARAM_INT( receiver, 2 );
 
 	bool result = false;
 
@@ -2226,7 +2227,7 @@ DEFINE_ACTION_FUNCTION_PARAMS( AActor, A_GivePlayerMedal )
 
 	// [AK] Don't let the clients give medals to players.
 	if (( NETWORK_InClientMode( ) == false ) && ( self->player != nullptr ))
-		result = MEDAL_GiveMedal( self->player - players, medal );
+		result = MEDAL_GiveMedal( self->player - players, medal, silent );
 
 	ACTION_SET_RESULT( result );
 }
