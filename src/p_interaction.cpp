@@ -3221,28 +3221,33 @@ int PLAYER_GetOverrideSkin( player_t *player )
 	if ( player != nullptr )
 	{
 		int overrideSkin = player->CurrentPlayerClass;
+		const char *skinName = nullptr;
 
 		// [AK] Check if the player's skin was overridden from ACS.
 		if ( player->ACSSkin != NAME_None )
-			overrideSkin = R_FindSkin( player->ACSSkin, player->CurrentPlayerClass );
+		{
+			skinName = player->ACSSkin;
+			overrideSkin = R_FindSkin( skinName, player->CurrentPlayerClass );
+
+			// [AK] Make sure that the overridden skin actually exists.
+			if (( overrideSkin != player->CurrentPlayerClass ) || ( stricmp( skinName, "Base" ) == 0 ))
+				skin = overrideSkin;
+		}
 
 		// [AK] Next, check if the player's current weapon has its own preferred
 		// skin. Only apply this skin if the skin from ACS doesn't override it.
 		if (( player->ReadyWeapon != nullptr ) && ( player->ReadyWeapon->PreferredSkin != NAME_None ))
 		{
-			if (( overrideSkin == player->CurrentPlayerClass ) || ( player->ACSSkinOverridesWeaponSkin == false ))
+			if (( skin == -1 ) || ( player->ACSSkinOverridesWeaponSkin == false ))
 			{
-				int weaponSkin = R_FindSkin( player->ReadyWeapon->PreferredSkin, player->CurrentPlayerClass );
+				skinName = player->ReadyWeapon->PreferredSkin;
+				overrideSkin = R_FindSkin( skinName, player->CurrentPlayerClass );
 
 				// [AK] Check if the weapon's PreferredSkin actually exists.
-				if ( weaponSkin != player->CurrentPlayerClass )
-					overrideSkin = weaponSkin;
+				if (( overrideSkin != player->CurrentPlayerClass ) || ( stricmp( skinName, "Base" ) == 0 ))
+					skin = overrideSkin;
 			}
 		}
-
-		// [AK] Make sure that the overridden skin actually exists.
-		if ( overrideSkin != player->CurrentPlayerClass )
-			skin = overrideSkin;
 	}
 
 	return skin;
