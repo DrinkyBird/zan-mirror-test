@@ -3867,6 +3867,10 @@ do_count:
 				// [AK] Don't count actors hidden by HideOrDestroyIfSafe().
 				((actor->STFlags & STFL_HIDDEN_INSTEAD_OF_DESTROYED) == false))
 			{
+				// [RK] Don't count players who left the game by spectating or dead spectators.
+				if ( actor->player && (actor->player->bSpectating || actor->player->bDeadSpectator) )
+					continue;
+
 				if (actor->Sector->tag == tag || tag == -1)
 				{
 					// Don't count items in somebody's inventory
@@ -3889,6 +3893,10 @@ do_count:
 				// [AK] Don't count actors hidden by HideOrDestroyIfSafe().
 				((actor->STFlags & STFL_HIDDEN_INSTEAD_OF_DESTROYED) == false))
 			{
+				// [RK] Don't count players who left the game by spectating or dead spectators.
+				if ( actor->player && (actor->player->bSpectating || actor->player->bDeadSpectator) )
+					continue;
+
 				if (actor->Sector->tag == tag || tag == -1)
 				{
 					// Don't count items in somebody's inventory

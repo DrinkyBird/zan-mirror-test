@@ -157,6 +157,7 @@
 -	- Fixed: Numerous Heretic/Hexen actors and code pointers were sending invalid commands to clients that could not be executed (partially addresses 4187). [Ru5tK1ng]
 -	- Fixed: Voodoo dolls weren't being pushed by barrel explosions in order to trigger linedef actions online (addresses 3963). [Ru5tK1ng]
 -	- Fixed: +SPAWNSOUNDSOURCE wouldn't play the missile sound at the source online (addresses 807). [Ru5tK1ng]
+-	- Fixed: ThingCountNameSector would count spectators that were present in the tagged sector (addresses 2447). [Ru5tK1ng]
 !	- The result value of GAMEEVENT_MEDALS event scripts can now be used to determine whether or not the player receives the medal. [Kaminsky]
 !	- GAMEMODE flags are now validated after all GAMEMODE lumps have been parsed instead of after each one. The internal game mode name (e.g. "TeamLMS") is now printed with the error message instead of the actual name. [Kaminsky]
 !	- Added an extra check to ensure that game modes have a (short) name. [Kaminsky]
