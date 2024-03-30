@@ -393,6 +393,10 @@ BEGIN_ENUM( MARGINCMD_e )
 	ENUM_ELEMENT( MARGINCMD_IFSHOULDSHOWRANK ),
 	// Executes a block if the local player's spying on another player.
 	ENUM_ELEMENT( MARGINCMD_IFSPYING ),
+	// Executes a block if the local player's a spectator.
+	ENUM_ELEMENT( MARGINCMD_IFSPECTATOR ),
+	// Executes a block if the local player is specifically a dead spectator.
+	ENUM_ELEMENT( MARGINCMD_IFDEADSPECTATOR ),
 	// Executes a block when any of the given game modes are being played.
 	ENUM_ELEMENT( MARGINCMD_IFGAMEMODE ),
 	// Executes a block when any of the given game types are being played.

@@ -1793,6 +1793,8 @@ private:
 // - IfPlayersHaveLives: if players are supposed to have lives.
 // - IfShouldShowRank: if the current player's rank should be shown.
 // - IfSpying: if the local player's spying on another player.
+// - IfSpectator: if the local player's a spectator.
+// - IfDeadSpectator: if the local player is specifically a dead spectator.
 //
 // These commands accept one boolean parameter that inverts the condition
 // (i.e. the "if" block will be executed when the condition is false).
@@ -1816,6 +1818,8 @@ public:
 			case MARGINCMD_IFPLAYERSHAVELIVES:
 			case MARGINCMD_IFSHOULDSHOWRANK:
 			case MARGINCMD_IFSPYING:
+			case MARGINCMD_IFSPECTATOR:
+			case MARGINCMD_IFDEADSPECTATOR:
 				break;
 
 			default:
@@ -1893,6 +1897,14 @@ protected:
 
 			case MARGINCMD_IFSPYING:
 				bValue = ( ulDisplayPlayer != static_cast<ULONG>( consoleplayer ));
+				break;
+
+			case MARGINCMD_IFSPECTATOR:
+				bValue = players[consoleplayer].bSpectating;
+				break;
+
+			case MARGINCMD_IFDEADSPECTATOR:
+				bValue = players[consoleplayer].bDeadSpectator;
 				break;
 
 			default:
@@ -2773,6 +2785,8 @@ static ScoreMargin::BaseCommand *scoreboard_CreateMarginCommand( FScanner &sc, S
 		case MARGINCMD_IFPLAYERSHAVELIVES:
 		case MARGINCMD_IFSHOULDSHOWRANK:
 		case MARGINCMD_IFSPYING:
+		case MARGINCMD_IFSPECTATOR:
+		case MARGINCMD_IFDEADSPECTATOR:
 			pNewCommand = new TrueOrFalseFlowControl( pMargin, pParentCommand, Command );
 			break;
 
