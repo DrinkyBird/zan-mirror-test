@@ -1792,6 +1792,7 @@ private:
 // - IfPlayersOnTeams: if players are supposed to be on teams.
 // - IfPlayersHaveLives: if players are supposed to have lives.
 // - IfShouldShowRank: if the current player's rank should be shown.
+// - IfSpying: if the local player's spying on another player.
 //
 // These commands accept one boolean parameter that inverts the condition
 // (i.e. the "if" block will be executed when the condition is false).
@@ -1814,6 +1815,7 @@ public:
 			case MARGINCMD_IFPLAYERSONTEAMS:
 			case MARGINCMD_IFPLAYERSHAVELIVES:
 			case MARGINCMD_IFSHOULDSHOWRANK:
+			case MARGINCMD_IFSPYING:
 				break;
 
 			default:
@@ -1887,6 +1889,10 @@ protected:
 
 			case MARGINCMD_IFSHOULDSHOWRANK:
 				bValue = HUD_ShouldDrawRank( ulDisplayPlayer );
+				break;
+
+			case MARGINCMD_IFSPYING:
+				bValue = ( ulDisplayPlayer != static_cast<ULONG>( consoleplayer ));
 				break;
 
 			default:
@@ -2766,6 +2772,7 @@ static ScoreMargin::BaseCommand *scoreboard_CreateMarginCommand( FScanner &sc, S
 		case MARGINCMD_IFPLAYERSONTEAMS:
 		case MARGINCMD_IFPLAYERSHAVELIVES:
 		case MARGINCMD_IFSHOULDSHOWRANK:
+		case MARGINCMD_IFSPYING:
 			pNewCommand = new TrueOrFalseFlowControl( pMargin, pParentCommand, Command );
 			break;
 
