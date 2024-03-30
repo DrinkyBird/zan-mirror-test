@@ -1806,23 +1806,31 @@ public:
 		CommandType( Command ),
 		bMustBeTrue( false )
 	{
-		// [AK] If the command type isn't one of these listed here, throw an error.
-		if (( CommandType != MARGINCMD_IFONLINEGAME ) &&
-			( CommandType != MARGINCMD_IFINTERMISSION ) &&
-			( CommandType != MARGINCMD_IFPLAYERSONTEAMS ) &&
-			( CommandType != MARGINCMD_IFPLAYERSHAVELIVES ) &&
-			( CommandType != MARGINCMD_IFSHOULDSHOWRANK ))
+		switch ( CommandType )
 		{
-			if (( CommandType >= 0 ) && ( CommandType < NUM_MARGINCMDS ))
-			{
-				FString CommandName = GetStringMARGINCMD_e( CommandType ) + strlen( "MARGINCMD_" );
-				CommandName.ToLower( );
+			// [AK] If the command type isn't one of these listed here, throw an error.
+			case MARGINCMD_IFONLINEGAME:
+			case MARGINCMD_IFINTERMISSION:
+			case MARGINCMD_IFPLAYERSONTEAMS:
+			case MARGINCMD_IFPLAYERSHAVELIVES:
+			case MARGINCMD_IFSHOULDSHOWRANK:
+				break;
 
-				I_Error( "TrueOrFalseFlowControlBaseCommand: margin command '%s' cannot be used.", CommandName.GetChars( ));
-			}
-			else
+			default:
 			{
-				I_Error( "TrueOrFalseFlowControlBaseCommand: an unknown margin command was used." );
+				if (( CommandType >= 0 ) && ( CommandType < NUM_MARGINCMDS ))
+				{
+					FString CommandName = GetStringMARGINCMD_e( CommandType ) + strlen( "MARGINCMD_" );
+					CommandName.ToLower( );
+
+					I_Error( "TrueOrFalseFlowControlBaseCommand: margin command '%s' cannot be used.", CommandName.GetChars( ));
+				}
+				else
+				{
+					I_Error( "TrueOrFalseFlowControlBaseCommand: an unknown margin command was used." );
+				}
+
+				break;
 			}
 		}
 	}
