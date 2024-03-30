@@ -123,6 +123,24 @@ CUSTOM_CVAR( Int, cl_scoreboardscrollspeed, 32, CVAR_ARCHIVE )
 		self = 1;
 }
 
+// [AK] The maximum width of the scoreboard, as a percentage of the screen's width.
+CUSTOM_CVAR( Float, cl_maxscoreboardwidth, 1.0f, CVAR_ARCHIVE )
+{
+	float clampedValue = clamp<float>( self, 0.0f, 1.0f );
+
+	if ( self != clampedValue )
+		self = clampedValue;
+}
+
+// [AK] The maximum height of the scoreboard, as a percentage of the screen's height.
+CUSTOM_CVAR( Float, cl_maxscoreboardheight, 1.0f, CVAR_ARCHIVE )
+{
+	float clampedValue = clamp<float>( self, 0.0f, 1.0f );
+
+	if ( self != clampedValue )
+		self = clampedValue;
+}
+
 //*****************************************************************************
 //	PLAYER VALUE SPECIALIZATIONS
 
@@ -2975,8 +2993,9 @@ void Scoreboard::Refresh( const ULONG ulDisplayPlayer )
 void Scoreboard::UpdateWidth( void )
 {
 	const ULONG ulGameModeFlags = GAMEMODE_GetCurrentFlags( );
+	const unsigned int maxWidth = static_cast<unsigned>( HUD_GetWidth( ) * cl_maxscoreboardwidth );
 	ULONG ulNumActiveColumns = 0;
-	ULONG ulShortestWidthOfAllColumns = 0;
+	ULONG ulShortestColumnWidths = 0;
 
 	ulWidth = 0;
 
@@ -2986,7 +3005,7 @@ void Scoreboard::UpdateWidth( void )
 			continue;
 
 		ulWidth += ColumnOrder[i]->GetWidth( );
-		ulShortestWidthOfAllColumns += ColumnOrder[i]->GetShortestWidth( );
+		ulShortestColumnWidths += ColumnOrder[i]->GetShortestWidth( );
 		ulNumActiveColumns++;
 	}
 
@@ -3000,18 +3019,18 @@ void Scoreboard::UpdateWidth( void )
 	ulWidth += ulExtraSpace;
 
 	// [AK] If the scoreboard is too wide, try shrinking the columns as much as possible.
-	if ( ulWidth > static_cast<ULONG>( HUD_GetWidth( )))
+	if ( ulWidth > maxWidth )
 	{
 		// [AK] Choose whichever's bigger: the shortest combined width of all active columns, or the width of
 		// the screen minus the extra space.
-		const ULONG ulShortestPossibleWidth = MAX<ULONG>( ulShortestWidthOfAllColumns, HUD_GetWidth( ) - ulExtraSpace );
+		const ULONG ulShortestWidth = maxWidth > ulExtraSpace ? MAX<ULONG>( ulShortestColumnWidths, maxWidth - ulExtraSpace ) : ulShortestColumnWidths;
 		const ULONG ulWidthWithoutSpace = ulWidth - ulExtraSpace;
 
 		// [AK] If we're able to shrink down any active columns, then re-adjust their widths as necessary.
-		if ( ulShortestPossibleWidth < ulWidthWithoutSpace )
+		if ( ulShortestWidth < ulWidthWithoutSpace )
 		{
-			const ULONG ulMinWidthDiff = ulWidthWithoutSpace - ulShortestPossibleWidth;
-			const ULONG ulMaxWidthDiff = ulWidthWithoutSpace - ulShortestWidthOfAllColumns;
+			const ULONG ulMinWidthDiff = ulWidthWithoutSpace - ulShortestWidth;
+			const ULONG ulMaxWidthDiff = ulWidthWithoutSpace - ulShortestColumnWidths;
 
 			ulWidth = ulExtraSpace;
 
@@ -3067,7 +3086,7 @@ void Scoreboard::UpdateHeight( const ULONG ulDisplayPlayer )
 	const ULONG ulNumActivePlayers = HUD_GetNumPlayers( );
 	const ULONG ulNumSpectators = HUD_GetNumSpectators( );
 	const ULONG ulWidthWithoutBorder = ulWidth - 2 * ulBackgroundBorderSize;
-	const unsigned int maxHeight = HUD_GetHeight( );
+	const unsigned int maxHeight = static_cast<unsigned>( HUD_GetHeight( ) * cl_maxscoreboardheight );
 
 	ulHeight = 2 * ulBackgroundBorderSize + lHeaderHeight + ulGapBetweenHeaderAndRows;
 	totalScrollHeight = visibleScrollHeight = 0;
@@ -3131,7 +3150,7 @@ void Scoreboard::UpdateHeight( const ULONG ulDisplayPlayer )
 
 	// [AK] Check if the scroreboard is too big to everything on the screen.
 	if ( ulHeight + totalScrollHeight > maxHeight )
-		visibleScrollHeight = maxHeight - ulHeight;
+		visibleScrollHeight = maxHeight > ulHeight ? maxHeight - ulHeight : 0;
 
 	ulHeight += visibleScrollHeight;
 

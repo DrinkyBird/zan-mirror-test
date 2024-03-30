@@ -1231,6 +1231,9 @@ OptionMenu ScoreboardOptions
 	Option "Country code format",		"cl_usealpha3countrycode", "ZA_CountryCodeFormat"
 	Slider "Translucency",			"cl_scoreboardalpha", 0, 1, 0.05
 	Slider "Scroll speed",			"cl_scoreboardscrollspeed", 1, 64, 1
+	StaticText " "
+	Slider "Max width (%)",			"cl_maxscoreboardwidth", 0.1, 1.0, 0.05
+	Slider "Max height (%)",		"cl_maxscoreboardheight", 0.1, 1.0, 0.05
 
 	/* 
 	StaticText "Cooperative Options", 1
