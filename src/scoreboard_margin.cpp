@@ -836,6 +836,9 @@ public:
 		int clipTop = lYPos;
 		int clipHeight = pParentMargin->GetHeight( );
 
+		if ( SCOREBOARD_AdjustVerticalClipRect( clipTop, clipHeight ) == false )
+			return;
+
 		// [AK] We must take into account the virtual screen's size when setting up the clipping rectangle.
 		if ( g_bScale )
 			screen->VirtualToRealCoordsInt( clipLeft, clipTop, clipWidth, clipHeight, con_virtualwidth, con_virtualheight, false, !con_scaletext_usescreenratio );
@@ -1382,6 +1385,9 @@ public:
 		int clipTop = Pos.Y + lYPos;
 		int clipHeight = ulHeight;
 
+		if ( SCOREBOARD_AdjustVerticalClipRect( clipTop, clipHeight ) == false )
+			return;
+
 		// [AK] We must take into account the virtual screen's size when setting up the clipping rectangle.
 		if ( g_bScale )
 			screen->VirtualToRealCoordsInt( clipLeft, clipTop, clipWidth, clipHeight, con_virtualwidth, con_virtualheight, false, !con_scaletext_usescreenratio );
@@ -1499,6 +1505,9 @@ public:
 		int clipWidth = pParentMargin->GetWidth( );
 		int clipTop = lYPos;
 		int clipHeight = pParentMargin->GetHeight( );
+
+		if ( SCOREBOARD_AdjustVerticalClipRect( clipTop, clipHeight ) == false )
+			return;
 
 		// [AK] We must take into account the virtual screen's size when setting up the clipping rectangle.
 		if ( g_bScale )

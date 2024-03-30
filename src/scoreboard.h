@@ -507,6 +507,10 @@ struct Scoreboard
 	LONG lHeaderHeight;
 	LONG lRowHeight;
 	ULONG ulRowHeightToUse;
+	unsigned int totalScrollHeight;
+	unsigned int visibleScrollHeight;
+	int minClipRectY;
+	int maxClipRectY;
 
 	Scoreboard( void );
 
@@ -536,6 +540,8 @@ private:
 	ScoreMargin SpectatorHeader;
 	ScoreMargin Footer;
 	LONG lLastRefreshTick;
+	int currentScrollOffset;
+	int interpolateScrollOffset;
 
 	void AddColumnToList( FScanner &sc, const bool bAddToRankOrder );
 	void RemoveColumnFromList( FScanner &sc, const bool bRemoveFromRankOrder );
@@ -551,6 +557,7 @@ void			SCOREBOARD_Construct( void );
 void			SCOREBOARD_Reset( void );
 void			SCOREBOARD_Render( ULONG ulDisplayPlayer );
 bool			SCOREBOARD_ShouldDrawBoard( void );
+bool			SCOREBOARD_AdjustVerticalClipRect( int &clipTop, int &clipHeight );
 void			SCOREBOARD_BuildLimitStrings( std::list<FString> &lines, bool bAcceptColors );
 ScoreColumn		*SCOREBOARD_GetColumn( FName Name, const bool bMustBeUsable );
 LONG			SCOREBOARD_GetLeftToLimit( void );

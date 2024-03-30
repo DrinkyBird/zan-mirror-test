@@ -116,6 +116,13 @@ CUSTOM_CVAR( Float, cl_scoreboardalpha, 1.0f, CVAR_ARCHIVE )
 		self = fClampedValue;
 }
 
+// [AK] How fast the scoreboard can scroll up or down when it's too big.
+CUSTOM_CVAR( Int, cl_scoreboardscrollspeed, 32, CVAR_ARCHIVE )
+{
+	if ( self < 1 )
+		self = 1;
+}
+
 //*****************************************************************************
 //	PLAYER VALUE SPECIALIZATIONS
 
@@ -1052,6 +1059,9 @@ void ScoreColumn::DrawString( const char *pszString, FFont *pFont, const ULONG u
 
 	LONG lNewYPos = lYPos + ( clipHeight - static_cast<LONG>( pFont->StringHeight( pszString ))) / 2;
 
+	if ( SCOREBOARD_AdjustVerticalClipRect( clipTop, clipHeight ) == false )
+		return;
+
 	// [AK] We must take into account the virtual screen's size when setting up the clipping rectangle.
 	// Nothing should be drawn outside of this rectangle (i.e. the column's boundaries).
 	if ( g_bScale )
@@ -1085,6 +1095,9 @@ void ScoreColumn::DrawColor( const PalEntry color, const LONG lYPos, const ULONG
 	int clipLeft = GetAlignmentPosition( clipWidthToUse );
 	int clipTop = lYPos + ( static_cast<LONG>( ulHeight ) - clipHeightToUse ) / 2;
 
+	if ( SCOREBOARD_AdjustVerticalClipRect( clipTop, clipHeightToUse ) == false )
+		return;
+
 	// [AK] We must take into account the virtual screen's size.
 	if ( g_bScale )
 		screen->VirtualToRealCoordsInt( clipLeft, clipTop, clipWidthToUse, clipHeightToUse, con_virtualwidth, con_virtualheight, false, !con_scaletext_usescreenratio );
@@ -1116,6 +1129,9 @@ void ScoreColumn::DrawTexture( FTexture *pTexture, const LONG lYPos, const ULONG
 	int clipTop = lYPos + ( ulHeight - clipHeightToUse ) / 2;
 
 	LONG lNewYPos = lYPos + ( static_cast<LONG>( ulHeight ) - pTexture->GetScaledHeight( )) / 2;
+
+	if ( SCOREBOARD_AdjustVerticalClipRect( clipTop, clipHeightToUse ) == false )
+		return;
 
 	// [AK] We must take into account the virtual screen's size.
 	if ( g_bScale )
@@ -1954,6 +1970,9 @@ void CountryFlagScoreColumn::DrawValue( const ULONG ulPlayer, const ULONG ulColo
 		int clipTop = lNewYPos;
 		int clipHeight = ulFlagHeight;
 
+		if ( SCOREBOARD_AdjustVerticalClipRect( clipTop, clipHeight ) == false )
+			return;
+
 		// [AK] We must take into account the virtual screen's size.
 		if ( g_bScale )
 			screen->VirtualToRealCoordsInt( clipLeft, clipTop, clipWidth, clipHeight, con_virtualwidth, con_virtualheight, false, !con_scaletext_usescreenratio );
@@ -2340,11 +2359,17 @@ Scoreboard::Scoreboard( void ) :
 	lHeaderHeight( 0 ),
 	lRowHeight( 0 ),
 	ulRowHeightToUse( 0 ),
+	totalScrollHeight( 0 ),
+	visibleScrollHeight( 0 ),
+	minClipRectY( 0 ),
+	maxClipRectY( 0 ),
 	MainHeader( MARGINTYPE_HEADER_OR_FOOTER, "MainHeader" ),
 	TeamHeader( MARGINTYPE_TEAM, "TeamHeader" ),
 	SpectatorHeader( MARGINTYPE_SPECTATOR, "SpectatorHeader" ),
 	Footer( MARGINTYPE_HEADER_OR_FOOTER, "Footer" ),
-	lLastRefreshTick( 0 ) { }
+	lLastRefreshTick( 0 ),
+	currentScrollOffset( 0 ),
+	interpolateScrollOffset( 0 ) { }
 
 //*****************************************************************************
 //
@@ -2923,6 +2948,14 @@ void Scoreboard::Refresh( const ULONG ulDisplayPlayer )
 
 	UpdateHeight( ulDisplayPlayer );
 
+	// [AK] Clamp the scroll offset (i.e. how far the user has scrolled down on
+	// the scoreboard), depending on how much bigger the total height of the
+	// player rows and headers are compared to what's visible.
+	if ( visibleScrollHeight < totalScrollHeight )
+		currentScrollOffset = clamp<int>( interpolateScrollOffset, 0, totalScrollHeight - visibleScrollHeight );
+	else
+		currentScrollOffset = interpolateScrollOffset = 0;
+
 	// [AK] Reset the player list then sort players based on the scoreboard's rank order.
 	for ( ULONG ulIdx = 0; ulIdx < MAXPLAYERS; ulIdx++ )
 		ulPlayerList[ulIdx] = ulIdx;
@@ -3034,8 +3067,10 @@ void Scoreboard::UpdateHeight( const ULONG ulDisplayPlayer )
 	const ULONG ulNumActivePlayers = HUD_GetNumPlayers( );
 	const ULONG ulNumSpectators = HUD_GetNumSpectators( );
 	const ULONG ulWidthWithoutBorder = ulWidth - 2 * ulBackgroundBorderSize;
+	const unsigned int maxHeight = HUD_GetHeight( );
 
 	ulHeight = 2 * ulBackgroundBorderSize + lHeaderHeight + ulGapBetweenHeaderAndRows;
+	totalScrollHeight = visibleScrollHeight = 0;
 
 	MainHeader.Refresh( ulDisplayPlayer, ulWidthWithoutBorder );
 	ulHeight += MainHeader.GetHeight( );
@@ -3055,7 +3090,7 @@ void Scoreboard::UpdateHeight( const ULONG ulDisplayPlayer )
 	// [AK] Add the total height of all rows for active players.
 	if ( ulNumActivePlayers > 0 )
 	{
-		ulHeight += ulNumActivePlayers * ulRowYOffset;
+		totalScrollHeight += ulNumActivePlayers * ulRowYOffset;
 
 		if ( ShouldSeparateTeams( ))
 		{
@@ -3067,10 +3102,10 @@ void Scoreboard::UpdateHeight( const ULONG ulDisplayPlayer )
 				if (( ulFlags & SCOREBOARDFLAG_DONTSHOWTEAMHEADERS ) == false )
 				{
 					TeamHeader.Refresh( ulDisplayPlayer, ulWidthWithoutBorder );
-					ulHeight += TeamHeader.GetHeight( ) * ulNumTeamsWithPlayers;
+					totalScrollHeight += TeamHeader.GetHeight( ) * ulNumTeamsWithPlayers;
 				}
 
-				ulHeight += ulRowHeightToUse * ( ulNumTeamsWithPlayers - 1 );
+				totalScrollHeight += ulRowHeightToUse * ( ulNumTeamsWithPlayers - 1 );
 			}
 		}
 	}
@@ -3078,20 +3113,27 @@ void Scoreboard::UpdateHeight( const ULONG ulDisplayPlayer )
 	// [AK] Do the same for any true spectators.
 	if ( ulNumSpectators > 0 )
 	{
-		ulHeight += ulRowHeightToUse;
+		totalScrollHeight += ulRowHeightToUse;
 
 		// [AK] Refresh and add the height of the spectator header too, if allowed.
 		if (( ulFlags & SCOREBOARDFLAG_DONTSHOWTEAMHEADERS ) == false )
 		{
 			SpectatorHeader.Refresh( ulDisplayPlayer, ulWidthWithoutBorder );
-			ulHeight += SpectatorHeader.GetHeight( );
+			totalScrollHeight += SpectatorHeader.GetHeight( );
 		}
 
-		ulHeight += ulNumSpectators * ulRowYOffset;
+		totalScrollHeight += ulNumSpectators * ulRowYOffset;
 	}
 
 	Footer.Refresh( ulDisplayPlayer, ulWidthWithoutBorder );
 	ulHeight += Footer.GetHeight( );
+	visibleScrollHeight = totalScrollHeight;
+
+	// [AK] Check if the scroreboard is too big to everything on the screen.
+	if ( ulHeight + totalScrollHeight > maxHeight )
+		visibleScrollHeight = maxHeight - ulHeight;
+
+	ulHeight += visibleScrollHeight;
 
 	lRelY = ( HUD_GetHeight( ) - static_cast<LONG>( ulHeight )) / 2;
 }
@@ -3122,6 +3164,9 @@ void Scoreboard::Render( const ULONG ulDisplayPlayer, const float fAlpha )
 	int clipWidth = ulWidth;
 	int clipHeight = ulHeight;
 
+	minClipRectY = lRelY;
+	maxClipRectY = lRelY + ulHeight;
+
 	// [AK] We must take into account the virtual screen's size.
 	if ( g_bScale )
 		screen->VirtualToRealCoordsInt( clipLeft, clipTop, clipWidth, clipHeight, con_virtualwidth, con_virtualheight, false, !con_scaletext_usescreenratio );
@@ -3149,6 +3194,25 @@ void Scoreboard::Render( const ULONG ulDisplayPlayer, const float fAlpha )
 	// [AK] Draw another border below the headers.
 	DrawBorder( HeaderColor, lYPos, fCombinedAlpha, true );
 	lYPos += ulGapBetweenHeaderAndRows;
+
+	minClipRectY = lYPos;
+	maxClipRectY = lYPos + visibleScrollHeight;
+
+	// [AK] Check if the user wants to scroll the scoreboard up or down.
+	if ( visibleScrollHeight < totalScrollHeight )
+	{
+		const int offset = static_cast<int>( cl_scoreboardscrollspeed * FIXED2FLOAT( r_TicFrac ));
+
+		if ( Button_SB_ScrollUp.bDown )
+			interpolateScrollOffset = currentScrollOffset - offset;
+
+		if ( Button_SB_ScrollDn.bDown )
+			interpolateScrollOffset = currentScrollOffset + offset;
+
+		interpolateScrollOffset = clamp<int>( interpolateScrollOffset, 0, totalScrollHeight - visibleScrollHeight );
+	}
+
+	lYPos -= interpolateScrollOffset;
 
 	// [AK] Draw rows for all active players.
 	for ( ULONG ulIdx = 0; ulIdx < ulNumActivePlayers; ulIdx++ )
@@ -3194,6 +3258,10 @@ void Scoreboard::Render( const ULONG ulDisplayPlayer, const float fAlpha )
 		for ( ULONG ulIdx = ulNumActivePlayers; ulIdx < ulTotalPlayers; ulIdx++ )
 			DrawRow( ulPlayerList[ulIdx], ulDisplayPlayer, lYPos, fAlpha, bUseLightBackground );
 	}
+
+	lYPos = maxClipRectY;
+	minClipRectY = lRelY;
+	maxClipRectY = lRelY + ulHeight;
 
 	// [AK] Draw a border at the bottom of the scoreboard. We must subtract ulGapBetweenRows here (a bit hacky)
 	// because SCOREBOARD_s::DrawPlayerRow adds it every time a row is drawn. This isn't necessary for the last row.
@@ -3380,7 +3448,11 @@ void Scoreboard::DrawRowBackground( const PalEntry color, const int y, const flo
 	if (( fAlpha <= 0.0f ) || ( fRowBackgroundAmount <= 0.0f ))
 		return;
 
-	const int height = ulRowHeightToUse;
+	int yToUse = y;
+	int height = ulRowHeightToUse;
+
+	if ( SCOREBOARD_AdjustVerticalClipRect( yToUse, height ) == false )
+		return;
 
 	// [AK] If gaps must be shown in the row's background, then only draw the background where
 	// the active columns are. Otherwise, draw a single background across the scoreboard.
@@ -3391,12 +3463,12 @@ void Scoreboard::DrawRowBackground( const PalEntry color, const int y, const flo
 			if ( ColumnOrder[i]->IsDisabled( ))
 				continue;
 
-			DrawRowBackground( color, ColumnOrder[i]->GetRelX( ) - ulColumnPadding, y, ColumnOrder[i]->GetWidth( ) + 2 * ulColumnPadding, height, fAlpha );
+			DrawRowBackground( color, ColumnOrder[i]->GetRelX( ) - ulColumnPadding, yToUse, ColumnOrder[i]->GetWidth( ) + 2 * ulColumnPadding, height, fAlpha );
 		}
 	}
 	else
 	{
-		DrawRowBackground( color, lRelX + ulBackgroundBorderSize, y, ulWidth - 2 * ulBackgroundBorderSize, height, fAlpha );
+		DrawRowBackground( color, lRelX + ulBackgroundBorderSize, yToUse, ulWidth - 2 * ulBackgroundBorderSize, height, fAlpha );
 	}
 }
 
@@ -3441,6 +3513,10 @@ bool Scoreboard::ShouldSeparateTeams( void ) const
 
 void SCOREBOARD_Construct( void )
 {
+	// [AK] Reset the scroll up/down buttons.
+	Button_SB_ScrollUp.Reset( );
+	Button_SB_ScrollDn.Reset( );
+
 	if ( Wads.CheckNumForName( "SCORINFO" ) != -1 )
 	{
 		int currentLump, lastLump = 0;
@@ -3598,6 +3674,36 @@ bool SCOREBOARD_ShouldDrawBoard( void )
 	// watching a demo. However, we still want to draw it in deathmatch, teamgame, or invasion.
 	if (( NETWORK_GetState( ) == NETSTATE_SINGLE ) && ( CLIENTDEMO_IsPlaying( ) == false ) && (( deathmatch || teamgame || invasion ) == false ))
 		return false;
+
+	return true;
+}
+
+//*****************************************************************************
+//
+// [AK] SCOREBOARD_AdjustVerticalClipRect
+//
+// This checks if a clipping rectangle is within the vertical boundaries of the
+// scoreboard (i.e. it isn't too far up or down). If the enire clipping rectangle
+// is out of bounds, then it returns false.
+//
+// Otherwise, the clipping rectangle is adjusted to ensure that it isn't outside
+// of the scoreboard, then returns true.
+//
+//*****************************************************************************
+
+bool SCOREBOARD_AdjustVerticalClipRect( int &clipTop, int &clipHeight )
+{
+	if (( clipTop + clipHeight <= g_Scoreboard.minClipRectY ) || ( clipTop >= g_Scoreboard.maxClipRectY ))
+		return false;
+
+	if ( clipTop < g_Scoreboard.minClipRectY )
+	{
+		clipHeight -= g_Scoreboard.minClipRectY - clipTop;
+		clipTop = g_Scoreboard.minClipRectY;
+	}
+
+	if ( clipTop + clipHeight > g_Scoreboard.maxClipRectY )
+		clipHeight = g_Scoreboard.maxClipRectY - clipTop;
 
 	return true;
 }

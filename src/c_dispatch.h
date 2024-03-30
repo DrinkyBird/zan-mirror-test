@@ -207,7 +207,8 @@ extern FButtonStatus Button_Mlook, Button_Klook, Button_Use, Button_AltAttack,
 	Button_AM_PanLeft, Button_AM_PanRight, Button_AM_PanDown, Button_AM_PanUp,
 	Button_AM_ZoomIn, Button_AM_ZoomOut,
 	Button_ShowMedals,	// [BC] New "show medals" button.
-	Button_VoiceRecord;	// [AK] Added the "voicerecord" button.
+	Button_VoiceRecord,	// [AK] Added the "voicerecord" button.
+	Button_SB_ScrollUp, Button_SB_ScrollDn; // [AK] Added "sb_scrollup" and "sb_scrolldn" buttons.
 extern bool ParsingKeyConf, UnsafeExecutionContext;
 
 void ResetButtonTriggers ();	// Call ResetTriggers for all buttons
