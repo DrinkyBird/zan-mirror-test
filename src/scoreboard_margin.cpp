@@ -906,6 +906,8 @@ protected:
 		DRAWSTRING_CVAR,
 		// The name of the current game mode.
 		DRAWSTRING_GAMEMODE,
+		// The name of the current player.
+		DRAWSTRING_PLAYERNAME,
 		// The name of the current level.
 		DRAWSTRING_LEVELNAME,
 		// The lump of the current level.
@@ -973,6 +975,7 @@ protected:
 		{
 			{ "cvar",					{ DRAWSTRING_CVAR,					MARGINTYPE_HEADER_OR_FOOTER }},
 			{ "gamemode",				{ DRAWSTRING_GAMEMODE,				MARGINTYPE_HEADER_OR_FOOTER }},
+			{ "playername",				{ DRAWSTRING_PLAYERNAME,			MARGINTYPE_HEADER_OR_FOOTER }},
 			{ "levelname",				{ DRAWSTRING_LEVELNAME,				MARGINTYPE_HEADER_OR_FOOTER }},
 			{ "levellump",				{ DRAWSTRING_LEVELLUMP,				MARGINTYPE_HEADER_OR_FOOTER }},
 			{ "nextlevelname",			{ DRAWSTRING_NEXTLEVELNAME,			MARGINTYPE_HEADER_OR_FOOTER }},
@@ -1136,6 +1139,10 @@ protected:
 
 					case DRAWSTRING_GAMEMODE:
 						text += GAMEMODE_GetCurrentName( );
+						break;
+
+					case DRAWSTRING_PLAYERNAME:
+						text += players[ulDisplayPlayer].userinfo.GetName( );
 						break;
 
 					case DRAWSTRING_LEVELNAME:
