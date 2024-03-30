@@ -3270,7 +3270,7 @@ bool PLAYER_ShouldForceBaseSkin( player_t *player )
 
 	// [BB] MF4_NOSKIN should force the player to have the base skin too, the
 	// same is true for morphed players.
-	if ((( player->mo != nullptr ) && ( player->mo->flags & MF4_NOSKIN )) || ( player->morphTics ))
+	if ((( player->mo != nullptr ) && ( player->mo->flags4 & MF4_NOSKIN )) || ( player->morphTics ))
 		return true;
 
 	return false;
