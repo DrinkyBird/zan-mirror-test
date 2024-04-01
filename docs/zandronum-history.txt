@@ -190,6 +190,7 @@
 !	- A server's settings (i.e. any serverinfo CVars the server syncs with the client) are now discarded when the client disconnects and won't be saved into their config file. [Kaminsky] 
 !	- The position of the weapon sprite while swaying now only updates at 35 Hz instead of at the refresh rate. [Kaminsky]
 !	- Renamed "cl_swayspeed" to "cl_viewswayspeed", to distinguish it from the new weapon sway speeds (i.e. motion and jump). [Kaminsky]
+!	- Made the mini flag icons that appear on the HUD and scoreboard bigger and easier to see. [Kaminsky]
 
 
 3.1
