@@ -103,6 +103,18 @@ CUSTOM_CVAR (Float, cl_spectatormove, 1.0, CVAR_ARCHIVE|CVAR_GLOBALCONFIG) {
 		self = -100.0;
 }
 
+// [AK] Enables source-engine like noclipping, allowing spectators to pass through floors and ceilings.
+CUSTOM_CVAR (Bool, cl_spectatorsource, false, CVAR_ARCHIVE|CVAR_GLOBALCONFIG)
+{
+	if (players[consoleplayer].bSpectating)
+	{
+		if (self)
+			players[consoleplayer].mo->flags5 |= MF5_NOINTERACTION;
+		else
+			players[consoleplayer].mo->flags5 &= ~MF5_NOINTERACTION;
+	}
+}
+
 // [GRB] Custom player classes
 TArray<FPlayerClass> PlayerClasses;
 
@@ -2714,6 +2726,9 @@ void P_CalcHeight (player_t *player)
 	if ( CLIENT_PREDICT_IsPredicting( ))
 		return;
 
+	// [AK] Check if source-engine noclipping is being used by the spectator.
+	const bool usingSourceEngineNoClip = P_IsUsingSourceEngineNoClip(player->mo);
+
 	// Regular movement bobbing
 	// (needs to be calculated for gun swing even if not on ground)
 
@@ -2723,7 +2738,8 @@ void P_CalcHeight (player_t *player)
 	// it causes bobbing jerkiness when the player moves from ice to non-ice,
 	// and vice-versa.
 
-	if (player->cheats & CF_NOCLIP2)
+	// [AK] Don't calculate bobbing while using source-engine noclipping.
+	if ((player->cheats & CF_NOCLIP2) || (usingSourceEngineNoClip))
 	{
 		player->bob = 0;
 	}
@@ -2817,8 +2833,14 @@ void P_CalcHeight (player_t *player)
 	{
 		bob = 0;
 	}
+
 	// [AK] Don't bob the screen if cl_viewbob is disabled.
 	player->viewz = player->mo->z + player->viewheight + (cl_viewbob ? bob : 0);
+
+	// [AK] Don't clip the view to the floor/ceiling while using source-engine noclipping.
+	if (usingSourceEngineNoClip)
+		return;
+
 	if (player->mo->floorclip && player->playerstate != PST_DEAD
 		&& player->mo->z <= player->mo->floorz)
 	{
@@ -4540,6 +4562,15 @@ bool P_IsPlayerTotallyFrozen(const player_t *player)
 		gamestate == GS_TITLELEVEL ||
 		player->cheats & CF_TOTALLYFROZEN ||
 		((level.flags2 & LEVEL2_FROZEN) && player->timefreezer == 0 && (player->bSpectating == false));
+}
+
+// [AK] Checks if source-engine noclipping is being used by the local player.
+bool P_IsUsingSourceEngineNoClip(const AActor *viewActor)
+{
+	if ((cl_spectatorsource == false) || (viewActor == nullptr))
+		return false;
+
+	return ((players[consoleplayer].bSpectating) && (viewActor == players[consoleplayer].mo));
 }
 
 // [AK] Resets the player's pitch limits anytime they need to be changed.

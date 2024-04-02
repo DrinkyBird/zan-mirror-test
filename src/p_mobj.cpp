@@ -4013,6 +4013,15 @@ void AActor::Tick ()
 
 		UnlinkFromWorld ();
 		flags |= MF_NOBLOCKMAP;
+
+		// [AK] Spectators using source-engine noclipping still need a way to slow down.
+		if (P_IsUsingSourceEngineNoClip(this))
+		{
+			velx = FixedMul(velx, FRICTION_FLY);
+			vely = FixedMul(vely, FRICTION_FLY);
+			velz = FixedMul(velz, FRICTION_FLY);
+		}
+
 		x += velx;
 		y += vely;
 		z += velz;

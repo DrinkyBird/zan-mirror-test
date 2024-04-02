@@ -36,6 +36,12 @@ OptionValue ZA_IdentifyMonsterLevels
 	3.0, "Ghost"
 }
 
+OptionValue ZA_SpectatorMode
+{
+	0.0, "Standard"
+	1.0, "Source-engine"
+}
+
 OptionMenu ZA_MultiplayerOptions
 {
 	Title "MULTIPLAYER OPTIONS"
@@ -70,6 +76,7 @@ OptionMenu ZA_MultiplayerOptions
 	Option		"Show spawn spots",			"cl_showspawns",			"YesNo"
 	Option		"Free chasecam",			"cl_freechase",				"YesNo"
 	Option		"Teleport to spied player",	"cl_telespy",				"YesNo"
+	Option		"Spectator mode",		"cl_spectatorsource",			"ZA_SpectatorMode"
 	Slider		"Spectator move speed",		"cl_spectatormove",			0.1, 5.0, 0.1
 	StaticText	" "
 	Option		"Override player colors",	"cl_overrideplayercolors",	"ZA_OverridePlayerColors"

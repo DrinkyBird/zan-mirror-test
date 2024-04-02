@@ -59,6 +59,7 @@
 +	- Added ACS function: "GetPlayerCountry", to return the alpha-2 or alpha-3 code, or full name, of the country a player's connecting from. This also respects a player's choice to hide their country. [Kaminsky]
 +	- Added the CVars "cl_motionswayspeed" and "cl_jumpswayspeed" (and MotionSwaySpeed and JumpSwaySpeed DECORATE weapon properties), to add additional sway to a player's weapon when they move, crouch, or jump up or down. [Kaminsky]
 +	- Added the CVars "cl_stillbobspeed" and "cl_stillbobrange" (and StillBobSpeed and StillBobRange DECORATE weapon properties), to also bob the weapon up and down while the player stands still. [Kaminsky]
++	- Added the CVar "cl_spectatorsource", which enables source-engine like noclipping that allows spectators to pass through floors and ceilings. Based on the "zcc_spectsource" feature from ZCC. [Kaminsky]
 -	- Fixed: clients didn't initialize a sector's friction properly in some cases due to a superfluous check that wasn't removed earlier. [Kaminsky]
 -	- Fixed: the server wouldn't initialize compatflags and compatflags2 properly if entered as command line parameters. [Kaminsky]
 -	- Fixed: serverinfo CVars entered on the command line were restored in reverse order. [Kaminsky]
