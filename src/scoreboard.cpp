@@ -92,6 +92,10 @@ static	bool	scoreboard_TryPushingColumnToList( FScanner &sc, TArray<ColumnType *
 template <typename ColumnType>
 static	bool	scoreboard_TryRemovingColumnFromList( FScanner &sc, TArray<ColumnType *> &ColumnList, ColumnType *pColumn );
 
+static	unsigned int	scoreboard_GetMaxSize( const float percentage, const int alignment, const int offset, const int screenSize );
+
+static	void	scoreboard_DoAlignAndOffset( LONG &position, const int alignment, const int offset, const int screenSize, const int scoreboardSize );
+
 //*****************************************************************************
 //	CONSOLE VARIABLES
 
@@ -106,6 +110,12 @@ CVAR( Bool, cl_usealpha3countrycode, false, CVAR_ARCHIVE );
 
 // [AK] If true, then columns will use their short names in the headers.
 CVAR( Bool, cl_useshortcolumnnames, false, CVAR_ARCHIVE );
+
+// [AK] How much to offset the scoreboard horizontally.
+CVAR( Int, cl_scoreboardx, 0, CVAR_ARCHIVE );
+
+// [AK] How much to offset the scoreboard vertically.
+CVAR( Int, cl_scoreboardy, 0, CVAR_ARCHIVE );
 
 // [AK] Controls the opacity of the entire scoreboard.
 CUSTOM_CVAR( Float, cl_scoreboardalpha, 1.0f, CVAR_ARCHIVE )
@@ -136,6 +146,24 @@ CUSTOM_CVAR( Float, cl_maxscoreboardwidth, 1.0f, CVAR_ARCHIVE )
 CUSTOM_CVAR( Float, cl_maxscoreboardheight, 1.0f, CVAR_ARCHIVE )
 {
 	float clampedValue = clamp<float>( self, 0.0f, 1.0f );
+
+	if ( self != clampedValue )
+		self = clampedValue;
+}
+
+// [AK] Controls whether the scoreboard is aligned to the left, center, or right of the screen.
+CUSTOM_CVAR( Int, cl_scoreboardhorizalign, HORIZALIGN_CENTER, CVAR_ARCHIVE )
+{
+	const int clampedValue = clamp<int>( self, HORIZALIGN_LEFT, HORIZALIGN_RIGHT );
+
+	if ( self != clampedValue )
+		self = clampedValue;
+}
+
+// [AK] Controls whether the scoreboard is aligned to the top, center, or bottom of the screen.
+CUSTOM_CVAR( Int, cl_scoreboardvertalign, VERTALIGN_CENTER, CVAR_ARCHIVE )
+{
+	const int clampedValue = clamp<int>( self, VERTALIGN_TOP, VERTALIGN_BOTTOM );
 
 	if ( self != clampedValue )
 		self = clampedValue;
@@ -2993,7 +3021,6 @@ void Scoreboard::Refresh( const ULONG ulDisplayPlayer )
 void Scoreboard::UpdateWidth( void )
 {
 	const ULONG ulGameModeFlags = GAMEMODE_GetCurrentFlags( );
-	const unsigned int maxWidth = static_cast<unsigned>( HUD_GetWidth( ) * cl_maxscoreboardwidth );
 	ULONG ulNumActiveColumns = 0;
 	ULONG ulShortestColumnWidths = 0;
 
@@ -3017,6 +3044,8 @@ void Scoreboard::UpdateWidth( void )
 
 	// [AK] Add the gaps between each of the active columns and the background border size to the total width.
 	ulWidth += ulExtraSpace;
+
+	const unsigned int maxWidth = scoreboard_GetMaxSize( cl_maxscoreboardwidth, cl_scoreboardhorizalign, cl_scoreboardx, HUD_GetWidth( ));
 
 	// [AK] If the scoreboard is too wide, try shrinking the columns as much as possible.
 	if ( ulWidth > maxWidth )
@@ -3053,7 +3082,7 @@ void Scoreboard::UpdateWidth( void )
 		}
 	}
 
-	lRelX = ( HUD_GetWidth( ) - static_cast<LONG>( ulWidth )) / 2;
+	scoreboard_DoAlignAndOffset( lRelX, cl_scoreboardhorizalign, cl_scoreboardx, HUD_GetWidth( ), ulWidth );
 
 	LONG lCurXPos = lRelX + ulBackgroundBorderSize + ulColumnPadding;
 
@@ -3085,13 +3114,13 @@ void Scoreboard::UpdateHeight( const ULONG ulDisplayPlayer )
 	const ULONG ulRowYOffset = ulRowHeightToUse + ulGapBetweenRows;
 	const ULONG ulNumActivePlayers = HUD_GetNumPlayers( );
 	const ULONG ulNumSpectators = HUD_GetNumSpectators( );
-	const ULONG ulWidthWithoutBorder = ulWidth - 2 * ulBackgroundBorderSize;
-	const unsigned int maxHeight = static_cast<unsigned>( HUD_GetHeight( ) * cl_maxscoreboardheight );
+	const ULONG marginWidth = ulWidth - 2 * ulBackgroundBorderSize;
+	const int marginRelX = lRelX + ulBackgroundBorderSize;
 
 	ulHeight = 2 * ulBackgroundBorderSize + lHeaderHeight + ulGapBetweenHeaderAndRows;
 	totalScrollHeight = visibleScrollHeight = 0;
 
-	MainHeader.Refresh( ulDisplayPlayer, ulWidthWithoutBorder );
+	MainHeader.Refresh( ulDisplayPlayer, marginWidth, marginRelX );
 	ulHeight += MainHeader.GetHeight( );
 
 	if (( ulFlags & SCOREBOARDFLAG_DONTDRAWBORDERS ) == false )
@@ -3120,7 +3149,7 @@ void Scoreboard::UpdateHeight( const ULONG ulDisplayPlayer )
 				// [AK] Refresh and add the heights of all team headers too, if allowed.
 				if (( ulFlags & SCOREBOARDFLAG_DONTSHOWTEAMHEADERS ) == false )
 				{
-					TeamHeader.Refresh( ulDisplayPlayer, ulWidthWithoutBorder );
+					TeamHeader.Refresh( ulDisplayPlayer, marginWidth, marginRelX );
 					totalScrollHeight += TeamHeader.GetHeight( ) * ulNumTeamsWithPlayers;
 				}
 
@@ -3137,16 +3166,18 @@ void Scoreboard::UpdateHeight( const ULONG ulDisplayPlayer )
 		// [AK] Refresh and add the height of the spectator header too, if allowed.
 		if (( ulFlags & SCOREBOARDFLAG_DONTSHOWTEAMHEADERS ) == false )
 		{
-			SpectatorHeader.Refresh( ulDisplayPlayer, ulWidthWithoutBorder );
+			SpectatorHeader.Refresh( ulDisplayPlayer, marginWidth, marginRelX );
 			totalScrollHeight += SpectatorHeader.GetHeight( );
 		}
 
 		totalScrollHeight += ulNumSpectators * ulRowYOffset;
 	}
 
-	Footer.Refresh( ulDisplayPlayer, ulWidthWithoutBorder );
+	Footer.Refresh( ulDisplayPlayer, marginWidth, marginRelX );
 	ulHeight += Footer.GetHeight( );
 	visibleScrollHeight = totalScrollHeight;
+
+	const unsigned int maxHeight = scoreboard_GetMaxSize( cl_maxscoreboardheight, cl_scoreboardvertalign, cl_scoreboardy, HUD_GetHeight( ));
 
 	// [AK] Check if the scroreboard is too big to everything on the screen.
 	if ( ulHeight + totalScrollHeight > maxHeight )
@@ -3154,7 +3185,7 @@ void Scoreboard::UpdateHeight( const ULONG ulDisplayPlayer )
 
 	ulHeight += visibleScrollHeight;
 
-	lRelY = ( HUD_GetHeight( ) - static_cast<LONG>( ulHeight )) / 2;
+	scoreboard_DoAlignAndOffset( lRelY, cl_scoreboardvertalign, cl_scoreboardy, HUD_GetHeight( ), ulHeight );
 }
 
 //*****************************************************************************
@@ -3837,4 +3868,98 @@ static bool scoreboard_TryRemovingColumnFromList( FScanner &sc, TArray<ColumnTyp
 	// [AK] If we get this far, then the column wasn't in the list. Inform the user.
 	sc.ScriptMessage( "Couldn't find column '%s' in the list.", pColumn->GetInternalName( ));
 	return false;
+}
+
+//*****************************************************************************
+//
+// [AK] scoreboard_GetMaxSize
+//
+// A helper function used to find the maximum possible width or height of the
+// scoreboard, based on how it should be aligned (e.g. cl_scoreboardhorizalign).
+// This picks the smallest of two sizes: the screen's width/height subtracted by
+// the offset (e.g. cl_scoreboardx), or the screen's width/height multiplied by
+// a percentage (e.g. cl_maxscoreboardwidth).
+//
+// For the alignments:
+//
+// 0 = left/top
+// 1 = center
+// 2 = right/bottom
+//
+//*****************************************************************************
+
+static unsigned int scoreboard_GetMaxSize( const float percentage, const int alignment, const int offset, const int screenSize )
+{
+	unsigned int maxSize = MAX<int>( static_cast<int>( screenSize * percentage ), 0 );
+
+	if ( offset != 0 )
+	{
+		unsigned int maxSizeWithOffset = 0;
+
+		// [AK] Double the offset when aligned to the center of the screen.
+		if ( alignment == 1 )
+			maxSizeWithOffset = MAX<int>( screenSize - 2 * offset, 0 );
+		else
+			maxSizeWithOffset = MAX<int>( screenSize - offset, 0 );
+
+		maxSize = MIN<unsigned>( maxSize, maxSizeWithOffset );
+	}
+
+	return maxSize;
+}
+
+//*****************************************************************************
+//
+// [AK] scoreboard_DoAlignAndOffset
+//
+// A helper function used to determine the scoreboard's x and y-position on the
+// screen, depending on how it should be aligned (e.g. cl_scoreboardhorizalign)
+// and offset (e.g. cl_scoreboardx). The scoreboard's final width or height
+// must also be known when calling this function.
+//
+//*****************************************************************************
+
+void scoreboard_DoAlignAndOffset( LONG &position, const int alignment, const int offset, const int screenSize, const int scoreboardSize )
+{
+	const int sizeDiff = screenSize - scoreboardSize;
+
+	// [AK] Align to the center of the screen.
+	if ( alignment == 1 )
+	{
+		if ( sizeDiff > 0 )
+		{
+			position = offset + sizeDiff / 2;
+
+			if ( position < 0 )
+				position = 0;
+			else if ( position + scoreboardSize > screenSize )
+				position = sizeDiff;
+		}
+		else
+		{
+			position = sizeDiff / 2;
+		}
+	}
+	else
+	{
+		// [AK] The offset can't be negative when uncentered.
+		const int clampedOffset = MAX<int>( offset, 0 );
+
+		// [AK] Align to the left or top of the screen.
+		if ( alignment == 0 )
+		{
+			position = 0;
+
+			if ( sizeDiff > 0 )
+				position = MIN<LONG>( clampedOffset, sizeDiff );
+		}
+		// [AK] Otherwise, align to the right or bottom of the screen.
+		else
+		{
+			position = sizeDiff;
+
+			if ( sizeDiff > 0 )
+				position = MAX<LONG>( position - clampedOffset, 0 );
+		}
+	}
 }

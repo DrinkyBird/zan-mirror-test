@@ -359,17 +359,16 @@ protected:
 
 	TVector2<LONG> GetDrawingPosition( const ULONG ulWidth, const ULONG ulHeight, const LONG lXOffsetBonus = 0 ) const
 	{
-		const ULONG ulHUDWidth = HUD_GetWidth( );
 		const LONG lActualXOffset = lXOffset + lXOffsetBonus;
 		TVector2<LONG> result;
 
 		// [AK] Get the x-position based on the horizontal alignment.
 		if ( HorizontalAlignment == HORIZALIGN_LEFT )
-			result.X = ( ulHUDWidth - pParentMargin->GetWidth( )) / 2 + lActualXOffset;
+			result.X = pParentMargin->GetRelX( ) + lActualXOffset;
 		else if ( HorizontalAlignment == HORIZALIGN_CENTER )
-			result.X = ( ulHUDWidth - ulWidth ) / 2 + lActualXOffset;
+			result.X = pParentMargin->GetRelX( ) + ( pParentMargin->GetWidth( ) - ulWidth ) / 2 + lActualXOffset;
 		else
-			result.X = ( ulHUDWidth + pParentMargin->GetWidth( )) / 2 - ulWidth - lActualXOffset;
+			result.X = pParentMargin->GetRelX( ) + pParentMargin->GetWidth( ) - ulWidth - lActualXOffset;
 
 		// [AK] Next, get the y-position based on the vertical alignment.
 		if ( VerticalAlignment == VERTALIGN_TOP )
@@ -582,7 +581,7 @@ public:
 		const ULONG ulWidth = GetContentWidth( ulTeam );
 		TVector2<LONG> Pos = GetDrawingPosition( ulWidth, GetContentHeight( ulTeam ), lXOffsetBonus );
 
-		Pos.X -= ( HUD_GetWidth( ) - pParentMargin->GetWidth( )) / 2;
+		Pos.X -= pParentMargin->GetRelX( );
 		Pos.Y += lYPos;
 
 		for ( unsigned int i = 0; i < CommandsToDraw.Size( ); i++ )
@@ -662,7 +661,7 @@ public:
 		const ULONG ulHeight = GetContentHeight( ulTeam );
 		TVector2<LONG> Pos = GetDrawingPosition( ulWidth, ulHeight, lXOffsetBonus );
 
-		Pos.X -= ( HUD_GetWidth( ) - pParentMargin->GetWidth( )) / 2;
+		Pos.X -= pParentMargin->GetRelX( );
 		Pos.Y += lYPos;
 
 		for ( unsigned int i = 0; i < CommandsToDraw.Size( ); i++ )
@@ -831,7 +830,7 @@ public:
 		const fixed_t combinedAlpha = FLOAT2FIXED( fAlpha * fTranslucency );
 		TVector2<LONG> Pos = GetDrawingPosition( pString->ulMaxWidth, pString->ulTotalHeight, lXOffsetBonus );
 
-		int clipLeft = ( HUD_GetWidth( ) - pParentMargin->GetWidth( )) / 2;
+		int clipLeft = pParentMargin->GetRelX( );
 		int clipWidth = pParentMargin->GetWidth( );
 		int clipTop = lYPos;
 		int clipHeight = pParentMargin->GetHeight( );
@@ -1377,11 +1376,10 @@ public:
 		const ULONG ulWidthToUse = MIN( ulWidth, pParentMargin->GetWidth( ) - abs( lXOffset + lXOffsetBonus ));
 		const TVector2<LONG> Pos = GetDrawingPosition( ulWidthToUse, ulHeight, lXOffsetBonus );
 		const PalEntry ColorToDraw = ( ValueType == DRAWCOLOR_TEAMCOLOR ) ? PalEntry( TEAM_GetColor( ulTeam )) : Color;
-		const LONG lMarginLeftXPos = ( HUD_GetWidth( ) - pParentMargin->GetWidth( )) / 2;
 
 		// [AK] The color box can't be drawn past the left or right sides of the margin.
-		int clipLeft = MAX<int>( Pos.X, lMarginLeftXPos );
-		int clipWidth = MIN<int>( ulWidthToUse, lMarginLeftXPos + pParentMargin->GetWidth( ) - clipLeft );
+		int clipLeft = MAX<int>( Pos.X, pParentMargin->GetRelX( ));
+		int clipWidth = MIN<int>( ulWidthToUse, pParentMargin->GetRelX( ) + pParentMargin->GetWidth( ) - clipLeft );
 		int clipTop = Pos.Y + lYPos;
 		int clipHeight = ulHeight;
 
@@ -1501,7 +1499,7 @@ public:
 
 		const TVector2<LONG> Pos = GetDrawingPosition( pTextureToDraw->GetScaledWidth( ), pTextureToDraw->GetScaledHeight( ), lXOffsetBonus );
 
-		int clipLeft = ( HUD_GetWidth( ) - pParentMargin->GetWidth( )) / 2;
+		int clipLeft = pParentMargin->GetRelX( );
 		int clipWidth = pParentMargin->GetWidth( );
 		int clipTop = lYPos;
 		int clipHeight = pParentMargin->GetHeight( );
@@ -2339,7 +2337,8 @@ ScoreMargin::ScoreMargin( MARGINTYPE_e MarginType, const char *pszName ) :
 	Type( MarginType ),
 	Name( pszName ),
 	ulWidth( 0 ),
-	ulHeight( 0 ) { }
+	ulHeight( 0 ),
+	relX( 0 ) { }
 
 //*****************************************************************************
 //
@@ -2363,20 +2362,21 @@ void ScoreMargin::Parse( FScanner &sc )
 //
 //*****************************************************************************
 
-void ScoreMargin::Refresh( const ULONG ulDisplayPlayer, const ULONG ulNewWidth )
+void ScoreMargin::Refresh( const ULONG displayPlayer, const ULONG newWidth, const int newRelX )
 {
 	// [AK] If there's no commands, then don't do anything.
 	if ( Block.HasCommands( ) == false )
 		return;
 
 	// [AK] Never accept a width of zero, throw a fatal error if this happens.
-	if ( ulNewWidth == 0 )
+	if ( newWidth == 0 )
 		I_Error( "ScoreMargin::Refresh: tried assigning a width of zero to '%s'.", GetName( ));
 
-	ulWidth = ulNewWidth;
+	ulWidth = newWidth;
+	relX = newRelX;
 	ulHeight = 0;
 
-	Block.Refresh( ulDisplayPlayer );
+	Block.Refresh( displayPlayer );
 }
 
 //*****************************************************************************

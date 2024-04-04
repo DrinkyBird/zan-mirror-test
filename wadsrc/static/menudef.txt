@@ -1220,6 +1220,22 @@ OptionValue ZA_CountryCodeFormat
 	1, "Alpha-3"
 }
 
+// [AK]
+OptionValue ZA_HorizontalAlignment
+{
+	0, "Left"
+	1, "Center"
+	2, "Right"
+}
+
+// [AK]
+OptionValue ZA_VerticalAlignment
+{
+	0, "Top"
+	1, "Center"
+	2, "Bottom"
+}
+
 OptionMenu ScoreboardOptions
 {
 	Title "SCOREBOARD OPTIONS"
@@ -1234,6 +1250,11 @@ OptionMenu ScoreboardOptions
 	StaticText " "
 	Slider "Max width (%)",			"cl_maxscoreboardwidth", 0.1, 1.0, 0.05
 	Slider "Max height (%)",		"cl_maxscoreboardheight", 0.1, 1.0, 0.05
+	StaticText " "
+	Option "Horizontal alignment",		"cl_scoreboardhorizalign", "ZA_HorizontalAlignment"
+	Option "Vertical alignment",		"cl_scoreboardvertalign", "ZA_VerticalAlignment"
+	TextField "X-offset",			"cl_scoreboardx"
+	TextField "Y-offset",			"cl_scoreboardy"
 
 	/* 
 	StaticText "Cooperative Options", 1

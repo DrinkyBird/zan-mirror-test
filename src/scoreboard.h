@@ -425,9 +425,10 @@ public:
 	const char *GetName( void ) const { return Name.GetChars( ); }
 	ULONG GetWidth( void ) const { return ulWidth; }
 	ULONG GetHeight( void ) const { return ulHeight; }
+	int GetRelX( void ) const { return relX; }
 	void IncreaseHeight( ULONG ulExtraHeight ) { ulHeight += ulExtraHeight; }
 	void Parse( FScanner &sc );
-	void Refresh( const ULONG ulDisplayPlayer, const ULONG ulNewWidth );
+	void Refresh( const ULONG displayPlayer, const ULONG newWidth, const int newRelX );
 	void Render( const ULONG ulDisplayPlayer, const ULONG ulTeam, LONG &lYPos, const float fAlpha ) const;
 
 	// [AK] Indicates that this margin is drawing for no team.
@@ -439,6 +440,7 @@ private:
 	const FName Name;
 	ULONG ulWidth;
 	ULONG ulHeight;
+	int relX;
 };
 
 //*****************************************************************************
