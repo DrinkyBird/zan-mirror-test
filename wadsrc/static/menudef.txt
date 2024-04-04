@@ -1255,6 +1255,10 @@ OptionMenu ScoreboardOptions
 	Option "Vertical alignment",		"cl_scoreboardvertalign", "ZA_VerticalAlignment"
 	TextField "X-offset",			"cl_scoreboardx"
 	TextField "Y-offset",			"cl_scoreboardy"
+	StaticText " "
+	Option "Use custom scale",		"cl_usescoreboardscale", "YesNo"
+	TextField "Screen width",		"cl_scoreboardscreenwidth", "cl_usescoreboardscale"
+	TextField "Screen height",		"cl_scoreboardscreenheight", "cl_usescoreboardscale"
 
 	/* 
 	StaticText "Cooperative Options", 1

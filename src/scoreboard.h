@@ -558,8 +558,12 @@ private:
 void			SCOREBOARD_Construct( void );
 void			SCOREBOARD_Reset( void );
 void			SCOREBOARD_Render( ULONG ulDisplayPlayer );
+void STACK_ARGS SCOREBOARD_DrawString( FFont *font, const int color, const int x, const int y, const char *string, ... );
+void			SCOREBOARD_DrawColor( const PalEntry color, const float alpha, int left, int top, int width, int height );
+void STACK_ARGS SCOREBOARD_DrawTexture( FTexture *texture, const int x, const int y, ... );
 bool			SCOREBOARD_ShouldDrawBoard( void );
 bool			SCOREBOARD_AdjustVerticalClipRect( int &clipTop, int &clipHeight );
+void			SCOREBOARD_ConvertVirtualCoordsToReal( int &left, int &top, int &width, int &height );
 void			SCOREBOARD_BuildLimitStrings( std::list<FString> &lines, bool bAcceptColors );
 ScoreColumn		*SCOREBOARD_GetColumn( FName Name, const bool bMustBeUsable );
 LONG			SCOREBOARD_GetLeftToLimit( void );

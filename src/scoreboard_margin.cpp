@@ -63,10 +63,6 @@
 #include "lastmanstanding.h"
 #include "g_game.h"
 
-EXTERN_CVAR( Int, con_virtualwidth )
-EXTERN_CVAR( Int, con_virtualheight )
-EXTERN_CVAR( Bool, con_scaletext_usescreenratio )
-
 //*****************************************************************************
 //	DEFINITIONS
 
@@ -839,8 +835,7 @@ public:
 			return;
 
 		// [AK] We must take into account the virtual screen's size when setting up the clipping rectangle.
-		if ( g_bScale )
-			screen->VirtualToRealCoordsInt( clipLeft, clipTop, clipWidth, clipHeight, con_virtualwidth, con_virtualheight, false, !con_scaletext_usescreenratio );
+		SCOREBOARD_ConvertVirtualCoordsToReal( clipLeft, clipTop, clipWidth, clipHeight );
 
 		for ( unsigned int i = 0; pString->pLines[i].Width >= 0; i++ )
 		{
@@ -854,8 +849,7 @@ public:
 			else if ( AlignmentToUse == HORIZALIGN_RIGHT )
 				lActualXPos += pString->ulMaxWidth - pString->pLines[i].Width;
 
-			screen->DrawText( pFont, TextColorToUse, lActualXPos, Pos.Y + lYPos, pString->pLines[i].Text.GetChars( ),
-				DTA_UseVirtualScreen, g_bScale,
+			SCOREBOARD_DrawString( pFont, TextColorToUse, lActualXPos, Pos.Y + lYPos, pString->pLines[i].Text.GetChars( ),
 				DTA_ClipLeft, clipLeft,
 				DTA_ClipRight, clipLeft + clipWidth,
 				DTA_ClipTop, clipTop,
@@ -1386,11 +1380,7 @@ public:
 		if ( SCOREBOARD_AdjustVerticalClipRect( clipTop, clipHeight ) == false )
 			return;
 
-		// [AK] We must take into account the virtual screen's size when setting up the clipping rectangle.
-		if ( g_bScale )
-			screen->VirtualToRealCoordsInt( clipLeft, clipTop, clipWidth, clipHeight, con_virtualwidth, con_virtualheight, false, !con_scaletext_usescreenratio );
-
-		screen->Dim( ColorToDraw, fAlpha * fTranslucency, clipLeft, clipTop, clipWidth, clipHeight );
+		SCOREBOARD_DrawColor( ColorToDraw, fAlpha * fTranslucency, clipLeft, clipTop, clipWidth, clipHeight );
 	}
 
 	//*************************************************************************
@@ -1508,11 +1498,9 @@ public:
 			return;
 
 		// [AK] We must take into account the virtual screen's size when setting up the clipping rectangle.
-		if ( g_bScale )
-			screen->VirtualToRealCoordsInt( clipLeft, clipTop, clipWidth, clipHeight, con_virtualwidth, con_virtualheight, false, !con_scaletext_usescreenratio );
+		SCOREBOARD_ConvertVirtualCoordsToReal( clipLeft, clipTop, clipWidth, clipHeight );
 
-		screen->DrawTexture( pTextureToDraw, Pos.X, Pos.Y + lYPos,
-			DTA_UseVirtualScreen, g_bScale,
+		SCOREBOARD_DrawTexture( pTextureToDraw, Pos.X, Pos.Y + lYPos,
 			DTA_ClipLeft, clipLeft,
 			DTA_ClipRight, clipLeft + clipWidth,
 			DTA_ClipTop, clipTop,

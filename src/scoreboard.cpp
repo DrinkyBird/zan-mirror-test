@@ -49,6 +49,7 @@
 //-----------------------------------------------------------------------------
 
 #include <algorithm>
+#include <stdarg.h>
 #include "c_dispatch.h"
 #include "callvote.h"
 #include "chat.h"
@@ -81,6 +82,15 @@ static	TMap<FName, ScoreColumn *>	g_Columns;
 // [AK] The main scoreboard object.
 static	Scoreboard	g_Scoreboard;
 
+// The width of the screen to draw the scoreboard.
+static	unsigned int	g_ScreenWidth = 0;
+
+// The height of the screen to draw the scoreboard.
+static	unsigned int	g_ScreenHeight = 0;
+
+// Should the screen's actual aspect ratio still be used?
+static	bool		g_KeepScreenRatio = false;
+
 //*****************************************************************************
 //	PROTOTYPES
 
@@ -111,6 +121,9 @@ CVAR( Bool, cl_usealpha3countrycode, false, CVAR_ARCHIVE );
 // [AK] If true, then columns will use their short names in the headers.
 CVAR( Bool, cl_useshortcolumnnames, false, CVAR_ARCHIVE );
 
+// [AK] If true, then the scoreboard will be scaled using its own scale, independent of text scaling.
+CVAR( Bool, cl_usescoreboardscale, false, CVAR_ARCHIVE )
+
 // [AK] How much to offset the scoreboard horizontally.
 CVAR( Int, cl_scoreboardx, 0, CVAR_ARCHIVE );
 
@@ -133,6 +146,13 @@ CUSTOM_CVAR( Int, cl_scoreboardscrollspeed, 32, CVAR_ARCHIVE )
 		self = 1;
 }
 
+// [AK] The width of the screen to draw the scoreboard if cl_usescoreboardscale is enabled.
+CUSTOM_CVAR( Int, cl_scoreboardscreenwidth, 640, CVAR_ARCHIVE )
+{
+	if ( self < 320 )
+		self = 320;
+}
+
 // [AK] The maximum width of the scoreboard, as a percentage of the screen's width.
 CUSTOM_CVAR( Float, cl_maxscoreboardwidth, 1.0f, CVAR_ARCHIVE )
 {
@@ -140,6 +160,13 @@ CUSTOM_CVAR( Float, cl_maxscoreboardwidth, 1.0f, CVAR_ARCHIVE )
 
 	if ( self != clampedValue )
 		self = clampedValue;
+}
+
+// [AK] The height of the screen to draw the scoreboard if cl_usescoreboardscale is enabled.
+CUSTOM_CVAR( Int, cl_scoreboardscreenheight, 480, CVAR_ARCHIVE )
+{
+	if ( self < 200 )
+		self = 200;
 }
 
 // [AK] The maximum height of the scoreboard, as a percentage of the screen's height.
@@ -1110,11 +1137,9 @@ void ScoreColumn::DrawString( const char *pszString, FFont *pFont, const ULONG u
 
 	// [AK] We must take into account the virtual screen's size when setting up the clipping rectangle.
 	// Nothing should be drawn outside of this rectangle (i.e. the column's boundaries).
-	if ( g_bScale )
-		screen->VirtualToRealCoordsInt( clipLeft, clipTop, clipWidth, clipHeight, con_virtualwidth, con_virtualheight, false, !con_scaletext_usescreenratio );
+	SCOREBOARD_ConvertVirtualCoordsToReal( clipLeft, clipTop, clipWidth, clipHeight );
 
-	screen->DrawText( pFont, ulColor, lXPos, lNewYPos, pszString,
-		DTA_UseVirtualScreen, g_bScale,
+	SCOREBOARD_DrawString( pFont, ulColor, lXPos, lNewYPos, pszString,
 		DTA_ClipLeft, clipLeft,
 		DTA_ClipRight, clipLeft + clipWidth,
 		DTA_ClipTop, clipTop,
@@ -1144,11 +1169,7 @@ void ScoreColumn::DrawColor( const PalEntry color, const LONG lYPos, const ULONG
 	if ( SCOREBOARD_AdjustVerticalClipRect( clipTop, clipHeightToUse ) == false )
 		return;
 
-	// [AK] We must take into account the virtual screen's size.
-	if ( g_bScale )
-		screen->VirtualToRealCoordsInt( clipLeft, clipTop, clipWidthToUse, clipHeightToUse, con_virtualwidth, con_virtualheight, false, !con_scaletext_usescreenratio );
-
-	screen->Dim( color, fAlpha, clipLeft, clipTop, clipWidthToUse, clipHeightToUse );
+	SCOREBOARD_DrawColor( color, fAlpha, clipLeft, clipTop, clipWidthToUse, clipHeightToUse );
 }
 
 //*****************************************************************************
@@ -1180,11 +1201,9 @@ void ScoreColumn::DrawTexture( FTexture *pTexture, const LONG lYPos, const ULONG
 		return;
 
 	// [AK] We must take into account the virtual screen's size.
-	if ( g_bScale )
-		screen->VirtualToRealCoordsInt( clipLeft, clipTop, clipWidthToUse, clipHeightToUse, con_virtualwidth, con_virtualheight, false, !con_scaletext_usescreenratio );
+	SCOREBOARD_ConvertVirtualCoordsToReal( clipLeft, clipTop, clipWidthToUse, clipHeightToUse );
 
-	screen->DrawTexture( pTexture, lXPos, lNewYPos,
-		DTA_UseVirtualScreen, g_bScale,
+	SCOREBOARD_DrawTexture( pTexture, lXPos, lNewYPos,
 		DTA_ClipLeft, clipLeft,
 		DTA_ClipRight, clipLeft + clipWidthToUse,
 		DTA_ClipTop, clipTop,
@@ -2020,11 +2039,9 @@ void CountryFlagScoreColumn::DrawValue( const ULONG ulPlayer, const ULONG ulColo
 			return;
 
 		// [AK] We must take into account the virtual screen's size.
-		if ( g_bScale )
-			screen->VirtualToRealCoordsInt( clipLeft, clipTop, clipWidth, clipHeight, con_virtualwidth, con_virtualheight, false, !con_scaletext_usescreenratio );
+		SCOREBOARD_ConvertVirtualCoordsToReal( clipLeft, clipTop, clipWidth, clipHeight );
 
-		screen->DrawTexture( pFlagIconSet, lXPos, lNewYPos,
-			DTA_UseVirtualScreen, g_bScale,
+		SCOREBOARD_DrawTexture( pFlagIconSet, lXPos, lNewYPos,
 			DTA_ClipLeft, clipLeft,
 			DTA_ClipRight, clipLeft + clipWidth,
 			DTA_ClipTop, clipTop,
@@ -2966,6 +2983,26 @@ void Scoreboard::Refresh( const ULONG ulDisplayPlayer )
 {
 	ulRowHeightToUse = lRowHeight;
 
+	// [AK] Determine the size of the screen to draw the scoreboard.
+	if ( cl_usescoreboardscale )
+	{
+		g_ScreenWidth = cl_scoreboardscreenwidth;
+		g_ScreenHeight = cl_scoreboardscreenheight;
+
+		// [AK] Don't use con_scaletext_usescreenratio if the resolution of the
+		// scoreboard matches the screen's actual ratio.
+		if (( g_ScreenWidth != SCREENWIDTH ) || ( g_ScreenHeight != SCREENHEIGHT ))
+			g_KeepScreenRatio = con_scaletext_usescreenratio;
+		else
+			g_KeepScreenRatio = true;
+	}
+	else
+	{
+		g_ScreenWidth = HUD_GetWidth( );
+		g_ScreenHeight = HUD_GetHeight( );
+		g_KeepScreenRatio = g_bScale ? con_scaletext_usescreenratio : true;
+	}
+
 	// [AK] The scoreboard needs the player and spectator counts in "st_hud.cpp".
 	// Since the HUD doesn't refresh during intermissions, update the counts here.
 	if ( gamestate == GS_INTERMISSION )
@@ -3045,7 +3082,7 @@ void Scoreboard::UpdateWidth( void )
 	// [AK] Add the gaps between each of the active columns and the background border size to the total width.
 	ulWidth += ulExtraSpace;
 
-	const unsigned int maxWidth = scoreboard_GetMaxSize( cl_maxscoreboardwidth, cl_scoreboardhorizalign, cl_scoreboardx, HUD_GetWidth( ));
+	const unsigned int maxWidth = scoreboard_GetMaxSize( cl_maxscoreboardwidth, cl_scoreboardhorizalign, cl_scoreboardx, g_ScreenWidth );
 
 	// [AK] If the scoreboard is too wide, try shrinking the columns as much as possible.
 	if ( ulWidth > maxWidth )
@@ -3082,7 +3119,7 @@ void Scoreboard::UpdateWidth( void )
 		}
 	}
 
-	scoreboard_DoAlignAndOffset( lRelX, cl_scoreboardhorizalign, cl_scoreboardx, HUD_GetWidth( ), ulWidth );
+	scoreboard_DoAlignAndOffset( lRelX, cl_scoreboardhorizalign, cl_scoreboardx, g_ScreenWidth, ulWidth );
 
 	LONG lCurXPos = lRelX + ulBackgroundBorderSize + ulColumnPadding;
 
@@ -3177,7 +3214,7 @@ void Scoreboard::UpdateHeight( const ULONG ulDisplayPlayer )
 	ulHeight += Footer.GetHeight( );
 	visibleScrollHeight = totalScrollHeight;
 
-	const unsigned int maxHeight = scoreboard_GetMaxSize( cl_maxscoreboardheight, cl_scoreboardvertalign, cl_scoreboardy, HUD_GetHeight( ));
+	const unsigned int maxHeight = scoreboard_GetMaxSize( cl_maxscoreboardheight, cl_scoreboardvertalign, cl_scoreboardy, g_ScreenHeight );
 
 	// [AK] Check if the scroreboard is too big to everything on the screen.
 	if ( ulHeight + totalScrollHeight > maxHeight )
@@ -3185,7 +3222,7 @@ void Scoreboard::UpdateHeight( const ULONG ulDisplayPlayer )
 
 	ulHeight += visibleScrollHeight;
 
-	scoreboard_DoAlignAndOffset( lRelY, cl_scoreboardvertalign, cl_scoreboardy, HUD_GetHeight( ), ulHeight );
+	scoreboard_DoAlignAndOffset( lRelY, cl_scoreboardvertalign, cl_scoreboardy, g_ScreenHeight, ulHeight );
 }
 
 //*****************************************************************************
@@ -3217,11 +3254,7 @@ void Scoreboard::Render( const ULONG ulDisplayPlayer, const float fAlpha )
 	minClipRectY = lRelY;
 	maxClipRectY = lRelY + ulHeight;
 
-	// [AK] We must take into account the virtual screen's size.
-	if ( g_bScale )
-		screen->VirtualToRealCoordsInt( clipLeft, clipTop, clipWidth, clipHeight, con_virtualwidth, con_virtualheight, false, !con_scaletext_usescreenratio );
-
-	screen->Dim( BackgroundColor, fBackgroundAmount * fAlpha, clipLeft, clipTop, clipWidth, clipHeight );
+	SCOREBOARD_DrawColor( BackgroundColor, fBackgroundAmount * fAlpha, clipLeft, clipTop, clipWidth, clipHeight );
 
 	const ULONG ulNumActivePlayers = HUD_GetNumPlayers( );
 	const ULONG ulNumTrueSpectators = HUD_GetNumSpectators( );
@@ -3417,13 +3450,11 @@ void Scoreboard::DrawBorder( const EColorRange Color, LONG &lYPos, const float f
 
 		height = pBorderTexture->GetScaledHeight( );
 
-		if ( g_bScale )
-			screen->VirtualToRealCoordsInt( x, y, width, height, con_virtualwidth, con_virtualheight, false, !con_scaletext_usescreenratio );
+		SCOREBOARD_ConvertVirtualCoordsToReal( x, y, width, height );
 
 		while ( lXPos < lRight )
 		{
-			screen->DrawTexture( pBorderTexture, lXPos, lYPos,
-				DTA_UseVirtualScreen, g_bScale,
+			SCOREBOARD_DrawTexture( pBorderTexture, lXPos, lYPos,
 				DTA_ClipLeft, x,
 				DTA_ClipRight, x + width,
 				DTA_ClipTop, y,
@@ -3442,9 +3473,6 @@ void Scoreboard::DrawBorder( const EColorRange Color, LONG &lYPos, const float f
 	{
 		uint32 lightColor, darkColor;
 		height = 1;
-
-		if ( g_bScale )
-			screen->VirtualToRealCoordsInt( x, y, width, height, con_virtualwidth, con_virtualheight, false, !con_scaletext_usescreenratio );
 
 		// [AK] Do we want to use the font's translation table and text color to colorize the border,
 		// or the predetermined hexadecimal colors for the border?
@@ -3466,8 +3494,8 @@ void Scoreboard::DrawBorder( const EColorRange Color, LONG &lYPos, const float f
 		}
 
 		// [AK] The dark color goes above the light one, unless it's reversed.
-		screen->Dim( bReverse ? lightColor : darkColor, fAlpha, x, y, width, height );
-		screen->Dim( bReverse ? darkColor : lightColor, fAlpha, x, y + height, width, height );
+		SCOREBOARD_DrawColor( bReverse ? lightColor : darkColor, fAlpha, x, y, width, height );
+		SCOREBOARD_DrawColor( bReverse ? darkColor : lightColor, fAlpha, x, y + height, width, height );
 		lYPos += 2;
 	}
 }
@@ -3485,10 +3513,7 @@ void Scoreboard::DrawRowBackground( const PalEntry color, int x, int y, int widt
 	if (( fAlpha <= 0.0f ) || ( fRowBackgroundAmount <= 0.0f ))
 		return;
 
-	if ( g_bScale )
-		screen->VirtualToRealCoordsInt( x, y, width, height, con_virtualwidth, con_virtualheight, false, !con_scaletext_usescreenratio );
-
-	screen->Dim( color, fAlpha * fRowBackgroundAmount, x, y, width, height );
+	SCOREBOARD_DrawColor( color, fAlpha * fRowBackgroundAmount, x, y, width, height );
 }
 
 //*****************************************************************************
@@ -3708,6 +3733,62 @@ void SCOREBOARD_Render( ULONG ulDisplayPlayer )
 
 //*****************************************************************************
 //
+// SCOREBOARD_DrawString
+//
+// Helper function to draw strings on the scoreboard.
+//
+//*****************************************************************************
+
+void STACK_ARGS	SCOREBOARD_DrawString( FFont *font, const int color, const int x, const int y, const char *string, ... )
+{
+	va_list tags;
+	va_start( tags, string );
+
+	screen->DrawText( font, color, x, y, string,
+		DTA_VirtualWidth, g_ScreenWidth,
+		DTA_VirtualHeight, g_ScreenHeight,
+		DTA_KeepRatio, g_KeepScreenRatio,
+		TAG_MORE, &tags );
+}
+
+//*****************************************************************************
+//
+// SCOREBOARD_DrawColor
+//
+// Helper function to draw colors on the scoreboard.
+//
+//*****************************************************************************
+
+void SCOREBOARD_DrawColor( const PalEntry color, const float alpha, int left, int top, int width, int height )
+{
+	// [AK] We must take into account the virtual screen's size.
+	SCOREBOARD_ConvertVirtualCoordsToReal( left, top, width, height );
+
+	screen->Dim( color, alpha, left, top, width, height );
+}
+
+//*****************************************************************************
+//
+// SCOREBOARD_DrawTexture
+//
+// Helper function to draw textures on the scoreboard.
+//
+//*****************************************************************************
+
+void STACK_ARGS SCOREBOARD_DrawTexture( FTexture *texture, const int x, const int y, ... )
+{
+	va_list tags;
+	va_start( tags, y );
+
+	screen->DrawTexture( texture, x, y,
+		DTA_VirtualWidth, g_ScreenWidth,
+		DTA_VirtualHeight, g_ScreenHeight,
+		DTA_KeepRatio, g_KeepScreenRatio,
+		TAG_MORE, &tags );
+}
+
+//*****************************************************************************
+//
 // SCOREBOARD_ShouldDrawBoard
 //
 // Checks if the user wants to see the scoreboard and is allowed to.
@@ -3756,6 +3837,22 @@ bool SCOREBOARD_AdjustVerticalClipRect( int &clipTop, int &clipHeight )
 		clipHeight = g_Scoreboard.maxClipRectY - clipTop;
 
 	return true;
+}
+
+//*****************************************************************************
+//
+// [AK] SCOREBOARD_ConvertVirtualCoordsToRead
+//
+// Checks if the scoreboard should be scaled (whether it uses its own scale or
+// the virtual screen), then convert the virtual coordinates of a clipping
+// rectangle to their actual coordinates on the screen.
+//
+//*****************************************************************************
+
+void SCOREBOARD_ConvertVirtualCoordsToReal( int &left, int &top, int &width, int &height )
+{
+	if (( cl_usescoreboardscale ) || ( g_bScale ))
+		screen->VirtualToRealCoordsInt( left, top, width, height, g_ScreenWidth, g_ScreenHeight, false, !g_KeepScreenRatio );
 }
 
 //*****************************************************************************
