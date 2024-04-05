@@ -7185,11 +7185,11 @@ void P_PlaySpawnSound(AActor *missile, AActor *spawner)
 	{
 		if (!(missile->flags & MF_SPAWNSOUNDSOURCE))
 		{
-			S_Sound (missile, CHAN_VOICE, missile->SeeSound, 1, ATTN_NORM, true); // [RK] Inform the client to play sound at the missile.
+			S_Sound (missile, CHAN_VOICE, missile->SeeSound, 1, ATTN_NORM);
 		}
 		else if (spawner != NULL)
 		{
-			S_Sound (spawner, CHAN_WEAPON, missile->SeeSound, 1, ATTN_NORM, true); // [RK] Inform the client to play sound at spawner.
+			S_Sound (spawner, CHAN_WEAPON, missile->SeeSound, 1, ATTN_NORM);
 		}
 		else
 		{
