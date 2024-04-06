@@ -642,10 +642,17 @@ void P_BobWeapon (player_t *player, pspdef_t *psp, fixed_t *x, fixed_t *y)
 			// [AK] Add additional vertical sway when the player jumps in the air. Don't do this after
 			// the player's speed in the z-axis is greater than their jump speed.
 			if ((jumpSwaySpeed != 0) && (player->onground == false) && (player->jumpTics != 0) && (abs(player->mo->velz) <= player->mo->CalcJumpVelz()))
+			{
 				nswaypos[1] += FixedMul(player->mo->velz, jumpSwaySpeed);
+			}
 			// [AK] Add additional vertical sway when the player moves and/or crouches up or down.
 			else if (motionSwaySpeed != 0)
-				nswaypos[1] += FixedMul(player->mo->z - player->mo->PrevZ + player->crouchviewdelta / 2, motionSwaySpeed);
+			{
+				const fixed_t zDiffMax = FixedMul(10 << FRACBITS, motionSwaySpeed);
+				const fixed_t zDiff = clamp<fixed_t>(player->mo->z - player->mo->PrevZ, -zDiffMax, zDiffMax);
+
+				nswaypos[1] += FixedMul(zDiff + player->crouchviewdelta / 2, motionSwaySpeed);
+			}
 
 			for (int i = 0; i <= 1; i++)
 			{
