@@ -12667,10 +12667,10 @@ DLevelScript::DLevelScript (AActor *who, line_t *where, int num, const ScriptPtr
 	activefontname = "SmallFont";
 
 	// [AK] Check if this is an event script triggered by GAMEEVENT_ACTOR_DAMAGED or
-	// GAMEEVENT_ACTOR_ARMORDAMAGED. This is where we initialize the script's target,
+	// GAMEEVENT_ACTOR_DAMAGED_PREMOD. This is where we initialize the script's target,
 	// source, and inflictor pointers by using the temporary activator's own pointers.
 	if (( NETWORK_InClientMode( ) == false ) && ( who != NULL ) &&
-		( code->Type == SCRIPT_Event ) && ( args[0] == GAMEEVENT_ACTOR_DAMAGED || args[0] == GAMEEVENT_ACTOR_ARMORDAMAGED ))
+		( code->Type == SCRIPT_Event ) && ( args[0] == GAMEEVENT_ACTOR_DAMAGED || args[0] == GAMEEVENT_ACTOR_DAMAGED_PREMOD ))
 	{
 		pDamageTarget = who->target;
 		pDamageSource = who->master;

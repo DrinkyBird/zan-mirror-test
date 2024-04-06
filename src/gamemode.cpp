@@ -1261,7 +1261,7 @@ bool GAMEMODE_HandleDamageEvent ( AActor *target, AActor *inflictor, AActor *sou
 	if ((( target->STFlags & STFL_USEDAMAGEEVENTSCRIPT ) == false ) && ( gameinfo.bForceDamageEventScripts == false ))
 		return true;
 	
-	const GAMEEVENT_e DamageEvent = bBeforeArmor ? GAMEEVENT_ACTOR_ARMORDAMAGED : GAMEEVENT_ACTOR_DAMAGED;
+	const GAMEEVENT_e DamageEvent = bBeforeArmor ? GAMEEVENT_ACTOR_DAMAGED_PREMOD : GAMEEVENT_ACTOR_DAMAGED;
 	const int originalDamage = damage;
 
 	// [AK] We somehow need to pass all the actor pointers into the script itself. A simple way
