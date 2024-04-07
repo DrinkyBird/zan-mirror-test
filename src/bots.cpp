@@ -604,6 +604,9 @@ void BOTS_RemoveBot( ULONG ulPlayerIdx, bool bExitMsg )
 	if (players[ulPlayerIdx].morphTics)
 		P_UndoPlayerMorph (&players[ulPlayerIdx], &players[ulPlayerIdx]);
 
+	// [RK] Stop the runing scripts for the bot.
+	FBehavior::StaticStopMyScripts (players[ulPlayerIdx].mo);
+
 	// Remove the bot from the game.
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 		SERVERCOMMANDS_DisconnectPlayer( ulPlayerIdx, ulPlayerIdx, SVCF_SKIPTHISCLIENT );
@@ -722,6 +725,25 @@ bool BOTS_RemoveRandomBot( void )
 	// Now that we've found a valid bot, remove it.
 	BOTS_RemoveBot( randomIndex, true );
 	return true;
+}
+
+//*****************************************************************************
+//
+void BOTS_RemovePawnThinkers( SWORD botID )
+{
+	// [RK] The bot should have a NULL player at this point so we will remove
+	// its corpse thinkers to avoid any possible issue of them lingering around.
+	TThinkerIterator<APlayerPawn> it;
+	APlayerPawn* pawn, * next;
+
+	next = it.Next();
+	while ( (pawn = next) != NULL )
+	{
+		next = it.Next();
+
+		if (( pawn->player == NULL ) && ( botID == pawn->id ))
+			pawn->Destroy();
+	}
 }
 
 //*****************************************************************************
@@ -3389,6 +3411,10 @@ void CSkullBot::PreDelete( void )
 	if ( m_pPlayer->mo )
 		m_pPlayer->mo->Destroy( );
 
+	// [RK] Remove the corpse's thinkers to prevent a crash later
+	if ( NETWORK_GetState() == NETSTATE_SINGLE || NETWORK_GetState() == NETSTATE_SINGLE_MULTIPLAYER )
+		BOTS_RemovePawnThinkers(m_pPlayer->mo->id);
+
 	// Finally, fix some pointers.
 	// [BB] We have to delete the CSkullBot pointer before setting it to NULL.
 	//m_pPlayer->pSkullBot = NULL;
@@ -3965,7 +3991,12 @@ CCMD( removebot )
 	if ( argv.argc( ) < 2 )
 	{
 		if ( BOTS_RemoveRandomBot( ) == false )
+		{
 			Printf( "No bots found.\n" );
+
+			// [RK] No bot? Nothing more to do.
+			return;
+		}
 	}
 	else
 	{
