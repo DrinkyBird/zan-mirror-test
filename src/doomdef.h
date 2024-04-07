@@ -291,7 +291,7 @@ enum
 	DF2_YES_FREEAIMBFG		= 1 << 8,	// Allow BFG freeaiming in multiplayer games.
 	DF2_BARRELS_RESPAWN		= 1 << 9,	// Barrels respawn (duh)
 	DF2_NO_RESPAWN_INVUL	= 1 << 10,	// No respawn invulnerability.
-	DF2_COOP_SHOTGUNSTART	= 1 << 11,	// All playres start with a shotgun when they respawn
+	DF2_SHOTGUNSTART		= 1 << 11,	// All playres start with a shotgun when they respawn
 	DF2_SAME_SPAWN_SPOT		= 1 << 12,	// Players respawn in the same place they died (co-op)
 	DF2_YES_KEEPFRAGS		= 1 << 13,	// Don't clear frags after each level
 	DF2_NO_RESPAWN			= 1 << 14,	// Player cannot respawn

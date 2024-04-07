@@ -572,7 +572,7 @@ CVAR (Flag, sv_nocountendmonst,		dmflags2, DF2_NOCOUNTENDMONST);
 CVAR (Flag, sv_norunes,				dmflags2, DF2_NO_RUNES);
 CVAR (Flag, sv_instantreturn,		dmflags2, DF2_INSTANT_RETURN);
 CVAR (Flag, sv_noteamselect,		dmflags2, DF2_NO_TEAM_SELECT);
-CVAR (Flag, sv_shotgunstart,		dmflags2, DF2_COOP_SHOTGUNSTART);
+CVAR (Flag, sv_shotgunstart,		dmflags2, DF2_SHOTGUNSTART);
 
 //==========================================================================
 //

@@ -1819,10 +1819,10 @@ void APlayerPawn::GiveDefaultInventory ()
 			PLAYER_SetWeapon( player, pPendingWeapon, true );
 		}
 		// [BC] If the user has the shotgun start flag set, do that!
-		else if ( dmflags2 & DF2_COOP_SHOTGUNSTART )
+		else if ( dmflags2 & DF2_SHOTGUNSTART )
 		{
 			pInventory = player->mo->GiveInventoryTypeRespectingReplacements( PClass::FindClass( "Shotgun" ) );
-			if ( pInventory )
+			if ( pInventory && pInventory->IsKindOf( PClass::FindClass( "Weapon") )) // [RK] Make sure it's a type of weapon before handing it out.
 			{
 				// [BB] PLAYER_SetWeapon takes care of the special client / server and demo handling.
 				PLAYER_SetWeapon( player, static_cast<AWeapon *>( pInventory ), true );
@@ -1832,7 +1832,14 @@ void APlayerPawn::GiveDefaultInventory ()
 				// Thus, we can't use those pointers, but need to rely on pInventory.
 				AInventory *pAmmo = player->mo->FindInventory( PClass::FindClass( "Shell" )->ActorInfo->GetReplacement( )->Class );
 				if ( pAmmo != NULL )
+				{
 					pAmmo->Amount = static_cast<AWeapon *>( pInventory )->AmmoGive1 * 2;
+
+					// [RK] Sync the give amount for clients since they actually haven't been
+					// given any shells yet from the command sent in AWeapon::AttachToOwner.
+					if ( NETWORK_GetState() == NETSTATE_SERVER )
+						SERVERCOMMANDS_GiveInventory(player->mo->id, pAmmo);
+				}
 			}
 		}
 		else if (!Inventory)
