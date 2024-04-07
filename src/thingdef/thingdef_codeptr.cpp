@@ -2655,8 +2655,9 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_SpawnItemEx)
 			if ( mo->Translation )
 				SERVERCOMMANDS_SetThingTranslation( mo );
 
+			// [TRSR] It is useful to always sync the AAPTR_TARGET field for missiles.
 			// [BB] To properly handle actor-actor bouncing, the client must know the target.
-			if ( mo->BounceFlags != BOUNCE_None )
+			if ( mo->flags & MF_MISSILE || mo->BounceFlags != BOUNCE_None )
 				SERVERCOMMANDS_SetThingTarget ( mo );
 
 			// [BB] Set scale if necessary.
