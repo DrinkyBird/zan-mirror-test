@@ -911,7 +911,20 @@ void R_InitSkins (void)
 			{
 				skins.Delete(i);
 				i--;
-				continue;
+				// [TRSR] If a skin is deleted, we need to finish parsing it until its end to prevent the
+				// last skin in Zandronum's SKININFO lump from double-removing in niche circumstances.
+				if (s_skin == 0)
+				{ 
+
+					while (sc.String[0] != '}') // Finish Parsing That Skin
+					{
+						if (!sc.GetString())
+							break;
+					}
+					continue;
+				}
+				else
+					break; //S_SKIN Generally contains one skin in a lump, unless converted to SKININFO
 			}
 
 			// Register any sounds this skin provides
