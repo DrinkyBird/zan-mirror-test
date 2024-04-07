@@ -105,6 +105,8 @@ enum PARAMETER_e
 	PARAMETER_WIDTH,
 	// The height of a color box.
 	PARAMETER_HEIGHT,
+	// The scale to apply to a texture.
+	PARAMETER_SCALE,
 
 	NUM_PARAMETERS
 };
@@ -141,6 +143,7 @@ static const std::map<FName, std::tuple<PARAMETER_e, bool, std::set<COMMAND_e>>>
 	{ "gapsize",			{ PARAMETER_GAPSIZE,		false,	{ COMMAND_STRING }}},
 	{ "width",				{ PARAMETER_WIDTH,			true,	{ COMMAND_COLOR }}},
 	{ "height",				{ PARAMETER_HEIGHT,			true,	{ COMMAND_COLOR }}},
+	{ "scale",				{ PARAMETER_SCALE,			false,	{ COMMAND_TEXTURE }}},
 };
 
 // [AK] The level we are entering, to be shown on the intermission screen.
@@ -1471,7 +1474,8 @@ class DrawTexture : public DrawBaseCommand
 public:
 	DrawTexture( ScoreMargin *pMargin, BaseCommand *pParentCommand ) : DrawBaseCommand( pMargin, pParentCommand, COMMAND_TEXTURE ),
 		ValueType( DRAWTEXTURE_STATIC ),
-		pTexture( NULL ) { }
+		pTexture( NULL ),
+		scale( 1.0f ) { }
 
 	//*************************************************************************
 	//
@@ -1487,7 +1491,9 @@ public:
 		if ( pTextureToDraw == NULL )
 			return;
 
-		const TVector2<LONG> Pos = GetDrawingPosition( pTextureToDraw->GetScaledWidth( ), pTextureToDraw->GetScaledHeight( ), lXOffsetBonus );
+		const unsigned int textureWidth = static_cast<unsigned>( pTextureToDraw->GetScaledWidth( ) * scale );
+		const unsigned int textureHeight = static_cast<unsigned>( pTextureToDraw->GetScaledHeight( ) * scale );
+		const TVector2<LONG> Pos = GetDrawingPosition( textureWidth, textureHeight, lXOffsetBonus );
 
 		int clipLeft = pParentMargin->GetRelX( );
 		int clipWidth = pParentMargin->GetWidth( );
@@ -1500,7 +1506,7 @@ public:
 		// [AK] We must take into account the virtual screen's size when setting up the clipping rectangle.
 		SCOREBOARD_ConvertVirtualCoordsToReal( clipLeft, clipTop, clipWidth, clipHeight );
 
-		SCOREBOARD_DrawTexture( pTextureToDraw, Pos.X, Pos.Y + lYPos,
+		SCOREBOARD_DrawTexture( pTextureToDraw, Pos.X, Pos.Y + lYPos, scale,
 			DTA_ClipLeft, clipLeft,
 			DTA_ClipRight, clipLeft + clipWidth,
 			DTA_ClipTop, clipTop,
@@ -1520,7 +1526,7 @@ public:
 	virtual ULONG GetContentWidth( const ULONG ulTeam ) const
 	{
 		FTexture *pTexture = RetrieveTexture( ulTeam );
-		return pTexture != NULL ? pTexture->GetScaledWidth( ) + ulRightPadding : 0;
+		return pTexture != NULL ? static_cast<ULONG>( pTexture->GetScaledWidth( ) * scale ) + ulRightPadding : 0;
 	}
 
 	//*************************************************************************
@@ -1532,7 +1538,7 @@ public:
 	virtual ULONG GetContentHeight( const ULONG ulTeam ) const
 	{
 		FTexture *pTexture = RetrieveTexture( ulTeam );
-		return pTexture != NULL ? pTexture->GetScaledHeight( ) + ulBottomPadding : 0;
+		return pTexture != NULL ? static_cast<ULONG>( pTexture->GetScaledHeight( ) * scale ) + ulBottomPadding : 0;
 	}
 
 protected:
@@ -1572,6 +1578,14 @@ protected:
 					sc.ScriptError( "Couldn't find texture '%s'.", sc.String );
 			}
 		}
+		else if ( Parameter == PARAMETER_SCALE )
+		{
+			sc.MustGetToken( TK_FloatConst );
+			scale = static_cast<float>( sc.Float );
+
+			if ( scale <= 0.0f )
+				sc.ScriptError( "The scale must be greater than zero!" );
+		}
 		else
 		{
 			DrawBaseCommand::ParseParameter( sc, ParameterName, Parameter );
@@ -1601,6 +1615,7 @@ protected:
 
 	DRAWTEXTUREVALUE_e ValueType;
 	FTexture *pTexture;
+	float scale;
 };
 
 //*****************************************************************************

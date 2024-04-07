@@ -1180,22 +1180,22 @@ void ScoreColumn::DrawColor( const PalEntry color, const LONG lYPos, const ULONG
 //
 //*****************************************************************************
 
-void ScoreColumn::DrawTexture( FTexture *pTexture, const LONG lYPos, const ULONG ulHeight, const float fAlpha, const int clipWidth, const int clipHeight ) const
+void ScoreColumn::DrawTexture( FTexture *texture, const LONG yPos, const ULONG height, const float alpha, const int clipWidth, const int clipHeight, const float scale ) const
 {
 	int clipWidthToUse;
 	int clipHeightToUse;
 
-	if ( pTexture == NULL )
+	if ( texture == NULL )
 		return;
 
-	LONG lXPos = GetAlignmentPosition( pTexture->GetScaledWidth( ));
+	LONG lXPos = GetAlignmentPosition( static_cast<ULONG>( texture->GetScaledWidth( ) * scale ));
 
-	FixClipRectSize( clipWidth, clipHeight, ulHeight, clipWidthToUse, clipHeightToUse );
+	FixClipRectSize( clipWidth, clipHeight, height, clipWidthToUse, clipHeightToUse );
 
 	int clipLeft = GetAlignmentPosition( clipWidthToUse );
-	int clipTop = lYPos + ( ulHeight - clipHeightToUse ) / 2;
+	int clipTop = yPos + ( height - clipHeightToUse ) / 2;
 
-	LONG lNewYPos = lYPos + ( static_cast<LONG>( ulHeight ) - pTexture->GetScaledHeight( )) / 2;
+	LONG lNewYPos = yPos + ( static_cast<LONG>( height ) - static_cast<LONG>( texture->GetScaledHeight( ) * scale )) / 2;
 
 	if ( SCOREBOARD_AdjustVerticalClipRect( clipTop, clipHeightToUse ) == false )
 		return;
@@ -1203,14 +1203,14 @@ void ScoreColumn::DrawTexture( FTexture *pTexture, const LONG lYPos, const ULONG
 	// [AK] We must take into account the virtual screen's size.
 	SCOREBOARD_ConvertVirtualCoordsToReal( clipLeft, clipTop, clipWidthToUse, clipHeightToUse );
 
-	SCOREBOARD_DrawTexture( pTexture, lXPos, lNewYPos,
+	SCOREBOARD_DrawTexture( texture, lXPos, lNewYPos, scale,
 		DTA_ClipLeft, clipLeft,
 		DTA_ClipRight, clipLeft + clipWidthToUse,
 		DTA_ClipTop, clipTop,
 		DTA_ClipBottom, clipTop + clipHeightToUse,
 		DTA_LeftOffset, 0,
 		DTA_TopOffset, 0,
-		DTA_Alpha, FLOAT2FIXED( fAlpha ),
+		DTA_Alpha, FLOAT2FIXED( alpha ),
 		TAG_DONE );
 }
 
@@ -1497,12 +1497,12 @@ ULONG DataScoreColumn::GetValueWidthOrHeight( const PlayerValue &Value, const bo
 
 				if ( bGetHeight )
 				{
-					ulTextureSize = pTexture->GetScaledHeight( );
+					ulTextureSize = static_cast<ULONG>( pTexture->GetScaledHeight( ) * textureScale );
 					lClipRectSize = lClipRectHeight;
 				}
 				else
 				{
-					ulTextureSize = pTexture->GetScaledWidth( );
+					ulTextureSize = static_cast<ULONG>( pTexture->GetScaledWidth( ) * textureScale );
 					lClipRectSize = lClipRectWidth;
 				}
 
@@ -1827,6 +1827,21 @@ void DataScoreColumn::ParseCommand( FScanner &sc, const COLUMNCMD_e Command, con
 			break;
 		}
 
+		case COLUMNCMD_SCALE:
+		{
+			// [AK] Scale is only available for texture columns.
+			if ( GetDataType( ) != DATATYPE_TEXTURE )
+				sc.ScriptError( "Option '%s' is only available for texture columns.", CommandName.GetChars( ));
+
+			sc.MustGetToken( TK_FloatConst );
+			textureScale = static_cast<float>( sc.Float );
+
+			if ( textureScale <= 0.0f )
+				sc.ScriptError( "The scale must be greater than zero!" );
+
+			break;
+		}
+
 		// [AK] Parse any generic column commands if we reach here.
 		default:
 			ScoreColumn::ParseCommand( sc, Command, CommandName );
@@ -1929,7 +1944,7 @@ void DataScoreColumn::DrawValue( const ULONG ulPlayer, const ULONG ulColor, cons
 			break;
 
 		case DATATYPE_TEXTURE:
-			DrawTexture( Value.GetValue<FTexture *>( ), lYPos, ulHeight, fAlpha, lClipRectWidth, lClipRectHeight );
+			DrawTexture( Value.GetValue<FTexture *>( ), lYPos, ulHeight, fAlpha, lClipRectWidth, lClipRectHeight, textureScale );
 			break;
 
 		default:
@@ -2041,7 +2056,7 @@ void CountryFlagScoreColumn::DrawValue( const ULONG ulPlayer, const ULONG ulColo
 		// [AK] We must take into account the virtual screen's size.
 		SCOREBOARD_ConvertVirtualCoordsToReal( clipLeft, clipTop, clipWidth, clipHeight );
 
-		SCOREBOARD_DrawTexture( pFlagIconSet, lXPos, lNewYPos,
+		SCOREBOARD_DrawTexture( pFlagIconSet, lXPos, lNewYPos, textureScale,
 			DTA_ClipLeft, clipLeft,
 			DTA_ClipRight, clipLeft + clipWidth,
 			DTA_ClipTop, clipTop,
@@ -3454,7 +3469,7 @@ void Scoreboard::DrawBorder( const EColorRange Color, LONG &lYPos, const float f
 
 		while ( lXPos < lRight )
 		{
-			SCOREBOARD_DrawTexture( pBorderTexture, lXPos, lYPos,
+			SCOREBOARD_DrawTexture( pBorderTexture, lXPos, lYPos, 1.0f,
 				DTA_ClipLeft, x,
 				DTA_ClipRight, x + width,
 				DTA_ClipTop, y,
@@ -3775,15 +3790,17 @@ void SCOREBOARD_DrawColor( const PalEntry color, const float alpha, int left, in
 //
 //*****************************************************************************
 
-void STACK_ARGS SCOREBOARD_DrawTexture( FTexture *texture, const int x, const int y, ... )
+void STACK_ARGS SCOREBOARD_DrawTexture( FTexture *texture, const int x, const int y, const float scale, ... )
 {
 	va_list tags;
-	va_start( tags, y );
+	va_start( tags, scale );
 
 	screen->DrawTexture( texture, x, y,
 		DTA_VirtualWidth, g_ScreenWidth,
 		DTA_VirtualHeight, g_ScreenHeight,
 		DTA_KeepRatio, g_KeepScreenRatio,
+		DTA_DestWidthF, texture->GetScaledWidth( ) * scale,
+		DTA_DestHeightF, texture->GetScaledHeight( ) * scale,
 		TAG_MORE, &tags );
 }
 

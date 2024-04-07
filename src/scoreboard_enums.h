@@ -279,6 +279,8 @@ BEGIN_ENUM( COLUMNCMD_e )
 	ENUM_ELEMENT( COLUMNCMD_TRUETEXT ),
 	// What gets drawn when a row's value is 0 (boolean columns only).
 	ENUM_ELEMENT( COLUMNCMD_FALSETEXT ),
+	// The scale to apply to a texture (texture columns only).
+	ENUM_ELEMENT( COLUMNCMD_SCALE ),
 	// The spacing between sub-columns in a composite column, in pixels (composite columns only).
 	ENUM_ELEMENT( COLUMNCMD_GAPBETWEENCOLUMNS ),
 	// What sub-columns are inside the composite column and their order (composite columns only).

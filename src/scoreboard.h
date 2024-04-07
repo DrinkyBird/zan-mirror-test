@@ -216,7 +216,7 @@ public:
 	void DrawHeader( const LONG lYPos, const ULONG ulHeight, const float fAlpha ) const;
 	void DrawString( const char *pszString, FFont *pFont, const ULONG ulColor, const LONG lYPos, const ULONG ulHeight, const float fAlpha ) const;
 	void DrawColor( const PalEntry color, const LONG lYPos, const ULONG ulHeight, const float fAlpha, const int clipWidth, const int clipHeight ) const;
-	void DrawTexture( FTexture *pTexture, const LONG lYPos, const ULONG ulHeight, const float fAlpha, const int clipWidth, const int clipHeight ) const;
+	void DrawTexture( FTexture *texture, const LONG yPos, const ULONG height, const float alpha, const int clipWidth, const int clipHeight, const float scale ) const;
 
 	virtual COLUMNTEMPLATE_e GetTemplate( void ) const { return COLUMNTEMPLATE_UNKNOWN; }
 	virtual void ParseCommand( FScanner &sc, const COLUMNCMD_e Command, const FString CommandName );
@@ -278,6 +278,7 @@ public:
 		ulMaxLength( 0 ),
 		lClipRectWidth( 0 ),
 		lClipRectHeight( 0 ),
+		textureScale( 1.0f ),
 		pCompositeColumn( NULL ) { }
 
 	CompositeScoreColumn *GetCompositeColumn( void ) const { return pCompositeColumn; }
@@ -302,6 +303,7 @@ protected:
 	ULONG ulMaxLength;
 	LONG lClipRectWidth;
 	LONG lClipRectHeight;
+	float textureScale;
 
 	// [AK] The composite column that this column belongs to, if there is one.
 	CompositeScoreColumn *pCompositeColumn;
@@ -560,7 +562,7 @@ void			SCOREBOARD_Reset( void );
 void			SCOREBOARD_Render( ULONG ulDisplayPlayer );
 void STACK_ARGS SCOREBOARD_DrawString( FFont *font, const int color, const int x, const int y, const char *string, ... );
 void			SCOREBOARD_DrawColor( const PalEntry color, const float alpha, int left, int top, int width, int height );
-void STACK_ARGS SCOREBOARD_DrawTexture( FTexture *texture, const int x, const int y, ... );
+void STACK_ARGS SCOREBOARD_DrawTexture( FTexture *texture, const int x, const int y, const float scale, ... );
 bool			SCOREBOARD_ShouldDrawBoard( void );
 bool			SCOREBOARD_AdjustVerticalClipRect( int &clipTop, int &clipHeight );
 void			SCOREBOARD_ConvertVirtualCoordsToReal( int &left, int &top, int &width, int &height );
