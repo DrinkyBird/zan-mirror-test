@@ -3413,7 +3413,7 @@ void CSkullBot::PreDelete( void )
 		m_pPlayer->mo->Destroy( );
 
 	// [RK] Remove the corpse's thinkers to prevent a crash later
-	if ( NETWORK_GetState() == NETSTATE_SINGLE || NETWORK_GetState() == NETSTATE_SINGLE_MULTIPLAYER )
+	if (( NETWORK_GetState() == NETSTATE_SINGLE || NETWORK_GetState() == NETSTATE_SINGLE_MULTIPLAYER ) && m_pPlayer->mo )
 		BOTS_RemovePawnThinkers(m_pPlayer->mo->id);
 
 	// Finally, fix some pointers.
