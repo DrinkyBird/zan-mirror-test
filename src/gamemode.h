@@ -121,6 +121,7 @@ typedef enum
 	GAMEEVENT_DOMINATION_CONTROL,
 	GAMEEVENT_DOMINATION_POINT,
 	GAMEEVENT_PLAYERLEAVESSERVER,
+	GAMEEVENT_LEVEL_INIT,
 } GAMEEVENT_e;
 
 //*****************************************************************************

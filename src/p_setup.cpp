@@ -4404,6 +4404,9 @@ void P_SetupLevel (char *lumpname, int position)
 		}
 	}
 
+	// [JM] Event for early setup before things are spawned and OPEN scripts are executed.
+	GAMEMODE_HandleEvent(GAMEEVENT_LEVEL_INIT, 0, 0, 0, true);
+
 	if (!buildmap)
 	{
 		// [RH] Spawn slope creating things first.
