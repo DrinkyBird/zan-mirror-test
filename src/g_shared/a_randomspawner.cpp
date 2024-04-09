@@ -152,6 +152,16 @@ class ARandomSpawner : public AActor
 		else newmobj = Spawn(cls, x, y, z, NO_REPLACE);
 		if (newmobj != NULL)
 		{
+			// [JM] If anything other than the default RandomSpawner flags are set, pass them down.
+			// This allows passing down these flags through ACS.
+			newmobj->flags |= (flags & ~(GetDefault()->flags));
+			newmobj->flags2 |= (flags2 & ~(GetDefault()->flags2));
+			newmobj->flags3 |= (flags3 & ~(GetDefault()->flags3));
+			newmobj->flags4 |= (flags4 & ~(GetDefault()->flags4));
+			newmobj->flags5 |= (flags5 & ~(GetDefault()->flags5));
+			newmobj->flags6 |= (flags6 & ~(GetDefault()->flags6));
+			newmobj->flags7 |= (flags7 & ~(GetDefault()->flags7));
+
 			// copy everything relevant
 			newmobj->SpawnAngle = newmobj->angle = angle;
 			newmobj->SpawnPoint[2] = SpawnPoint[2];
