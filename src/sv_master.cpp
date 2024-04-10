@@ -74,6 +74,7 @@
 #include "version.h"
 #include "d_dehacked.h"
 #include "v_text.h"
+#include "voicechat.h"
 
 // [SB] This is easier than updating the parameters for a load of functions every time I want to add something.
 struct LauncherResponseContext
@@ -499,6 +500,13 @@ static void server_master_WriteGameModeShortName( const LauncherResponseContext 
 }
 
 //*****************************************************************************
+// Send voice chat setting
+static void server_master_WriteVoicechat( const LauncherResponseContext &ctx )
+{
+	ctx.pByteStream->WriteByte( sv_allowvoicechat );
+}
+
+//*****************************************************************************
 // [SB] And now the big maps of functions.
 static const std::map<ULONG, LauncherFieldFunction> ResponseFunctions[] =
 {
@@ -541,6 +549,7 @@ static const std::map<ULONG, LauncherFieldFunction> ResponseFunctions[] =
 		{ SQF2_COUNTRY,				server_master_WriteCountry },
 		{ SQF2_GAMEMODE_NAME,		server_master_WriteGameModeName },
 		{ SQF2_GAMEMODE_SHORTNAME,	server_master_WriteGameModeShortName },
+		{ SQF2_VOICECHAT,			server_master_WriteVoicechat },
 	}
 };
 
