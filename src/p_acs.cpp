@@ -4163,10 +4163,12 @@ int DLevelScript::DoSpawnSpot (int type, int spot, int tid, int angle, bool forc
 
 		while ( (aspot = iterator.Next ()) )
 		{
-			spawned += DoSpawn (type, aspot->x, aspot->y, aspot->z, tid, angle, force);
+			// [RK] Don't spawn things that are currently hidden.
+			if(!( aspot->STFlags & STFL_HIDDEN_INSTEAD_OF_DESTROYED ))
+				spawned += DoSpawn (type, aspot->x, aspot->y, aspot->z, tid, angle, force);
 		}
 	}
-	else if (activator != NULL)
+	else if (activator != NULL && !( activator->STFlags & STFL_HIDDEN_INSTEAD_OF_DESTROYED )) // [RK] Don't activate at hidden things.
 	{
 			spawned += DoSpawn (type, activator->x, activator->y, activator->z, tid, angle, force);
 	}
@@ -4184,10 +4186,12 @@ int DLevelScript::DoSpawnSpotFacing (int type, int spot, int tid, bool force)
 
 		while ( (aspot = iterator.Next ()) )
 		{
-			spawned += DoSpawn (type, aspot->x, aspot->y, aspot->z, tid, aspot->angle >> 24, force);
+			// [RK] Don't spawn things that are currently hidden.
+			if (!( aspot->STFlags & STFL_HIDDEN_INSTEAD_OF_DESTROYED ))
+				spawned += DoSpawn (type, aspot->x, aspot->y, aspot->z, tid, aspot->angle >> 24, force);
 		}
 	}
-	else if (activator != NULL)
+	else if (activator != NULL && !(activator->STFlags & STFL_HIDDEN_INSTEAD_OF_DESTROYED )) // [RK] Don't activate at hidden things.
 	{
 			spawned += DoSpawn (type, activator->x, activator->y, activator->z, tid, activator->angle >> 24, force);
 	}
