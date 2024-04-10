@@ -12632,7 +12632,11 @@ static DLevelScript *P_GetScriptGoing (AActor *who, line_t *where, int num, cons
 			(*running)->SetState(DLevelScript::SCRIPT_Running);
 			return *running;
 		}
-		return NULL;
+		// [RK] Clientside unloading scripts can't return null here or it'll crash.
+		if ( code->Type == SCRIPT_Unloading )
+			return *running;
+		else
+			return NULL;
 	}
 
 	return new DLevelScript (who, where, num, code, module, args, argcount, flags);
