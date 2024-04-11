@@ -751,3 +751,4 @@ CUSTOM_CVAR( Int, lmsspectatorsettings, LMS_SPF_VIEW, CVAR_SERVERINFO | CVAR_GAM
 
 CVAR( Flag, lms_spectatorchat, lmsspectatorsettings, LMS_SPF_CHAT );
 CVAR( Flag, lms_spectatorview, lmsspectatorsettings, LMS_SPF_VIEW );
+CVAR( Flag, lms_spectatorvoicechat, lmsspectatorsettings, LMS_SPF_VOICECHAT );

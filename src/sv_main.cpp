@@ -1223,7 +1223,7 @@ void SERVER_SendChatMessage( ULONG ulPlayer, ULONG ulMode, const char *pszString
 		return;
 
 	// Potentially prevent spectators from talking to active players during LMS games.
-	const bool bForbidChatToPlayers = GAMEMODE_IsClientForbiddenToChatToPlayers( ulPlayer );
+	const bool bForbidChatToPlayers = GAMEMODE_IsClientForbiddenToChatToPlayers( ulPlayer, false );
 	FString cleanedChatString = pszString;
 
 	// [BB] If the chat string is empty now, it only contained crap and is ignored.

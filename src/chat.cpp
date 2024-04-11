@@ -790,7 +790,7 @@ void CHAT_Render( void )
 	positionY -= SmallFont->GetHeight( ) * 2 + 1;
 
 	// [RC] Tell chatters about the iron curtain of LMS chat.
-	if ( GAMEMODE_AreSpectatorsForbiddenToChatToPlayers() )
+	if ( GAMEMODE_AreSpectatorsForbiddenToChatToPlayers( false ))
 	{
 		bool bDrawNote = true;
 		note = "NOTE: " TEXTCOLOR_GRAY;

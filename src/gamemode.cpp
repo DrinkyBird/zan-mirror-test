@@ -923,9 +923,9 @@ void GAMEMODE_ResetPlayersKillCount( const bool bInformClients )
 
 //*****************************************************************************
 //
-bool GAMEMODE_AreSpectatorsForbiddenToChatToPlayers( void )
+bool GAMEMODE_AreSpectatorsForbiddenToChatToPlayers( const bool doVoice )
 {
-	if ( ( lmsspectatorsettings & LMS_SPF_CHAT ) == false )
+	if (( lmsspectatorsettings & ( doVoice ? LMS_SPF_VOICECHAT : LMS_SPF_CHAT )) == false )
 	{
 		if (( teamlms || lastmanstanding ) && ( LASTMANSTANDING_GetState( ) == LMSS_INPROGRESS ))
 			return true;
@@ -939,18 +939,18 @@ bool GAMEMODE_AreSpectatorsForbiddenToChatToPlayers( void )
 
 //*****************************************************************************
 //
-bool GAMEMODE_IsClientForbiddenToChatToPlayers( const ULONG ulClient )
+bool GAMEMODE_IsClientForbiddenToChatToPlayers( const ULONG client, const bool doVoice )
 {
 	// [BB] If it's not a valid client, there are no restrictions. Note:
-	// ulClient == MAXPLAYERS means the server wants to say something.
-	if ( ulClient >= MAXPLAYERS )
+	// client == MAXPLAYERS means the server wants to say something.
+	if ( client >= MAXPLAYERS )
 		return false;
 
 	// [BB] Ingame players are allowed to chat to other players.
-	if ( players[ulClient].bSpectating == false )
+	if ( players[client].bSpectating == false )
 		return false;
 
-	return GAMEMODE_AreSpectatorsForbiddenToChatToPlayers();
+	return GAMEMODE_AreSpectatorsForbiddenToChatToPlayers( doVoice );
 }
 
 //*****************************************************************************

@@ -1207,7 +1207,7 @@ void SERVERCOMMANDS_PlayerVoIPAudioPacket( ULONG player, unsigned int frame, uns
 		return;
 
 	// [AK] Potentially prevent spectators from talking to active players during LMS games.
-	const bool forbidVoiceChatToPlayers = GAMEMODE_IsClientForbiddenToChatToPlayers( player );
+	const bool forbidVoiceChatToPlayers = GAMEMODE_IsClientForbiddenToChatToPlayers( player, true );
 	const int transmitFilter = players[player].userinfo.GetVoiceTransmitFilter( );
 
 	NetCommand command( SVC_PLAYERVOIPAUDIOPACKET );
