@@ -2784,11 +2784,18 @@ void CLIENT_SpawnMissile( const PClass *pType, fixed_t X, fixed_t Y, fixed_t Z, 
 	pActor->NetID = lNetID;
 	g_ActorNetIDList.useID ( lNetID, pActor );
 
-	// Play the seesound if this missile has one.
-	if ( pActor->SeeSound )
-		S_Sound( pActor, CHAN_VOICE, pActor->SeeSound, 1, ATTN_NORM );
+	// [RK] Moved this up since we need the target before we play the sound.
+	pActor->target = CLIENT_FindThingByNetID(lTargetNetID);
 
-	pActor->target = CLIENT_FindThingByNetID( lTargetNetID );
+	// Play the seesound if this missile has one.
+	// [RK] Play the sound at the target if the missile has MF_SPAWNSOUNDSOURCE.
+	if ( pActor->SeeSound )
+	{
+		if ( pActor->flags & MF_SPAWNSOUNDSOURCE && pActor->target )
+			S_Sound( pActor->target, CHAN_WEAPON, pActor->SeeSound, 1, ATTN_NORM );
+		else
+			S_Sound( pActor, CHAN_VOICE, pActor->SeeSound, 1, ATTN_NORM );
+	}
 }
 
 //*****************************************************************************
