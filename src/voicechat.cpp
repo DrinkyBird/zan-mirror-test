@@ -2008,6 +2008,7 @@ void VOIPPanel::Refresh( void )
 
 				VOIPPanelRow newRow;
 				newRow.player = i;
+				newRow.color = CR_GREY;
 				newRow.alpha = 1.0f;
 				rows.push_back( newRow );
 			}
