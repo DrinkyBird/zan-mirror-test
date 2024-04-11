@@ -65,23 +65,29 @@ typedef enum
 
 } LMSSTATE_e;
 
-#define	LMS_AWF_PISTOL				0x00000001
-#define	LMS_AWF_SHOTGUN				0x00000002
-#define	LMS_AWF_SSG					0x00000004
-#define	LMS_AWF_CHAINGUN			0x00000008
-#define	LMS_AWF_MINIGUN				0x00000010
-#define	LMS_AWF_ROCKETLAUNCHER		0x00000020
-#define	LMS_AWF_GRENADELAUNCHER		0x00000040
-#define	LMS_AWF_PLASMA				0x00000080
-#define	LMS_AWF_RAILGUN				0x00000100
-#define	LMS_AWF_CHAINSAW			0x00000200
+enum
+{
+	LMS_AWF_PISTOL =			( 1 << 0 ),
+	LMS_AWF_SHOTGUN =			( 1 << 1 ),
+	LMS_AWF_SSG =				( 1 << 2 ),
+	LMS_AWF_CHAINGUN =			( 1 << 3 ),
+	LMS_AWF_MINIGUN =			( 1 << 4 ),
+	LMS_AWF_ROCKETLAUNCHER =	( 1 << 5 ),
+	LMS_AWF_GRENADELAUNCHER =	( 1 << 6 ),
+	LMS_AWF_PLASMA =			( 1 << 7 ),
+	LMS_AWF_RAILGUN =			( 1 << 8 ),
+	LMS_AWF_CHAINSAW =			( 1 << 9 ),
+};
 
 #define	LMS_AWF_ALLALLOWED			( LMS_AWF_PISTOL|LMS_AWF_SHOTGUN|LMS_AWF_SSG|LMS_AWF_CHAINGUN| \
 									  LMS_AWF_MINIGUN|LMS_AWF_ROCKETLAUNCHER|LMS_AWF_GRENADELAUNCHER|LMS_AWF_PLASMA| \
 									  LMS_AWF_RAILGUN|LMS_AWF_CHAINSAW )
 
-#define	LMS_SPF_CHAT				0x00000001
-#define	LMS_SPF_VIEW				0x00000002
+enum
+{
+	LMS_SPF_CHAT =				( 1 << 0 ),
+	LMS_SPF_VIEW =				( 1 << 1 ),
+};
 
 //*****************************************************************************
 //	PROTOTYPES
