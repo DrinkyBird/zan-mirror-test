@@ -1653,6 +1653,12 @@ static void network_InitPWADList( void )
 	// Collect all the PWADs into a list.
 	for ( ULONG ulIdx = 0; Wads.GetWadName( ulIdx ) != NULL; ulIdx++ )
 	{
+		// [SB] Skip nested WADs, they can't be checksummed and only their parents matter anyway. 
+		if ( Wads.GetParentWad( ulIdx ) != ulIdx )
+		{
+			continue;
+		}
+
 		const bool bIsIwad = ( ulIdx == ulRealIWADIdx );
 		const bool bIsBaseWad = ( stricmp( Wads.GetWadName( ulIdx ), BASEWAD ) == 0 ); // [SB] Corrected to use BASEWAD instead of GAMENAMELOWERCASE ".pk3"
 
@@ -1671,8 +1677,8 @@ static void network_InitPWADList( void )
 			g_PWADs.Push( pwad );
 		}
 
-		// [SB] Only add files that contain protected lumps or levels, and skip nested WADs (their parents are marked as containing authenticated lumps.)
-		if ( Wads.WadContainsAuthenticatedLumps( ulIdx ) && Wads.GetParentWad( ulIdx ) == ulIdx )
+		// [SB] Only add files that contain protected lumps or levels.
+		if ( Wads.WadContainsAuthenticatedLumps( ulIdx ) )
 		{
 			g_AuthenticatedWADs.Push( pwad );
 		}
