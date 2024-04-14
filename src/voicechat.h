@@ -340,6 +340,7 @@ private:
 //*****************************************************************************
 //	EXTERNAL CONSOLE VARIABLES
 
+EXTERN_CVAR( Int, voice_recorddriver )
 EXTERN_CVAR( Int, sv_allowvoicechat )
 EXTERN_CVAR( Bool, sv_proximityvoicechat )
 EXTERN_CVAR( Float, sv_minproximityrolloffdist )

@@ -1454,7 +1454,7 @@ class FOptionMenuMicTestBar : public FOptionMenuItem
 
 public:
 	FOptionMenuMicTestBar( const char *label ) :
-		FOptionMenuItem( label ),
+		FOptionMenuItem( label, "MicTestBar" ),
 		mBarTexture( TexMan.FindTexture( "MICBAR" )) { }
 
 	virtual bool Activate( void );

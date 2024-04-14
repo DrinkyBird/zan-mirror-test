@@ -612,30 +612,50 @@ public:
 		if ( opt != nullptr )
 		{
 			TArray<FString> recordDriverList;
-			FOptionValues::Pair pair;
-
 			VOIPController::GetInstance( ).RetrieveRecordDrivers( recordDriverList );
 
-			( *opt )->mValues.Clear( );
-
-			if ( recordDriverList.Size( ) > 0 )
-			{
-				for ( unsigned int i = 0; i < recordDriverList.Size( ); i++ )
-				{
-					pair.Value = i;
-					pair.Text = recordDriverList[i];
-					( *opt )->mValues.Push( pair );
-				}
-			}
-			else
-			{
-				pair.Value = 0;
-				pair.Text = "None";
-				( *opt )->mValues.Push( pair );
-			}
+			RefreshRecordDriverList( *opt, recordDriverList );
 		}
 
 		Super::Init( parent, desc );
+	}
+
+	virtual void Ticker( void )
+	{
+		Super::Ticker( );
+
+		FOptionValues **opt = OptionValues.CheckKey( "ZA_RecordDrivers" );
+		TArray<FString> recordDriverList;
+
+		VOIPController::GetInstance( ).RetrieveRecordDrivers( recordDriverList );
+
+		if ( opt != nullptr )
+		{
+			int numRecordDrivers = ( *opt )->mValues.Size( );
+
+			// [AK] "None" doesn't count as a record driver.
+			if ( stricmp(( *opt )->mValues[0].Text, "None" ) == 0 )
+				numRecordDrivers = 0;
+
+			// [AK] Refresh the list of record drivers if any got added or removed.
+			if ( numRecordDrivers != recordDriverList.Size( ))
+				RefreshRecordDriverList( *opt, recordDriverList );
+		}
+
+		// [AK] Stop the microphone test if we're not recording (e.g. the device was disconnected).
+		if (( VOIPController::GetInstance( ).IsRecording( ) == false ) && ( VOIPController::GetInstance( ).IsTestingMicrophone( )))
+		{
+			VOIPController::GetInstance( ).SetMicrophoneTest( false );
+
+			// [AK] If no record drivers are connected, then the microphone test bar shouldn't be selected.
+			if ( recordDriverList.Size( ) == 0 )
+			{
+				FOptionMenuItem *it = mDesc->GetItem( "MicTestBar" );
+
+				if (( it != nullptr ) && ( it == mDesc->mItems[mDesc->mSelectedItem] ))
+					mDesc->mSelectedItem = FirstSelectable( );
+			}
+		}
 	}
 
 	virtual void Close( void )
@@ -645,6 +665,36 @@ public:
 			VOIPController::GetInstance( ).SetMicrophoneTest( false );
 
 		Super::Close( );
+	}
+
+private:
+	void RefreshRecordDriverList( FOptionValues *opt, TArray<FString> recordDriverList )
+	{
+		FOptionValues::Pair pair;
+
+		if ( opt == nullptr )
+			return;
+
+		opt->mValues.Clear( );
+
+		if ( recordDriverList.Size( ) > 0 )
+		{
+			for ( unsigned int i = 0; i < recordDriverList.Size( ); i++ )
+			{
+				pair.Value = i;
+				pair.Text = recordDriverList[i];
+				opt->mValues.Push( pair );
+			}
+		}
+		else
+		{
+			pair.Value = 0;
+			pair.Text = "None";
+			opt->mValues.Push( pair );
+		}
+
+		if ( static_cast<unsigned>( voice_recorddriver ) >= opt->mValues.Size( ))
+			voice_recorddriver = opt->mValues.Size( ) - 1;
 	}
 };
 
