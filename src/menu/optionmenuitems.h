@@ -1449,15 +1449,18 @@ public:
 class FOptionMenuMicTestBar : public FOptionMenuItem
 {
 	FTexture *mBarTexture;
+	bool grayed;
 
 	void DrawBar( const DWORD color, const int x, const int y, const float percentage = 1.0f );
 
 public:
 	FOptionMenuMicTestBar( const char *label ) :
 		FOptionMenuItem( label, "MicTestBar" ),
-		mBarTexture( TexMan.FindTexture( "MICBAR" )) { }
+		mBarTexture( TexMan.FindTexture( "MICBAR" )),
+		grayed( false ) { }
 
 	virtual bool Activate( void );
+	virtual void Ticker( void );
 	virtual int Draw( FOptionMenuDescriptor *desc, int y, int indent, bool selected );
 	virtual bool Selectable( void );
 };

@@ -2163,6 +2163,20 @@ bool FOptionMenuMicTestBar::Activate( void )
 
 //*****************************************************************************
 //
+// [AK] FOptionMenuMicTestBar::Ticker
+//
+// Checks if the menu item should be grayed out based on its selectability.
+//
+//*****************************************************************************
+
+void FOptionMenuMicTestBar::Ticker( void )
+{
+	FOptionMenuItem::Ticker( );
+	grayed = !Selectable( );
+}
+
+//*****************************************************************************
+//
 // [AK] FOptionMenuMicTestBar::Draw
 //
 // Draws the menu item's label and the test bar itself.
@@ -2171,7 +2185,7 @@ bool FOptionMenuMicTestBar::Activate( void )
 
 int FOptionMenuMicTestBar::Draw( FOptionMenuDescriptor *desc, int y, int indent, bool selected )
 {
-	drawLabel( indent, y, selected ? OptionSettings.mFontColorSelection : OptionSettings.mFontColorMore );
+	drawLabel( indent, y, selected ? OptionSettings.mFontColorSelection : OptionSettings.mFontColorMore, grayed );
 
 	if ( mBarTexture != nullptr )
 	{
@@ -2215,7 +2229,8 @@ int FOptionMenuMicTestBar::Draw( FOptionMenuDescriptor *desc, int y, int indent,
 // [AK] FOptionMenuMicTestBar::DrawBar
 //
 // Draws a layer of the test bar. A percentage between 0-1 indicates how much
-// of the bar to actually draw, width-wise.
+// of the bar to actually draw, width-wise. The bar is drawn at half opacity
+// when it's grayed out (i.e. not selectable).
 //
 //*****************************************************************************
 
@@ -2235,6 +2250,7 @@ void FOptionMenuMicTestBar::DrawBar( const DWORD color, const int x, const int y
 		DTA_ClipRight, x + width,
 		DTA_ClipTop, y,
 		DTA_ClipBottom, y + height,
+		DTA_Alpha, grayed ? FRACUNIT >> 1 : FRACUNIT,
 		TAG_DONE );
 }
 
