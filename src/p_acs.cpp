@@ -8583,7 +8583,7 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 						skinIndex = R_FindSkin( skinName, player->CurrentPlayerClass );
 
 					// [AK] If the skin doesn't exist, return an empty string.
-					if (( skinIndex == player->CurrentPlayerClass ) && ( stricmp( skinName, "Base" ) != 0 ))
+					if (( skinIndex == player->CurrentPlayerClass ) && (( skinName == nullptr ) || ( stricmp( skinName, "Base" ) != 0 )))
 						return GlobalACSStrings.AddString( "" );
 				}
 				// [AK] ...or if we want to know the skin that's visible using without any
