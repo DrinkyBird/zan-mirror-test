@@ -6021,3 +6021,27 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_DropItem)
 
 	P_DropItem(self, spawntype, amount, chance);
 }
+
+//==========================================================================
+//
+// [JM] A_ClientsideACSExecute
+//
+//==========================================================================
+
+DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_ClientsideACSExecute)
+{
+	ACTION_PARAM_START(5);
+
+	ACTION_PARAM_NAME(scriptname, 0);
+	ACTION_PARAM_INT(arg1, 1);
+	ACTION_PARAM_INT(arg2, 2);
+	ACTION_PARAM_INT(arg3, 3);
+	ACTION_PARAM_INT(arg4, 4);
+
+	if (NETWORK_GetState() > NETSTATE_CLIENT || !ACS_IsScriptClientSide(-scriptname))
+		return;
+
+	bool res = !!P_ExecuteSpecial(ACS_ExecuteWithResult, NULL, self, false, -scriptname, arg1, arg2, arg3, arg4);
+
+	ACTION_SET_RESULT(res);
+}
