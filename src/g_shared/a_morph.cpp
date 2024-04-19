@@ -175,7 +175,10 @@ bool P_MorphPlayer (player_t *activator, player_t *p, const PClass *spawntype, i
 	{
 		p->camera = morphed;
 	}
-	morphed->ScoreIcon = actor->ScoreIcon;	// [GRB]
+
+	// [AK] Don't replace the morphed class's icon if NOMORPHLIMITATIONS is enabled.
+	if ((morphed->PlayerFlags & PPF_NOMORPHLIMITATIONS) == false)
+		morphed->ScoreIcon = actor->ScoreIcon;	// [GRB]
 
 	// [BB] Tell the clients to morph the player.
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )

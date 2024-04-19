@@ -3792,8 +3792,11 @@ void ServerCommands::SpawnPlayer::Execute()
 		pPlayer->MorphedPlayerClass = morphedClass;
 		// [EP] Set the morph style, too.
 		pPlayer->MorphStyle = morphStyle;
+
 		// [AK] Set the morphed class's score icon to the orignial class's too.
-		pPlayer->mo->ScoreIcon = static_cast<APlayerPawn *>( GetDefaultByType( PlayerClasses[oldPlayerClass].Type ))->ScoreIcon;
+		// Don't do this if the morphed class has NOMORPHLIMITATIONS enabled.
+		if (( pPlayer->mo->PlayerFlags & PPF_NOMORPHLIMITATIONS ) == false )
+			pPlayer->mo->ScoreIcon = static_cast<APlayerPawn *>( GetDefaultByType( PlayerClasses[oldPlayerClass].Type ))->ScoreIcon;
 	}
 	else
 	{
