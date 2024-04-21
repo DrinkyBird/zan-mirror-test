@@ -171,6 +171,7 @@
 -	- Fixed: SpawnSpot functions would still spawn things at a spot that had been removed with thing_remove in survival (addresses 1877). [Ru5tK1ng]
 -	- Fixed: Spectators weren't able to use turn180 after connecting to a server or turning into a dead spectator (addresses 3490). [Ru5tK1ng]
 -	- Fixed: a morphed player class's score icon wasn't set to the original player class's in online games. [Kaminsky]
+-	- Fixed: a client didn't locally keep a name assigned to them by the server upon reconnecting to the server that executed the "map" CCMD. [Kaminsky]
 !	- The result value of GAMEEVENT_MEDALS event scripts can now be used to determine whether or not the player receives the medal. [Kaminsky]
 !	- GAMEMODE flags are now validated after all GAMEMODE lumps have been parsed instead of after each one. The internal game mode name (e.g. "TeamLMS") is now printed with the error message instead of the actual name. [Kaminsky]
 !	- Added an extra check to ensure that game modes have a (short) name. [Kaminsky]

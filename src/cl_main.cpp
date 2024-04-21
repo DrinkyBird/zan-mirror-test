@@ -4701,11 +4701,19 @@ void ServerCommands::SetConsolePlayer::Execute()
 		players[consoleplayer].userinfo.Reset();
 	}
 
+	// [AK] Save a copy of our old name, in case the server assigned a different
+	// name to us. When we apply our local userinfo to the new player slot via
+	// D_SetupUserInfo, we must restore the overridden name.
+	FString oldName = players[consoleplayer].userinfo.GetName( );
+
 	// Otherwise, since it's valid, set our local player index to this.
 	consoleplayer = playerNumber;
 
 	// Finally, apply our local userinfo to this player slot.
 	D_SetupUserInfo( );
+
+	if ( strcmp( name.GetGenericRep( CVAR_String ).String, oldName.GetChars( )) != 0 )
+		players[consoleplayer].userinfo.NameChanged( oldName.GetChars( ));
 }
 
 //*****************************************************************************
