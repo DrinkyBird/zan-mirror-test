@@ -2514,7 +2514,7 @@ void WI_checkForAccelerate(void)
 	{
 		if ( --g_lStopWatch <= 0 )
 		{
-			g_lStopWatch = SERVERSTOPWATCHDELAY * TICRATE;
+			WI_ResetStopWatch( );
 			acceleratestage = 1;
 		}
 
@@ -2736,11 +2736,7 @@ void WI_initVariables (wbstartstruct_t *wbstartstruct)
 	plrs = wbs->plyr;
 
 	// [BC] Initialize the stopwatch.
-	g_lStopWatch = SERVERSTOPWATCHDELAY * TICRATE;
-
-	// [AK] Add a few extra seconds to the stopwatch for clients.
-	if ( NETWORK_InClientMode( ))
-		g_lStopWatch += ( SHOWNEXTLOCDELAY + 1 ) * TICRATE;
+	WI_ResetStopWatch( );
 }
 
 void WI_Start (wbstartstruct_t *wbstartstruct)
@@ -2787,4 +2783,14 @@ void WI_Start (wbstartstruct_t *wbstartstruct)
 LONG WI_GetStopWatch( void )
 {
 	return ( g_lStopWatch );
+}
+
+// [AK]
+void WI_ResetStopWatch( void )
+{
+	g_lStopWatch = SERVERSTOPWATCHDELAY * TICRATE;
+
+	// [AK] Add a few extra seconds to the stopwatch for clients.
+	if ( NETWORK_InClientMode( ))
+		g_lStopWatch += ( SHOWNEXTLOCDELAY + 1 ) * TICRATE;
 }

@@ -133,6 +133,7 @@
 #include "st_hud.h"
 #include "voicechat.h"
 #include "gameconfigfile.h"
+#include "wi_stuff.h"
 
 //*****************************************************************************
 //	MISC CRAP THAT SHOULDN'T BE HERE BUT HAS TO BE BECAUSE OF SLOPPY CODING
@@ -7253,14 +7254,18 @@ void ServerCommands::MapExit::Execute()
 	// and wanted to skip the current map, we are done with it now.
 	CLIENTDEMO_SetSkippingToNextMap ( false );
 
-	if (( gamestate == GS_FULLCONSOLE ) ||
-		( gamestate == GS_INTERMISSION ))
+	// [AK] Display the next level on the scoreboard.
+	SCOREBOARD_SetNextLevel( nextMap );
+
+	if (( gamestate == GS_FULLCONSOLE ) || ( gamestate == GS_INTERMISSION ))
 	{
+		// [AK] Reset the stopwatch, if on the intermission screen.
+		if ( gamestate == GS_INTERMISSION )
+			WI_ResetStopWatch( );
+
 		return;
 	}
 
-	// [AK] Display the next level on the scoreboard.
-	SCOREBOARD_SetNextLevel( nextMap );
 	G_ChangeLevel( nextMap, position, true );
 }
 
