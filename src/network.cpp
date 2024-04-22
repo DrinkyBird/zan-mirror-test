@@ -1136,10 +1136,16 @@ bool NETWORK_IsGeoIPAvailable ( void )
 ULONG NETWORK_GetCountryIndexFromAddress( NETADDRESS_s Address )
 {
 	const char *addressString = Address.ToStringNoPort();
-	if ( ( strnicmp( "10.", addressString, 3 ) == 0 ) ||
-		 ( strnicmp( "192.168.", addressString, 8 ) == 0 ) ||
-		 ( strnicmp( "127.", addressString, 4 ) == 0 ) )
+
+	// [AK] IP addresses ranging between 172.16.0.0 to 172.31.255.255 are also
+	// private and should be treated as LAN.
+	if ((( Address.abIP[0] == 172 ) && ( Address.abIP[1] >= 16 ) && ( Address.abIP[1] <= 31 )) ||
+		( strnicmp( "10.", addressString, 3 ) == 0 ) ||
+		( strnicmp( "192.168.", addressString, 8 ) == 0 ) ||
+		( strnicmp( "127.", addressString, 4 ) == 0 ))
+	{
 		return COUNTRYINDEX_LAN;
+	}
 
 	if ( NETWORK_IsGeoIPAvailable() == false )
 		return 0;

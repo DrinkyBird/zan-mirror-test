@@ -208,6 +208,7 @@
 !	- Made the mini flag icons that appear on the HUD and scoreboard bigger and easier to see. [Kaminsky]
 !	- Make GL extension printing optional (using the developer CVAR) [TDRR]
 !	- Rename GAMEEVENT_ACTOR_ARMORDAMAGED to GAMEEVENT_ACTOR_DAMAGED_PREMOD and changed behaviour to execute on actors without inventory. [StrikerTheHedgefox]
+!	- IP addresses ranging between 172.16.0.0 to 172.31.255.255 are now treated as LAN when determining which country an IP address originates from. [Kaminsky]
 
 
 3.1
