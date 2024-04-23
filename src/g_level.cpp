@@ -1697,24 +1697,24 @@ void G_DoWorldDone (void)
 		// [AK] Check if we're using the map rotation for the next level.
 		if (( NETWORK_GetState() == NETSTATE_SERVER ) && ( sv_maprotation ) && (( level.flags & LEVEL_CHANGEMAPCHEAT ) == false ))
 		{
-			ULONG ulMapEntry = MAPROTATION_GetNextPosition( );
-			level_info_t* map = MAPROTATION_GetMap( ulMapEntry );
+			const unsigned int nextMapEntry = MAPROTATION_GetNextPosition( );
+			level_info_t* nextMapInfo = MAPROTATION_GetMap( nextMapEntry );
 
-			if ( map && ( stricmp( map->mapname, nextlevel.GetChars()) == 0 ) )
+			if (( nextMapInfo ) && ( stricmp( nextMapInfo->mapname, nextlevel.GetChars( )) == 0 ))
 			{
-				ULONG ulPlayerCount = 0;
+				unsigned int playerCount = 0;
 
 				// [AK] Get the number of players that are still playing or in the join queue.
-				for ( ULONG ulIdx = 0; ulIdx < MAXPLAYERS; ulIdx++ )
+				for ( unsigned int i = 0; i < MAXPLAYERS; i++ )
 				{
-					if (( playeringame[ulIdx] ) && (( !players[ulIdx].bSpectating ) || ( JOINQUEUE_GetPositionInLine( ulIdx ) != -1 )))
-						ulPlayerCount++;
+					if (( playeringame[i] ) && (( players[i].bSpectating == false ) || ( JOINQUEUE_GetPositionInLine( i ) != -1 )))
+						playerCount++;
 				}
 
 				// [AK] It's possible the number of players who are playing changed during the intermission
 				// screen, so we must check again if we can still enter the next level. If not, we'll need
 				// to pick another map that will accept this many players.
-				if ( MAPROTATION_CanEnterMap( ulMapEntry, ulPlayerCount ) == false )
+				if ( MAPROTATION_CanEnterMap( nextMapEntry, playerCount ) == false )
 				{
 					MAPROTATION_CalcNextMap( );
 					nextlevel = MAPROTATION_GetNextMap( )->mapname;
