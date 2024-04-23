@@ -209,6 +209,7 @@
 !	- Make GL extension printing optional (using the developer CVAR) [TDRR]
 !	- Rename GAMEEVENT_ACTOR_ARMORDAMAGED to GAMEEVENT_ACTOR_DAMAGED_PREMOD and changed behaviour to execute on actors without inventory. [StrikerTheHedgefox]
 !	- IP addresses ranging between 172.16.0.0 to 172.31.255.255 are now treated as LAN when determining which country an IP address originates from. [Kaminsky]
+!	- The next entry in the map rotation is now calculated upon entering a new level, instead of when the current level is being exited. [Kaminsky]
 
 
 3.1

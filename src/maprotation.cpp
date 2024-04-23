@@ -98,6 +98,13 @@ ULONG MAPROTATION_GetCurrentPosition( void )
 
 //*****************************************************************************
 //
+ULONG MAPROTATION_GetNextPosition( void )
+{
+	return ( g_ulNextMapInList );
+}
+
+//*****************************************************************************
+//
 void MAPROTATION_SetCurrentPosition( ULONG ulPosition )
 {
 	g_ulCurMapInList = ulPosition;
@@ -153,7 +160,7 @@ static bool MAPROTATION_GetLowestAndHighestLimits( ULONG ulPlayerCount, ULONG &u
 
 //*****************************************************************************
 //
-static void MAPROTATION_CalcNextMap( void )
+void MAPROTATION_CalcNextMap( void )
 {
 	if ( g_MapRotationEntries.empty( ))
 		return;
@@ -267,10 +274,10 @@ static void MAPROTATION_CalcNextMap( void )
 
 //*****************************************************************************
 //
-void MAPROTATION_AdvanceMap( bool bMarkUsed )
+void MAPROTATION_AdvanceMap( void )
 {
 	g_ulCurMapInList = g_ulNextMapInList;
-	if (( bMarkUsed ) && ( g_ulCurMapInList < g_MapRotationEntries.size( )))
+	if ( g_ulCurMapInList < g_MapRotationEntries.size( ))
 		g_MapRotationEntries[g_ulCurMapInList].bUsed = true;
 }
 
@@ -281,10 +288,6 @@ level_info_t *MAPROTATION_GetNextMap( void )
 	// [BB] If we don't want to use the rotation, there is no scheduled next map.
 	if (( sv_maprotation == false ) || ( g_MapRotationEntries.empty( )))
 		return NULL;
-
-	// [BB] See if we need to calculate the next map.
-	if ( g_ulNextMapInList == g_ulCurMapInList )
-		MAPROTATION_CalcNextMap();
 
 	return ( g_MapRotationEntries[g_ulNextMapInList].pMap );
 }
@@ -311,18 +314,21 @@ ULONG MAPROTATION_GetPlayerLimits( ULONG ulIdx, bool bMaxPlayers )
 
 //*****************************************************************************
 //
-void MAPROTATION_SetPositionToMap( const char *pszMapName )
+void MAPROTATION_SetPositionToMap( const char *mapName, const bool setNextMap )
 {
-	for ( ULONG ulIdx = 0; ulIdx < g_MapRotationEntries.size( ); ulIdx++ )
+	for ( unsigned int i = 0; i < g_MapRotationEntries.size( ); i++ )
 	{
-		if ( stricmp( g_MapRotationEntries[ulIdx].pMap->mapname, pszMapName ) == 0 )
+		if ( stricmp( g_MapRotationEntries[i].pMap->mapname, mapName ) == 0 )
 		{
-			g_ulCurMapInList = ulIdx;
+			g_ulCurMapInList = i;
 			g_MapRotationEntries[g_ulCurMapInList].bUsed = true;
 			break;
 		}
 	}
-	g_ulNextMapInList = g_ulCurMapInList;
+
+	// [AK] Set the next map position to the current position, if desired.
+	if ( setNextMap )
+		g_ulNextMapInList = g_ulCurMapInList;
 }
 
 //*****************************************************************************
@@ -418,7 +424,15 @@ void MAPROTATION_AddMap( const char *pszMapName, int iPosition, ULONG ulMinPlaye
 		g_MapRotationEntries.insert( itPosition, 1, newEntry );
 	}
 
-	MAPROTATION_SetPositionToMap( level.mapname );
+	// [AK] Set the current entry in the map rotation to the current level, but
+	// only set the next entry if it's the only one in the rotation.
+	MAPROTATION_SetPositionToMap( level.mapname, g_MapRotationEntries.size( ) == 1 );
+
+	// [AK] If there's more than one entry in the map rotation now, and the
+	// current and next entries are the same, calculate a new next map.
+	if (( NETWORK_GetState( ) == NETSTATE_SERVER ) && ( g_MapRotationEntries.size( ) > 1 ) && ( g_ulCurMapInList == g_ulNextMapInList ))
+		MAPROTATION_CalcNextMap( );
+
 	if ( !bSilent )
 	{
 		FString message;
@@ -463,15 +477,22 @@ void MAPROTATION_DelMap (const char *pszMapName, bool bSilent)
 	}
 
 	// search the map in the map rotation and throw it to trash
-	level_info_t entry;
 	std::vector<MAPROTATIONENTRY_t>::iterator iterator;
 	bool gotcha = false;
 	for (iterator = g_MapRotationEntries.begin (); iterator < g_MapRotationEntries.end (); iterator++)
 	{
-		entry = *iterator->pMap;
-		if (!stricmp(entry.mapname, pszMapName)) {
+		level_info_t *entry = iterator->pMap;
+		if (!stricmp(entry->mapname, pszMapName))
+		{
+			level_info_t *nextEntry = MAPROTATION_GetNextMap( );
+
 			g_MapRotationEntries.erase (iterator);
 			gotcha = true;
+
+			// [AK] If the deleted map was the next entry, calculate a new one.
+			if (( NETWORK_GetState( ) == NETSTATE_SERVER ) && ( g_MapRotationEntries.size( ) > 0 ) && ( entry == nextEntry ))
+				MAPROTATION_CalcNextMap( );
+
 			break;
 		}
 	}

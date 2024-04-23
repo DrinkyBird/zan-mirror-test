@@ -3209,7 +3209,7 @@ void D_DoomMain (void)
 						char levelname[10];
 						// [K6] Start with a random map if we are using sv_randommaprotation.
 						sprintf( levelname, "%s", MAPROTATION_GetMap( sv_randommaprotation ? M_Random.Random( ) % MAPROTATION_GetNumEntries( ) : 0 )->mapname );
-						MAPROTATION_SetPositionToMap( levelname );
+						MAPROTATION_SetPositionToMap( levelname, true );
 						G_InitNew( levelname, false );
 						//G_InitNew( MAPROTATION_GetMapName( 0 ), false );
 					}

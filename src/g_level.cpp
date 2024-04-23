@@ -202,7 +202,7 @@ CCMD (map)
 				if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 				{
 					if ( sv_maprotation )
-						MAPROTATION_SetPositionToMap( argv[1] );
+						MAPROTATION_SetPositionToMap( argv[1], true );
 
 					// Tell the clients about the mapchange.
 					SERVER_ReconnectNewLevel( argv[1] );
@@ -714,16 +714,7 @@ void G_ChangeLevel(const char *levelname, int position, int flags, int nextSkill
 
 	// [BC] If we're the server, tell clients that the map has finished.
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-	{
 		SERVERCOMMANDS_MapExit( position, nextlevel.GetChars() );
-
-		// [BB] It's possible that the selected next map doesn't coincide with the next map
-		// in the rotation, e.g. exiting to a secret map allows to leave the rotation.
-		// In this case, we may not advance to the next map in the rotation.
-		level_info_t *nextmapinrotation = MAPROTATION_GetNextMap( );
-		if (( nextmapinrotation != NULL ) && ( stricmp( nextmapinrotation->mapname, nextlevel.GetChars() ) == 0 ))
-			MAPROTATION_AdvanceMap( false );
-	}
 
 	STAT_ChangeLevel(nextlevel);
 
@@ -779,13 +770,7 @@ void G_ChangeLevel(const char *levelname, int position, int flags, int nextSkill
 const char *G_GetExitMap()
 {
 	if ( level.flags & LEVEL_CHANGEMAPCHEAT )
-	{
-		// [BB] We need to update the maprotation if the changemap cheat is used.
-		if (( sv_maprotation ) && ( NETWORK_GetState( ) == NETSTATE_SERVER ))
-			MAPROTATION_SetPositionToMap( level.nextmap );
-
 		return ( level.nextmap );
-	}
 
 	// If we failed a campaign, just stay on the current map.
 	if (( CAMPAIGN_InCampaign( )) &&
@@ -1086,6 +1071,25 @@ void G_DoLoadLevel (int position, bool autosave)
 	// [RK] Except if we're in a hub.
 	if ( CALLVOTE_GetVoteState() == VOTESTATE_INVOTE && !( level.clusterflags & CLUSTER_HUB ))
 		CALLVOTE_ClearVote();
+
+	// [AK] Things to do to the map rotation upon entering a new level.
+	if (( sv_maprotation ) && ( NETWORK_GetState( ) == NETSTATE_SERVER ))
+	{
+		// [BB] We need to update the map rotation if the changemap cheat was used.
+		if ( level.flags & LEVEL_CHANGEMAPCHEAT )
+			MAPROTATION_SetPositionToMap( level.mapname, false );
+
+		level_info_t *nextMapInRotation = MAPROTATION_GetNextMap( );
+
+		// [BB] It's possible that the entered map doesn't coincide with the next map
+		// in the rotation, e.g. entering a secret map allows to leave the rotation.
+		// In this case, we may not advance to the next map in the rotation.
+		if (( nextMapInRotation != nullptr ) && ( stricmp( nextMapInRotation->mapname, level.mapname ) == 0 ))
+		{
+			MAPROTATION_AdvanceMap( );
+			MAPROTATION_CalcNextMap( );
+		}
+	}
 
 	// [BB] Reset the net traffic measurements when a new map starts.
 	NETTRAFFIC_Reset();
@@ -1693,8 +1697,9 @@ void G_DoWorldDone (void)
 		// [AK] Check if we're using the map rotation for the next level.
 		if (( NETWORK_GetState() == NETSTATE_SERVER ) && ( sv_maprotation ) && (( level.flags & LEVEL_CHANGEMAPCHEAT ) == false ))
 		{
-			ULONG ulMapEntry = MAPROTATION_GetCurrentPosition();
+			ULONG ulMapEntry = MAPROTATION_GetNextPosition( );
 			level_info_t* map = MAPROTATION_GetMap( ulMapEntry );
+
 			if ( map && ( stricmp( map->mapname, nextlevel.GetChars()) == 0 ) )
 			{
 				ULONG ulPlayerCount = 0;
@@ -1710,10 +1715,10 @@ void G_DoWorldDone (void)
 				// screen, so we must check again if we can still enter the next level. If not, we'll need
 				// to pick another map that will accept this many players.
 				if ( MAPROTATION_CanEnterMap( ulMapEntry, ulPlayerCount ) == false )
-					nextlevel = MAPROTATION_GetNextMap()->mapname;
-
-				// [AK] We can now mark the map as being used.
-				MAPROTATION_AdvanceMap( true );
+				{
+					MAPROTATION_CalcNextMap( );
+					nextlevel = MAPROTATION_GetNextMap( )->mapname;
+				}
 			}
 		}
 
