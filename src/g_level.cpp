@@ -199,12 +199,14 @@ CCMD (map)
 			}
 			else
 			{
-				if ( sv_maprotation )
-					MAPROTATION_SetPositionToMap( argv[1] );
-
-				// Tell the clients about the mapchange.
 				if ( NETWORK_GetState( ) == NETSTATE_SERVER )
+				{
+					if ( sv_maprotation )
+						MAPROTATION_SetPositionToMap( argv[1] );
+
+					// Tell the clients about the mapchange.
 					SERVER_ReconnectNewLevel( argv[1] );
+				}
 
 				// Tell the server we're leaving the game.
 				if ( NETWORK_GetState( ) == NETSTATE_CLIENT )
@@ -779,7 +781,7 @@ const char *G_GetExitMap()
 	if ( level.flags & LEVEL_CHANGEMAPCHEAT )
 	{
 		// [BB] We need to update the maprotation if the changemap cheat is used.
-		if ( sv_maprotation )
+		if (( sv_maprotation ) && ( NETWORK_GetState( ) == NETSTATE_SERVER ))
 			MAPROTATION_SetPositionToMap( level.nextmap );
 
 		return ( level.nextmap );
