@@ -274,15 +274,6 @@ void MAPROTATION_CalcNextMap( void )
 
 //*****************************************************************************
 //
-void MAPROTATION_AdvanceMap( void )
-{
-	g_ulCurMapInList = g_ulNextMapInList;
-	if ( g_ulCurMapInList < g_MapRotationEntries.size( ))
-		g_MapRotationEntries[g_ulCurMapInList].bUsed = true;
-}
-
-//*****************************************************************************
-//
 level_info_t *MAPROTATION_GetNextMap( void )
 {
 	// [BB] If we don't want to use the rotation, there is no scheduled next map.

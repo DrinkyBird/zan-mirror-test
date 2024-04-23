@@ -83,7 +83,6 @@ ULONG			MAPROTATION_GetNextPosition( void );
 void			MAPROTATION_SetCurrentPosition( ULONG ulPosition );
 bool			MAPROTATION_CanEnterMap( ULONG ulIdx, ULONG ulPlayerCount );
 void			MAPROTATION_CalcNextMap( void );
-void			MAPROTATION_AdvanceMap( void );
 level_info_t	*MAPROTATION_GetNextMap( void );
 level_info_t	*MAPROTATION_GetMap( ULONG ulIdx );
 ULONG			MAPROTATION_GetPlayerLimits( ULONG ulIdx, bool bMaxPlayers );

@@ -1086,7 +1086,9 @@ void G_DoLoadLevel (int position, bool autosave)
 		// In this case, we may not advance to the next map in the rotation.
 		if (( nextMapInRotation != nullptr ) && ( stricmp( nextMapInRotation->mapname, level.mapname ) == 0 ))
 		{
-			MAPROTATION_AdvanceMap( );
+			MAPROTATION_SetCurrentPosition( MAPROTATION_GetNextPosition( ));
+			MAPROTATION_SetUsed( MAPROTATION_GetCurrentPosition( ), true );
+
 			MAPROTATION_CalcNextMap( );
 		}
 	}
