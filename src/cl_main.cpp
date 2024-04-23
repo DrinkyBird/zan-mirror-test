@@ -2333,6 +2333,10 @@ void CLIENT_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 								MAPROTATION_SetUsed( ulIdx, false );
 							break;
 						}
+
+						case UPDATE_MAPROTATION_SETNEXTPOSITION:
+							MAPROTATION_SetNextPosition( pByteStream->ReadShort());
+							break;
 					}
 				}
 				break;

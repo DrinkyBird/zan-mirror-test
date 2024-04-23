@@ -190,7 +190,7 @@
 !	- gl_texture is now forced to be true when sv_forcevideodefaults is true. [Kaminsky]
 !	- cl_identifytarget now prints "ally" if the target is a teammate of the player being spied on, instead of the local player. Also, it now always prints a player's skin with their current class, if unmorphed. If cl_skins is 0, then the skin is always printed as "base" instead. [Kaminsky]
 !	- The GAMEMODE lump now accepts a wider range of gameplay-related CVars that aren't limited to flags. Strictly speaking, any CVars with the CVAR_GAMEPLAYSETTING bit, or any flags whose flagset has the CVAR_GAMEPLAYFLAGSET (previously named CVAR_GAMEMODELOCK) bit. [Kaminsky]
-!	- The "maplist" CCMD now also prints "current" or "used" alongside green or red text for map entries that are currently being played or used. This change is particularly useful for consoles or logfiles that strip color codes and couldn't show the colored text. [Kaminsky]
+!	- The "maplist" CCMD now also prints "current", "next", or "used" alongside green, blue, or red text for map entries that are currently being played, will be played next, or used. This change is particularly useful for consoles or logfiles that strip color codes and couldn't show the colored text. [Kaminsky]
 !	- Zandronum is now marked as DPI-aware on Windows, which prevents issues caused by the operating system automatically upscaling the game window on high-DPI displays. [Sean]
 !	- The output of the dumptrafficmeasure CCMD is now sorted by the bandwidth used in ascending order. This can be changed to descending order by specifying "desc" as the first parameter. [Sean]
 !	- The "logo" property in TEAMINFO, as well as a PlayerPawn's "ScoreIcon", are now usable and appear on the scoreboard. [Kaminsky]

@@ -1621,8 +1621,9 @@ void SERVER_ConnectNewPlayer( BYTESTREAM_s *pByteStream )
 	// [TP] Tell the client his account name.
 	SERVERCOMMANDS_SetPlayerAccountName( g_lCurrentClient, g_lCurrentClient, SVCF_ONLYTHISCLIENT );
 
-	// [AK] Inform the client of the map rotation list.
+	// [AK] Inform the client of the map rotation list and the next entry.
 	SERVERCOMMANDS_SyncMapRotation(g_lCurrentClient, SVCF_ONLYTHISCLIENT );
+	SERVERCOMMANDS_SetNextMapPosition( g_lCurrentClient, SVCF_ONLYTHISCLIENT );
 
 	// Send a snapshot of the level.
 	SERVER_SendFullUpdate( g_lCurrentClient );

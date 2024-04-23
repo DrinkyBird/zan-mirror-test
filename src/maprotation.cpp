@@ -112,6 +112,13 @@ void MAPROTATION_SetCurrentPosition( ULONG ulPosition )
 
 //*****************************************************************************
 //
+void MAPROTATION_SetNextPosition( ULONG position )
+{
+	g_ulNextMapInList = position;
+}
+
+//*****************************************************************************
+//
 bool MAPROTATION_CanEnterMap( ULONG ulIdx, ULONG ulPlayerCount )
 {
 	if ( ulIdx >= g_MapRotationEntries.size( ))
@@ -160,7 +167,7 @@ static bool MAPROTATION_GetLowestAndHighestLimits( ULONG ulPlayerCount, ULONG &u
 
 //*****************************************************************************
 //
-void MAPROTATION_CalcNextMap( void )
+void MAPROTATION_CalcNextMap( const bool updateClients )
 {
 	if ( g_MapRotationEntries.empty( ))
 		return;
@@ -270,6 +277,10 @@ void MAPROTATION_CalcNextMap( void )
 			}
 		}
 	}
+
+	// [AK] If we're the server, tell the clients what the next map is.
+	if (( NETWORK_GetState( ) == NETSTATE_SERVER ) && ( updateClients ))
+		SERVERCOMMANDS_SetNextMapPosition( );
 }
 
 //*****************************************************************************
@@ -422,7 +433,7 @@ void MAPROTATION_AddMap( const char *pszMapName, int iPosition, ULONG ulMinPlaye
 	// [AK] If there's more than one entry in the map rotation now, and the
 	// current and next entries are the same, calculate a new next map.
 	if (( NETWORK_GetState( ) == NETSTATE_SERVER ) && ( g_MapRotationEntries.size( ) > 1 ) && ( g_ulCurMapInList == g_ulNextMapInList ))
-		MAPROTATION_CalcNextMap( );
+		MAPROTATION_CalcNextMap( true );
 
 	if ( !bSilent )
 	{
@@ -482,7 +493,7 @@ void MAPROTATION_DelMap (const char *pszMapName, bool bSilent)
 
 			// [AK] If the deleted map was the next entry, calculate a new one.
 			if (( NETWORK_GetState( ) == NETSTATE_SERVER ) && ( g_MapRotationEntries.size( ) > 0 ) && ( entry == nextEntry ))
-				MAPROTATION_CalcNextMap( );
+				MAPROTATION_CalcNextMap( true );
 
 			break;
 		}
@@ -538,12 +549,18 @@ CCMD( maplist )
 			message.Format( "%lu. ", ulIdx + 1 );
 
 			// [AK] Highlight the current position in the map rotation in green, but only if we're actually playing on that map.
-			// Otherwise, maps that have already been played will be highlighted in red.
 			if (( g_ulCurMapInList == ulIdx ) && ( stricmp( level.mapname, g_MapRotationEntries[g_ulCurMapInList].pMap->mapname ) == 0 ))
 			{
 				message.Insert( 0, TEXTCOLOR_GREEN );
 				message += "(Current) ";
 			}
+			// [AK] Highlight the next position in the map rotation in blue.
+			else if ( g_ulNextMapInList == ulIdx )
+			{
+				message.Insert( 0, TEXTCOLOR_LIGHTBLUE );
+				message += "(Next) ";
+			}
+			// [AK] Highlight maps that have already been played in red.
 			else if ( g_MapRotationEntries[ulIdx].bUsed )
 			{
 				message.Insert( 0, TEXTCOLOR_RED );

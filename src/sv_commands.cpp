@@ -5264,6 +5264,16 @@ void SERVERCOMMANDS_ResetMapRotation( ULONG ulPlayerExtra, ServerCommandFlags fl
 
 //*****************************************************************************
 // [AK]
+void SERVERCOMMANDS_SetNextMapPosition( unsigned int playerExtra, ServerCommandFlags flags )
+{
+	NetCommand command( SVC2_UPDATEMAPROTATION );
+	command.addByte( UPDATE_MAPROTATION_SETNEXTPOSITION );
+	command.addShort( MAPROTATION_GetNextPosition( ));
+	command.sendCommandToClients( playerExtra, flags );
+}
+
+//*****************************************************************************
+// [AK]
 void SERVERCOMMANDS_SetCustomPlayerValue( PlayerData &Data, ULONG ulPlayer, ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
 	if ( PLAYER_IsValidPlayer( ulPlayer ) == false )

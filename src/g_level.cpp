@@ -1089,7 +1089,7 @@ void G_DoLoadLevel (int position, bool autosave)
 			MAPROTATION_SetCurrentPosition( MAPROTATION_GetNextPosition( ));
 			MAPROTATION_SetUsed( MAPROTATION_GetCurrentPosition( ), true );
 
-			MAPROTATION_CalcNextMap( );
+			MAPROTATION_CalcNextMap( true );
 		}
 	}
 
@@ -1718,7 +1718,7 @@ void G_DoWorldDone (void)
 				// to pick another map that will accept this many players.
 				if ( MAPROTATION_CanEnterMap( nextMapEntry, playerCount ) == false )
 				{
-					MAPROTATION_CalcNextMap( );
+					MAPROTATION_CalcNextMap( false );
 					nextlevel = MAPROTATION_GetNextMap( )->mapname;
 				}
 			}
