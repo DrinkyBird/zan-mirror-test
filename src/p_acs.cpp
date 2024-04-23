@@ -5441,7 +5441,7 @@ enum EACSFunctions
 	ACSF_GetChatMessage,
 	ACSF_GetMapRotationSize,
 	ACSF_GetMapRotationInfo,
-	ACSF_GetCurrentMapPosition,
+	ACSF_GetMapPosition,
 	ACSF_GetEventResult,
 	ACSF_GetActorSectorLocation,
 	ACSF_ChangeTeamScore,
@@ -7808,20 +7808,38 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 				return 0;
 			}
 
-		case ACSF_GetCurrentMapPosition:
+		case ACSF_GetMapPosition:
 			{
+				enum
+				{
+					MAPPOSITION_CURRENT,
+					MAPPOSITION_NEXT,
+				};
+
 				// [AK] If there's no maplist, return zero.
 				if ( MAPROTATION_GetNumEntries() == 0 )
 					return 0;
 
-				ULONG ulPosition = MAPROTATION_GetCurrentPosition();
-				level_info_t *rotationMap = MAPROTATION_GetMap( ulPosition );
+				const int positionType = args[0];
+				unsigned int position = 0;
 
-				// [AK] Make sure that the current map position is the current level being played.
-				if (( rotationMap == NULL ) || ( stricmp( level.mapname, rotationMap->mapname ) != 0 ))
+				if ( positionType == MAPPOSITION_CURRENT )
+					position = MAPROTATION_GetCurrentPosition( );
+				else if ( positionType == MAPPOSITION_NEXT )
+					position = MAPROTATION_GetNextPosition( );
+				else
 					return 0;
 
-				return ulPosition + 1;
+				// [AK] Make sure that the current map position is the current level being played.
+				if ( positionType == MAPPOSITION_CURRENT )
+				{
+					level_info_t *rotationMap = MAPROTATION_GetMap( position );
+
+					if (( rotationMap == nullptr ) || ( stricmp( level.mapname, rotationMap->mapname ) != 0 ))
+						return 0;
+				}
+
+				return position + 1;
 			}
 
 		case ACSF_GetEventResult:
