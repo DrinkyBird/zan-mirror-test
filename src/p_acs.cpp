@@ -5468,6 +5468,7 @@ enum EACSFunctions
 	ACSF_SetPlayerSkin,
 	ACSF_GetPlayerSkin,
 	ACSF_GetPlayerCountry,
+	ACSF_SetNextMapPosition,
 
 	// ZDaemon
 	ACSF_GetTeamScore = 19620,	// (int team)
@@ -8652,6 +8653,25 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 
 			// [AK] Return "N/A" if the arguments are invalid or they're hiding their country.
 			return GlobalACSStrings.AddString( "N/A" );
+		}
+
+		case ACSF_SetNextMapPosition:
+		{
+			// [AK] Only the server may set the next map position.
+			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
+			{
+				const unsigned int position = args[0] - 1;
+
+				if (( position < MAPROTATION_GetNumEntries( )) && ( position != MAPROTATION_GetNextPosition( )))
+				{
+					MAPROTATION_SetNextPosition( position );
+					SERVERCOMMANDS_SetNextMapPosition( );
+
+					return 1;
+				}
+			}
+
+			return 0;
 		}
 
 		case ACSF_GetActorFloorTexture:
