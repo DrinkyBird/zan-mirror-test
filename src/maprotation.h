@@ -56,21 +56,20 @@
 //*****************************************************************************
 //	STRUCTURES
 
-typedef struct
+struct MapRotationEntry
 {
 	// The map.
-	level_info_t	*pMap;
+	level_info_t	*map;
 
 	// Has this map already been used in the rotation?
-	bool	bUsed;
+	bool			isUsed;
 
 	// [AK] The minimum number of players required to enter this map.
-	ULONG	ulMinPlayers;
+	unsigned int	minPlayers;
 
 	// [AK] The maximum number of players allowed to enter this map.
-	ULONG	ulMaxPlayers;
-
-} MAPROTATIONENTRY_t;
+	unsigned int	maxPlayers;
+};
 
 //*****************************************************************************
 //	PROTOTYPES

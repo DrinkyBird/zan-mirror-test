@@ -64,7 +64,7 @@
 //*****************************************************************************
 //	VARIABLES
 
-std::vector<MAPROTATIONENTRY_t>	g_MapRotationEntries;
+std::vector<MapRotationEntry>	g_MapRotationEntries;
 
 static	ULONG					g_ulCurMapInList;
 static	ULONG					g_ulNextMapInList;
@@ -140,7 +140,7 @@ bool MAPROTATION_CanEnterMap( ULONG ulIdx, ULONG ulPlayerCount )
 	if ( ulIdx >= g_MapRotationEntries.size( ))
 		return ( false );
 
-	return (( g_MapRotationEntries[ulIdx].ulMinPlayers <= ulPlayerCount ) && ( g_MapRotationEntries[ulIdx].ulMaxPlayers >= ulPlayerCount ));
+	return (( g_MapRotationEntries[ulIdx].minPlayers <= ulPlayerCount ) && ( g_MapRotationEntries[ulIdx].maxPlayers >= ulPlayerCount ));
 }
 
 //*****************************************************************************
@@ -151,9 +151,9 @@ static bool MAPROTATION_MapHasLowestOrHighestLimit( ULONG ulIdx, ULONG ulLowest,
 		return ( false );
 
 	if ( bUseMax )
-		return ( g_MapRotationEntries[ulIdx].ulMaxPlayers == ulHighest );
+		return ( g_MapRotationEntries[ulIdx].maxPlayers == ulHighest );
 	else
-		return ( g_MapRotationEntries[ulIdx].ulMinPlayers == ulLowest );
+		return ( g_MapRotationEntries[ulIdx].minPlayers == ulLowest );
 }
 
 //*****************************************************************************
@@ -167,14 +167,14 @@ static bool MAPROTATION_GetLowestAndHighestLimits( ULONG ulPlayerCount, ULONG &u
 	// [AK] Get the lowest min player limit and highest max player limit from the list.
 	for ( unsigned int i = 0; i < g_MapRotationEntries.size( ); i++ )
 	{
-		if ( g_MapRotationEntries[i].ulMinPlayers < ulLowest )
-			ulLowest = g_MapRotationEntries[i].ulMinPlayers;
+		if ( g_MapRotationEntries[i].minPlayers < ulLowest )
+			ulLowest = g_MapRotationEntries[i].minPlayers;
 
-		if ( g_MapRotationEntries[i].ulMaxPlayers > ulHighest )
-			ulHighest = g_MapRotationEntries[i].ulMaxPlayers;
+		if ( g_MapRotationEntries[i].maxPlayers > ulHighest )
+			ulHighest = g_MapRotationEntries[i].maxPlayers;
 
 		// [AK] If there's any map where the player count exceeds the min limit, then use the max limit.
-		if ( ulPlayerCount >= g_MapRotationEntries[i].ulMinPlayers )
+		if ( ulPlayerCount >= g_MapRotationEntries[i].minPlayers )
 			bUseMaxLimit = true;
 	}
 
@@ -202,7 +202,7 @@ void MAPROTATION_CalcNextMap( const bool updateClients )
 			if ( MAPROTATION_CanEnterMap( ulIdx, ulPlayerCount ) == false )
 				continue;
 
-			if ( !g_MapRotationEntries[ulIdx].bUsed )			
+			if ( !g_MapRotationEntries[ulIdx].isUsed )
 			{
 				bAllMapsPlayed = false;
 				break;
@@ -212,7 +212,7 @@ void MAPROTATION_CalcNextMap( const bool updateClients )
 		if ( bAllMapsPlayed )
 		{
 			for ( ULONG ulIdx = 0; ulIdx < g_MapRotationEntries.size( ); ulIdx++ )
-				g_MapRotationEntries[ulIdx].bUsed = false;
+				g_MapRotationEntries[ulIdx].isUsed = false;
 
 			// [AK] If we're the server, tell the clients to reset their map lists too.
 			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
@@ -228,7 +228,7 @@ void MAPROTATION_CalcNextMap( const bool updateClients )
 		for ( unsigned int i = 0; i < g_MapRotationEntries.size( ); ++i )
 		{
 			// [AK] Only select maps that we can enter with the current number of players.
-			if (( g_MapRotationEntries[i].bUsed == false ) && ( MAPROTATION_CanEnterMap( i, ulPlayerCount )))
+			if (( g_MapRotationEntries[i].isUsed == false ) && ( MAPROTATION_CanEnterMap( i, ulPlayerCount )))
 				unusedEntries.push_back ( i );
 		}
 
@@ -300,7 +300,7 @@ level_info_t *MAPROTATION_GetNextMap( void )
 	if (( sv_maprotation == false ) || ( g_MapRotationEntries.empty( )))
 		return NULL;
 
-	return ( g_MapRotationEntries[g_ulNextMapInList].pMap );
+	return ( g_MapRotationEntries[g_ulNextMapInList].map );
 }
 
 //*****************************************************************************
@@ -310,7 +310,7 @@ level_info_t *MAPROTATION_GetMap( ULONG ulIdx )
 	if ( ulIdx >= g_MapRotationEntries.size( ))
 		return ( NULL );
 
-	return ( g_MapRotationEntries[ulIdx].pMap );
+	return ( g_MapRotationEntries[ulIdx].map );
 }
 
 //*****************************************************************************
@@ -320,7 +320,7 @@ ULONG MAPROTATION_GetPlayerLimits( ULONG ulIdx, bool bMaxPlayers )
 	if ( ulIdx >= g_MapRotationEntries.size( ))
 		return ( 0 );
 
-	return ( bMaxPlayers ? g_MapRotationEntries[ulIdx].ulMaxPlayers : g_MapRotationEntries[ulIdx].ulMinPlayers );
+	return ( bMaxPlayers ? g_MapRotationEntries[ulIdx].maxPlayers : g_MapRotationEntries[ulIdx].minPlayers );
 }
 
 //*****************************************************************************
@@ -329,10 +329,10 @@ void MAPROTATION_SetPositionToMap( const char *mapName, const bool setNextMap )
 {
 	for ( unsigned int i = 0; i < g_MapRotationEntries.size( ); i++ )
 	{
-		if ( stricmp( g_MapRotationEntries[i].pMap->mapname, mapName ) == 0 )
+		if ( stricmp( g_MapRotationEntries[i].map->mapname, mapName ) == 0 )
 		{
 			g_ulCurMapInList = i;
-			g_MapRotationEntries[g_ulCurMapInList].bUsed = true;
+			g_MapRotationEntries[g_ulCurMapInList].isUsed = true;
 			break;
 		}
 	}
@@ -348,7 +348,7 @@ bool MAPROTATION_IsMapInRotation( const char *pszMapName )
 {
 	for ( ULONG ulIdx = 0; ulIdx < g_MapRotationEntries.size( ); ulIdx++ )
 	{
-		if ( stricmp( g_MapRotationEntries[ulIdx].pMap->mapname, pszMapName ) == 0 )
+		if ( stricmp( g_MapRotationEntries[ulIdx].map->mapname, pszMapName ) == 0 )
 			return true;
 	}
 	return false;
@@ -361,7 +361,7 @@ bool MAPROTATION_IsUsed( ULONG ulIdx )
 	if ( ulIdx >= g_MapRotationEntries.size( ))
 		return ( false );
 
-	return ( g_MapRotationEntries[ulIdx].bUsed );
+	return ( g_MapRotationEntries[ulIdx].isUsed );
 }
 
 //*****************************************************************************
@@ -371,7 +371,7 @@ void MAPROTATION_SetUsed( ULONG ulIdx, bool bUsed )
 	if ( ulIdx >= g_MapRotationEntries.size( ))
 		return;
 
-	g_MapRotationEntries[ulIdx].bUsed = bUsed;
+	g_MapRotationEntries[ulIdx].isUsed = bUsed;
 }
 
 //*****************************************************************************
@@ -403,17 +403,17 @@ void MAPROTATION_AddMap( const char *pszMapName, int iPosition, ULONG ulMinPlaye
 	// [AK] Save the position we originally passed into this function.
 	int iOriginalPosition = iPosition;
 
-	MAPROTATIONENTRY_t newEntry;
-	newEntry.pMap = pMap;
-	newEntry.bUsed = false;
+	MapRotationEntry newEntry;
+	newEntry.map = pMap;
+	newEntry.isUsed = false;
 
 	// [AK] Add the minimum and maximum player limits the map will use.
-	newEntry.ulMinPlayers = clamp<ULONG>( ulMinPlayers, 0, MAXPLAYERS );
-	newEntry.ulMaxPlayers = clamp<ULONG>( ulMaxPlayers, 1, MAXPLAYERS );
+	newEntry.minPlayers = clamp<ULONG>( ulMinPlayers, 0, MAXPLAYERS );
+	newEntry.maxPlayers = clamp<ULONG>( ulMaxPlayers, 1, MAXPLAYERS );
 
 	// [AK] The minimum limit should never be greater than the maximum limit.
-	if ( newEntry.ulMinPlayers > newEntry.ulMaxPlayers )
-		swapvalues( newEntry.ulMinPlayers, newEntry.ulMaxPlayers );
+	if ( newEntry.minPlayers > newEntry.maxPlayers )
+		swapvalues( newEntry.minPlayers, newEntry.maxPlayers );
 
 	// [Dusk] iPosition of 0 implies the end of the maplist.
 	if (iPosition == 0) {
@@ -424,7 +424,7 @@ void MAPROTATION_AddMap( const char *pszMapName, int iPosition, ULONG ulMinPlaye
 		iPosition = g_MapRotationEntries.end() - g_MapRotationEntries.begin();
 	} else {
 		// [Dusk] insert the map into a certain position
-		std::vector<MAPROTATIONENTRY_t>::iterator itPosition = g_MapRotationEntries.begin() + iPosition - 1;
+		std::vector<MapRotationEntry>::iterator itPosition = g_MapRotationEntries.begin() + iPosition - 1;
 
 		// sanity check.
 		if (itPosition < g_MapRotationEntries.begin () || itPosition > g_MapRotationEntries.end ()) {
@@ -449,19 +449,19 @@ void MAPROTATION_AddMap( const char *pszMapName, int iPosition, ULONG ulMinPlaye
 		FString message;
 		message.Format( "%s (%s) added to map rotation list at position %d", pMap->mapname, pMap->LookupLevelName( ).GetChars( ), iPosition );
 
-		if (( newEntry.ulMinPlayers > 0 ) || ( newEntry.ulMaxPlayers < MAXPLAYERS ))
+		if (( newEntry.minPlayers > 0 ) || ( newEntry.maxPlayers < MAXPLAYERS ))
 		{
 			message += " (";
 
-			if ( newEntry.ulMinPlayers > 0 )
-				message.AppendFormat( "min = %lu", newEntry.ulMinPlayers );
+			if ( newEntry.minPlayers > 0 )
+				message.AppendFormat( "min = %lu", newEntry.minPlayers );
 
-			if ( newEntry.ulMaxPlayers < MAXPLAYERS )
+			if ( newEntry.maxPlayers < MAXPLAYERS )
 			{
-				if ( newEntry.ulMinPlayers > 0 )
+				if ( newEntry.minPlayers > 0 )
 					message += ", ";
 
-				message.AppendFormat( "max = %lu", newEntry.ulMaxPlayers );
+				message.AppendFormat( "max = %lu", newEntry.maxPlayers );
 			}
 
 			message += ')';
@@ -472,7 +472,7 @@ void MAPROTATION_AddMap( const char *pszMapName, int iPosition, ULONG ulMinPlaye
 
 	// [AK] If we're the server, tell the clients to add the map on their end.
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-		SERVERCOMMANDS_AddToMapRotation( pMap->mapname, iOriginalPosition, newEntry.ulMinPlayers, newEntry.ulMaxPlayers );
+		SERVERCOMMANDS_AddToMapRotation( pMap->mapname, iOriginalPosition, newEntry.minPlayers, newEntry.maxPlayers );
 }
 
 //*****************************************************************************
@@ -488,11 +488,11 @@ void MAPROTATION_DelMap (const char *pszMapName, bool bSilent)
 	}
 
 	// search the map in the map rotation and throw it to trash
-	std::vector<MAPROTATIONENTRY_t>::iterator iterator;
+	std::vector<MapRotationEntry>::iterator iterator;
 	bool gotcha = false;
 	for (iterator = g_MapRotationEntries.begin (); iterator < g_MapRotationEntries.end (); iterator++)
 	{
-		level_info_t *entry = iterator->pMap;
+		level_info_t *entry = iterator->map;
 		if (!stricmp(entry->mapname, pszMapName))
 		{
 			level_info_t *nextEntry = MAPROTATION_GetNextMap( );
@@ -560,7 +560,7 @@ CCMD( maplist )
 			message.Format( "%lu. ", ulIdx + 1 );
 
 			// [AK] Highlight the current position in the map rotation in green, but only if we're actually playing on that map.
-			if (( g_ulCurMapInList == ulIdx ) && ( stricmp( level.mapname, g_MapRotationEntries[g_ulCurMapInList].pMap->mapname ) == 0 ))
+			if (( g_ulCurMapInList == ulIdx ) && ( stricmp( level.mapname, g_MapRotationEntries[g_ulCurMapInList].map->mapname ) == 0 ))
 			{
 				message.Insert( 0, canEnter ? TEXTCOLOR_GREEN : TEXTCOLOR_DARKGREEN );
 				message += "(Current) ";
@@ -572,7 +572,7 @@ CCMD( maplist )
 				message += "(Next) ";
 			}
 			// [AK] Highlight maps that have already been played in red.
-			else if ( g_MapRotationEntries[ulIdx].bUsed )
+			else if ( g_MapRotationEntries[ulIdx].isUsed )
 			{
 				message.Insert( 0, canEnter ? TEXTCOLOR_RED : TEXTCOLOR_DARKRED );
 				message += "(Used) ";
@@ -583,22 +583,22 @@ CCMD( maplist )
 				message.Insert( 0, TEXTCOLOR_DARKGRAY );
 			}
 
-			message.AppendFormat( "%s - %s", g_MapRotationEntries[ulIdx].pMap->mapname, g_MapRotationEntries[ulIdx].pMap->LookupLevelName( ).GetChars( ));
+			message.AppendFormat( "%s - %s", g_MapRotationEntries[ulIdx].map->mapname, g_MapRotationEntries[ulIdx].map->LookupLevelName( ).GetChars( ));
 
 			// [AK] Also print the min and max player limits if they're different from the default values.
-			if (( g_MapRotationEntries[ulIdx].ulMinPlayers > 0 ) || ( g_MapRotationEntries[ulIdx].ulMaxPlayers < MAXPLAYERS ))
+			if (( g_MapRotationEntries[ulIdx].minPlayers > 0 ) || ( g_MapRotationEntries[ulIdx].maxPlayers < MAXPLAYERS ))
 			{
 				message += " (";
 
-				if ( g_MapRotationEntries[ulIdx].ulMinPlayers > 0 )
-					message.AppendFormat( "min = %lu", g_MapRotationEntries[ulIdx].ulMinPlayers );
+				if ( g_MapRotationEntries[ulIdx].minPlayers > 0 )
+					message.AppendFormat( "min = %lu", g_MapRotationEntries[ulIdx].minPlayers );
 
-				if ( g_MapRotationEntries[ulIdx].ulMaxPlayers < MAXPLAYERS )
+				if ( g_MapRotationEntries[ulIdx].maxPlayers < MAXPLAYERS )
 				{
-					if ( g_MapRotationEntries[ulIdx].ulMinPlayers > 0 )
+					if ( g_MapRotationEntries[ulIdx].minPlayers > 0 )
 						message += ", ";
 
-					message.AppendFormat( "max = %lu", g_MapRotationEntries[ulIdx].ulMaxPlayers );
+					message.AppendFormat( "max = %lu", g_MapRotationEntries[ulIdx].maxPlayers );
 				}
 
 				message += ')';
@@ -652,7 +652,7 @@ CCMD (delmap_idx) {
 		return;
 	}
 
-	Printf ("%s (%s) has been removed from map rotation list.\n",	g_MapRotationEntries[idx].pMap->mapname, g_MapRotationEntries[idx].pMap->LookupLevelName().GetChars());
+	Printf ("%s (%s) has been removed from map rotation list.\n",	g_MapRotationEntries[idx].map->mapname, g_MapRotationEntries[idx].map->LookupLevelName().GetChars());
 	g_MapRotationEntries.erase (g_MapRotationEntries.begin()+idx);
 }
 
