@@ -1704,19 +1704,10 @@ void G_DoWorldDone (void)
 
 			if (( nextMapInfo ) && ( stricmp( nextMapInfo->mapname, nextlevel.GetChars( )) == 0 ))
 			{
-				unsigned int playerCount = 0;
-
-				// [AK] Get the number of players that are still playing or in the join queue.
-				for ( unsigned int i = 0; i < MAXPLAYERS; i++ )
-				{
-					if (( playeringame[i] ) && (( players[i].bSpectating == false ) || ( JOINQUEUE_GetPositionInLine( i ) != -1 )))
-						playerCount++;
-				}
-
 				// [AK] It's possible the number of players who are playing changed during the intermission
 				// screen, so we must check again if we can still enter the next level. If not, we'll need
 				// to pick another map that will accept this many players.
-				if ( MAPROTATION_CanEnterMap( nextMapEntry, playerCount ) == false )
+				if ( MAPROTATION_CanEnterMap( nextMapEntry, MAPROTATION_CountEligiblePlayers( )) == false )
 				{
 					MAPROTATION_CalcNextMap( false );
 					nextlevel = MAPROTATION_GetNextMap( )->mapname;

@@ -76,7 +76,7 @@ typedef struct
 //	PROTOTYPES
 
 void			MAPROTATION_Construct( void );
-
+unsigned int	MAPROTATION_CountEligiblePlayers( void );
 ULONG			MAPROTATION_GetNumEntries( void );
 ULONG			MAPROTATION_GetCurrentPosition( void );
 ULONG			MAPROTATION_GetNextPosition( void );

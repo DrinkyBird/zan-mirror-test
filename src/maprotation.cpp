@@ -84,6 +84,22 @@ void MAPROTATION_Construct( void )
 
 //*****************************************************************************
 //
+unsigned int MAPROTATION_CountEligiblePlayers( void )
+{
+	unsigned int playerCount = 0;
+
+	// [AK] Count players who are already playing or are in the join queue.
+	for ( unsigned int i = 0; i < MAXPLAYERS; i++ )
+	{
+		if (( playeringame[i] ) && (( PLAYER_IsTrueSpectator( &players[i] ) == false ) || ( JOINQUEUE_GetPositionInLine( i ) != -1 )))
+			playerCount++;
+	}
+
+	return playerCount;
+}
+
+//*****************************************************************************
+//
 ULONG MAPROTATION_GetNumEntries( void )
 {
 	return g_MapRotationEntries.size( );
@@ -172,17 +188,10 @@ void MAPROTATION_CalcNextMap( const bool updateClients )
 	if ( g_MapRotationEntries.empty( ))
 		return;
 
-	ULONG ulPlayerCount = 0;
+	const ULONG ulPlayerCount = MAPROTATION_CountEligiblePlayers( );
 	ULONG ulLowestLimit;
 	ULONG ulHighestLimit;
 	bool bUseMaxLimit;
-
-	// [AK] We only want to count players who are already playing or are in the join queue.
-	for ( ULONG ulIdx = 0; ulIdx < MAXPLAYERS; ulIdx++ )
-	{
-		if (( playeringame[ulIdx] ) && (( !players[ulIdx].bSpectating ) || ( JOINQUEUE_GetPositionInLine( ulIdx ) != -1 )))
-			ulPlayerCount++;
-	}
 
 	// If all the maps have been played, make them all available again.
 	{
@@ -541,30 +550,37 @@ CCMD( maplist )
 		Printf( "The map rotation list is empty.\n" );
 	else
 	{
+		const unsigned int playerCount = MAPROTATION_CountEligiblePlayers( );
 		FString message;
 
 		Printf( "Map rotation list: \n" );
 		for ( ULONG ulIdx = 0; ulIdx < g_MapRotationEntries.size( ); ulIdx++ )
 		{
+			const bool canEnter = MAPROTATION_CanEnterMap( ulIdx, playerCount );
 			message.Format( "%lu. ", ulIdx + 1 );
 
 			// [AK] Highlight the current position in the map rotation in green, but only if we're actually playing on that map.
 			if (( g_ulCurMapInList == ulIdx ) && ( stricmp( level.mapname, g_MapRotationEntries[g_ulCurMapInList].pMap->mapname ) == 0 ))
 			{
-				message.Insert( 0, TEXTCOLOR_GREEN );
+				message.Insert( 0, canEnter ? TEXTCOLOR_GREEN : TEXTCOLOR_DARKGREEN );
 				message += "(Current) ";
 			}
 			// [AK] Highlight the next position in the map rotation in blue.
 			else if ( g_ulNextMapInList == ulIdx )
 			{
-				message.Insert( 0, TEXTCOLOR_LIGHTBLUE );
+				message.Insert( 0, canEnter ? TEXTCOLOR_LIGHTBLUE : TEXTCOLOR_BLUE );
 				message += "(Next) ";
 			}
 			// [AK] Highlight maps that have already been played in red.
 			else if ( g_MapRotationEntries[ulIdx].bUsed )
 			{
-				message.Insert( 0, TEXTCOLOR_RED );
+				message.Insert( 0, canEnter ? TEXTCOLOR_RED : TEXTCOLOR_DARKRED );
 				message += "(Used) ";
+			}
+			// [AK] Maps that can't be entered are displayed in dark grey.
+			else if ( canEnter == false )
+			{
+				message.Insert( 0, TEXTCOLOR_DARKGRAY );
 			}
 
 			message.AppendFormat( "%s - %s", g_MapRotationEntries[ulIdx].pMap->mapname, g_MapRotationEntries[ulIdx].pMap->LookupLevelName( ).GetChars( ));
