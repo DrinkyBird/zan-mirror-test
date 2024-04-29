@@ -7778,6 +7778,15 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 
 		case ACSF_GetMapRotationInfo:
 			{
+				enum
+				{
+					MAPROTATION_NAME,
+					MAPROTATION_LUMPNAME,
+					MAPROTATION_USED,
+					MAPROTATION_MINPLAYERS,
+					MAPROTATION_MAXPLAYERS,
+				};
+
 				ULONG ulPosition = ( args[0] <= 0 ) ? MAPROTATION_GetCurrentPosition() : ( args[0] - 1 );
 				level_info_t *rotationMap = MAPROTATION_GetMap( ulPosition );
 
@@ -7786,7 +7795,7 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 				// If we're checking the current map position, make sure it's the current level too.
 				if (( rotationMap == NULL ) || (( args[0] <= 0 ) && ( stricmp( level.mapname, rotationMap->mapname ) != 0 )))
 				{
-					if (( args[1] == MAPROTATION_Name ) || ( args[1] == MAPROTATION_LumpName ))
+					if (( args[1] == MAPROTATION_NAME ) || ( args[1] == MAPROTATION_LUMPNAME ))
 						return GlobalACSStrings.AddString( "" );
 
 					return 0;
@@ -7794,16 +7803,16 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 
 				switch ( args[1] )
 				{
-					case MAPROTATION_Used:
+					case MAPROTATION_USED:
 						return MAPROTATION_IsUsed( ulPosition );
 
-					case MAPROTATION_MinPlayers:
-					case MAPROTATION_MaxPlayers:
-						return MAPROTATION_GetPlayerLimits( ulPosition, args[1] == MAPROTATION_MaxPlayers );
+					case MAPROTATION_MINPLAYERS:
+					case MAPROTATION_MAXPLAYERS:
+						return MAPROTATION_GetPlayerLimits( ulPosition, args[1] == MAPROTATION_MAXPLAYERS );
 
-					case MAPROTATION_Name:
-					case MAPROTATION_LumpName:
-						return GlobalACSStrings.AddString( args[1] == MAPROTATION_Name ? rotationMap->LookupLevelName().GetChars() : rotationMap->mapname );
+					case MAPROTATION_NAME:
+					case MAPROTATION_LUMPNAME:
+						return GlobalACSStrings.AddString( args[1] == MAPROTATION_NAME ? rotationMap->LookupLevelName().GetChars() : rotationMap->mapname );
 				}
 
 				return 0;
