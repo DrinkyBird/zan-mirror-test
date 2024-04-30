@@ -714,7 +714,7 @@ void G_ChangeLevel(const char *levelname, int position, int flags, int nextSkill
 
 	// [BC] If we're the server, tell clients that the map has finished.
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-		SERVERCOMMANDS_MapExit( position, nextlevel.GetChars() );
+		SERVERCOMMANDS_MapExit( position, nextlevel.GetChars(), changeflags );
 
 	STAT_ChangeLevel(nextlevel);
 

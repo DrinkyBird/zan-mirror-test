@@ -315,7 +315,7 @@ void	SERVERCOMMANDS_ClearVote( ULONG ulPlayerExtra = MAXPLAYERS, ServerCommandFl
 // Map commands. These load maps, exit maps, or manipulate some property of the current map.
 void	SERVERCOMMANDS_MapLoad( ULONG ulPlayerExtra = MAXPLAYERS, ServerCommandFlags flags = 0 );
 void	SERVERCOMMANDS_MapNew( const char *pszMapName, ULONG ulPlayerExtra = MAXPLAYERS, ServerCommandFlags flags = 0 );
-void	SERVERCOMMANDS_MapExit( LONG lPosition, const char *pszNextMap, ULONG ulPlayerExtra = MAXPLAYERS, ServerCommandFlags flags = 0 );
+void	SERVERCOMMANDS_MapExit( const int position, const char *nextMap, const int changeFlags, unsigned int playerExtra = MAXPLAYERS, ServerCommandFlags flags = 0 );
 void	SERVERCOMMANDS_MapAuthenticate( const char *pszMapName, ULONG ulPlayerExtra = MAXPLAYERS, ServerCommandFlags flags = 0 );
 void	SERVERCOMMANDS_SecretFound( AActor *actor, BYTE secretFlags, ULONG ulPlayerExtra = MAXPLAYERS, ServerCommandFlags flags = 0 );
 void	SERVERCOMMANDS_SecretMarkSectorFound( sector_t *sector, ULONG ulPlayerExtra = MAXPLAYERS, ServerCommandFlags flags = 0);

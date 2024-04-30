@@ -7270,7 +7270,7 @@ void ServerCommands::MapExit::Execute()
 		return;
 	}
 
-	G_ChangeLevel( nextMap, position, true );
+	G_ChangeLevel( nextMap, position, changeFlags );
 }
 
 //*****************************************************************************

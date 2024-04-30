@@ -3732,15 +3732,16 @@ void SERVERCOMMANDS_MapNew( const char *pszMapName, ULONG ulPlayerExtra, ServerC
 
 //*****************************************************************************
 //
-void SERVERCOMMANDS_MapExit( LONG lPosition, const char *pszNextMap, ULONG ulPlayerExtra, ServerCommandFlags flags )
+void SERVERCOMMANDS_MapExit( const int position, const char *nextMap, const int changeFlags, unsigned int playerExtra, ServerCommandFlags flags )
 {
-	if ( pszNextMap == NULL )
+	if ( nextMap == nullptr )
 		return;
 
 	ServerCommands::MapExit command;
-	command.SetPosition( lPosition );
-	command.SetNextMap( pszNextMap );
-	command.sendCommandToClients ( ulPlayerExtra, flags );
+	command.SetPosition( position );
+	command.SetNextMap( nextMap );
+	command.SetChangeFlags( changeFlags );
+	command.sendCommandToClients( playerExtra, flags );
 
 	// [BB] The clients who are authenticated, but still didn't finish loading
 	// the map are not covered by the code above and need special treatment.
