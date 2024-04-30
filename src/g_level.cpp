@@ -1321,26 +1321,31 @@ void G_DoLoadLevel (int position, bool autosave)
 	if( !( level.clusterflags & CLUSTER_HUB ) || autosave == false ) // Resets with map command
 		g_keysFound.Clear();
 
-	// [BC] In server mode, display the level name slightly differently.
-	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
+	// [AK] Don't show the level's name if changed by the SetCurrentGameMode ACS function.
+	if ((changeflags & CHANGELEVEL_HIDENAME) == false)
 	{
-		Printf( "\n*** %s: %s ***\n\n", level.mapname, level.LevelName.GetChars() );
+		// [BC] In server mode, display the level name slightly differently.
+		if (NETWORK_GetState() == NETSTATE_SERVER)
+		{
+			Printf("\n*** %s: %s ***\n\n", level.mapname, level.LevelName.GetChars());
+		}
+		else
+		{
 
-		// [RC] Update clients using the RCON utility.
-		SERVER_RCON_UpdateInfo( SVRCU_MAP );
-	}
-	else
-	{
+			Printf (
+					"\n\35\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36"
+					"\36\36\36\36\36\36\36\36\36\36\36\36\37\n\n"
+					TEXTCOLOR_BOLD "%s - %s\n\n",
+					level.mapname, level.LevelName.GetChars());
 
-		Printf (
-				"\n\35\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36"
-				"\36\36\36\36\36\36\36\36\36\36\36\36\37\n\n"
-				TEXTCOLOR_BOLD "%s - %s\n\n",
-				level.mapname, level.LevelName.GetChars());
-		
-		// [RC] Update the G15 display.
-		G15_NextLevel( level.mapname, level.LevelName.GetChars() );
+			// [RC] Update the G15 display.
+			G15_NextLevel(level.mapname, level.LevelName.GetChars());
+		}
 	}
+
+	// [RC] Update clients using the RCON utility.
+	if (NETWORK_GetState() == NETSTATE_SERVER)
+		SERVER_RCON_UpdateInfo(SVRCU_MAP);
 
 	if (wipegamestate == GS_LEVEL)
 		wipegamestate = GS_FORCEWIPE;

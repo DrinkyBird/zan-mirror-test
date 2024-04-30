@@ -7473,7 +7473,7 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 
 				// [AK] We should also reset the current level to apply the new game mode safely.
 				// Do this without showing the intermission screen, and reset everyone's health and items.
-				G_ChangeLevel( level.mapname, 0, CHANGELEVEL_NOINTERMISSION | CHANGELEVEL_RESETHEALTH | CHANGELEVEL_RESETINVENTORY );
+				G_ChangeLevel( level.mapname, 0, CHANGELEVEL_NOINTERMISSION | CHANGELEVEL_RESETHEALTH | CHANGELEVEL_RESETINVENTORY | CHANGELEVEL_HIDENAME );
 				return 1;
 			}
 
@@ -12319,7 +12319,9 @@ scriptwait:
 
 		case PCD_CHANGELEVEL:
 			{
-				G_ChangeLevel(FBehavior::StaticLookupString(STACK(4)), STACK(3), STACK(2), STACK(1));
+				// [AK] Always disable the CHANGELEVEL_HIDENAME bit here, in case it's enabled.
+				// This is only used for the SetCurrentGameMode ACS function.
+				G_ChangeLevel(FBehavior::StaticLookupString(STACK(4)), STACK(3), STACK(2) & ~CHANGELEVEL_HIDENAME, STACK(1));
 				sp -= 4;
 			}
 			break;
