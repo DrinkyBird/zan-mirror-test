@@ -238,7 +238,7 @@ static	void	client_VoteEnded( BYTESTREAM_s *pByteStream );
 static	void	client_ClearVote( BYTESTREAM_s *pByteStream );
 
 // Inventory commands.
-static	void	client_GiveInventory( BYTESTREAM_s *pByteStream );
+static	void	client_GiveInventory( BYTESTREAM_s *pByteStream, bool bUseExtra = false );
 static	void	client_TakeInventory( BYTESTREAM_s *pByteStream );
 static	void	client_GivePowerup( BYTESTREAM_s *pByteStream );
 static	void	client_DoInventoryPickup( BYTESTREAM_s *pByteStream );
@@ -2345,6 +2345,11 @@ void CLIENT_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 			case SVC2_CLEARVOTE:
 
 				client_ClearVote( pByteStream );
+				break;
+
+			// [RK]
+			case SVC2_GIVEINVENTORYEXTRA:
+				client_GiveInventory( pByteStream, true );
 				break;
 
 			default:
@@ -7373,12 +7378,13 @@ void ServerCommands::SetMapSkyScrollSpeed::Execute()
 
 //*****************************************************************************
 //
-static void client_GiveInventory( BYTESTREAM_s *pByteStream )
+static void client_GiveInventory( BYTESTREAM_s *pByteStream, bool bUseExtra )
 {
 	const PClass	*pType;
 	ULONG			ulPlayer;
 	USHORT			usActorNetworkIndex;
 	LONG			lAmount;
+	LONG			lMaxAmount = 0; // [RK]
 	AInventory		*pInventory;
 
 	// Read in the player ID.
@@ -7389,6 +7395,10 @@ static void client_GiveInventory( BYTESTREAM_s *pByteStream )
 
 	// Read in the amount of this inventory type the player has.
 	lAmount = pByteStream->ReadLong();
+
+	// [RK] Read in the extra info of this item if it's there.
+	if ( bUseExtra )
+		lMaxAmount = pByteStream->ReadLong();
 
 	// Check to make sure everything is valid. If not, break out.
 	if (( PLAYER_IsValidPlayer( ulPlayer ) == false ) || ( players[ulPlayer].mo == NULL ))
@@ -7422,9 +7432,17 @@ static void client_GiveInventory( BYTESTREAM_s *pByteStream )
 			{
 				static_cast<ABasicArmorBonus*>( pInventory )->SaveAmount *= lAmount;
 				static_cast<ABasicArmorBonus*>( pInventory )->BonusCount *= lAmount;
+
+				// [RK] If we read in BonusMax, apply it.
+				if ( lMaxAmount != 0 )
+					static_cast<ABasicArmorBonus*>( pInventory )->BonusMax *= lMaxAmount;
 			}
 			else if ( pType->IsDescendantOf( RUNTIME_CLASS( AHealth ) ) )
 			{
+				// [RK] If we read in MaxAmount, apply it.
+				if ( lMaxAmount != 0 )
+					pInventory->MaxAmount = lMaxAmount;
+
 				if ( pInventory->MaxAmount > 0 )
 					pInventory->Amount = MIN( lAmount, (LONG)pInventory->MaxAmount );
 				else

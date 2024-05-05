@@ -85,6 +85,7 @@
 #include "maprotation.h"
 #include "voicechat.h"
 #include "d_netinf.h"
+#include <memory>
 
 CVAR (Bool, sv_showwarnings, false, CVAR_GLOBALCONFIG|CVAR_ARCHIVE)
 
@@ -521,7 +522,8 @@ void SERVERCOMMANDS_SetPlayerHealthAndMaxHealthBonus( ULONG ulPlayer, ULONG ulPl
 		if ( pInventory )
 		{
 			pInventory->Amount = players[ulPlayer].MaxHealthBonus;
-			SERVERCOMMANDS_GiveInventory( ulPlayer, pInventory, ulPlayerExtra, flags );
+			pInventory->MaxAmount = pInventory->Amount + players[ulPlayer].mo->StartHealth; // [RK] Set the current max health.
+			SERVERCOMMANDS_GiveInventory( ulPlayer, pInventory, ulPlayerExtra, 0, true ); // [RK] Send extra value
 			pInventory->Destroy ();
 			pInventory = NULL;
 		}
@@ -545,7 +547,8 @@ void SERVERCOMMANDS_SetPlayerArmorAndMaxArmorBonus( ULONG ulPlayer, ULONG ulPlay
 		if ( pInventory )
 		{
 			pInventory->Amount = pArmor->BonusCount;
-			SERVERCOMMANDS_GiveInventory( ulPlayer, pInventory, ulPlayerExtra, flags );
+			pInventory->MaxAmount = pArmor->MaxAmount; // [RK] Set the current BonusMax ammount.
+			SERVERCOMMANDS_GiveInventory( ulPlayer, pInventory, ulPlayerExtra, 0, true ); // [RK] Send extra value
 			pInventory->Destroy ();
 			pInventory = NULL;
 		}
@@ -3876,7 +3879,7 @@ void SERVERCOMMANDS_SetMapSkyScrollSpeed( bool isSky1, ULONG ulPlayerExtra, Serv
 //*****************************************************************************
 //*****************************************************************************
 //
-void SERVERCOMMANDS_GiveInventory( ULONG ulPlayer, AInventory *pInventory, ULONG ulPlayerExtra, ServerCommandFlags flags )
+void SERVERCOMMANDS_GiveInventory( ULONG ulPlayer, AInventory *pInventory, ULONG ulPlayerExtra, ServerCommandFlags flags, bool bExtraValue )
 {
 	if ( PLAYER_IsValidPlayer( ulPlayer ) == false )
 		return;
@@ -3887,11 +3890,17 @@ void SERVERCOMMANDS_GiveInventory( ULONG ulPlayer, AInventory *pInventory, ULONG
 	if ( pInventory->NetworkFlags & NETFL_SERVERSIDEONLY )
 		return;
 
-	NetCommand command ( SVC_GIVEINVENTORY );
-	command.addByte ( ulPlayer );
-	command.addShort (  pInventory->GetClass()->getActorNetworkIndex() );
-	command.addLong ( pInventory->Amount );
-	command.sendCommandToClients ( ulPlayerExtra, flags );
+	// [RK] Determine which command we're going to prepare based on bExtraValue.
+	std::unique_ptr<NetCommand> pCommand ( bExtraValue ? new NetCommand ( SVC2_GIVEINVENTORYEXTRA ) : new NetCommand ( SVC_GIVEINVENTORY ));
+
+	pCommand->addByte ( ulPlayer );
+	pCommand->addShort (  pInventory->GetClass()->getActorNetworkIndex() );
+	pCommand->addLong ( pInventory->Amount );
+
+	if ( bExtraValue )
+		pCommand->addLong(pInventory->MaxAmount);
+
+	pCommand->sendCommandToClients ( ulPlayerExtra, flags );
 
 	// [BB] Clients don't know that a BackpackItem may be depleted. In this case we have to resync the ammo count.
 	if ( pInventory->IsKindOf (RUNTIME_CLASS(ABackpackItem)) && static_cast<ABackpackItem*> ( pInventory )->bDepleted )
