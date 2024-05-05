@@ -67,6 +67,8 @@
 #include "team.h"
 #include "v_video.h"
 #include "g_level.h"
+//[RK] New includes
+#include "duel.h"
 
 //*****************************************************************************
 //	CONSOLE COMMANDS/VARIABLES
@@ -326,6 +328,14 @@ CUSTOM_CVAR( Int, fraglimit, 0, CVAR_SERVERINFO | CVAR_CAMPAIGNLOCK | CVAR_GAMEP
 
 	// [AK] Update the clients and update the server console.
 	SERVER_SettingChanged( self, true );
+
+	// [RK] Nothing more for the client to do.
+	if ( NETWORK_InClientMode() )
+		return;
+
+	// [RK] Check for the fraglimit change being lower than a player's frag amount.
+	if ( duel && self > 0 && GAMEMODE_GetState( ) == GAMESTATE_INPROGRESS )
+		DUEL_FragLimitChanged(self);
 }
 
 //*****************************************************************************

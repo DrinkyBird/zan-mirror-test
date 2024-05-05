@@ -66,6 +66,8 @@
 #include "sv_commands.h"
 #include "team.h"
 #include "v_video.h"
+// [RK] New include
+#include "d_netinf.h"
 
 EXTERN_CVAR( Int,  cl_respawninvuleffect )
 
@@ -353,6 +355,63 @@ void DUEL_TimeExpired( void )
 	PLAYER_SetWins( &players[lWinner], players[lWinner].ulWins + 1 );
 	NETWORK_Printf( "%s\n", GStrings( "TXT_TIMELIMIT" ));
 	GAME_SetEndLevelDelay( 5 * TICRATE );
+}
+
+//*****************************************************************************
+//
+void DUEL_FragLimitChanged( int iFraglimit )
+{
+	// [RK] Grab the players in game to see who should win.
+	player_t* firstPlayer = NULL;
+	player_t* secondPlayer = NULL;
+
+	for ( int i = 0; i < MAXPLAYERS; ++i )
+	{
+		if ( DUEL_IsDueler(i) )
+		{
+			if (!firstPlayer)
+				firstPlayer = &players[i];
+			else
+			{
+				secondPlayer = &players[i];
+				break;
+			}
+		}
+	}
+
+	// [RK] We only want to do this when there are 2 players in
+	// the game at the moment when the fraglimit is changed.
+	if ( firstPlayer && secondPlayer )
+	{
+		player_t* winner;
+		player_t* loser;
+
+		// [RK] Check if the new fraglimit has been 'hit'.
+		if (( iFraglimit <= D_GetFragCount( firstPlayer )) || ( iFraglimit <= D_GetFragCount( secondPlayer )))
+		{
+			// [RK] Now the player with the higher frag count will be the winner.
+			// If scores are equal, return and let Die() deal with the next frag.
+			if ( D_GetFragCount( firstPlayer ) == D_GetFragCount( secondPlayer ))
+				return;
+			else if ( D_GetFragCount( firstPlayer ) > D_GetFragCount( secondPlayer ))
+			{
+				winner = firstPlayer;
+				loser = secondPlayer;
+			}
+			else
+			{
+				winner = secondPlayer;
+				loser = firstPlayer;
+			}
+			// [RK] This is the same win sequence in Die();
+			NETWORK_Printf( "%s\n", GStrings( "TXT_FRAGLIMIT" ));
+			NETWORK_Printf( "%s wins!\n", winner->userinfo.GetName() );
+			DUEL_SetLoser( loser - players );
+			DUEL_DoWinSequence( winner - players );
+			PLAYER_SetWins( winner, winner->ulWins + 1 );
+			GAME_SetEndLevelDelay( 5 * TICRATE );
+		}
+	}
 }
 
 //*****************************************************************************
