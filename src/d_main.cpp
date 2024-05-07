@@ -1075,16 +1075,6 @@ drawfullconsole:
 
 				// Render any medals the player might have been awarded.
 				MEDAL_Render( );
-
-				// Render all medals the player currently has.
-				// [AK] Only on game modes that players can earn medals in.
-				if (( Button_ShowMedals.bDown ) && ( GAMEMODE_GetCurrentFlags( ) & GMF_PLAYERSEARNMEDALS ))
-				{
-					if (( players[consoleplayer].camera != NULL ) && ( players[consoleplayer].camera->player != NULL ))
-						MEDAL_RenderAllMedalsFullscreen( players[consoleplayer].camera->player ); // [CK] Fixed 'mo' to 'camera' (which was probably intended)
-					else
-						MEDAL_RenderAllMedalsFullscreen( &players[consoleplayer] );
-				}
 			}
 
 			// Render chat prompt.
@@ -1095,16 +1085,6 @@ drawfullconsole:
 			screen->SetBlendingRect(0,0,0,0);
 			hw2d = screen->Begin2D(false);
 			WI_Drawer ();
-
-			// Render all medals the player currently has.
-			// [AK] Only on game modes that players can earn medals in.
-			if (( Button_ShowMedals.bDown ) && ( GAMEMODE_GetCurrentFlags( ) & GMF_PLAYERSEARNMEDALS ))
-			{
-				if (( players[consoleplayer].camera != NULL ) && ( players[consoleplayer].camera->player != NULL ))
-					MEDAL_RenderAllMedalsFullscreen( players[consoleplayer].camera->player );
-				else
-					MEDAL_RenderAllMedalsFullscreen( &players[consoleplayer] );
-			}
 
 			// Allow people to see the full scoreboard in campaign mode.
 			if (( CAMPAIGN_InCampaign( )) && Button_ShowScores.bDown )

@@ -478,7 +478,6 @@ OptionMenu "CustomizeControls"
 	Control 	"Show Scoreboard",		"+showscores"
 	Control		"Scroll scoreboard up",		"+sb_scrollup" // [AK]
 	Control		"Scroll scoreboard down",	"+sb_scrolldn" // [AK]
-	Control		"Show medals",			"+showmedals" // [TP]
 	StaticText 	""
 	StaticText 	"Chat", 1
 	Control 	"Say",					"messagemode"
