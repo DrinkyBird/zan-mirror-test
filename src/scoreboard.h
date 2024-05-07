@@ -558,6 +558,8 @@ private:
 //	PROTOTYPES
 
 void			SCOREBOARD_Construct( void );
+void			SCOREBOARD_ParseFont( FScanner &sc, FFont *&font );
+void			SCOREBOARD_ParseTextColor( FScanner &sc, EColorRange &color );
 void			SCOREBOARD_Reset( void );
 void			SCOREBOARD_Render( ULONG ulDisplayPlayer );
 void STACK_ARGS SCOREBOARD_DrawString( FFont *font, const int color, const int x, const int y, const char *string, ... );

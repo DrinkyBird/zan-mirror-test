@@ -1032,21 +1032,8 @@ protected:
 			}
 
 			case PARAMETER_FONT:
-			{
-				sc.MustGetToken( TK_StringConst );
-
-				// [AK] Throw a fatal error if an empty font name was passed.
-				if ( sc.StringLen == 0 )
-					sc.ScriptError( "Got an empty string for a font name." );
-
-				pFont = V_GetFont( sc.String );
-
-				// [AK] Throw a fatal error if the font wasn't found.
-				if ( pFont == NULL )
-					sc.ScriptError( "Couldn't find font '%s'.", sc.String );
-
+				SCOREBOARD_ParseFont( sc, pFont );
 				break;
-			}
 
 			case PARAMETER_TEXTCOLOR:
 			{
@@ -1067,21 +1054,7 @@ protected:
 				}
 				else
 				{
-					sc.MustGetToken( TK_StringConst );
-
-					// [AK] If an empty string was passed, inform the user of the error and switch to untranslated.
-					if ( sc.StringLen == 0 )
-					{
-						sc.ScriptMessage( "Got an empty string for a text color, using untranslated instead." );
-					}
-					else
-					{
-						Color = V_FindFontColor( sc.String );
-
-						// [AK] If the text color name was invalid, let the user know about it.
-						if (( Color == CR_UNTRANSLATED ) && ( stricmp( sc.String, "untranslated" ) != 0 ))
-							sc.ScriptMessage( "'%s' is an unknown text color, using untranslated instead.", sc.String );
-					}
+					SCOREBOARD_ParseTextColor( sc, Color );
 				}
 
 				break;

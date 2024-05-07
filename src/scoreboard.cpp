@@ -2525,62 +2525,28 @@ void Scoreboard::Parse( FScanner &sc )
 				}
 
 				case SCOREBOARDCMD_HEADERFONT:
-				case SCOREBOARDCMD_ROWFONT:
-				{
-					sc.MustGetToken( TK_StringConst );
-
-					// [AK] Throw a fatal error if an empty string was passed.
-					if ( sc.StringLen == 0 )
-						sc.ScriptError( "Got an empty string for a font name." );
-
-					FFont *pFont = V_GetFont( sc.String );
-
-					// [AK] If the font was invalid, throw a fatal error.
-					if ( pFont == NULL )
-						sc.ScriptError( "Couldn't find font '%s'.", sc.String );
-
-					if ( Command == SCOREBOARDCMD_HEADERFONT )
-						pHeaderFont = pFont;
-					else
-						pRowFont = pFont;
-
+					SCOREBOARD_ParseFont( sc, pHeaderFont );
 					break;
-				}
+
+				case SCOREBOARDCMD_ROWFONT:
+					SCOREBOARD_ParseFont( sc, pRowFont );
+					break;
 
 				case SCOREBOARDCMD_HEADERCOLOR:
-				case SCOREBOARDCMD_ROWCOLOR:
-				case SCOREBOARDCMD_LOCALROWCOLOR:
-				case SCOREBOARDCMD_LOCALROWDEMOCOLOR:
-				{
-					sc.MustGetToken( TK_StringConst );
-					EColorRange color;
-
-					// [AK] If an empty string was passed, inform the user of the error and switch to untranslated.
-					if ( sc.StringLen == 0 )
-					{
-						sc.ScriptMessage( "Got an empty string for a text color, using untranslated instead." );
-						color = CR_UNTRANSLATED;
-					}
-					else
-					{
-						color = V_FindFontColor( sc.String );
-
-						// [AK] If the text color name was invalid, let the user know about it.
-						if (( color == CR_UNTRANSLATED ) && ( stricmp( sc.String, "untranslated" ) != 0 ))
-							sc.ScriptMessage( "'%s' is an unknown text color, using untranslated instead.", sc.String );
-					}
-
-					if ( Command == SCOREBOARDCMD_HEADERCOLOR )
-						HeaderColor = color;
-					else if ( Command == SCOREBOARDCMD_ROWCOLOR )
-						RowColor = color;
-					else if ( Command == SCOREBOARDCMD_LOCALROWCOLOR )
-						LocalRowColors[LOCALROW_COLOR_INGAME] = color;
-					else
-						LocalRowColors[LOCALROW_COLOR_INDEMO] = color;
-
+					SCOREBOARD_ParseTextColor( sc, HeaderColor );
 					break;
-				}
+
+				case SCOREBOARDCMD_ROWCOLOR:
+					SCOREBOARD_ParseTextColor( sc, RowColor );
+					break;
+
+				case SCOREBOARDCMD_LOCALROWCOLOR:
+					SCOREBOARD_ParseTextColor( sc, LocalRowColors[LOCALROW_COLOR_INGAME] );
+					break;
+
+				case SCOREBOARDCMD_LOCALROWDEMOCOLOR:
+					SCOREBOARD_ParseTextColor( sc, LocalRowColors[LOCALROW_COLOR_INDEMO] );
+					break;
 
 				case SCOREBOARDCMD_CONTENTALPHA:
 				case SCOREBOARDCMD_DEADPLAYERTEXTALPHA:
@@ -3699,6 +3665,58 @@ void SCOREBOARD_Construct( void )
 				}
 			}
 		}
+	}
+}
+
+//*****************************************************************************
+//
+// [AK] SCOREBOARD_ParseFont
+//
+// Parses a font while parsing a SCORINFO lump.
+//
+//*****************************************************************************
+
+void SCOREBOARD_ParseFont( FScanner &sc, FFont *&font )
+{
+	sc.MustGetToken( TK_StringConst );
+
+	// [AK] Throw a fatal error if an empty string was passed.
+	if ( sc.StringLen == 0 )
+		sc.ScriptError( "Got an empty string for a font name." );
+
+	font = V_GetFont( sc.String );
+
+	// [AK] If the font was invalid, throw a fatal error.
+	if ( font == nullptr )
+		sc.ScriptError( "Couldn't find font '%s'.", sc.String );
+}
+
+//*****************************************************************************
+//
+// [AK] SCOREBOARD_ParseTextColor
+//
+// Parses a text color while parsing a SCORINFO lump.
+//
+//*****************************************************************************
+
+void SCOREBOARD_ParseTextColor( FScanner &sc, EColorRange &color )
+{
+	sc.MustGetToken( TK_StringConst );
+
+	// [AK] If an empty string was passed, inform the user of the error and
+	// switch to untranslated.
+	if ( sc.StringLen == 0 )
+	{
+		sc.ScriptMessage( "Got an empty string for a text color, using untranslated instead." );
+		color = CR_UNTRANSLATED;
+	}
+	else
+	{
+		color = V_FindFontColor( sc.String );
+
+		// [AK] If the text color name was invalid, let the user know about it.
+		if (( color == CR_UNTRANSLATED ) && ( stricmp( sc.String, "untranslated" ) != 0 ))
+			sc.ScriptMessage( "'%s' is an unknown text color, using untranslated instead.", sc.String );
 	}
 }
 
