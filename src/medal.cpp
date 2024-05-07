@@ -75,6 +75,11 @@
 #include "c_console.h"
 #include "voicechat.h"
 
+// [AK] Implement the string table and the conversion functions for the medal enums.
+#define GENERATE_ENUM_STRINGS  // Start string generation
+#include "medal_enums.h"
+#undef GENERATE_ENUM_STRINGS   // Stop string generation
+
 //*****************************************************************************
 //	VARIABLES
 
@@ -158,6 +163,17 @@ void MEDAL_Construct( void )
 			{
 				sc.MustGetString( );
 				FString command = sc.String;
+
+				if ( command.CompareNoCase( "addflag" ) == 0 )
+				{
+					medal->flags |= sc.MustGetEnumName( "medal flag", "MEDALFLAG_", GetValueMedalFlag );
+					continue;
+				}
+				else if ( command.CompareNoCase( "removeflag" ) == 0 )
+				{
+					medal->flags &= ~sc.MustGetEnumName( "medal flag", "MEDALFLAG_", GetValueMedalFlag );
+					continue;
+				}
 
 				sc.MustGetToken( '=' );
 				sc.MustGetToken( TK_StringConst );
@@ -345,7 +361,8 @@ void MEDAL_Render( void )
 	ULONG ulLength = medal->awardedCount[ulPlayer] * icon->GetWidth( );
 
 	// If that length is greater then the screen width, display the medals as "<icon> <name> X <num>"
-	if ( ulLength >= 320 )
+	// [AK] Also do this if the medal has the ALWAYSSHOWQUANTITY flag enabled.
+	if (( ulLength >= 320 ) || ( medal->flags & MEDALFLAG_ALWAYSSHOWQUANTITY ))
 	{
 		if ( medal->quantityColor.IsNotEmpty( ))
 		{
@@ -585,14 +602,19 @@ void MEDAL_RetrieveAwardedMedals( const unsigned int player, TArray<MEDAL_t *> &
 
 //*****************************************************************************
 //
-void MEDAL_ResetPlayerMedals( const ULONG player )
+void MEDAL_ResetPlayerMedals( const ULONG player, const bool resetAll )
 {
 	if ( player >= MAXPLAYERS )
 		return;
 
 	// Reset the number of medals this player has.
+	// [AK] Let players keep any medals that persist between levels unless all
+	// of the medals must be reset (e.g. when they leave the game).
 	for ( unsigned int i = 0; i < medalList.Size( ); i++ )
-		medalList[i]->awardedCount[player] = 0;
+	{
+		if (( resetAll ) || (( medalList[i]->flags & MEDALFLAG_KEEPBETWEENLEVELS ) == false ))
+			medalList[i]->awardedCount[player] = 0;
+	}
 
 	medalQueue[player].medals.clear( );
 	medalQueue[player].ticks = 0;

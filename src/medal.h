@@ -55,6 +55,8 @@
 #include "info.h"
 #include "v_font.h"
 
+#include "medal_enums.h"
+
 //*****************************************************************************
 //	DEFINES
 
@@ -127,10 +129,20 @@ struct MEDAL_t
 	// Name of sound to play when this medal type is triggered.
 	FSoundID		sound;
 
+	// [AK] Which flags are enabled for this medal.
+	unsigned int	flags;
+
 	// [AK] How much of this medal that each player currently has.
 	unsigned int	awardedCount[MAXPLAYERS];
 
-	MEDAL_t( FName name ) : name( name ), iconClass( nullptr ), iconState( nullptr ), textColor( CR_UNTRANSLATED ), lowerMedal( nullptr ), awardedCount{ 0 }
+	MEDAL_t( FName name ) :
+		name( name ),
+		iconClass( nullptr ),
+		iconState( nullptr ),
+		textColor( CR_UNTRANSLATED ),
+		lowerMedal( nullptr ),
+		flags( 0 ),
+		awardedCount{ 0 }
 	{
 		icon.SetInvalid( );
 		scoreboardIcon.SetInvalid( );
@@ -164,7 +176,7 @@ int			MEDAL_GetMedalIndex( const FName medalName );
 MEDAL_t		*MEDAL_GetMedal( const FName medalName );
 MEDAL_t		*MEDAL_GetDisplayedMedal( const ULONG player );
 void		MEDAL_RetrieveAwardedMedals( const unsigned int player, TArray<MEDAL_t *> &list );
-void		MEDAL_ResetPlayerMedals( const ULONG player );
+void		MEDAL_ResetPlayerMedals( const ULONG player, const bool resetAll );
 void		MEDAL_PlayerDied( ULONG ulPlayer, ULONG ulSourcePlayer );
 void		MEDAL_ResetFirstFragAwarded( void );
 

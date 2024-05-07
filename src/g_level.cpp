@@ -437,9 +437,17 @@ void G_InitNew (const char *mapname, bool bTitleLevel)
 
 	if ( NETWORK_InClientMode( ) == false )
 	{
-		// [AK] Clear out the saved chat messages from all players and the server.
-		for ( ULONG ulPlayer = 0; ulPlayer <= MAXPLAYERS; ulPlayer++ )
-			CHAT_ClearChatMessages( ulPlayer );
+		for ( unsigned int i = 0; i < MAXPLAYERS; i++ )
+		{
+			// [AK] Clear out any saved chat messages from the player.
+			CHAT_ClearChatMessages( i );
+
+			// [AK] Remove any medals that the player has been awarded.
+			MEDAL_ResetPlayerMedals( i, true );
+		}
+
+		// [AK] Also clear out any saved chat messages from the server.
+		CHAT_ClearChatMessages( MAXPLAYERS );
 
 		// [AK] Reset custom values to their default values for all players.
 		PLAYER_ResetCustomValues( MAXPLAYERS );
@@ -1382,7 +1390,8 @@ void G_DoLoadLevel (int position, bool autosave)
 			players[i].fragcount = 0;
 
 		// Reset the number of medals each player has.
-		MEDAL_ResetPlayerMedals( i );
+		// [AK] Players keep any medals that persist between levels if they're not spectating.
+		MEDAL_ResetPlayerMedals( i, PLAYER_ShouldSpawnAsSpectator( &players[i] ));
 
 		// Reset "ready to go on" flag.
 		PLAYER_SetStatus( &players[i], PLAYERSTATUS_READYTOGOON, false, SETPLAYERSTATUS_SERVERCANTSENDUPDATE );
