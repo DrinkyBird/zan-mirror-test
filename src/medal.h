@@ -100,6 +100,9 @@ struct MEDAL_t
 	// Icon that displays on the screen when this medal is received.
 	FTextureID		icon;
 
+	// [AK] Icon that displays on the scoreboard, if defined.
+	FTextureID		scoreboardIcon;
+
 	// [AK] The floaty icon class to spawn above the player's head.
 	const PClass	*iconClass;
 
@@ -130,6 +133,7 @@ struct MEDAL_t
 	MEDAL_t( FName name ) : name( name ), iconClass( nullptr ), iconState( nullptr ), textColor( CR_UNTRANSLATED ), lowerMedal( nullptr ), awardedCount{ 0 }
 	{
 		icon.SetInvalid( );
+		scoreboardIcon.SetInvalid( );
 	}
 };
 

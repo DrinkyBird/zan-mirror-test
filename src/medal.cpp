@@ -170,6 +170,10 @@ void MEDAL_Construct( void )
 				{
 					medal->icon = TexMan.CheckForTexture( sc.String, FTexture::TEX_MiscPatch );
 				}
+				else if ( command.CompareNoCase( "scoreboardicon" ) == 0 )
+				{
+					medal->scoreboardIcon = TexMan.CheckForTexture( sc.String, FTexture::TEX_MiscPatch );
+				}
 				else if ( command.CompareNoCase( "class" ) == 0 )
 				{
 					medal->iconClass = PClass::FindClass( sc.String );

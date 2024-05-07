@@ -1655,7 +1655,11 @@ public:
 		// on the size of the icons of the medals the player has earned.
 		for ( unsigned int i = 0; i < medalList.Size( ); i++ )
 		{
-			FTexture *icon = TexMan[medalList[i]->icon];
+			FTexture *icon = TexMan[medalList[i]->scoreboardIcon];
+
+			// [AK] If this medal has no scoreboard icon, use the default one.
+			if ( icon == nullptr )
+				icon = TexMan[medalList[i]->icon];
 
 			if ( icon != nullptr )
 			{
@@ -1715,8 +1719,12 @@ public:
 
 		for ( unsigned int i = 0; i < medalList.Size( ); i++ )
 		{
-			FTexture *icon = TexMan[medalList[i]->icon];
+			FTexture *icon = TexMan[medalList[i]->scoreboardIcon];
 			FString quantityText;
+
+			// [AK] If this medal has no scoreboard icon, use the default one.
+			if ( icon == nullptr )
+				icon = TexMan[medalList[i]->icon];
 
 			if ( icon != nullptr )
 			{
