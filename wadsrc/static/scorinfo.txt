@@ -353,6 +353,54 @@ Scoreboard
 		}
 	}
 
+	Footer
+	{
+		IfEarnType( Medals ) && IfCVar( cl_medals == true ) && IfCVar( sv_nomedals == false )
+		{
+			IfSpectator( false ) || IfSpying( true )
+			{
+				IfPlayerHasMedals( true )
+				{
+					MultiLineBlock( horizontalalign = center, y = 2 )
+					{
+						RowBlock( bottompadding = 1 )
+						{
+							IfSpying( true )
+							{
+								DrawString( value = playername + " has", textcolor = "Grey" )
+							}
+							Else
+							{
+								DrawString( value = "You have", textcolor = "Grey" )
+							}
+
+							DrawString( value = " earned the following medals:", textcolor = "Grey" )
+						}
+
+						// [AK] Use a width of INT_MAX to ensure the medals are drawn across the entire margin.
+						DrawMedals( maxwidth = 2147483648, textcolor = "Grey", columngap = 5, rowgap = 1, textspacing = 1 )
+					}
+				}
+				Else
+				{
+					RowBlock( bottompadding = 1, horizontalalign = center, y = 2 )
+					{
+						IfSpying( true )
+						{
+							DrawString( value = playername + " has", textcolor = "Grey" )
+						}
+						Else
+						{
+							DrawString( value = "You have", textcolor = "Grey" )
+						}
+
+						DrawString( value = " not yet earned any medals.", textcolor = "Grey" )
+					}
+				}
+			}
+		}
+	}
+
 	HeaderFont = "SmallFont"
 	RowFont = "SmallFont"
 	HeaderColor = "Grey"

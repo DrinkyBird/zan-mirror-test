@@ -631,6 +631,22 @@ MEDAL_t *MEDAL_GetDisplayedMedal( const ULONG player )
 
 //*****************************************************************************
 //
+void MEDAL_RetrieveAwardedMedals( const unsigned int player, TArray<MEDAL_t *> &list )
+{
+	list.Clear( );
+
+	if ( PLAYER_IsValidPlayer( player ))
+	{
+		for ( unsigned int i = 0; i < medalList.Size( ); i++ )
+		{
+			if ( medalList[i]->awardedCount[player] > 0 )
+				list.Push( medalList[i] );
+		}
+	}
+}
+
+//*****************************************************************************
+//
 void MEDAL_ResetPlayerMedals( const ULONG player )
 {
 	if ( player >= MAXPLAYERS )

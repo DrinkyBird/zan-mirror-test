@@ -383,6 +383,8 @@ BEGIN_ENUM( MARGINCMD_e )
 	ENUM_ELEMENT( MARGINCMD_DRAWCOLOR ),
 	// Draws a graphic or image somewhere in the margin.
 	ENUM_ELEMENT( MARGINCMD_DRAWTEXTURE ),
+	// Draws all the medals that the player has earned.
+	ENUM_ELEMENT( MARGINCMD_DRAWMEDALS ),
 	// Executes a block if the current game is a network game.
 	ENUM_ELEMENT( MARGINCMD_IFONLINEGAME ),
 	// Executes a block if the intermission screen is being shown.
@@ -399,6 +401,8 @@ BEGIN_ENUM( MARGINCMD_e )
 	ENUM_ELEMENT( MARGINCMD_IFSPECTATOR ),
 	// Executes a block if the local player is specifically a dead spectator.
 	ENUM_ELEMENT( MARGINCMD_IFDEADSPECTATOR ),
+	// Executes a block if the current player has earned any medals.
+	ENUM_ELEMENT( MARGINCMD_IFPLAYERHASMEDALS ),
 	// Executes a block when any of the given game modes are being played.
 	ENUM_ELEMENT( MARGINCMD_IFGAMEMODE ),
 	// Executes a block when any of the given game types are being played.

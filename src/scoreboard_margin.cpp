@@ -62,6 +62,7 @@
 #include "duel.h"
 #include "lastmanstanding.h"
 #include "g_game.h"
+#include "medal.h"
 
 //*****************************************************************************
 //	DEFINITIONS
@@ -107,6 +108,14 @@ enum PARAMETER_e
 	PARAMETER_HEIGHT,
 	// The scale to apply to a texture.
 	PARAMETER_SCALE,
+	// The maximum width to use to draw all earned medals.
+	PARAMETER_MAXWIDTH,
+	// The horizontal gap between two medals.
+	PARAMETER_COLUMNGAP,
+	// The vertical gap between two medals.
+	PARAMETER_ROWGAP,
+	// The space between the bottom of the medal and quantity.
+	PARAMETER_TEXTSPACING,
 
 	NUM_PARAMETERS
 };
@@ -122,6 +131,7 @@ enum COMMAND_e
 	COMMAND_STRING,
 	COMMAND_COLOR,
 	COMMAND_TEXTURE,
+	COMMAND_MEDALS,
 };
 
 //*****************************************************************************
@@ -138,12 +148,16 @@ static const std::map<FName, std::tuple<PARAMETER_e, bool, std::set<COMMAND_e>>>
 	{ "bottompadding",		{ PARAMETER_BOTTOMPADDING,	false,	{ COMMAND_ALL }}},
 	{ "rightpadding",		{ PARAMETER_RIGHTPADDING,	false,	{ COMMAND_ALL }}},
 	{ "alpha",				{ PARAMETER_ALPHA,			false,	{ COMMAND_ALL }}},
-	{ "font",				{ PARAMETER_FONT,			false,	{ COMMAND_STRING }}},
-	{ "textcolor",			{ PARAMETER_TEXTCOLOR,		false,	{ COMMAND_STRING }}},
+	{ "font",				{ PARAMETER_FONT,			false,	{ COMMAND_STRING, COMMAND_MEDALS }}},
+	{ "textcolor",			{ PARAMETER_TEXTCOLOR,		false,	{ COMMAND_STRING, COMMAND_MEDALS }}},
 	{ "gapsize",			{ PARAMETER_GAPSIZE,		false,	{ COMMAND_STRING }}},
 	{ "width",				{ PARAMETER_WIDTH,			true,	{ COMMAND_COLOR }}},
 	{ "height",				{ PARAMETER_HEIGHT,			true,	{ COMMAND_COLOR }}},
 	{ "scale",				{ PARAMETER_SCALE,			false,	{ COMMAND_TEXTURE }}},
+	{ "maxwidth",			{ PARAMETER_MAXWIDTH,		true,	{ COMMAND_MEDALS }}},
+	{ "columngap",			{ PARAMETER_COLUMNGAP,		false,	{ COMMAND_MEDALS }}},
+	{ "rowgap",				{ PARAMETER_ROWGAP,			false,	{ COMMAND_MEDALS }}},
+	{ "textspacing",		{ PARAMETER_TEXTSPACING,	false,	{ COMMAND_MEDALS }}},
 };
 
 // [AK] The level we are entering, to be shown on the intermission screen.
@@ -1594,6 +1608,236 @@ protected:
 //*****************************************************************************
 //*****************************************************************************
 //
+// [AK] DrawMedals
+//
+// Draws all the medals that the player has earned.
+//
+//*****************************************************************************
+//*****************************************************************************
+
+class DrawMedals : public DrawBaseCommand
+{
+public:
+	DrawMedals( ScoreMargin *margin, BaseCommand *parentCommand ) : DrawBaseCommand( margin, parentCommand, COMMAND_MEDALS ),
+		font( SmallFont ),
+		color( CR_UNTRANSLATED ),
+		numColumns( 0 ),
+		currentWidth( 0 ),
+		currentHeight( 0 ),
+		maxWidth( 0 ),
+		maxColumnWidth( 0 ),
+		maxRowHeight( 0 ),
+		columnGap( 0 ),
+		rowGap( 0 ),
+		textSpacing( 0 ) { }
+
+	//*************************************************************************
+	//
+	// [AK] Determines the width and height to use, and how many columns and
+	// rows are needed to draw all of the earned medals.
+	//
+	//*************************************************************************
+
+	virtual void Refresh( const ULONG displayPlayer )
+	{
+		const unsigned int maxWidthToUse = MIN<unsigned>( maxWidth, pParentMargin->GetWidth( ));
+		FString quantityText;
+
+		MEDAL_RetrieveAwardedMedals( displayPlayer, medalList );
+
+		numColumns = currentWidth = currentHeight = 0;
+		maxColumnWidth = maxRowHeight = 0;
+
+		if ( medalList.Size( ) == 0 )
+			return;
+
+		// [AK] Determine the largest column width and row height to use, based
+		// on the size of the icons of the medals the player has earned.
+		for ( unsigned int i = 0; i < medalList.Size( ); i++ )
+		{
+			FTexture *icon = TexMan[medalList[i]->icon];
+
+			if ( icon != nullptr )
+			{
+				maxColumnWidth = MAX<unsigned>( maxColumnWidth, icon->GetScaledWidth( ));
+
+				// [AK] It's possible that the quantity of the medal in printed
+				// form is wider than the icon, so it must also be considered.
+				quantityText.Format( "%u", medalList[i]->awardedCount[displayPlayer] );
+				maxColumnWidth = MAX<unsigned>( maxColumnWidth, font->StringWidth( quantityText.GetChars( )));
+
+				maxRowHeight = MAX<unsigned>( maxRowHeight, icon->GetScaledHeight( ));
+			}
+		}
+
+		if (( maxColumnWidth == 0 ) || ( maxColumnWidth > maxWidthToUse ) || ( maxRowHeight == 0 ))
+			return;
+
+		// [AK] Determine the width to use to draw all the medals.
+		while ( true )
+		{
+			unsigned int newCurrentWidth = currentWidth + maxColumnWidth;
+
+			if ( currentWidth > 0 )
+				newCurrentWidth += columnGap;
+
+			if ( newCurrentWidth > maxWidthToUse )
+				break;
+
+			currentWidth = newCurrentWidth;
+
+			if ( ++numColumns >= medalList.Size( ))
+				break;
+		}
+
+		// [AK] Next, determine the height to use to draw all the medals.
+		const unsigned int numRows = static_cast<unsigned>( ceilf( static_cast<float>( medalList.Size( )) / numColumns ));
+		currentHeight = ( maxRowHeight + font->GetHeight( ) + textSpacing ) * numRows + rowGap + ( numRows - 1 );
+
+		DrawBaseCommand::Refresh( displayPlayer );
+	}
+
+	//*************************************************************************
+	//
+	// [AK] Draws all of the earned medals and their quantities.
+	//
+	//*************************************************************************
+
+	virtual void Draw( const ULONG displayPlayer, const ULONG team, const LONG yPos, const float alpha, const LONG xOffsetBonus ) const
+	{
+		if (( medalList.Size( ) == 0 ) || ( currentWidth == 0 ) || ( currentHeight == 0 ))
+			return;
+
+		const TVector2<LONG> startPos = GetDrawingPosition( currentWidth, currentHeight, xOffsetBonus );
+		const fixed_t combinedAlpha = FLOAT2FIXED( alpha * fTranslucency );
+
+		TVector2<LONG> currentPos = startPos;
+
+		for ( unsigned int i = 0; i < medalList.Size( ); i++ )
+		{
+			FTexture *icon = TexMan[medalList[i]->icon];
+			FString quantityText;
+
+			if ( icon != nullptr )
+			{
+				const int iconX = currentPos.X + ( maxColumnWidth - icon->GetScaledWidth( )) / 2;
+				const int iconY = currentPos.Y + yPos + ( maxRowHeight - icon->GetScaledHeight( )) / 2;
+
+				SCOREBOARD_DrawTexture( icon, iconX, iconY, 1.0f,
+					DTA_LeftOffset, 0,
+					DTA_TopOffset, 0,
+					DTA_Alpha, combinedAlpha,
+					TAG_DONE );
+			}
+
+			quantityText.Format( "%u", medalList[i]->awardedCount[displayPlayer] );
+			const int textX = currentPos.X + ( maxColumnWidth - font->StringWidth( quantityText.GetChars( ))) / 2;
+			const int textY = currentPos.Y + yPos + maxRowHeight + textSpacing;
+
+			SCOREBOARD_DrawString( font, color, textX, textY, quantityText.GetChars( ), DTA_Alpha, combinedAlpha, TAG_DONE );
+
+			// [AK] Start a new row when enough medals are drawn on one row.
+			if (( i + 1 ) % numColumns == 0 )
+			{
+				const HORIZALIGN_e alignmentToUse = GetHorizontalAlignment( );
+				const unsigned int numColumnsInNextRow = MIN<unsigned>( medalList.Size( ) - ( i + 1 ), numColumns );
+
+				currentPos.X = startPos.X;
+
+				// [AK] Adjust the alignment of the next row if there's going to
+				// less medals on that row than the max number of columns.
+				if (( numColumnsInNextRow > 0 ) && ( numColumnsInNextRow < numColumns ) && ( alignmentToUse != HORIZALIGN_LEFT ))
+				{
+					const unsigned int rowWidth = maxColumnWidth * numColumnsInNextRow + columnGap * ( numColumnsInNextRow - 1 );
+
+					if ( alignmentToUse == HORIZALIGN_CENTER )
+						currentPos.X += ( currentWidth - rowWidth ) / 2;
+					else
+						currentPos.X += currentWidth - rowWidth;
+				}
+
+				currentPos.Y += maxRowHeight + font->GetHeight( ) + textSpacing + rowGap;
+			}
+			else
+			{
+				currentPos.X += maxColumnWidth + columnGap;
+			}
+		}
+	}
+
+	//*************************************************************************
+	//
+	// [AK] Gets the total width/height to draw all of the earned medals.
+	//
+	//*************************************************************************
+
+	virtual ULONG GetContentWidth( const ULONG team ) const { return currentWidth; }
+	virtual ULONG GetContentHeight( const ULONG team ) const { return currentHeight; }
+
+protected:
+
+	//*************************************************************************
+	//
+	// [AK] Parses the font, text color, max width, or gaps, or parses any
+	// parameters from the DrawBaseCommand class.
+	//
+	//*************************************************************************
+
+	virtual void ParseParameter( FScanner &sc, const FName parameterName, const PARAMETER_e parameter )
+	{
+		switch ( parameter )
+		{
+			case PARAMETER_FONT:
+				SCOREBOARD_ParseFont( sc, font );
+				break;
+
+			case PARAMETER_TEXTCOLOR:
+				SCOREBOARD_ParseTextColor( sc, color );
+				break;
+
+			case PARAMETER_MAXWIDTH:
+			case PARAMETER_COLUMNGAP:
+			case PARAMETER_ROWGAP:
+			case PARAMETER_TEXTSPACING:
+			{
+				sc.MustGetToken( TK_IntConst );
+				const unsigned int value = MAX( sc.Number, 0 );
+
+				if ( parameter == PARAMETER_MAXWIDTH )
+					maxWidth = value;
+				else if ( parameter == PARAMETER_COLUMNGAP )
+					columnGap = value;
+				else if ( parameter == PARAMETER_ROWGAP )
+					rowGap = value;
+				else
+					textSpacing = value;
+
+				break;
+			}
+
+			default:
+				DrawBaseCommand::ParseParameter( sc, parameterName, parameter );
+				break;
+		}
+	}
+
+	TArray<MEDAL_t *> medalList;
+	FFont *font;
+	EColorRange color;
+	unsigned int numColumns;
+	unsigned int currentWidth;
+	unsigned int currentHeight;
+	unsigned int maxWidth;
+	unsigned int maxColumnWidth;
+	unsigned int maxRowHeight;
+	unsigned int columnGap;
+	unsigned int rowGap;
+	unsigned int textSpacing;
+};
+
+//*****************************************************************************
+//*****************************************************************************
+//
 // [AK] FlowControlBaseCommand
 //
 // An abstract class for all margin commands that evaluate a condition, which
@@ -1803,6 +2047,7 @@ public:
 			case MARGINCMD_IFSPYING:
 			case MARGINCMD_IFSPECTATOR:
 			case MARGINCMD_IFDEADSPECTATOR:
+			case MARGINCMD_IFPLAYERHASMEDALS:
 				break;
 
 			default:
@@ -1889,6 +2134,15 @@ protected:
 			case MARGINCMD_IFDEADSPECTATOR:
 				bValue = players[consoleplayer].bDeadSpectator;
 				break;
+
+			case MARGINCMD_IFPLAYERHASMEDALS:
+			{
+				TArray<MEDAL_t *> medalList;
+
+				MEDAL_RetrieveAwardedMedals( ulDisplayPlayer, medalList );
+				bValue = ( medalList.Size( ) > 0 );
+				break;
+			}
 
 			default:
 				break;
@@ -2764,6 +3018,15 @@ static ScoreMargin::BaseCommand *scoreboard_CreateMarginCommand( FScanner &sc, S
 			pNewCommand = new DrawTexture( pMargin, pParentCommand );
 			break;
 
+		case MARGINCMD_DRAWMEDALS:
+		{
+			if ( pMargin->GetType( ) != MARGINTYPE_HEADER_OR_FOOTER )
+				sc.ScriptError( "Margin command '%s' can only be used in the main header or footer.", sc.String );
+
+			pNewCommand = new DrawMedals( pMargin, pParentCommand );
+			break;
+		}
+
 		case MARGINCMD_IFONLINEGAME:
 		case MARGINCMD_IFINTERMISSION:
 		case MARGINCMD_IFPLAYERSONTEAMS:
@@ -2772,6 +3035,7 @@ static ScoreMargin::BaseCommand *scoreboard_CreateMarginCommand( FScanner &sc, S
 		case MARGINCMD_IFSPYING:
 		case MARGINCMD_IFSPECTATOR:
 		case MARGINCMD_IFDEADSPECTATOR:
+		case MARGINCMD_IFPLAYERHASMEDALS:
 			pNewCommand = new TrueOrFalseFlowControl( pMargin, pParentCommand, Command );
 			break;
 
