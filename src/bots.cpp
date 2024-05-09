@@ -2123,10 +2123,20 @@ void CSkullBot::Tick( void )
 //
 void CSkullBot::EndTick( void )
 {
-	if ( m_bForwardMovePersist )
-		m_pPlayer->cmd.ucmd.forwardmove = static_cast<short> ( m_lForwardMove << 8 );
-	if ( m_bSideMovePersist )
-		m_pPlayer->cmd.ucmd.sidemove = static_cast<short> ( m_lSideMove << 8 );
+	// [AK] Don't allow the bot to move while frozen.
+	if (( m_pPlayer->cheats & CF_FROZEN ) == false )
+	{
+		if ( m_bForwardMovePersist )
+			m_pPlayer->cmd.ucmd.forwardmove = static_cast<short>( m_lForwardMove << 8 );
+
+		if ( m_bSideMovePersist )
+			m_pPlayer->cmd.ucmd.sidemove = static_cast<short>( m_lSideMove << 8 );
+	}
+	else
+	{
+		m_pPlayer->cmd.ucmd.forwardmove = m_pPlayer->cmd.ucmd.sidemove = 0;
+	}
+
 	m_pPlayer->cmd.ucmd.buttons |= m_lButtons;
 
 	g_BotCycles.Unclock();
