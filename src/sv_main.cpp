@@ -1781,7 +1781,6 @@ void SERVER_DetermineConnectionType( BYTESTREAM_s *pByteStream )
 	ULONG	ulTime;
 	LONG	lCommand;
 	ULONG   ulFlags2 = 0; // [SB] extended flags
-	bool    bSendSegmentedResponse = false;
 
 	// If either this IP is in our flood protection queue, or the queue is full (DOS), ignore the request.
 	if ( g_floodProtectionIPQueue.isFull( ) || g_floodProtectionIPQueue.addressInQueue( NETWORK_GetFromAddress( )))
@@ -1826,7 +1825,6 @@ void SERVER_DetermineConnectionType( BYTESTREAM_s *pByteStream )
 			return;
 		// Launcher is querying this server.
 		case LAUNCHER_SERVER_CHALLENGE:
-		case LAUNCHER_SERVER_SEGMENTED_CHALLENGE: // [SB]
 
 			// Read in three more bytes, because it was a long that was sent to us.
 			pByteStream->ReadByte();
@@ -1839,34 +1837,15 @@ void SERVER_DetermineConnectionType( BYTESTREAM_s *pByteStream )
 			// Read in the time the launcher sent us.
 			ulTime = pByteStream->ReadLong();
 
-			if ( lCommand == LAUNCHER_SERVER_SEGMENTED_CHALLENGE )
-			{
-				bSendSegmentedResponse = true;
-
-				// [SB] Read the extended flags, if any were sent.
-				if ( ulFlags & SQF_EXTENDED_INFO )
-					ulFlags2 = pByteStream->ReadLong();
-			}
-			else
-			{
-				// [SB] read extended flags
-				if ( ulFlags & SQF_EXTENDED_INFO )
-					ulFlags2 = pByteStream->ReadLong();
-
-				// [SB] Check if the launcher wants a segmented response.
-				if ( pByteStream->pbStream + 1 <= pByteStream->pbStreamEnd )
-					bSendSegmentedResponse = pByteStream->ReadByte() == 1;
-			}
+			// [SB] read extended flags
+			if ( ulFlags & SQF_EXTENDED_INFO )
+				ulFlags2 = pByteStream->ReadLong();
 
 			// Received launcher query!
 			if ( sv_showlauncherqueries )
-				Printf( "Launcher challenge%s%s from: %s\n",
-					lCommand == LAUNCHER_SERVER_CHALLENGE ? " (old)" : "",
-					bSendSegmentedResponse ? " (segmented)" : "",
-					NETWORK_GetFromAddress().ToString() 
-				);
+				Printf( "Launcher challenge from: %s\n", NETWORK_GetFromAddress().ToString() );
 
-			SERVER_MASTER_SendServerInfo( NETWORK_GetFromAddress( ), ulTime, ulFlags, ulFlags2, bSendSegmentedResponse, false );
+			SERVER_MASTER_SendServerInfo( NETWORK_GetFromAddress( ), ulFlags, ulTime, ulFlags2, false );
 			return;
 		// [RC] Master server is sending us the holy banlist.
 		case MASTER_SERVER_BANLIST:
