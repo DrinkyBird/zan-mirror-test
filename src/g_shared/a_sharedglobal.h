@@ -191,6 +191,9 @@ public:
 	LONG lTick;
 	bool bTeamItemFloatyIcon;
 	unsigned int currentSprite;
+
+protected:
+	void CopyTracerTranslucency( );
 };
 
 class DEarthquake : public DThinker
