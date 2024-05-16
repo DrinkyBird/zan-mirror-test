@@ -2983,33 +2983,32 @@ bool PLAYER_IsTrueSpectator( player_t *pPlayer )
 
 //*****************************************************************************
 //
-void PLAYER_CheckStruckPlayer( AActor *pActor )
+void PLAYER_CheckStruckPlayer( AActor *actor )
 {
-	if ( pActor && pActor->player )
-	{
-		if ( pActor->player->bStruckPlayer )
-			PLAYER_StruckPlayer( pActor->player );
-		else
-			pActor->player->ulConsecutiveHits = 0;
-	}
-}
-
-//*****************************************************************************
-//
-void PLAYER_StruckPlayer( player_t *pPlayer )
-{
-	if ( NETWORK_InClientMode() )
+	if ( NETWORK_InClientMode( ))
 		return;
 
-	pPlayer->ulConsecutiveHits++;
+	if (( actor != nullptr ) && ( actor->player != nullptr ))
+	{
+		player_t *player = actor->player;
 
-	// If the player has made 5 straight consecutive hits with a weapon, award a medal.
-	// Award a "Precision" medal if they made 10+ consecutive hits. Otherwise, award an "Accuracy" medal.
-	if (( pPlayer->ulConsecutiveHits % 5 ) == 0 )
-		MEDAL_GiveMedal( pPlayer - players, pPlayer->ulConsecutiveHits >= 10 ? MEDAL_PRECISION : MEDAL_ACCURACY );
+		if ( player->bStruckPlayer )
+		{
+			player->ulConsecutiveHits++;
 
-	// Reset the struck player flag.
-	pPlayer->bStruckPlayer = false;
+			// If the player has made 5 straight consecutive hits with a weapon, award a medal.
+			// Award a "Precision" medal if they made 10+ consecutive hits. Otherwise, award an "Accuracy" medal.
+			if (( player->ulConsecutiveHits % 5 ) == 0 )
+				MEDAL_GiveMedal( player - players, player->ulConsecutiveHits >= 10 ? MEDAL_PRECISION : MEDAL_ACCURACY );
+
+			// Reset the struck player flag.
+			player->bStruckPlayer = false;
+		}
+		else
+		{
+			player->ulConsecutiveHits = 0;
+		}
+	}
 }
 
 //*****************************************************************************
