@@ -71,10 +71,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_Punch)
 	// [BC] If the player hit a player with his attack, potentially give him a medal.
 	if ( self->player )
 	{
-		if ( self->player->bStruckPlayer )
-			PLAYER_StruckPlayer( self->player );
-		else
-			self->player->ulConsecutiveHits = 0;
+		PLAYER_CheckStruckPlayer( self );
 
 		// Tell all the bots that a weapon was fired.
 		BOTS_PostWeaponFiredEvent( ULONG( self->player - players ), BOTEVENT_USEDFIST, BOTEVENT_ENEMY_USEDFIST, BOTEVENT_PLAYER_USEDFIST );
@@ -176,10 +173,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FirePistol)
 	// [BC] If the player hit a player with his attack, potentially give him a medal.
 	if ( actor->player )
 	{
-		if ( actor->player->bStruckPlayer )
-			PLAYER_StruckPlayer( actor->player );
-		else
-			actor->player->ulConsecutiveHits = 0;
+		PLAYER_CheckStruckPlayer( actor );
 
 		// Tell all the bots that a weapon was fired.
 		BOTS_PostWeaponFiredEvent( ULONG( actor->player - players ), BOTEVENT_FIREDPISTOL, BOTEVENT_ENEMY_FIREDPISTOL, BOTEVENT_PLAYER_FIREDPISTOL );
@@ -275,10 +269,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_Saw)
 	}
 
 	// [BC] If the player hit a player with his attack, potentially give him a medal.
-	if ( self->player->bStruckPlayer )
-		PLAYER_StruckPlayer( self->player );
-	else
-		self->player->ulConsecutiveHits = 0;
+	PLAYER_CheckStruckPlayer( self );
 
 	// [BC] If we're the server, tell clients that a weapon is being fired.
 //	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
@@ -422,10 +413,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireShotgun)
 	}
 
 	// [BC] If the player hit a player with his attack, potentially give him a medal.
-	if ( player->bStruckPlayer )
-		PLAYER_StruckPlayer( player );
-	else
-		player->ulConsecutiveHits = 0;
+	PLAYER_CheckStruckPlayer( self );
 
 	// [BC] Tell all the bots that a weapon was fired.
 	BOTS_PostWeaponFiredEvent( ULONG( player - players ), BOTEVENT_FIREDSHOTGUN, BOTEVENT_ENEMY_FIREDSHOTGUN, BOTEVENT_PLAYER_FIREDSHOTGUN );
@@ -517,10 +505,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireShotgun2)
 		return;
 
 	// [BC] If the player hit a player with his attack, potentially give him a medal.
-	if ( player->bStruckPlayer )
-		PLAYER_StruckPlayer( player );
-	else
-		player->ulConsecutiveHits = 0;
+	PLAYER_CheckStruckPlayer( self );
 
 	// [BC] Tell all the bots that a weapon was fired.
 	BOTS_PostWeaponFiredEvent( ULONG( player - players ), BOTEVENT_FIREDSSG, BOTEVENT_ENEMY_FIREDSSG, BOTEVENT_PLAYER_FIREDSSG );
@@ -714,10 +699,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireCGun)
 	}
 
 	// [BC] If the player hit a player with his attack, potentially give him a medal.
-	if ( player->bStruckPlayer )
-		PLAYER_StruckPlayer( player );
-	else
-		player->ulConsecutiveHits = 0;
+	PLAYER_CheckStruckPlayer( self );
 
 	// [BC] Tell all the bots that a weapon was fired.
 	BOTS_PostWeaponFiredEvent( ULONG( player - players ), BOTEVENT_FIREDCHAINGUN, BOTEVENT_ENEMY_FIREDCHAINGUN, BOTEVENT_PLAYER_FIREDCHAINGUN );

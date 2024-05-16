@@ -1636,10 +1636,7 @@ void A_CustomFireBullets( AActor *self,
 	}
 
 	// [BB] If the player hit a player with his attack, potentially give him a medal.
-	if ( player->bStruckPlayer )
-		PLAYER_StruckPlayer( player );
-	else
-		player->ulConsecutiveHits = 0;
+	PLAYER_CheckStruckPlayer( self );
 
 	// [BB] Tell all the bots that a weapon was fired.
 	// This is more or less a hack, so that the bots are notified when the
