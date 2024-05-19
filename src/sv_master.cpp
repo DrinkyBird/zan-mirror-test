@@ -93,6 +93,7 @@ static	NETADDRESS_s		g_AddressMasterServer;
 
 // Message buffer for sending messages to the master server.
 static	NETBUFFER_s			g_MasterServerBuffer;
+static	NETBUFFER_s			g_SegmentBuffer;
 
 // Port the master server is located on.
 static	USHORT				g_usMasterPort;
@@ -547,6 +548,10 @@ void SERVER_MASTER_Construct( void )
 	g_MasterServerBuffer.Init( MAX_UDP_PACKET, BUFFERTYPE_WRITE );
 	g_MasterServerBuffer.Clear();
 
+	// [SB] Buffer for assembling segments.
+	g_SegmentBuffer.Init( MAX_UDP_PACKET, BUFFERTYPE_WRITE );
+	g_SegmentBuffer.Clear();
+
 	// Allow the user to specify which port the master server is on.
 	pszPort = Args->CheckValue( "-masterport" );
     if ( pszPort )
@@ -686,14 +691,14 @@ void SERVER_MASTER_Broadcast( void )
 #endif
 
 	// Broadcast our packet.
-	SERVER_MASTER_SendServerInfo( AddressBroadcast, SQF_ALL, 0, SQF2_ALL, true );
+	SERVER_MASTER_SendServerInfo( AddressBroadcast, SQF_ALL, 0, SQF2_ALL, true, false );
 //	NETWORK_WriteLong( &g_MasterServerBuffer, MASTER_CHALLENGE );
 //	NETWORK_LaunchPacket( g_MasterServerBuffer, AddressBroadcast, true );
 }
 
 //*****************************************************************************
 //
-void SERVER_MASTER_SendServerInfo( NETADDRESS_s Address, ULONG ulFlags, ULONG ulTime, ULONG ulFlags2, bool bBroadcasting )
+void SERVER_MASTER_SendServerInfo( NETADDRESS_s Address, ULONG ulFlags, ULONG ulTime, ULONG ulFlags2, bool bBroadcasting, bool bSegmentedResponse )
 {
 	IPStringArray szAddress;
 	ULONG		ulIdx;
@@ -769,7 +774,11 @@ void SERVER_MASTER_SendServerInfo( NETADDRESS_s Address, ULONG ulFlags, ULONG ul
 	}
 
 	// Write our header.
-	g_MasterServerBuffer.ByteStream.WriteLong( SERVER_LAUNCHER_CHALLENGE );
+	// [SB] But skip the response code in the segmented response as it's unneeded.
+	if ( !bSegmentedResponse )
+	{
+		g_MasterServerBuffer.ByteStream.WriteLong( SERVER_LAUNCHER_CHALLENGE );
+	}
 
 	// Send the time the launcher sent to us.
 	g_MasterServerBuffer.ByteStream.WriteLong( ulTime );
@@ -865,7 +874,48 @@ void SERVER_MASTER_SendServerInfo( NETADDRESS_s Address, ULONG ulFlags, ULONG ul
 		}
 	}
 
-	NETWORK_LaunchPacket( &g_MasterServerBuffer, Address );
+	// [SB] Handle a segmented response.
+	if ( bSegmentedResponse )
+	{
+		// [SB] Size of the segment header, as written in the loop below.
+		constexpr LONG segmentHeaderSize = 12;
+
+		const LONG sourceBufferSize = g_MasterServerBuffer.CalcSize();
+		const LONG segmentMaxSize = static_cast<LONG>( sv_maxpacketsize ) - segmentHeaderSize;
+		const LONG numSegments = static_cast<LONG>( std::ceil( static_cast<double>( sourceBufferSize ) / static_cast<double>( segmentMaxSize ) ) );
+
+		LONG segmentNumber = 0;
+		LONG offset = 0;
+
+		// [SB] Now assemble segments until we've exhausted the buffer.
+		while ( offset < sourceBufferSize )
+		{
+			// [SB] (std::min) prevents macro expansion of min.
+			const LONG readSize = (std::min)( segmentMaxSize, sourceBufferSize - offset );
+
+			g_SegmentBuffer.Clear();
+
+			// [SB] segmentHeaderSize must be equal to the byte size of this header, including the challenge.
+			g_SegmentBuffer.ByteStream.WriteLong( SERVER_LAUNCHER_CHALLENGE_SEGMENTED );
+			g_SegmentBuffer.ByteStream.WriteByte( segmentNumber );
+			g_SegmentBuffer.ByteStream.WriteByte( numSegments );
+			g_SegmentBuffer.ByteStream.WriteShort( offset );
+			g_SegmentBuffer.ByteStream.WriteShort( readSize );
+			g_SegmentBuffer.ByteStream.WriteShort( sourceBufferSize );
+
+			// [SB] Read from the master buffer directly into the segment buffer.
+			memcpy( g_SegmentBuffer.ByteStream.pbStream, g_MasterServerBuffer.pbData + offset, readSize );
+			offset += readSize;
+			g_SegmentBuffer.ByteStream.pbStream += readSize;
+
+			NETWORK_LaunchPacket( &g_SegmentBuffer, Address );
+			segmentNumber++;
+		}
+	}
+	else
+	{
+		NETWORK_LaunchPacket( &g_MasterServerBuffer, Address );
+	}
 }
 
 //*****************************************************************************

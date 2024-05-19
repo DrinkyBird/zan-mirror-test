@@ -1781,6 +1781,7 @@ void SERVER_DetermineConnectionType( BYTESTREAM_s *pByteStream )
 	ULONG	ulTime;
 	LONG	lCommand;
 	ULONG   ulFlags2 = 0; // [SB] extended flags
+	bool	bSendSegmentedResponse = false; // [SB]
 
 	// If either this IP is in our flood protection queue, or the queue is full (DOS), ignore the request.
 	if ( g_floodProtectionIPQueue.isFull( ) || g_floodProtectionIPQueue.addressInQueue( NETWORK_GetFromAddress( )))
@@ -1841,11 +1842,17 @@ void SERVER_DetermineConnectionType( BYTESTREAM_s *pByteStream )
 			if ( ulFlags & SQF_EXTENDED_INFO )
 				ulFlags2 = pByteStream->ReadLong();
 
+			// [SB] Handle a special '2' byte as a request for a segmented response.
+			if ( pByteStream->pbStream + 1 <= pByteStream->pbStreamEnd )
+			{
+				bSendSegmentedResponse = pByteStream->ReadByte() == 2;
+			}
+
 			// Received launcher query!
 			if ( sv_showlauncherqueries )
 				Printf( "Launcher challenge from: %s\n", NETWORK_GetFromAddress().ToString() );
 
-			SERVER_MASTER_SendServerInfo( NETWORK_GetFromAddress( ), ulFlags, ulTime, ulFlags2, false );
+			SERVER_MASTER_SendServerInfo( NETWORK_GetFromAddress( ), ulFlags, ulTime, ulFlags2, false, bSendSegmentedResponse );
 			return;
 		// [RC] Master server is sending us the holy banlist.
 		case MASTER_SERVER_BANLIST:
