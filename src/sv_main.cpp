@@ -6102,73 +6102,74 @@ ClientMoveCommand::ClientMoveCommand ( BYTESTREAM_s *pByteStream )
 		moveCmd.usWeaponNetworkIndex = 0;
 }
 
-bool ClientMoveCommand::process( const ULONG ulClient ) const
+bool ClientMoveCommand::process( const ULONG clientIndex ) const
 {
-	player_t *pPlayer = &players[ulClient];
-	ticcmd_t *pCmd = &pPlayer->cmd;
-	memcpy( pCmd, &moveCmd, sizeof( ticcmd_t ));
+	CLIENT_s *client = SERVER_GetClient( clientIndex );
+	player_t *player = &players[clientIndex];
+	ticcmd_t *cmd = &player->cmd;
+	memcpy( cmd, &moveCmd, sizeof( ticcmd_t ));
 
-	g_aClients[ulClient].ulClientGameTic = moveCmd.ulGametic;
+	client->ulClientGameTic = moveCmd.ulGametic;
 	// Important: We should only accept their update if it's less than or equal
 	// to ours. The clients should never send a larger gametic unless they're
 	// hacking the data or something has become corrupt.
 	// We also will only accept newer gametics to prevent clients from going
 	// back in time and attempting to cheat with stale states.
-	if ( ( moveCmd.ulServerGametic <= unsigned ( gametic ) ) && ( unsigned ( g_aClients[ulClient].lLastServerGametic ) < moveCmd.ulServerGametic ) )
-		g_aClients[ulClient].lLastServerGametic = moveCmd.ulServerGametic; // [CK] Use the gametic from what we saw
+	if (( moveCmd.ulServerGametic <= static_cast<unsigned>( gametic )) && ( static_cast<unsigned>( client->lLastServerGametic ) < moveCmd.ulServerGametic ))
+		client->lLastServerGametic = moveCmd.ulServerGametic; // [CK] Use the gametic from what we saw
 
 	// If the client is attacking, he always sends the name of the weapon he's using.
 	// [AK] Only do this when we're not extrapolating this player's movement.
-	if (( pCmd->ucmd.buttons & BT_ATTACK ) && ( SERVER_IsExtrapolatingPlayer( ulClient ) == false ))
+	if (( cmd->ucmd.buttons & BT_ATTACK ) && ( SERVER_IsExtrapolatingPlayer( clientIndex ) == false ))
 	{
 		// If the name of the weapon the client is using doesn't match the name of the
 		// weapon we think he's using, do something to rectify the situation.
 		// [BB] Only do this if the client is fully spawned and authenticated.
-		if ( ( SERVER_GetClient( ulClient )->State == CLS_SPAWNED ) && ( ( pPlayer->ReadyWeapon == NULL ) || ( pPlayer->ReadyWeapon->GetClass( )->getActorNetworkIndex() != moveCmd.usWeaponNetworkIndex ) ) )
+		if (( client->State == CLS_SPAWNED ) && (( player->ReadyWeapon == nullptr ) || ( player->ReadyWeapon->GetClass( )->getActorNetworkIndex( ) != moveCmd.usWeaponNetworkIndex )))
 		{
 			// [BB] Directly after a map change this workaround seems to do more harm than good,
 			// (client and server are possibly changing weapons and one of them is slightly ahead)
 			// so don't use it when the level just started. The inventory reset that the server does
 			// on the clients after a map change most likely has to do with this slight sync issues.
 			// [BB] Do this anyway if the server thinks that the player doesn't have any weapon.
-			if ( ( level.maptime > 3*TICRATE )
-				|| ( ( SERVER_GetClient( ulClient )->State == CLS_SPAWNED ) && ( pPlayer->ReadyWeapon == NULL ) && ( pPlayer->PendingWeapon == WP_NOCHANGE ) ) )
+			if (( level.maptime > 3 * TICRATE ) || (( client->State == CLS_SPAWNED ) && ( player->ReadyWeapon == nullptr ) && ( player->PendingWeapon == WP_NOCHANGE )))
 			{
-				const PClass *pType = NETWORK_GetClassFromIdentification( moveCmd.usWeaponNetworkIndex );
-				if (( pType ) && ( pType->IsDescendantOf( RUNTIME_CLASS( AWeapon ))))
+				const PClass *type = NETWORK_GetClassFromIdentification( moveCmd.usWeaponNetworkIndex );
+				if (( type ) && ( type->IsDescendantOf( RUNTIME_CLASS( AWeapon ))))
 				{
-					if ( pPlayer->mo )
+					if ( player->mo )
 					{
-						AInventory *pInventory = pPlayer->mo->FindInventory( pType );
-						if ( pInventory )
+						AInventory *inventory = player->mo->FindInventory( type );
+						if ( inventory )
 						{
-							pPlayer->PendingWeapon = static_cast<AWeapon *>( pInventory );
+							player->PendingWeapon = static_cast<AWeapon *>( inventory );
 							// [BB] Since the client tells us that he is attacking with this weapon,
 							// we can assume this to be client selected.
-							pPlayer->bClientSelectedWeapon = true;
+							player->bClientSelectedWeapon = true;
 
 							// Update other spectators with this info.
-							SERVERCOMMANDS_SetPlayerPendingWeapon( ulClient, ulClient, SVCF_SKIPTHISCLIENT );
+							SERVERCOMMANDS_SetPlayerPendingWeapon( clientIndex, clientIndex, SVCF_SKIPTHISCLIENT );
 						}
 //						else if ( g_ulWeaponCheckGracePeriodTicks == 0 )
 //						{
-//							SERVER_KickPlayer( ulClient, "Using unowned weapon." );
+//							SERVER_KickPlayer( clientIndex, "Using unowned weapon." );
 //							return ( true );
 //						}
 					}
 				}
 				else
 				{
-					if( moveCmd.usWeaponNetworkIndex == 0 )
+					if ( moveCmd.usWeaponNetworkIndex == 0 )
 					{
 						// [BB] For some reason the clients think he as no ready weapon, 
 						// but the server thinks he as one. Although this should not happen,
 						// we make a workaround for this here. Just tell the client to bring
 						// up the weapon, the server thinks he is using.
-						SERVERCOMMANDS_WeaponChange( ulClient, ulClient, SVCF_ONLYTHISCLIENT );
+						SERVERCOMMANDS_WeaponChange( clientIndex, clientIndex, SVCF_ONLYTHISCLIENT );
 					}
-					else{
-						SERVER_KickPlayer( ulClient, "Using unknown weapon type." );
+					else
+					{
+						SERVER_KickPlayer( clientIndex, "Using unknown weapon type." );
 						return ( true );
 					}
 				}
@@ -6178,73 +6179,67 @@ bool ClientMoveCommand::process( const ULONG ulClient ) const
 
 	// [BB] Instead of kicking players that send too many movement commands, we just ignroe the excessive commands.
 	// Note: The kick code is still there, but isn't triggered anymore since we are reducing lOverMovementLevel here.
-	if ( g_aClients[ulClient].lOverMovementLevel >= MAX_OVERMOVEMENT_LEVEL )
+	if ( client->lOverMovementLevel >= MAX_OVERMOVEMENT_LEVEL )
 	{
-		g_aClients[ulClient].lOverMovementLevel = MAX_OVERMOVEMENT_LEVEL - 1;
+		client->lOverMovementLevel = MAX_OVERMOVEMENT_LEVEL - 1;
 		return false;
 	}
 
 	if ( gamestate == GS_LEVEL )
 	{
-		if ( pPlayer->mo )
+		if ( player->mo )
 		{
 			// We already processed a movement command this tic.
-			if ( g_aClients[ulClient].lLastMoveTickProcess == gametic )
+			if ( client->lLastMoveTickProcess == gametic )
 			{
 				// [Leo] We have no choice left but to tick the body now.
-				pPlayer->mo->Tick( );
+				player->mo->Tick( );
 
 				// [EP] Make sure that the server sets the proper player psprite settings before running the psprite-events from this client command.
-				P_NewPspriteTick( pPlayer );
+				P_NewPspriteTick( player );
 			}
 
 			// [BB] Ignore the angle and pitch sent by the client if the client isn't authenticated yet.
 			// In this case the client still sends these values based on the previous map.
-			if (SERVER_GetClient(ulClient)->State == CLS_SPAWNED) {
-				pPlayer->mo->pitch = moveCmd.pitch;
+			if ( client->State == CLS_SPAWNED )
+			{
+				player->mo->pitch = moveCmd.pitch;
+
 				// [HYP] Lock angle if speed is above sr40
-				if ( !sv_cheats && ( pCmd->ucmd.sidemove > ( sidemove[1] << 8 ) || pCmd->ucmd.sidemove < -(sidemove[1] << 8) ) )
-				{
-					pCmd->ucmd.yaw = 0;
-				}
+				if ( !sv_cheats && ( cmd->ucmd.sidemove > ( sidemove[1] << 8 ) || cmd->ucmd.sidemove < -( sidemove[1] << 8 )))
+					cmd->ucmd.yaw = 0;
 				else //only update angle if speed is at or below sr40, disregard angle changes for speeds above
-				{
-					pPlayer->mo->angle = moveCmd.angle;
-				}
+					player->mo->angle = moveCmd.angle;
 			}
 
 			// Makes sure the pitch is valid (should we kick them if it's not?)
-			if ( pPlayer->mo->pitch < ( -ANGLE_1 * 90 ))
-				pPlayer->mo->pitch = -ANGLE_1*90;
-			else if ( pPlayer->mo->pitch > ( ANGLE_1 * 90 ))
-				pPlayer->mo->pitch = ( ANGLE_1 * 90 );
+			if ( player->mo->pitch < ( -ANGLE_1 * 90 ))
+				player->mo->pitch = -ANGLE_1*90;
+			else if ( player->mo->pitch > ( ANGLE_1 * 90 ))
+				player->mo->pitch = ( ANGLE_1 * 90 );
 
-			P_PlayerThink( pPlayer );
+			P_PlayerThink( player );
 
 			// P_PlayerThink was called this tic, this is used to tick the body afterwards.
-			g_aClients[ulClient].lLastMoveTickProcess = gametic;
+			client->lLastMoveTickProcess = gametic;
 
 			// [BB] We possibly process more than one move of this client per tic,
 			// so we have to update oldbuttons (otherwise a door that just started to
 			// open will be closed immediately again, looking as if it didn't move at all).
-			pPlayer->oldbuttons = pPlayer->cmd.ucmd.buttons;
+			player->oldbuttons = player->cmd.ucmd.buttons;
 		}
 	}
 
 	// If the player is doing stuff, then obviously he is no longer chatting.
-
 	// [RC] This actually isn't necessarily true. By using a joystick, a player can both move and chat.
 	// I'm not going to change it though, because since they can move, they shouldn't be protected by the llama medal. Also, it'd confuse people.
 	// [WS] I agree with Rive's statement above and we need the same treatment for the console status.
-	if (( pCmd->ucmd.buttons != 0 ) ||
-		( pCmd->ucmd.forwardmove != 0 ) ||
-		( pCmd->ucmd.sidemove != 0 ) ||
-		( pCmd->ucmd.upmove != 0 ))
+	if (( cmd->ucmd.buttons != 0 ) || ( cmd->ucmd.forwardmove != 0 ) || ( cmd->ucmd.sidemove != 0 ) || ( cmd->ucmd.upmove != 0 ))
 	{
 		// [K6/BB] The client is pressing a button, so not afk.
-		g_aClients[ulClient].lLastActionTic = gametic;
+		client->lLastActionTic = gametic;
 
-		PLAYER_SetStatus( &players[ulClient], PLAYERSTATUS_CHATTING | PLAYERSTATUS_INCONSOLE | PLAYERSTATUS_INMENU, false );
+		PLAYER_SetStatus( player, PLAYERSTATUS_CHATTING | PLAYERSTATUS_INCONSOLE | PLAYERSTATUS_INMENU, false );
 	}
 
 	return ( false );

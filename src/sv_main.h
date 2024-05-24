@@ -346,7 +346,7 @@ class ClientMoveCommand : public ClientCommand
 public:
 	ClientMoveCommand ( BYTESTREAM_s *pByteStream );
 
-	bool process ( const ULONG ulClient ) const;
+	virtual bool process ( const ULONG clientIndex ) const;
 
 	virtual bool isMoveCmd ( ) const
 	{
