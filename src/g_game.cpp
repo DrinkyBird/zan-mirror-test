@@ -2223,6 +2223,9 @@ void G_PlayerReborn (int player, bool bGiveInventory)
 	}
 	else if ( p->bSpectating == false )
 	{
+		// [AK] The client respawned on this gametic, so mark it.
+		SERVER_GetClient( player )->lastRespawnTick = gametic;
+
 		// [AK] Reset the client's tic buffer every time they spawn.
 		SERVER_ResetClientTicBuffer( player );
 	}
