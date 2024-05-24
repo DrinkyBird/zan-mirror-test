@@ -6161,8 +6161,8 @@ bool ClientMoveCommand::process( const ULONG clientIndex ) const
 				{
 					if ( moveCmd.usWeaponNetworkIndex == 0 )
 					{
-						// [BB] For some reason the clients think he as no ready weapon, 
-						// but the server thinks he as one. Although this should not happen,
+						// [BB] For some reason the clients think he has no ready weapon,
+						// but the server thinks he has one. Although this should not happen,
 						// we make a workaround for this here. Just tell the client to bring
 						// up the weapon, the server thinks he is using.
 						SERVERCOMMANDS_WeaponChange( clientIndex, clientIndex, SVCF_ONLYTHISCLIENT );
@@ -6177,7 +6177,7 @@ bool ClientMoveCommand::process( const ULONG clientIndex ) const
 		}
 	}
 
-	// [BB] Instead of kicking players that send too many movement commands, we just ignroe the excessive commands.
+	// [BB] Instead of kicking players that send too many movement commands, we just ignore the excessive commands.
 	// Note: The kick code is still there, but isn't triggered anymore since we are reducing lOverMovementLevel here.
 	if ( client->lOverMovementLevel >= MAX_OVERMOVEMENT_LEVEL )
 	{
