@@ -11943,7 +11943,17 @@ scriptwait:
 
 						// [BC] If we're the server, tell the client to change his weapon.
 						if ( NETWORK_GetState( ) == NETSTATE_SERVER )
+						{
 							SERVERCOMMANDS_SetPlayerPendingWeapon( ULONG( activator->player - players ));
+
+							// [AK] We only needed to set the client's pending weapon so that
+							// it could be sent in SERVERCOMMANDS_SetPlayerPendingWeapon, but
+							// we don't actually change their weapon yet. Instead, wait for the
+							// client to tell us that they selected the weapon on their end.
+							// This, however, doesn't need to apply to bots.
+							if ( activator->player->bIsBot == false )
+								activator->player->PendingWeapon = WP_NOCHANGE;
+						}
 					}
 					else
 					{

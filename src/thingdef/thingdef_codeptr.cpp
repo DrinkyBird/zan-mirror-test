@@ -80,6 +80,7 @@
 #include "p_acs.h"
 #include "unlagged.h"
 #include "d_netinf.h"
+#include "cl_commands.h"
 
 static FRandom pr_camissile ("CustomActorfire");
 static FRandom pr_camelee ("CustomMelee");
@@ -2823,9 +2824,16 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_SelectWeapon)
 
 	if (weaponitem != NULL && weaponitem->IsKindOf(RUNTIME_CLASS(AWeapon)))
 	{
-		if (self->player->ReadyWeapon != weaponitem)
+		// [AK] If we're the server, don't change the client's weapon yet.
+		// Instead, wait for client to tell us that they selected it on their
+		// end. This, however, doesn't need to apply to bots.
+		if (self->player->ReadyWeapon != weaponitem && ((NETWORK_GetState() != NETSTATE_SERVER) || (self->player->bIsBot)))
 		{
 			self->player->PendingWeapon = weaponitem;
+
+			// [AK] If we're the client, tell the server that we're switching weapons.
+			if ((NETWORK_GetState() == NETSTATE_CLIENT) && (self->player == &players[consoleplayer]))
+				CLIENTCOMMANDS_WeaponSelect(self->player->PendingWeapon->GetClass());
 		}
 	}
 	else ACTION_SET_RESULT(false);
