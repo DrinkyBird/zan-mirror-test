@@ -63,7 +63,8 @@ public:
 
 	// [BC] New skin properties for Skulltag.
 	// Default color used for this skin.
-	char		szColor[16];
+	int			szColor; // [BOF] Change to an int; use V_GetColor to store value.
+
 	// Can this skin be selected from the menu?
 	bool		bRevealed;
 
@@ -72,6 +73,11 @@ public:
 
 	// Is this skin a cheat skin?
 	bool		bCheat;
+
+	// [BOF] Extra SKININFO values for Zandronum.
+	char		displayname[MAX_SKIN_NAME + 1];	// Display name for menu
+
+
 	// [BC] End of new skin properties.
 };
 

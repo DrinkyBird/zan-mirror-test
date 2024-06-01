@@ -14,6 +14,7 @@
 #include "r_data/sprites.h"
 #include "r_data/voxels.h"
 #include "textures/textures.h"
+#include "v_video.h"
 
 void gl_InitModels();
 
@@ -510,18 +511,22 @@ void R_InitSkins (void)
 	FSoundID playersoundrefs[NUMSKINSOUNDS];
 	spritedef_t temp;
 	int sndlumps[NUMSKINSOUNDS];
-	char key[65];
+
+	//[BOF] Allow key to be any length
+	FString key;
+
 	DWORD intname, crouchname;
+	int pclass;
 	int i;
 	int j, k, base;
 	int lastlump;
 	int aliasid;
 	bool remove;
+	bool rangeChanged;
 	const PClass *basetype, *transtype;
 	int s_skin = 1; // (0 = skininfo, 1 = s_skin, 2 = s_skin non-changeable)
 	bool lumpSkininfo = false; // are we parsing the SKININFO lumps
 
-	key[sizeof(key)-1] = 0;
 	i = PlayerClasses.Size () - 1;
 	lastlump = 0;
 
@@ -553,104 +558,142 @@ void R_InitSkins (void)
 
 		FScanner sc(base);
 
+		
+		// [BOF] Slight parser rework using Tokens instead of Strings.
+		
+
 		// Data is stored as "key = data".
-		while (sc.GetString ())
+		while (sc.GetToken())
 		{
 			// [BB] The original SKININFO parser ate everything before the starting bracket.
 			// To retain compatibility with existing wads, we need to keep this behavior.
-			if ( lumpSkininfo )
+			if (lumpSkininfo)
 			{
 				// Parse until we find a starting bracket.
-				while ( sc.String[0] != '{' )
+				if (sc.String[0] != '{')
 				{
-					if ( !sc.GetString( ) )
-						break;
+					continue;
 				}
 			}
 
-			if(sc.String[0] == '{')
+			if (sc.String[0] == '{')
 			{
-				if(s_skin == 1)
+				if (s_skin == 1)
 					s_skin = 0; // Change to SKININFO
-				else if(s_skin == 0)
+				else if (s_skin == 0)
 				{
 					R_CreateSkin();
 					i++; // new skin
 				}
-				if(s_skin != 2) // If this is at S_SKIN unchangeable then no nothing else get a new string.
-					sc.GetString();
+				if (s_skin != 2) // If this is at S_SKIN unchangeable then no nothing else get a new string.
+					sc.GetToken();
 			}
-			for (j = 0; j < NUMSKINSOUNDS; j++)
-				sndlumps[j] = -1;
-			skins[i].namespc = Wads.GetLumpNamespace (base);
-			intname = 0;
-			crouchname = 0;
 
+			// Ready up for the next potential skin.
+			skins[i].namespc = Wads.GetLumpNamespace (base); 
+			for (j = 0; j < NUMSKINSOUNDS; j++) sndlumps[j] = -1; // Clear temp sndlumps
 			remove = false;
-			basetype = NULL;
-			transtype = NULL;
+			rangeChanged = false;
+			pclass = NULL;
+			intname = crouchname = 0;
+			basetype = transtype = NULL;	//	Clear class value.
+			if (s_skin == 1) s_skin = 2; // If it doesn't find a '{' permanently use S_SKIN format.
 
-			if(s_skin == 1)
-				s_skin = 2; // If it doesn't find a '{' permanently use S_SKIN format.
-
-			//[BL] We'll now go until we hit a '}' in SKININFO format
 			do
 			{
-				if(s_skin == 0 && sc.String[0] == '}')
-					break;
-
-				strncpy (key, sc.String, sizeof(key)-1);
-				if (!sc.GetString() || sc.String[0] != '=')
+				
+				if (!s_skin && sc.End && !sc.CheckToken('}')) // Remove skin at end of SKININFO with no ending bracket
 				{
-					Printf (PRINT_BOLD, "Bad format for skin %d: %s\n", (int)i, key);
+					Printf(PRINT_BOLD, "Unexpected end of file for skin %i. %s\n", i,
+						(strlen(skins[i].name)) ? skins[i].name : "");
+					remove = true;
+					break;
+				}
+				
+				key = sc.String;key.ToLower(); // Keep all lowercase to prevent inconsistencies with GetSkinInfo
+				
+				if (!sc.CheckToken('='))
+				{
+					Printf(PRINT_BOLD, "Bad format for skin %d: %s\n", (int)i, key);
 					// [BB] If there was a problem parsing the skin, remove it. Otherwise bad things may happen.
 					remove = true;
 					break;
 				}
-				sc.GetString ();
-				if (0 == stricmp (key, "name"))
+
+				sc.GetString();
+
+				// Name 
+				if (!key.Compare("name"))
 				{
 					// [BC] MAX_SKIN_NAME.
-					strncpy (skins[i].name, sc.String, MAX_SKIN_NAME);
-					for (j = 0; j < i; j++)
+					strncpy(skins[i].name, sc.String, MAX_SKIN_NAME);
+
+					// [BOF] Check for name after parsing and erase duplicates within same class instead.
+					
+					// [BOF] Prevent skins from intentionally being named 'skin#'
+					if (strncmp(skins[i].name, "skin", 4) == 0 && sc.StringLen > 4)
 					{
-						if (stricmp (skins[i].name, skins[j].name) == 0)
+						char check[MAX_SKIN_NAME - 4];
+						strncpy(check, &sc.String[4], MAX_SKIN_NAME - 4);
+						if (IsNum(check))
 						{
-							mysnprintf (skins[i].name, countof(skins[i].name), "skin%d", (int)i);
-							Printf (PRINT_BOLD, "Skin %s duplicated as %s\n",
-								skins[j].name, skins[i].name);
-							break;
+							Printf(PRINT_BOLD, "Skin %s renamed to skin%d\n",
+								skins[i].name, (int)i);
+							mysnprintf(skins[i].name, countof(skins[i].name), "skin%d", (int)i);
 						}
 					}
 				}
-				else if (0 == stricmp (key, "sprite"))
+
+				// Sprite
+				else if (!key.Compare("sprite"))
 				{
 					for (j = 3; j >= 0; j--)
-						sc.String[j] = toupper (sc.String[j]);
-					intname = *((DWORD *)sc.String);
+						sc.String[j] = toupper(sc.String[j]);
+					intname = *((DWORD*)sc.String);
 				}
-				else if (0 == stricmp (key, "crouchsprite"))
+
+				// Crouching Sprite
+				else if (!key.Compare("crouchsprite"))
 				{
 					for (j = 3; j >= 0; j--)
-						sc.String[j] = toupper (sc.String[j]);
-					crouchname = *((DWORD *)sc.String);
+						sc.String[j] = toupper(sc.String[j]);
+					crouchname = *((DWORD*)sc.String);
 				}
-				else if (0 == stricmp (key, "face"))
+
+				// HUD Face
+				else if (!key.Compare("face"))
 				{
 					for (j = 2; j >= 0; j--)
-						skins[i].face[j] = toupper (sc.String[j]);
+						skins[i].face[j] = toupper(sc.String[j]);
 					skins[i].face[3] = '\0';
 				}
-				else if (0 == stricmp (key, "gender"))
+
+				// Gender
+				else if (!key.Compare("gender"))
 				{
-					skins[i].gender = D_GenderToInt (sc.String);
+					skins[i].gender = D_GenderToInt(sc.String);
 				}
-				else if (0 == stricmp (key, "scale"))
-				{
-					skins[i].ScaleX = clamp<fixed_t> (FLOAT2FIXED(atof (sc.String)), 1, 256*FRACUNIT);
-					skins[i].ScaleY = skins[i].ScaleX;
+
+				// Scale
+				else if (!key.Compare("scale"))
+				{ // [BOF] You can set X and Y scales independently now. Just one argument will still set both to the same value.
+					sc.UnGet();
+					sc.GetToken();
+					skins[i].ScaleX = clamp<fixed_t>(FLOAT2FIXED(atof(sc.String)), 1, 256 * FRACUNIT);
+
+					if (sc.CheckToken(','))
+					{
+						sc.GetToken();
+						skins[i].ScaleY = clamp<fixed_t>(FLOAT2FIXED(atof(sc.String)), 1, 256 * FRACUNIT);
+					}
+					else
+					{
+						skins[i].ScaleY = skins[i].ScaleX;
+					}
 				}
-				else if (0 == stricmp (key, "game"))
+
+				// Game
+				else if (!key.Compare("game"))
 				{
 					if (gameinfo.gametype == GAME_Heretic)
 						basetype = PClass::FindClass (NAME_HereticPlayer);
@@ -696,9 +739,11 @@ void R_InitSkins (void)
 					if (remove)
 						break;
 				}
-				else if (0 == stricmp (key, "class"))
+
+				// Class
+				else if (!key.Compare("class"))
 				{ // [GRB] Define the skin for a specific player class
-					int pclass = D_PlayerClassToInt (sc.String);
+					pclass = D_PlayerClassToInt (sc.String);
 
 					if (pclass < 0)
 					{
@@ -708,76 +753,145 @@ void R_InitSkins (void)
 
 					basetype = transtype = PlayerClasses[pclass].Type;
 				}
+
+
 				// [BL] Skulltag additions
-				else if (0 == stricmp (key, "hidden"))
-				{
-					if (( stricmp(sc.String, "true") == 0 ) || ( stricmp(sc.String, "yes") == 0 ))
+
+				// Hidden Skin
+				else if (!key.Compare("hidden"))
+				{ // [BOF] This is backwards, but should be left untouched for compatability.
+					if ((stricmp(sc.String, "true") == 0) || (stricmp(sc.String, "yes") == 0))
+					{
 						skins[i].bRevealed = true;
-					else if (( stricmp(sc.String, "false") == 0 ) || ( stricmp(sc.String, "no") == 0 ))
+					}
+					else if ((stricmp(sc.String, "false") == 0) || (stricmp(sc.String, "no") == 0))
+					{
 						skins[i].bRevealed = false;
+					}
 				}
-				else if (0 == stricmp (key, "cheat"))
+
+				// Cheat Skin
+				else if (!key.Compare("cheat"))
 				{
-					if (( stricmp(sc.String, "true") == 0 ) || ( stricmp(sc.String, "yes") == 0 ))
+					if ((stricmp(sc.String, "true") == 0) || (stricmp(sc.String, "yes") == 0))
+					{
 						skins[i].bCheat = true;
-					else if (( stricmp(sc.String, "false") == 0 ) || ( stricmp(sc.String, "no") == 0 ))
+					}
+					else if ((stricmp(sc.String, "false") == 0) || (stricmp(sc.String, "no") == 0))
+					{
 						skins[i].bCheat = false;
+					}
 				}
-				else if (0 == stricmp( key, "color" ))
+
+				// Color
+				else if (!key.Compare("color"))
 				{
-					sprintf( skins[i].szColor, "%s", sc.String );
+					skins[i].szColor = V_GetColor(NULL, sc.String); // [BOF] Set an actual color now
 				}
+
+
+				// [BOF] Zandronum additions
+
+				// Display Name for Menus
+				else if (!key.Compare("displayname"))
+				{
+					strncpy(skins[i].displayname, sc.String, MAX_SKIN_NAME);
+				}
+
+				// Color Range
+				else if (!key.Compare("colorrange"))
+				{ // [BOF] Override a class's translation with the exception of a class using 0,0 Translation
+					sc.UnGet();
+					sc.GetToken();
+					BYTE tempbyte[2];
+
+					tempbyte[0] = (BYTE)atoi(sc.String);
+
+					if (sc.CheckToken(','))
+					{
+						sc.GetToken();
+						tempbyte[1]  = (BYTE)atoi(sc.String);
+					}
+					else
+					{
+						break;
+					}
+
+					skins[i].range0start = MIN(tempbyte[0], tempbyte[1]);
+					skins[i].range0end = MAX(tempbyte[0], tempbyte[1]);
+					rangeChanged = true;
+				}
+
+				// Selectablility
+				else if (!key.Compare("selectable"))
+				{ // Only accessible by Overriding (Weapon/ACS)
+					if ((stricmp(sc.String, "false") == 0) || (stricmp(sc.String, "no") == 0))
+					{
+						skins[i].bRevealedByDefault = false;
+					}
+					else 
+					{
+						skins[i].bRevealedByDefault = true;
+					}
+
+				}
+
+
+
+				// Sounds
+
+				// ZDoom Sound Replacement
 				else if (key[0] == '*')
 				{ // Player sound replacment (ZDoom extension)
-					int lump = Wads.CheckNumForName (sc.String, skins[i].namespc);
+					int lump = Wads.CheckNumForName(sc.String, skins[i].namespc);
 					if (lump == -1)
 					{
-						lump = Wads.CheckNumForFullName (sc.String, true, ns_sounds);
+						lump = Wads.CheckNumForFullName(sc.String, true, ns_sounds);
 					}
 					if (lump != -1)
 					{
-						if (stricmp (key, "*pain") == 0)
+						if (stricmp(key, "*pain") == 0)
 						{ // Replace all pain sounds in one go
-							aliasid = S_AddPlayerSound (skins[i].name, skins[i].gender,
+							aliasid = S_AddPlayerSound(skins[i].name, skins[i].gender,
 								playersoundrefs[0], lump, true);
 							for (int l = 3; l > 0; --l)
 							{
-								S_AddPlayerSoundExisting (skins[i].name, skins[i].gender,
+								S_AddPlayerSoundExisting(skins[i].name, skins[i].gender,
 									playersoundrefs[l], aliasid, true);
 							}
 						}
 						else
 						{
-							int sndref = S_FindSoundNoHash (key);
+							int sndref = S_FindSoundNoHash(key);
 							if (sndref != 0)
 							{
-								S_AddPlayerSound (skins[i].name, skins[i].gender, sndref, lump, true);
+								S_AddPlayerSound(skins[i].name, skins[i].gender, sndref, lump, true);
 							}
 						}
 					}
 				}
+
+				// Sound Replacement
 				else
 				{
 					for (j = 0; j < NUMSKINSOUNDS; j++)
 					{
-						if (stricmp (key, skinsoundnames[j][0]) == 0)
+						if (stricmp(key, skinsoundnames[j][0]) == 0)
 						{
-							sndlumps[j] = Wads.CheckNumForName (sc.String, skins[i].namespc);
+							sndlumps[j] = Wads.CheckNumForName(sc.String, skins[i].namespc);
 							if (sndlumps[j] == -1)
 							{ // [BL] no replacement, search all wads?
-								sndlumps[j] = Wads.CheckNumForName (sc.String);
+								sndlumps[j] = Wads.CheckNumForName(sc.String);
 							}
 							if (sndlumps[j] == -1)
 							{ // Replacement not found, try finding it in the global namespace
-								sndlumps[j] = Wads.CheckNumForFullName (sc.String, true, ns_sounds);
+								sndlumps[j] = Wads.CheckNumForFullName(sc.String, true, ns_sounds);
 							}
 						}
 					}
-					//if (j == 8)
-					//	Printf ("Funny info for skin %i: %s = %s\n", i, key, sc.String);
 				}
-			}
-			while(sc.GetString());
+
+			} while ((!s_skin && !sc.CheckToken('}') && sc.GetToken()) || (s_skin && sc.GetToken())); // Check for closing bracket in SKININFO, and end in S_SKIN
 
 			// [GRB] Assume Doom skin by default
 			if (!remove && basetype == NULL)
@@ -800,8 +914,14 @@ void R_InitSkins (void)
 
 			if (!remove)
 			{
-				skins[i].range0start = transtype->Meta.GetMetaInt (APMETA_ColorRange) & 0xff;
-				skins[i].range0end = transtype->Meta.GetMetaInt (APMETA_ColorRange) >> 8;
+				BYTE range0start = transtype->Meta.GetMetaInt(APMETA_ColorRange) & 0xff;
+				BYTE range0end = transtype->Meta.GetMetaInt(APMETA_ColorRange) >> 8;
+
+				if (!rangeChanged || (range0start == 0 && range0end == 0)) // [BOF] Don't translate if the Class doesn't want to be translated or if no custom range was set.
+				{
+					skins[i].range0start = range0start;
+					skins[i].range0end = range0end;
+				}
 			
 				remove = true;
 				for (j = 0; j < (int)PlayerClasses.Size (); j++)
@@ -821,7 +941,32 @@ void R_InitSkins (void)
 			if (!remove)
 			{
 				if (skins[i].name[0] == 0)
-					mysnprintf (skins[i].name, countof(skins[i].name), "skin%d", (int)i);
+				{
+					mysnprintf(skins[i].name, countof(skins[i].name), "skin%d", (int)i);
+				}
+
+				// [BOF] Check Skin name within its own class instead of globally.
+				bool initialname = false;
+				for (j = 0; j < PlayerClasses[pclass].Skins.Size(); j++)
+				{
+					if (stricmp(skins[i].name, skins[PlayerClasses[pclass].Skins[j]].name) == 0)
+					{
+						if (initialname == true)
+						{
+							mysnprintf(skins[i].name, countof(skins[i].name), "skin%d", (int)i);
+							Printf(PRINT_BOLD, "Skin %s duplicated as %s\n",
+								skins[PlayerClasses[pclass].Skins[j]].name, skins[i].name);
+							break;
+						}
+						initialname = true;
+					}
+				}
+
+
+				if (skins[i].displayname[0] == 0)
+				{
+					strcpy(skins[i].displayname, skins[i].name); //Use CVAR name if no Displayname is available
+				}
 
 				// Now collect the sprite frames for this skin. If the sprite name was not
 				// specified, use whatever immediately follows the specifier lump.
