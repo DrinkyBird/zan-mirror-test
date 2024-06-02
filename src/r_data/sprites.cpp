@@ -864,12 +864,12 @@ void R_InitSkins (void)
 				{ // Only accessible by Overriding (Weapon/ACS)
 					if ((stricmp(sc.String, "false") == 0) || (stricmp(sc.String, "no") == 0))
 					{
-						skins[i].bRevealedByDefault = false;
+						skins[i].countSkin = skins[i].bRevealedByDefault = false;
 						skins[i].param[key].list[0] = "0";
 					}
 					else 
 					{
-						skins[i].bRevealedByDefault = true;
+						skins[i].countSkin = skins[i].bRevealedByDefault = true;
 						skins[i].param[key].list[0] = "1";
 					}
 
@@ -1033,6 +1033,17 @@ void R_InitSkins (void)
 			
 			if (!remove)
 			{
+
+				for (j = 0; j < i; j++) // Mark all previous skins of the same name as hidden if such, and remove from numSkins value for 'skins' command
+				{
+					if (stricmp(skins[i].name, skins[j].name) == 0)
+					{
+						skins[i].countSkin = false; // Don't count this skin through 'skins' command
+						skins[j].bRevealed = skins[i].bRevealed; // Set all skins of the same anme's hidden status as this skins.
+						break;
+					}
+				}
+
 				if (skins[i].name[0] == 0)
 				{
 					mysnprintf(skins[i].name, countof(skins[i].name), "skin%d", (int)i);
@@ -1230,21 +1241,21 @@ CCMD (skins)
 
 	ulNumSkins = 0;
 	ulNumHiddenSkins = 0;
-	for (i = PlayerClasses.Size ()-1; i < (int)skins.Size(); i++)
+	for (i = 0; i < (int)skins.Size(); i++)
 	{
-		if ( skins[i].bRevealed )
+		if (!skins[i].countSkin) continue;
+		if (skins[i].bRevealed)
 		{
-			Printf ("% 3d %s\n", static_cast<unsigned int> (ulNumSkins), skins[i].name);
-			ulNumSkins++;
+			Printf("% 3d %s\n", static_cast<unsigned int> (++ulNumSkins), skins[i].name);
 		}
 		else
 			ulNumHiddenSkins++;
 	}
 
-	if ( ulNumHiddenSkins == 0 )
-		Printf( "\n%d skins; All hidden skins unlocked!\n", (int)skins.Size() );
+	if (ulNumHiddenSkins == 0)
+		Printf("\n%d skins; All hidden skins unlocked!\n", ulNumSkins);
 	else
-		Printf( "\n%d skins; %d remain%s hidden.\n", (int)skins.Size(), static_cast<unsigned int> (ulNumHiddenSkins), ulNumHiddenSkins == 1 ? "s" : "" );
+		Printf("\n%d skins; %d remain%s hidden.\n", ulNumSkins, static_cast<unsigned int> (ulNumHiddenSkins), ulNumHiddenSkins == 1 ? "s" : "");
 }
 
 //*****************************************************************************
@@ -1264,6 +1275,8 @@ static void R_CreateSkin()
 	// [BL] Hidden skins
 	skin.bRevealed = true;
 	skin.bRevealedByDefault = true;
+
+	skin.countSkin = true; //For 'skins' command
 
 	// [BOF] Default Param Values
 	skin.param = (paramlist)skin.param;
@@ -1354,6 +1367,7 @@ void R_InitSprites ()
 	for (i = 0; i < PlayerClasses.Size (); i++)
 	{
 		R_CreateSkin();
+		if (i != 0) skins[i].countSkin = false; // [BOF] Exclude all other Base skins from 'skins' command.
 	}
 
 	R_InitSpriteDefs ();

@@ -41,7 +41,6 @@ struct spritedef_t
 
 struct params
 {
-	int stringOnly = -1; // For params such as "name" and "class" For GetSkinInfo to always return a string instead of an int.
 	TArray<FString> list; //Regular array
 	TMap<FString, FString> charlist; //Array with string keys
 };
@@ -70,6 +69,7 @@ public:
 	int			sprite;
 	int			crouchsprite;
 	int			namespc;	// namespace for this skin
+	bool		countSkin;	// [BOF] For 'skins' command to not list duplicates.
 
 	// [BC] New skin properties for Skulltag.
 	// Default color used for this skin.
@@ -79,7 +79,7 @@ public:
 	bool		bRevealed;
 
 	// Is this skin hidden by default?
-	bool		bRevealedByDefault;
+	bool		bRevealedByDefault; // [BOF] If false, this skin can only be seen as a Weapon or ACS skin. True by default.
 
 	// Is this skin a cheat skin?
 	bool		bCheat;
