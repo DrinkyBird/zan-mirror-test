@@ -8613,8 +8613,8 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 						skinIndex = R_FindSkin( skinName, player->CurrentPlayerClass );
 
 					// [AK] If the skin doesn't exist, return an empty string.
-					if (( skinIndex == player->CurrentPlayerClass ) && (( skinName == nullptr ) || ( stricmp( skinName, "Base" ) != 0 )))
-						return GlobalACSStrings.AddString( "" );
+					if ((skinIndex == player->CurrentPlayerClass) && ((skinName == nullptr) || (stricmp(skinName, "Base") != 0)))
+						return -1;
 				}
 				// [AK] ...or if we want to know the skin that's visible using without any
 				// guess and check, then use their overridden skin (i.e. weapon preferred skin
@@ -8629,15 +8629,11 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 						skinIndex = player->userinfo.GetSkin( );
 				}
 
-				// [AK] Return the name of their skin if they're using one, or "Base" if not.
-				if ( skinIndex != player->CurrentPlayerClass )
-					return GlobalACSStrings.AddString( skins[skinIndex].name );
-				else
-					return GlobalACSStrings.AddString( "Base" );
+				return skinIndex; //[BOF] Return skin index number instead of name. Interface with GetSkinInfo below.
 			}
 
 			// [AK] Return an empty string for invalid players instead.
-			return GlobalACSStrings.AddString( "" );
+			return -1;
 		}
 		
 		case ACSF_GetSkinInfo: // [BOF] Get the parameter of a skin through its index as a string.
