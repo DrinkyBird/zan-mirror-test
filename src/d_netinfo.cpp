@@ -1428,10 +1428,14 @@ void D_ReadUserInfoStrings (int pnum, BYTE **stream, bool update)
 				{
 					if (players[pnum].cls != NULL &&
 						!(players[pnum].mo->flags4 & MF4_NOSKIN) &&
-						players[pnum].mo->state->sprite ==
-						GetDefaultByType (players[pnum].cls)->SpawnState->sprite)
-					{ // Only change the sprite if the player is using a standard one
-						players[pnum].mo->sprite = skins[info->GetSkin()].sprite;
+						(players[pnum].mo->state->sprite ==
+						GetDefaultByType (players[pnum].cls)->SpawnState->sprite || 
+						skins[info->GetSkin()].sprites.CheckKey(*(DWORD*)sprites[players[pnum].mo->state->sprite].name) ) )
+					{ 
+						players[pnum].mo->sprite = 
+						skins[info->GetSkin()].sprites.CheckKey(*(DWORD*)sprites[players[pnum].mo->state->sprite].name) ?
+						skins[info->GetSkin()].sprites[*(DWORD*)sprites[players[pnum].mo->state->sprite].name] :
+						skins[info->GetSkin()].sprite;
 					}
 				}
 				// Rebuild translation in case the new skin uses a different range

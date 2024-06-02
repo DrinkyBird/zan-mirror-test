@@ -553,7 +553,11 @@ bool AActor::SetState (FState *newstate, bool nofunction)
 				// except when this actor is a player chunk.
 				const int overrideSkin = IsKindOf( RUNTIME_CLASS( APlayerChunk )) ? -1 : PLAYER_GetOverrideSkin( this->player );
 				// [AK] Don't change to the skin's sprite if the new sprite is TNT1A0.
-				if ((!(flags4 & MF4_NOSKIN) || overrideSkin != -1) && newsprite == SpawnState->sprite && newsprite != SPR_TNT1)
+				if ((player != NULL && !(flags4 & MF4_NOSKIN) || overrideSkin != -1 && newsprite != SPR_TNT1)
+					&& (newsprite == SpawnState->sprite ||
+						// [BOF] Check if skin has a state equivalent.
+						(newsprite == state->sprite && state->sprite != SPR_TNT1
+							&& (skins[(overrideSkin != -1) ? overrideSkin : player->userinfo.GetSkin()].sprites.CheckKey(*(DWORD*)(&sprites[newsprite].name))))))
 				{ // [RH] If the new sprite is the same as the original sprite, and
 				// this actor is attached to a player, use the player's skin's
 				// sprite. If a player is not attached, do not change the sprite
@@ -563,13 +567,20 @@ bool AActor::SetState (FState *newstate, bool nofunction)
 				// for Dehacked, I would move sprite changing out of the states
 				// altogether, since actors rarely change their sprites after
 				// spawning.
-					if ( overrideSkin != -1 ) // [AK] Show the overridden skin first if valid.
+					if (overrideSkin != -1) // [AK] Show the overridden skin first if valid.
 					{
-						sprite = skins[overrideSkin].sprite;
+						sprite =
+							skins[overrideSkin].sprites.CheckKey(*(DWORD*)(&sprites[newsprite].name)) ?
+							skins[overrideSkin].sprites[*(DWORD*)(&sprites[newsprite].name)] :
+							skins[overrideSkin].sprite;
+						//sprite = skins[overrideSkin].sprite;
 					}
-					else if (player != NULL && ( skins.Size() > static_cast<unsigned int> ( player->userinfo.GetSkin() ) ) ) // [BB] Adapted the skins check
+					else if (player != NULL && (skins.Size() > static_cast<unsigned int> (player->userinfo.GetSkin()))) // [BB] Adapted the skins check
 					{
-						sprite = skins[player->userinfo.GetSkin()].sprite;
+						sprite =
+							skins[player->userinfo.GetSkin()].sprites.CheckKey(*(DWORD*)(&sprites[newsprite].name)) ?
+							skins[player->userinfo.GetSkin()].sprites[*(DWORD*)(&sprites[newsprite].name)] :
+							skins[player->userinfo.GetSkin()].sprite;
 					}
 					else if (newsprite != prevsprite)
 					{

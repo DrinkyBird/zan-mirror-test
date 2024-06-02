@@ -577,9 +577,10 @@ void FListMenuItemPlayerDisplay::Drawer(bool selected)
 		}
 		else
 		{
-			sprframe = &SpriteFrames[sprites[skins[mSkin].sprite].spriteframes + mPlayerState->GetFrame()];
-			scaleX = skins[mSkin].ScaleX;
-			scaleY = skins[mSkin].ScaleY;
+			sprframe = &SpriteFrames[sprites[
+				(skins[mSkin].sprites.CheckKey(*(DWORD*)sprites[mPlayerState->sprite].name) ?
+				skins[mSkin].sprites[*(DWORD*)sprites[mPlayerState->sprite].name] :
+				skins[mSkin].sprite)].spriteframes + mPlayerState->GetFrame()];
 		}
 	}
 

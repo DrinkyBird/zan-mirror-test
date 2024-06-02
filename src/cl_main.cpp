@@ -3698,7 +3698,10 @@ void ServerCommands::SpawnPlayer::Execute()
 	// [BB] There is no skin for the morphed class.
 	if ( !isMorphed )
 	{
-		pActor->sprite = skins[lSkin].sprite;
+		pActor->sprite = 
+		skins[lSkin].sprites.CheckKey(*(DWORD*)sprites[pPlayer->mo->state->sprite].name) ?
+		skins[lSkin].sprites[*(DWORD*)sprites[pPlayer->mo->state->sprite].name] :
+		skins[lSkin].sprite;
 	}
 
 	pPlayer->DesiredFOV = pPlayer->FOV = 90.f;
@@ -4219,7 +4222,10 @@ void ServerCommands::SetPlayerUserInfo::Execute()
 
 			if ( player->mo )
 			{
-				player->mo->sprite = skins[skin].sprite;
+				player->mo->sprite =
+				skins[skin].sprites.CheckKey(*(DWORD*)sprites[player->mo->sprite].name) ?
+				skins[skin].sprites[*(DWORD*)sprites[player->mo->sprite].name] :
+				skins[skin].sprite;
 			}
 		}
 		// Read in the player's handicap.

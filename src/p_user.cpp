@@ -2575,6 +2575,8 @@ void P_CheckPlayerSprite(AActor *actor, int &spritenum, fixed_t &scalex, fixed_t
 	player_t *player = actor->player;
 	int crouchspriteno;
 
+	Printf("%s\n", sprites[spritenum].name);
+
 	// [AK] Don't set the player's sprite if their current body doesn't match their class due to A_SkullPop.
 	if ( actor->IsKindOf( RUNTIME_CLASS( APlayerChunk )))
 		return;
@@ -2587,18 +2589,30 @@ void P_CheckPlayerSprite(AActor *actor, int &spritenum, fixed_t &scalex, fixed_t
 	if ( PLAYER_ShouldForceBaseSkin( player ))
 		skin = R_FindSkin( "base", player->CurrentPlayerClass );
 
-	// [BB/AK] If the skin was overridden from ACS, or the weapon has a PreferredSkin defined, make the player use it here.
-	if (( overrideSkin != -1 ) && ( overrideSkin != skin ))
+	// [BB/AK/BOF] If the skin was overridden from ACS, make the player use it here.
+	else if ((overrideSkin != -1) && (overrideSkin != skin))
 	{
 		skin = overrideSkin;
-		spritenum = skins[skin].sprite;
+				spritenum =
+			skins[skin].sprites.CheckKey(*(DWORD*)sprites[spritenum].name) ?
+			skins[skin].sprites[*(DWORD*)sprites[spritenum].name] :
+			skins[skin].sprite;
 	}
+
 	// [BB/AK] No longer using an overridden skin, reset the sprite.
-	else if ( ( spritenum != skins[skin].sprite ) && ( spritenum != skins[skin].crouchsprite )
-			&& ( spritenum != actor->state->sprite ) && (actor->state->sprite != SPR_NOCHANGE) && 
-			(actor->state->sprite != SPR_FIXED))
+	else if ( 
+		(spritenum != (
+		skins[skin].sprites.CheckKey(*(DWORD*)sprites[actor->state->sprite].name) ?
+		skins[skin].sprites[*(DWORD*)sprites[actor->state->sprite].name] :
+		skins[skin].sprite))
+		&& !(spritenum == actor->state->sprite && !skins[skin].sprites.CheckKey(actor->state->sprite))
+		&& (actor->state->sprite != SPR_NOCHANGE) && (actor->state->sprite != SPR_FIXED)
+		)
 	{
-		spritenum = skins[skin].sprite;
+		spritenum =
+			skins[skin].sprites.CheckKey(*(DWORD*)sprites[actor->state->sprite].name) ?
+			skins[skin].sprites[*(DWORD*)sprites[actor->state->sprite].name] :
+			skins[skin].sprite;
 	}
 
 	// [BB/AK] An overridden skin also overrides NOSKIN.
@@ -2619,11 +2633,14 @@ void P_CheckPlayerSprite(AActor *actor, int &spritenum, fixed_t &scalex, fixed_t
 			crouchspriteno = actor->GetClass()->ActorInfo->CrouchSprites[actor->state->sprite];
 		}
 		// [BB/AK] An overridden skin also overrides NOSKIN.
-		else if ( ( !(actor->flags4 & MF4_NOSKIN) || ( overrideSkin != -1 ) ) &&
-				(spritenum == skins[skin].sprite ||
-				 spritenum == skins[skin].crouchsprite))
+		else if (actor->GetClass()->ActorInfo->CrouchSprites.CheckKey(actor->state->sprite) &&
+			(skins[skin].sprites.CheckKey(*(DWORD*)sprites[actor->GetClass()->ActorInfo->CrouchSprites[actor->state->sprite]].name) ||
+			(skins[skin].crouchsprite && actor->state->sprite == actor->SpawnState->sprite)))
 		{
-			crouchspriteno = skins[skin].crouchsprite;
+			crouchspriteno =
+				skins[skin].sprites.CheckKey(*(DWORD*)sprites[actor->GetClass()->ActorInfo->CrouchSprites[actor->state->sprite]].name) ?
+				skins[skin].sprites[*(DWORD*)sprites[actor->GetClass()->ActorInfo->CrouchSprites[actor->state->sprite]].name] :
+				skins[skin].crouchsprite;
 		}
 		else
 		{ // no sprite -> squash the existing one

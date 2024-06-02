@@ -1132,7 +1132,6 @@ void R_InitSkins (void)
 				else if (intname.CountUsed() == 0) //Use class'spawnstate sprite if no intname is added for SKININFO skins.
 				{
 					skins[i].sprite = GetDefaultByType(basetype)->SpawnState->sprite;
-					intname[0] = *(DWORD*)sprites[GetDefaultByType(basetype)->SpawnState->sprite].name;
 					skins[i].param["sprite"].list[0] = sprites[skins[i].sprite].name;
 					continue;
 				}
@@ -1671,17 +1670,18 @@ CUSTOM_CVAR( Int, cl_skins, 1, CVAR_ARCHIVE )
 		// If cl_skins == 0, then the user wishes to disable all skins.
 		if ( self <= 0 )
 		{
-			lSkin = R_FindSkin( "base", players[ulIdx].CurrentPlayerClass );
+			lSkin = R_FindSkin( "base", players[ulIdx].CurrentPlayerClass);
 
 			// Make sure the player doesn't change sprites when his state changes.
 			players[ulIdx].mo->flags4 |= MF4_NOSKIN;
+
 		}
 		// If cl_skins >= 2, then the user wants to disable cheat skins, but allow all others.
 		else if ( self >= 2 )
 		{
 			if ( skins[players[ulIdx].userinfo.GetSkin()].bCheat )
 			{
-				lSkin = R_FindSkin( "base", players[ulIdx].CurrentPlayerClass );
+				lSkin = R_FindSkin( "base", players[ulIdx].CurrentPlayerClass);
 
 				// Make sure the player doesn't change sprites when his state changes.
 				players[ulIdx].mo->flags4 |= MF4_NOSKIN;
@@ -1691,7 +1691,9 @@ CUSTOM_CVAR( Int, cl_skins, 1, CVAR_ARCHIVE )
 				lSkin = players[ulIdx].userinfo.GetSkin();
 
 				if (( players[ulIdx].mo->GetDefault( )->flags4 & MF4_NOSKIN ) == false )
+				{
 					players[ulIdx].mo->flags4 &= ~MF4_NOSKIN;
+				}
 			}
 		}
 		// If cl_skins == 1, allow all skins to be used.
@@ -1704,9 +1706,17 @@ CUSTOM_CVAR( Int, cl_skins, 1, CVAR_ARCHIVE )
 		}
 
 		// If the skin is valid, set the player's sprite to the skin's sprite.
-		if (( lSkin >= 0 ) && ( static_cast<unsigned> (lSkin) < skins.Size() ))
+		if (( lSkin >= 0 ) && ( static_cast<unsigned> (lSkin) < skins.Size() )
+		// [BOF] Also add this check for cl_skins to not change to state frames that the skin doesn't have
+			&& (players[ulIdx].mo->state->sprite ==
+			GetDefaultByType(players[ulIdx].cls)->SpawnState->sprite ||
+			skins[players[ulIdx].userinfo.GetSkin()].sprites.CheckKey(*(DWORD*)sprites[players[ulIdx].mo->state->sprite].name))
+			&& !(players[ulIdx].mo->flags4 & MF4_NOSKIN))
 		{
-			players[ulIdx].mo->sprite = skins[lSkin].sprite;
+			players[ulIdx].mo->sprite = 
+			skins[lSkin].sprites.CheckKey(*(DWORD*)sprites[players[ulIdx].mo->state->sprite].name) ?
+			skins[lSkin].sprites[*(DWORD*)sprites[players[ulIdx].mo->state->sprite].name] :
+			skins[lSkin].sprite;
 /*
 			players[ulIdx].mo->scaleX = skins[lSkin].ScaleX;
 			players[ulIdx].mo->scaleY = skins[lSkin].ScaleY;
