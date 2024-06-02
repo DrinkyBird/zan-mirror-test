@@ -8610,7 +8610,7 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 					}
 
 					if (( skinName != nullptr ) && ( strlen( skinName ) > 0 ))
-						skinIndex = R_FindSkin( skinName, player->CurrentPlayerClass );
+						skinIndex = R_FindSkin( skinName, player->CurrentPlayerClass, true );
 
 					// [AK] If the skin doesn't exist, return an empty string.
 					if ((skinIndex == player->CurrentPlayerClass) && ((skinName == nullptr) || (stricmp(skinName, "Base") != 0)))

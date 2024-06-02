@@ -1070,6 +1070,8 @@ void R_InitSkins (void)
 				if (skins[i].displayname[0] == 0)
 				{
 					strcpy(skins[i].displayname, skins[i].name); //Use CVAR name if no Displayname is available
+					skins[i].param["displayname"].list.Resize(1);
+					skins[i].param["displayname"].list[0] = skins[i].displayname;
 				}
 
 				// Now collect the sprite frames for this skin. If the sprite name was not
@@ -1211,7 +1213,7 @@ void R_InitSkins (void)
 }
 
 // [RH] Find a skin by name
-int R_FindSkin (const char *name, int pclass)
+int R_FindSkin (const char *name, int pclass, bool override = false)
 {
 	// [BOF] Shrink this down a fair bit by parsing skin numbers within class itself.
 	for (unsigned i = 0; i < PlayerClasses[pclass].Skins.Size(); i++)
@@ -1219,7 +1221,7 @@ int R_FindSkin (const char *name, int pclass)
 		int classSkin = PlayerClasses[pclass].Skins[i];
 		// [BC] Changed from 16 to MAX_SKIN_NAME.
 		if (strnicmp(skins[classSkin].name, name, MAX_SKIN_NAME) == 0 &&
-			(skins[classSkin].bRevealedByDefault))
+			(skins[classSkin].bRevealedByDefault || override))
 				return classSkin;
 	}
 	return pclass;
@@ -1414,8 +1416,6 @@ void R_InitSprites ()
 
 
 
-		skins[i].param["name"].list.Resize(2);
-		skins[i].param["displayname"].list.Resize(1);
 		skins[i].param["displayname"].list[0] =
 		skins[i].param["name"].list[1] = skins[i].param["name"].list[0] = skins[i].name;
 
