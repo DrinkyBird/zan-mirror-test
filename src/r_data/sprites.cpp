@@ -515,7 +515,9 @@ void R_InitSkins (void)
 	//[BOF] Allow key to be any length
 	FString key;
 
-	DWORD intname, crouchname;
+	//[BOF] 'intname' turned into an array to parse and store multiple sprites with.
+	TMap<DWORD, DWORD> intname;
+
 	int pclass;
 	int i;
 	int j, k, base;
@@ -595,7 +597,7 @@ void R_InitSkins (void)
 			remove = false;
 			rangeChanged = false;
 			pclass = NULL;
-			intname = crouchname = 0;
+			intname.Clear();	//	Clear temp sprites list
 			basetype = transtype = NULL;	//	Clear class value.
 			if (s_skin == 1) s_skin = 2; // If it doesn't find a '{' permanently use S_SKIN format.
 
@@ -651,7 +653,7 @@ void R_InitSkins (void)
 				{
 					for (j = 3; j >= 0; j--)
 						sc.String[j] = toupper(sc.String[j]);
-					intname = *((DWORD*)sc.String);
+					intname[0] = *((DWORD*)sc.String);
 
 					skins[i].param[key].list[0] = sc.String;
 					skins[i].param[key].list[0].Truncate(4);
@@ -662,7 +664,7 @@ void R_InitSkins (void)
 				{
 					for (j = 3; j >= 0; j--)
 						sc.String[j] = toupper(sc.String[j]);
-					crouchname = *((DWORD*)sc.String);
+					intname[-1] = *((DWORD*)sc.String);
 
 					skins[i].param[key].list.Resize(1);
 					skins[i].param[key].list[0] = sc.String;
@@ -824,6 +826,50 @@ void R_InitSkins (void)
 
 
 				// [BOF] Zandronum additions
+
+				// Array of Sprites
+				else if (!key.Compare("sprites"))
+				{
+					sc.UnGet();
+					if (!sc.CheckToken('['))
+					{
+						Printf(PRINT_BOLD, "Bad format for skin %d: sprites\n", (int)i);
+						remove = true;
+						break;
+					}
+
+					skins[i].param[key].charlist.Clear();
+					while (!sc.CheckToken(']'))
+					{
+
+						DWORD spritename;
+
+						for (j = 3; j >= 0; j--)
+							sc.String[j] = toupper(sc.String[j]);
+						spritename = *((DWORD*)sc.String);
+
+						FString charkey = sc.String;
+						charkey.Truncate(4);
+						charkey.ToLower(); // Keep all keys lowercase for GetSkinInfo
+
+						sc.GetToken();
+						if (!sc.CheckToken('='))
+						{
+							Printf(PRINT_BOLD, "Bad format for skin %d: sprites \"%.4s\"\n", (int)i, &spritename);
+							remove = true;
+							break;
+						}
+
+						sc.GetToken();
+						for (j = 3; j >= 0; j--)
+							sc.String[j] = toupper(sc.String[j]);
+						intname[spritename] = *((DWORD*)sc.String);
+
+						skins[i].param[key].charlist[charkey] = sc.String;
+						skins[i].param[key].charlist[charkey].Truncate(4);
+					}
+					if (remove == true) break;
+				}
 
 				// Display Name for Menus
 				else if (!key.Compare("displayname"))
@@ -1077,85 +1123,99 @@ void R_InitSkins (void)
 				// Now collect the sprite frames for this skin. If the sprite name was not
 				// specified, use whatever immediately follows the specifier lump.
 				// [BL] S_SKIN only
-				if (intname == 0 && s_skin != 0)
+				if (!intname.CheckKey(0) && s_skin != 0)
 				{
 					char name[9];
-					Wads.GetLumpName (name, base+1);
-					memcpy(&intname, name, 4);
+					Wads.GetLumpName(name, base + 1);
+					intname[0] = *(DWORD*)name;
+				}
+				else if (intname.CountUsed() == 0) //Use class'spawnstate sprite if no intname is added for SKININFO skins.
+				{
+					skins[i].sprite = GetDefaultByType(basetype)->SpawnState->sprite;
+					intname[0] = *(DWORD*)sprites[GetDefaultByType(basetype)->SpawnState->sprite].name;
+					skins[i].param["sprite"].list[0] = sprites[skins[i].sprite].name;
+					continue;
 				}
 
 				int basens = Wads.GetLumpNamespace(base);
 
-				for(int spr = 0; spr<2; spr++)
+				//[BOF] Iterate list of sprites instead of just potentially 2
+				const TMap<DWORD, DWORD>::Pair* sprpair;
+				TMap<DWORD, DWORD>::ConstIterator addSprite(intname);
+				int spritesUsed = intname.CountUsed();
+				//for (int spr = 0; spr < 2; spr++)
+				while (addSprite.NextPair(sprpair))
 				{
-					memset (sprtemp, 0xFFFF, sizeof(sprtemp));
+					auto sprkey = sprpair->Key;
+					auto sprval = sprpair->Value;
+					memset(sprtemp, 0xFFFF, sizeof(sprtemp));
 					for (k = 0; k < MAX_SPRITE_FRAMES; ++k)
 					{
 						sprtemp[k].Flip = 0;
-					sprtemp[k].Voxel = NULL;
+						sprtemp[k].Voxel = NULL;
 					}
 					maxframe = -1;
 
-					if (spr == 1)
-					{
-						if (crouchname !=0 && crouchname != intname)
-						{
-							intname = crouchname;
-						}
-						else
-						{
-							skins[i].crouchsprite = -1;
-							break;
-						}
-					}
-
-					if (intname == 0)
-						continue;
-
 					// [BL] From the SKININFO parser
 					// Loop through all the lumps searching for frames for this skin.
-					for ( k = 0; static_cast<signed> (k) < Wads.GetNumLumps( ); k++ )
+					for (k = 0; static_cast<signed> (k) < Wads.GetNumLumps(); k++)
 					{
 						// Only process skin entries from the wad the SKININFO lump is in.
 						// NOTE: If this isn't done, Skulltag doesn't work with hr.wad.
-						if ( Wads.GetLumpFile( base ) != Wads.GetLumpFile( k ))
+						if (Wads.GetLumpFile(base) != Wads.GetLumpFile(k))
 							continue;
 
 						char lname[9];
 						DWORD lnameint;
-						Wads.GetLumpName( lname, k );
+						Wads.GetLumpName(lname, k);
 						memcpy(&lnameint, lname, 4);
-						if (lnameint == intname)
+						if (lnameint == sprval)
 						{
 							FTextureID picnum = TexMan.CreateTexture(k, FTexture::TEX_SkinSprite);
 							if (!picnum.isValid())
 								continue;
 
-							bool res = R_InstallSpriteLump (picnum, lname[4] - 'A', lname[5], false);
+							bool res = R_InstallSpriteLump(picnum, lname[4] - 'A', lname[5], false);
 
 							if (lname[6] && res)
-								R_InstallSpriteLump (picnum, lname[6] - 'A', lname[7], true);
+								R_InstallSpriteLump(picnum, lname[6] - 'A', lname[7], true);
 						}
 					}
 
-					if (spr == 0 && maxframe <= 0)
+					//Go on to the next sprite if there's no frames.
+					if (maxframe <= 0)
 					{
-						Printf (PRINT_BOLD, "Skin %s (#%d) has no frames. Removing.\n", skins[i].name, (int)i);
-						remove = true;
-						break;
+						/*Printf(PRINT_BOLD, "Skin %s (#%d) - Sprite %.4s has no frames.\n",
+						skins[i].name, (int)i, &sprval);*/
+						intname.Remove(sprval);
+						spritesUsed--;
+						continue;
 					}
 
-					// [BB] S_SKIN only, unless we don't have a proper intname.
-					if ( ( s_skin != 0 ) || ( intname == 0 ) )
-						Wads.GetLumpName (temp.name, base+1);
-					else
-						memcpy(temp.name, &intname, 4);
+					memcpy(temp.name, &sprval, 4);
 					temp.name[4] = 0;
-					int sprno = (int)sprites.Push (temp);
-					if (spr==0)	skins[i].sprite = sprno;
-					else skins[i].crouchsprite = sprno;
-					R_InstallSprite (sprno);
+					int sprno = (int)sprites.Push(temp);
+
+					if (sprkey == 0)
+						skins[i].sprites[0] = skins[i].sprite = sprno;
+
+					else if (sprkey == -1)
+						skins[i].sprites[-1] = skins[i].crouchsprite = sprno;
+
+					else //if (GetSpriteIndex((char*)&sprkey) != -1)
+						skins[i].sprites[*(DWORD*)&sprkey] = sprno;
+
+					R_InstallSprite(sprno);
 				}
+				
+				//If there's no sprites at the end, then remove the skin.
+				if (spritesUsed == 0)
+				{
+					Printf(PRINT_BOLD, "Skin %s (#%d) has no frames. Removing.\n", skins[i].name, (int)i);
+					remove = true;
+					break;
+				}
+
 			}
 
 			if (remove)

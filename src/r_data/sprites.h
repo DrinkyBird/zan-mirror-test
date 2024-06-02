@@ -46,7 +46,7 @@ struct params
 };
 
 typedef TMap<FString, params> paramlist;
-
+typedef TMap<int, int> intmap;
 
 extern TArray<spriteframe_t> SpriteFrames;
 
@@ -86,6 +86,7 @@ public:
 
 	// [BOF] Extra SKININFO values for Zandronum.
 	paramlist	param;							// A dynamic list for GetSkinInfo to grab values from SKININFO, including custom ones.
+	intmap		sprites;						// Array variant using the sprite to replace as the key
 	char		displayname[MAX_SKIN_NAME + 1];	// Display name for menu
 
 
