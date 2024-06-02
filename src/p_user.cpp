@@ -766,13 +766,17 @@ void APlayerPawn::BeginPlay ()
 	// Check whether a PWADs normal sprite is to be combined with the base WADs
 	// crouch sprite. In such a case the sprites normally don't match and it is
 	// best to disable the crouch sprite.
-	if (crouchsprite > 0)
+	FName playerclass = GetClass()->TypeName;
+	
+	int crouchspr = GetClass()->ActorInfo->CrouchSprites[SpawnState->sprite] = GetClass()->ActorInfo->CrouchSprites[0];
+
+	if (crouchspr > 0)
 	{
 		// This assumes that player sprites always exist in rotated form and
 		// that the front view is always a separate sprite. So far this is
 		// true for anything that exists.
 		FString normspritename = sprites[SpawnState->sprite].name;
-		FString crouchspritename = sprites[crouchsprite].name;
+		FString crouchspritename = sprites[crouchspr].name;
 
 		int spritenorm = Wads.CheckNumForName(normspritename + "A1", ns_sprites);
 		int spritecrouch = Wads.CheckNumForName(crouchspritename + "A1", ns_sprites);
@@ -780,7 +784,7 @@ void APlayerPawn::BeginPlay ()
 		if (spritenorm==-1 || spritecrouch ==-1) 
 		{
 			// Sprites do not exist so it is best to disable the crouch sprite.
-			crouchsprite = 0;
+			crouchspr = 0;
 			return;
 		}
 	
@@ -790,7 +794,7 @@ void APlayerPawn::BeginPlay ()
 		if (wadnorm > FWadCollection::IWAD_FILENUM && wadcrouch <= FWadCollection::IWAD_FILENUM) 
 		{
 			// Question: Add an option / disable crouching or do what?
-			crouchsprite = 0;
+			crouchspr = 0;
 		}
 	}
 }
@@ -2610,9 +2614,9 @@ void P_CheckPlayerSprite(AActor *actor, int &spritenum, fixed_t &scalex, fixed_t
 	// Set the crouch sprite?
 	if (player->crouchfactor < FRACUNIT*3/4)
 	{
-		if (spritenum == actor->SpawnState->sprite || spritenum == player->mo->crouchsprite) 
+		if (actor->GetClass()->ActorInfo->CrouchSprites.CheckKey(spritenum))
 		{
-			crouchspriteno = player->mo->crouchsprite;
+			crouchspriteno = actor->GetClass()->ActorInfo->CrouchSprites[actor->state->sprite];
 		}
 		// [BB/AK] An overridden skin also overrides NOSKIN.
 		else if ( ( !(actor->flags4 & MF4_NOSKIN) || ( overrideSkin != -1 ) ) &&

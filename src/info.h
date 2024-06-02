@@ -273,6 +273,7 @@ struct FActorInfo
 	PainChanceList *PainChances;
 	PainFlashList *PainFlashes;
 	FPlayerColorSetMap *ColorSets;
+	TMap<int, int> CrouchSprites;
 	TArray<const PClass *> VisibleToPlayerClass;
 	TArray<const PClass *> RestrictedToPlayerClass;
 	TArray<const PClass *> ForbiddenToPlayerClass;

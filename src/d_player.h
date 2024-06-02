@@ -142,7 +142,7 @@ public:
 	void BeginPlay ();
 	void Die (AActor *source, AActor *inflictor, int dmgflags);
 
-	int			crouchsprite;
+	//int	crouchsprite; // [BOF] no longer used, Crouch Sprites are now stored in the class instead to allow for multiple.
 	int			MaxHealth;
 	int			MugShotMaxHealth;
 	int			RunHealth;

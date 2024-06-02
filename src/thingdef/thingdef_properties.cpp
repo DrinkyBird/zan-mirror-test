@@ -2597,23 +2597,32 @@ DEFINE_CLASS_PROPERTY_PREFIX(player, scoreicon, S, PlayerPawn)
 }
 
 //==========================================================================
-//
+// [BOF] You can define crouch sprites for 
+// specific states in your class now to complete the package.
 //==========================================================================
-DEFINE_CLASS_PROPERTY_PREFIX(player, crouchsprite, S, PlayerPawn)
+DEFINE_CLASS_PROPERTY_PREFIX(player, crouchsprite, Ss, PlayerPawn)
 {
-	PROP_STRING_PARM(z, 0);
-	if (strlen(z) == 4)
+
+	PROP_STRING_PARM(z, 0); // Changed Sprite
+	PROP_STRING_PARM(z2, 1); // Sprite to Change 
+
+	if (PROP_PARM_COUNT > 1 && *z2 != 0 && strlen(z) == 4 && strlen(z2) == 4)
 	{
-		defaults->crouchsprite = GetSpriteIndex (z);
+		info->CrouchSprites[GetSpriteIndex(z2)] = GetSpriteIndex(z);
+	}
+	else if (strlen(z) == 4)
+	{
+		info->CrouchSprites[0] = GetSpriteIndex(z); // Index 0 is for the Spawn State, the default.
 	}
 	else if (*z == 0)
 	{
-		defaults->crouchsprite = 0;
+		info->CrouchSprites[0] = 0;
 	}
 	else
 	{
-		I_Error("Sprite name must have exactly 4 characters");
+		I_Error("Sprite name%s must have exactly 4 characters", *z2 == 0 ? "" : "s");
 	}
+
 }
 
 //==========================================================================
