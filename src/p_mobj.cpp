@@ -552,34 +552,45 @@ bool AActor::SetState (FState *newstate, bool nofunction)
 				// [AK] Check if the player is using a skin that overrides NOSKIN,
 				// except when this actor is a player chunk.
 				const int overrideSkin = IsKindOf( RUNTIME_CLASS( APlayerChunk )) ? -1 : PLAYER_GetOverrideSkin( this->player );
+				const int weaponSkin = IsKindOf(RUNTIME_CLASS(APlayerChunk)) ? -1 : PLAYER_GetWeaponSkin(this->player);
 				// [AK] Don't change to the skin's sprite if the new sprite is TNT1A0.
-				if ((player != NULL && !(flags4 & MF4_NOSKIN) || overrideSkin != -1 && newsprite != SPR_TNT1)
+				if ((player != NULL && !PLAYER_ShouldForceBaseSkin(player) || (overrideSkin != -1 || weaponSkin != -1) && newsprite != SPR_TNT1)
 					&& (newsprite == SpawnState->sprite ||
 						// [BOF] Check if skin has a state equivalent.
 						(newsprite == state->sprite && state->sprite != SPR_TNT1
-							&& (skins[(overrideSkin != -1) ? overrideSkin : player->userinfo.GetSkin()].sprites.CheckKey(*(DWORD*)(&sprites[newsprite].name))))))
-				{ // [RH] If the new sprite is the same as the original sprite, and
-				// this actor is attached to a player, use the player's skin's
-				// sprite. If a player is not attached, do not change the sprite
-				// unless it is different from the previous state's sprite; a
-				// player may have been attached, died, and respawned elsewhere,
-				// and we do not want to lose the skin on the body. If it wasn't
-				// for Dehacked, I would move sprite changing out of the states
-				// altogether, since actors rarely change their sprites after
-				// spawning.
-					if (overrideSkin != -1) // [AK] Show the overridden skin first if valid.
+							&& (skins[(overrideSkin != -1) ? overrideSkin : player->userinfo.GetSkin()].sprites.CheckKey(*(DWORD*)sprites[newsprite].name) ||
+								skins[(weaponSkin != -1) ? weaponSkin : player->userinfo.GetSkin()].sprites.CheckKey(*(DWORD*)sprites[newsprite].name)))))
+				{
+
+				visibleSkin = PLAYER_GetVisibleSkin(this->player); // [BOF] Record the last visibleSkin of the actor so it keeps track after losing player attachment.
+
+				}
+
+				if (visibleSkin != -1 && visibleSkin > PlayerClasses.Size()-1)
+				{
+					if (weaponSkin != -1)
 					{
+						int skin = (overrideSkin != -1 ? overrideSkin : player->userinfo.GetSkin());
 						sprite =
-							skins[overrideSkin].sprites.CheckKey(*(DWORD*)(&sprites[newsprite].name)) ?
-							skins[overrideSkin].sprites[*(DWORD*)(&sprites[newsprite].name)] :
-							skins[overrideSkin].sprite;
-						//sprite = skins[overrideSkin].sprite;
+							skins[weaponSkin].sprites.CheckKey(*(DWORD*)sprites[sprite].name) ?
+							skins[weaponSkin].sprites[*(DWORD*)sprites[sprite].name] :
+							skins[weaponSkin].sprite;
+
+						if (skins[skin].sprites.CheckKey(*(DWORD*)sprites[sprite].name))
+							sprite = skins[skin].sprites[*(DWORD*)sprites[sprite].name];
 					}
-					else if (player != NULL && (skins.Size() > static_cast<unsigned int> (player->userinfo.GetSkin()))) // [BB] Adapted the skins check
+					else if ( overrideSkin != -1 ) // [AK] Show the overridden skin first if valid.
 					{
 						sprite =
-							skins[player->userinfo.GetSkin()].sprites.CheckKey(*(DWORD*)(&sprites[newsprite].name)) ?
-							skins[player->userinfo.GetSkin()].sprites[*(DWORD*)(&sprites[newsprite].name)] :
+						skins[overrideSkin].sprites.CheckKey(*(DWORD*)sprites[newsprite].name) ?
+						skins[overrideSkin].sprites[*(DWORD*)sprites[newsprite].name] :
+						skins[overrideSkin].sprite;
+					}
+					else if (player != NULL && ( skins.Size() > static_cast<unsigned int> ( player->userinfo.GetSkin() ) ) ) // [BB] Adapted the skins check
+					{
+						sprite =
+							skins[player->userinfo.GetSkin()].sprites.CheckKey(*(DWORD*)sprites[newsprite].name) ?
+							skins[player->userinfo.GetSkin()].sprites[*(DWORD*)sprites[newsprite].name] :
 							skins[player->userinfo.GetSkin()].sprite;
 					}
 					else if (newsprite != prevsprite)
@@ -5617,6 +5628,13 @@ APlayerPawn *P_SpawnPlayer (FPlayerStart *mthing, int playernum, int flags)
 	p->Uncrouch();
 	p->MinPitch = p->MaxPitch = 0;	// will be filled in by PostBeginPlay()/netcode
 	p->cheats &= ~CF_FLY;
+
+	// [BOF] Set previous corpse's skin to the last ACSSkin, and clear the Player's ACSSkin.
+	p->mo->ACSSkin = p->ACSSkin;
+	p->ACSSkin = NAME_None;
+	p->mo->ACSSkinOverridesWeaponSkin = p->ACSSkinOverridesWeaponSkin;
+	p->ACSSkinOverridesWeaponSkin = false;
+	p->VisibleSkin = lSkin;
 
 	p->velx = p->vely = 0;		// killough 10/98: initialize bobbing to 0.
 

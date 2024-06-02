@@ -2572,16 +2572,16 @@ DEFINE_ACTION_FUNCTION(AActor, A_CheckPlayerDone)
 
 void P_CheckPlayerSprite(AActor *actor, int &spritenum, fixed_t &scalex, fixed_t &scaley)
 {
-	player_t *player = actor->player;
-	int crouchspriteno;
-
-	Printf("%s\n", sprites[spritenum].name);
+	player_t* player = actor->player;
+	int crouchspriteno = -1;
+	int weapSprite = -1;
 
 	// [AK] Don't set the player's sprite if their current body doesn't match their class due to A_SkullPop.
 	if ( actor->IsKindOf( RUNTIME_CLASS( APlayerChunk )))
 		return;
 
 	// [BC] Because of cl_skins, we might not necessarily use the player's desired skin.
+	const int weaponSkin = PLAYER_GetWeaponSkin( player ); // [BOF]
 	const int overrideSkin = PLAYER_GetOverrideSkin( player ); // [AK]
 	int skin = player->userinfo.GetSkin();
 
@@ -2589,6 +2589,23 @@ void P_CheckPlayerSprite(AActor *actor, int &spritenum, fixed_t &scalex, fixed_t
 	if ( PLAYER_ShouldForceBaseSkin( player ))
 		skin = R_FindSkin( "base", player->CurrentPlayerClass );
 
+	// [BOF] Split up overrideSkin for ACS and Weapon Skins.
+	if ((weaponSkin != -1) && (weaponSkin != skin) && (weaponSkin != overrideSkin))
+	{
+		if ((overrideSkin != -1) && (overrideSkin != skin))
+			skin = overrideSkin;
+
+		weapSprite = spritenum =
+			skins[weaponSkin].sprites.CheckKey(*(DWORD*)sprites[spritenum].name) ?
+			skins[weaponSkin].sprites[*(DWORD*)sprites[spritenum].name] :
+			skins[weaponSkin].sprite;
+
+		if (skins[skin].sprites.CheckKey(*(DWORD*)sprites[spritenum].name))
+		{
+			spritenum = skins[skin].sprites[*(DWORD*)sprites[spritenum].name];
+		}
+		else skin = weaponSkin;
+	}
 	// [BB/AK/BOF] If the skin was overridden from ACS, make the player use it here.
 	else if ((overrideSkin != -1) && (overrideSkin != skin))
 	{
@@ -2615,6 +2632,12 @@ void P_CheckPlayerSprite(AActor *actor, int &spritenum, fixed_t &scalex, fixed_t
 			skins[skin].sprite;
 	}
 
+	if (player->VisibleSkin != skin)
+	{
+		R_BuildPlayerTranslation(actor->IsKindOf(RUNTIME_CLASS(APlayerChunk)));
+		player->VisibleSkin = skin;
+	}
+
 	// [BB/AK] An overridden skin also overrides NOSKIN.
 	if (skin != 0 && ( !(player->mo->flags4 & MF4_NOSKIN) || ( overrideSkin != -1 ) ) )
 	{
@@ -2634,13 +2657,44 @@ void P_CheckPlayerSprite(AActor *actor, int &spritenum, fixed_t &scalex, fixed_t
 		}
 		// [BB/AK] An overridden skin also overrides NOSKIN.
 		else if (actor->GetClass()->ActorInfo->CrouchSprites.CheckKey(actor->state->sprite) &&
-			(skins[skin].sprites.CheckKey(*(DWORD*)sprites[actor->GetClass()->ActorInfo->CrouchSprites[actor->state->sprite]].name) ||
-			(skins[skin].crouchsprite && actor->state->sprite == actor->SpawnState->sprite)))
+			(!(actor->flags4 & MF4_NOSKIN) || (overrideSkin != -1)) || (weaponSkin != -1) && // Visible Skin?
+			(spritenum == skins[skin].sprite || // Check for sprite
+				(skins[skin].sprites.CheckKey(*(DWORD*)sprites[actor->state->sprite].name) && // Check Sprite Array
+					spritenum == skins[skin].sprites[*(DWORD*)sprites[actor->state->sprite].name])))
 		{
-			crouchspriteno =
-				skins[skin].sprites.CheckKey(*(DWORD*)sprites[actor->GetClass()->ActorInfo->CrouchSprites[actor->state->sprite]].name) ?
-				skins[skin].sprites[*(DWORD*)sprites[actor->GetClass()->ActorInfo->CrouchSprites[actor->state->sprite]].name] :
-				skins[skin].crouchsprite;
+			// [BOF] Check Skin over Weapon Skin 
+			if (weaponSkin != -1 && skin != weaponSkin &&
+				// Weapon Skin's Sprites Array Check
+				((skins[weaponSkin].sprites.CheckKey(*(DWORD*)sprites[actor->GetClass()->ActorInfo->CrouchSprites[actor->state->sprite]].name) && // What a mouthful
+				skins[skin].sprites.CheckKey(*(DWORD*)sprites[skins[weaponSkin].sprites[*(DWORD*)sprites[actor->GetClass()->ActorInfo->CrouchSprites[actor->state->sprite]].name]].name)) ||
+
+				// Weapon Skin's Crouch Sprite Check
+				((skins[weaponSkin].crouchsprite && actor->state->sprite == actor->SpawnState->sprite) &&
+				skins[skin].sprites.CheckKey(*(DWORD*)sprites[skins[weaponSkin].crouchsprite].name))
+				))
+
+			{
+				crouchspriteno =
+					skins[weaponSkin].sprites.CheckKey(*(DWORD*)sprites[actor->GetClass()->ActorInfo->CrouchSprites[actor->state->sprite]].name) &&
+					skins[skin].sprites.CheckKey(*(DWORD*)sprites[skins[weaponSkin].sprites[*(DWORD*)sprites[actor->GetClass()->ActorInfo->CrouchSprites[actor->state->sprite]].name]].name) ?
+					skins[skin].sprites[*(DWORD*)sprites[skins[weaponSkin].sprites[*(DWORD*)sprites[actor->GetClass()->ActorInfo->CrouchSprites[actor->state->sprite]].name]].name] :
+
+					skins[skin].sprites.CheckKey(*(DWORD*)sprites[skins[weaponSkin].crouchsprite].name) ?
+					skins[skin].sprites[*(DWORD*)sprites[skins[weaponSkin].crouchsprite].name] :
+
+					-1; // Shouldn't Happen with the conditions above, but just to be safe.
+			}
+			// Check Regular Skin
+			else if ((skins[skin].sprites.CheckKey(*(DWORD*)sprites[actor->GetClass()->ActorInfo->CrouchSprites[actor->state->sprite]].name) || 
+				(skins[skin].crouchsprite && actor->state->sprite == actor->SpawnState->sprite)) &&
+				weaponSkin == -1 || weaponSkin == skin)
+			{
+				crouchspriteno =
+					skins[skin].sprites.CheckKey(*(DWORD*)sprites[actor->GetClass()->ActorInfo->CrouchSprites[actor->state->sprite]].name) ?
+					skins[skin].sprites[*(DWORD*)sprites[actor->GetClass()->ActorInfo->CrouchSprites[actor->state->sprite]].name] :
+					skins[skin].crouchsprite;
+
+			}
 		}
 		else
 		{ // no sprite -> squash the existing one

@@ -1113,13 +1113,14 @@ void R_BuildAllPlayerTranslations()
 
 void R_BuildPlayerTranslation (int player)
 {
+	int skin = PLAYER_GetVisibleSkin(&players[player]) != -1 ? PLAYER_GetVisibleSkin(&players[player]) : players[player].userinfo.GetSkin();
 	float h, s, v;
 	FPlayerColorSet *colorset;
 
 	D_GetPlayerColor (player, &h, &s, &v, &colorset);
 
 	R_CreatePlayerTranslation (h, s, v, colorset,
-		&skins[players[player].userinfo.GetSkin()],
+		&skins[skin],
 		translationtables[TRANSLATION_Players][player],
 		translationtables[TRANSLATION_PlayersExtra][player]);
 }

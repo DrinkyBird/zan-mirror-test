@@ -1252,6 +1252,14 @@ public:
 	// end of GZDoom specific additions
 
 	size_t PropagateMark();
+
+	// [BOF] Last visible Skin for Player Actors.
+	int visibleSkin = -1;
+
+	// [BOF] For Override Skin corpses when respawning quickly
+	FNameNoInit ACSSkin;
+	bool	ACSSkinOverridesWeaponSkin;
+
 };
 
 class FActorIterator

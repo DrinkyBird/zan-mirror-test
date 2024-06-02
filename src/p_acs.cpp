@@ -8554,15 +8554,22 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 				const bool overrideWeaponPreferredSkin = argCount > 2 ? !!args[2] : false;
 
 				// [AK] If an empty string is used, then it should remove the skin.
-				if ( strlen( skinName ) > 0 )
+				if ( strlen( skinName ) > 0 && 
+				(!stricmp(skinName, "Base") || // [BOF] Make sure Skin is part of the class.
+				R_FindSkin(skinName, players[playerIndex].CurrentPlayerClass) != players[playerIndex].CurrentPlayerClass), true) 
+				{
 					players[playerIndex].ACSSkin = skinName;
+					players[playerIndex].ACSSkinOverridesWeaponSkin = overrideWeaponPreferredSkin;
+				}
 				else
+				{
 					players[playerIndex].ACSSkin = NAME_None;
-
-				players[playerIndex].ACSSkinOverridesWeaponSkin = overrideWeaponPreferredSkin;
-
+					players[playerIndex].ACSSkinOverridesWeaponSkin = false;
+				}
 				if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 					SERVERCOMMANDS_SetPlayerACSSkin( playerIndex );
+
+				R_BuildPlayerTranslation(playerIndex); // [BOF] Update Player's Translation
 
 				return 1;
 			}
@@ -8620,14 +8627,7 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 				// guess and check, then use their overridden skin (i.e. weapon preferred skin
 				// or from ACS) first if available, and their personal skin last.
 				else if ( type == PLAYERSKIN_VISIBLE )
-				{
-					const int overrideSkin = PLAYER_GetOverrideSkin( player );
-
-					if ( overrideSkin != -1 )
-						skinIndex = overrideSkin;
-					else if ( PLAYER_ShouldForceBaseSkin( player ) == false )
-						skinIndex = player->userinfo.GetSkin( );
-				}
+					return PLAYER_GetVisibleSkin(player);
 
 				return skinIndex; //[BOF] Return skin index number instead of name. Interface with GetSkinInfo below.
 			}
