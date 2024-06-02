@@ -1213,22 +1213,14 @@ void R_InitSkins (void)
 // [RH] Find a skin by name
 int R_FindSkin (const char *name, int pclass)
 {
-	if (stricmp ("base", name) == 0)
+	// [BOF] Shrink this down a fair bit by parsing skin numbers within class itself.
+	for (unsigned i = 0; i < PlayerClasses[pclass].Skins.Size(); i++)
 	{
-		return pclass;
-	}
-
-	for (unsigned i = PlayerClasses.Size(); i < skins.Size(); i++)
-	{
+		int classSkin = PlayerClasses[pclass].Skins[i];
 		// [BC] Changed from 16 to MAX_SKIN_NAME.
-		if (strnicmp(skins[i].name, name, MAX_SKIN_NAME) == 0 &&
-			(skins[i].bRevealedByDefault))
-		{
-			if (PlayerClasses[pclass].CheckSkin (i))
-			{	
-				return i;
-			}
-		}
+		if (strnicmp(skins[classSkin].name, name, MAX_SKIN_NAME) == 0 &&
+			(skins[classSkin].bRevealedByDefault))
+				return classSkin;
 	}
 	return pclass;
 }
