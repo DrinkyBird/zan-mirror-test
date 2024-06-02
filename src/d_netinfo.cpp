@@ -614,9 +614,9 @@ void D_SetupUserInfo ()
 			// Some cvars don't copy their original value directly.
 			// [BB] Zandronum still uses its own team code.
 			//case NAME_Team:			coninfo->TeamChanged(team); break;
-			case NAME_Skin:			coninfo->SkinChanged(skin, players[consoleplayer].CurrentPlayerClass); break;
-			case NAME_Gender:		coninfo->GenderChanged(gender); break;
 			case NAME_PlayerClass:	coninfo->PlayerClassChanged(playerclass); break;
+			case NAME_Skin:			coninfo->SkinChanged(skin, D_PlayerClassToInt(playerclass)); break; // [BOF] CurrentPlayerClass isn't set at this point, use D_PlayerClassToInt instead.
+			case NAME_Gender:		coninfo->GenderChanged(gender); break;
 			// [BB]
 			case NAME_RailColor:			coninfo->RailColorChanged(railcolor); break;
 			case NAME_Handicap:				coninfo->HandicapChanged(handicap); break;
@@ -691,7 +691,7 @@ int userinfo_t::SkinChanged(const char *skinname, int playerclass)
 {
 	int skinnum = R_FindSkin(skinname, playerclass);
 	*static_cast<FIntCVar *>((*this)[NAME_Skin]) = skinnum;
-	return skinnum;
+	return skins[skinnum].bRevealedByDefault ? skinnum : playerclass; // [BOF] Don't return skins that are selectable.
 }
 
 int userinfo_t::SkinNumChanged(int skinnum)

@@ -1221,12 +1221,13 @@ int R_FindSkin (const char *name, int pclass)
 	for (unsigned i = PlayerClasses.Size(); i < skins.Size(); i++)
 	{
 		// [BC] Changed from 16 to MAX_SKIN_NAME.
-		if (strnicmp (skins[i].name, name, MAX_SKIN_NAME) == 0)
+		if (strnicmp(skins[i].name, name, MAX_SKIN_NAME) == 0 &&
+			(skins[i].bRevealedByDefault))
 		{
 			if (PlayerClasses[pclass].CheckSkin (i))
+			{	
 				return i;
-			else
-				return pclass;
+			}
 		}
 	}
 	return pclass;

@@ -860,6 +860,9 @@ void DPlayerMenu::UpdateSkins()
 					// [BB] Support for hidden skins.
 					if ( skins[i].bRevealed == false )
 						continue;
+					// [BOF] Unselectable Skins don't appear.
+					if (skins[i].bRevealedByDefault == false)
+						continue;
 
 					int j = PlayerSkins.Push(i);
 					li->SetString(j, skins[i].name);
