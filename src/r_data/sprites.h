@@ -39,6 +39,16 @@ struct spritedef_t
 	WORD spriteframes;
 };
 
+struct params
+{
+	int stringOnly = -1; // For params such as "name" and "class" For GetSkinInfo to always return a string instead of an int.
+	TArray<FString> list; //Regular array
+	TMap<FString, FString> charlist; //Array with string keys
+};
+
+typedef TMap<FString, params> paramlist;
+
+
 extern TArray<spriteframe_t> SpriteFrames;
 
 
@@ -75,6 +85,7 @@ public:
 	bool		bCheat;
 
 	// [BOF] Extra SKININFO values for Zandronum.
+	paramlist	param;							// A dynamic list for GetSkinInfo to grab values from SKININFO, including custom ones.
 	char		displayname[MAX_SKIN_NAME + 1];	// Display name for menu
 
 

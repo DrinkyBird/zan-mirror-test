@@ -5470,6 +5470,7 @@ enum EACSFunctions
 	ACSF_GetPlayerCountry,
 	ACSF_SetNextMapPosition,
 	ACSF_GivePlayerMedal,
+	ACSF_GetSkinInfo,
 
 	// ZDaemon
 	ACSF_GetTeamScore = 19620,	// (int team)
@@ -8637,6 +8638,33 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 
 			// [AK] Return an empty string for invalid players instead.
 			return GlobalACSStrings.AddString( "" );
+		}
+		
+		case ACSF_GetSkinInfo: // [BOF] Get the parameter of a skin through its index as a string.
+		{
+
+			int skinIndex = args[0];
+			if (skinIndex < 0 || skinIndex > skins.Size() - 1) return GlobalACSStrings.AddString("");
+
+			const char* paramIndex = FBehavior::StaticLookupString(args[1]);
+			int keyValue = argCount >= 3 ? args[2] : 0;
+			char* charKeyValue = argCount >= 3 ? FBehavior::StaticLookupString(args[2]) : "";
+
+			if (skins[skinIndex].param.CheckKey(paramIndex))
+			{
+
+				if (skins[skinIndex].param[paramIndex].charlist.CountUsed() &&
+					skins[skinIndex].param[paramIndex].charlist.CheckKey(charKeyValue))
+				{
+					return GlobalACSStrings.AddString(skins[skinIndex].param[paramIndex].charlist[charKeyValue]);
+				}
+				else if (skins[skinIndex].param[paramIndex].list.Size() &&
+					(keyValue < skins[skinIndex].param[paramIndex].list.Size()))
+				{
+					return GlobalACSStrings.AddString(skins[skinIndex].param[paramIndex].list[keyValue]);
+				}
+			}
+			return GlobalACSStrings.AddString("");
 		}
 
 		case ACSF_GetPlayerCountry:

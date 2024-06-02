@@ -628,6 +628,8 @@ void R_InitSkins (void)
 					// [BC] MAX_SKIN_NAME.
 					strncpy(skins[i].name, sc.String, MAX_SKIN_NAME);
 
+					skins[i].param[key].list[1] = skins[i].param[key].list[0] = skins[i].name;
+
 					// [BOF] Check for name after parsing and erase duplicates within same class instead.
 					
 					// [BOF] Prevent skins from intentionally being named 'skin#'
@@ -650,6 +652,9 @@ void R_InitSkins (void)
 					for (j = 3; j >= 0; j--)
 						sc.String[j] = toupper(sc.String[j]);
 					intname = *((DWORD*)sc.String);
+
+					skins[i].param[key].list[0] = sc.String;
+					skins[i].param[key].list[0].Truncate(4);
 				}
 
 				// Crouching Sprite
@@ -658,6 +663,10 @@ void R_InitSkins (void)
 					for (j = 3; j >= 0; j--)
 						sc.String[j] = toupper(sc.String[j]);
 					crouchname = *((DWORD*)sc.String);
+
+					skins[i].param[key].list.Resize(1);
+					skins[i].param[key].list[0] = sc.String;
+					skins[i].param[key].list[0].Truncate(4);
 				}
 
 				// HUD Face
@@ -666,12 +675,19 @@ void R_InitSkins (void)
 					for (j = 2; j >= 0; j--)
 						skins[i].face[j] = toupper(sc.String[j]);
 					skins[i].face[3] = '\0';
+					
+					skins[i].param[key].list.Resize(1);
+					skins[i].param[key].list[0] = skins[i].face;
 				}
 
 				// Gender
 				else if (!key.Compare("gender"))
 				{
 					skins[i].gender = D_GenderToInt(sc.String);
+
+					skins[i].param[key].list.Resize(2);
+					skins[i].param[key].list[0].Format("%i", skins[i].gender);	// Integer value of gender
+					skins[i].param[key].list[1] = sc.String;		// Actual field entry
 				}
 
 				// Scale
@@ -680,15 +696,18 @@ void R_InitSkins (void)
 					sc.UnGet();
 					sc.GetToken();
 					skins[i].ScaleX = clamp<fixed_t>(FLOAT2FIXED(atof(sc.String)), 1, 256 * FRACUNIT);
+					skins[i].param[key].list[1].Format("%i", skins[i].ScaleX);
 
 					if (sc.CheckToken(','))
 					{
 						sc.GetToken();
 						skins[i].ScaleY = clamp<fixed_t>(FLOAT2FIXED(atof(sc.String)), 1, 256 * FRACUNIT);
+						skins[i].param[key].list[1].Format("%i", skins[i].ScaleY);
 					}
 					else
 					{
 						skins[i].ScaleY = skins[i].ScaleX;
+						skins[i].param[key].list[1] = skins[i].param[key].list[0];
 					}
 				}
 
@@ -738,6 +757,9 @@ void R_InitSkins (void)
 
 					if (remove)
 						break;
+
+					skins[i].param[key].list.Resize(1);
+					skins[i].param[key].list[0] = sc.String;
 				}
 
 				// Class
@@ -752,6 +774,10 @@ void R_InitSkins (void)
 					}
 
 					basetype = transtype = PlayerClasses[pclass].Type;
+
+					skins[i].param[key].list.Resize(2);
+					skins[i].param[key].list[0].Format("%i", pclass); //Class Number
+					skins[i].param[key].list[1] = sc.String; //Class Name
 				}
 
 
@@ -763,10 +789,12 @@ void R_InitSkins (void)
 					if ((stricmp(sc.String, "true") == 0) || (stricmp(sc.String, "yes") == 0))
 					{
 						skins[i].bRevealed = true;
+						skins[i].param[key].list[0] = "0";
 					}
 					else if ((stricmp(sc.String, "false") == 0) || (stricmp(sc.String, "no") == 0))
 					{
 						skins[i].bRevealed = false;
+						skins[i].param[key].list[0] = "1";
 					}
 				}
 
@@ -775,10 +803,12 @@ void R_InitSkins (void)
 				{
 					if ((stricmp(sc.String, "true") == 0) || (stricmp(sc.String, "yes") == 0))
 					{
+						skins[i].param[key].list[0] = "1";
 						skins[i].bCheat = true;
 					}
 					else if ((stricmp(sc.String, "false") == 0) || (stricmp(sc.String, "no") == 0))
 					{
+						skins[i].param[key].list[0] = "0";
 						skins[i].bCheat = false;
 					}
 				}
@@ -787,6 +817,9 @@ void R_InitSkins (void)
 				else if (!key.Compare("color"))
 				{
 					skins[i].szColor = V_GetColor(NULL, sc.String); // [BOF] Set an actual color now
+					skins[i].param[key].list.Resize(1);
+					skins[i].param[key].list[0].Format("%06X", skins[i].szColor);
+					
 				}
 
 
@@ -796,6 +829,7 @@ void R_InitSkins (void)
 				else if (!key.Compare("displayname"))
 				{
 					strncpy(skins[i].displayname, sc.String, MAX_SKIN_NAME);
+					skins[i].param[key].list[0] = skins[i].displayname;
 				}
 
 				// Color Range
@@ -820,6 +854,9 @@ void R_InitSkins (void)
 					skins[i].range0start = MIN(tempbyte[0], tempbyte[1]);
 					skins[i].range0end = MAX(tempbyte[0], tempbyte[1]);
 					rangeChanged = true;
+
+					skins[i].param[key].list[0].Format("%i", skins[i].range0start);
+					skins[i].param[key].list[1].Format("%i", skins[i].range0end);
 				}
 
 				// Selectablility
@@ -828,10 +865,12 @@ void R_InitSkins (void)
 					if ((stricmp(sc.String, "false") == 0) || (stricmp(sc.String, "no") == 0))
 					{
 						skins[i].bRevealedByDefault = false;
+						skins[i].param[key].list[0] = "0";
 					}
 					else 
 					{
 						skins[i].bRevealedByDefault = true;
+						skins[i].param[key].list[0] = "1";
 					}
 
 				}
@@ -869,11 +908,14 @@ void R_InitSkins (void)
 							}
 						}
 					}
+					skins[i].param[key].list.Resize(1);
+					skins[i].param[key].list[0] = sc.String;
 				}
 
-				// Sound Replacement
+				// Sound Replacement / Custom Parameters
 				else
 				{
+					bool cont = false;
 					for (j = 0; j < NUMSKINSOUNDS; j++)
 					{
 						if (stricmp(key, skinsoundnames[j][0]) == 0)
@@ -887,7 +929,56 @@ void R_InitSkins (void)
 							{ // Replacement not found, try finding it in the global namespace
 								sndlumps[j] = Wads.CheckNumForFullName(sc.String, true, ns_sounds);
 							}
+							skins[i].param[key].list.Resize(1);
+							skins[i].param[key].list[0] = sc.String;
+							cont = true;
 						}
+
+					}
+					if (cont) continue; // Don't parse these audio files again below
+
+					// [BOF] Custom value support for GetSkinInfo
+
+					// Custom string array
+					if (sc.String[0] == '[')
+					{
+						skins[i].param[key].charlist.Clear();
+						skins[i].param[key].list.Clear();
+						sc.GetString();
+						do
+						{
+							if (sc.String[0] == ']')
+								break;
+							FString charkey = sc.String;
+
+							// If there's no more parsing without hitting ']' or you hit '}' the skin is considered invalid
+							if (!sc.GetString() || sc.String[0] != '=' || sc.String[0] == '}')
+							{
+								Printf(PRINT_BOLD, "Bad format for skin %d: %s\n", (int)i, key);
+								remove = true;
+								break;
+							}
+							sc.GetString();
+							skins[i].param[key].charlist[charkey] = sc.String;
+							//Printf(PRINT_BOLD,"%s : %s = %s\n", key, charkey, skins[i].param[key].charlist[charkey]);
+						} while (sc.GetString());
+						if (remove == true) break;
+					}
+					// Custom param or array
+					else
+					{
+						skins[i].param[key].charlist.Clear();
+						skins[i].param[key].list.Clear();
+						do
+						{
+							if (skins[i].param[key].list.Size() != 0)
+								sc.GetString();
+							//Inserts valid classes into a paramlist, if no classes are valid, param["class"] will be empty.
+							skins[i].param[key].list.Insert(
+								skins[i].param[key].list.Size(),
+								sc.String);
+							//Printf(PRINT_BOLD, "%s #%i = %s\n", key, skins[i].param[key].list.Size(), sc.String);
+						} while (sc.CheckString(","));
 					}
 				}
 
@@ -921,6 +1012,8 @@ void R_InitSkins (void)
 				{
 					skins[i].range0start = range0start;
 					skins[i].range0end = range0end;
+					skins[i].param["colorrange"].list[0].Format("%i", skins[i].range0start);
+					skins[i].param["colorrange"].list[1].Format("%i", skins[i].range0end);
 				}
 			
 				remove = true;
@@ -1162,8 +1255,6 @@ static void R_CreateSkin()
 	memset(&skin, 0, sizeof(FPlayerSkin));
 
 	const PClass *type = PlayerClasses[0].Type;
-	skin.range0start = type->Meta.GetMetaInt (APMETA_ColorRange) & 255;
-	skin.range0end = type->Meta.GetMetaInt (APMETA_ColorRange) >> 8;
 	skin.ScaleX = GetDefaultByType (type)->scaleX;
 	skin.ScaleY = GetDefaultByType (type)->scaleY;
 
@@ -1173,6 +1264,36 @@ static void R_CreateSkin()
 	// [BL] Hidden skins
 	skin.bRevealed = true;
 	skin.bRevealedByDefault = true;
+
+	// [BOF] Default Param Values
+	skin.param = (paramlist)skin.param;
+
+
+	skin.param["name"].list.Resize(2);
+	
+	skin.param["sprite"].list.Resize(1);
+	skin.param["sprite"].list[0] = sprites[skin.sprite].name;
+
+	skin.param["scale"].list.Resize(2);
+	skin.param["scale"].list[0].Format("%i", skin.ScaleX);
+	skin.param["scale"].list[1].Format("%i", skin.ScaleY);
+
+	skin.param["class"].list.Resize(2);
+	skin.param["class"].list[0] = "0";
+	skin.param["class"].list[1] = type->Meta.GetMetaString(APMETA_DisplayName);
+
+	skin.param["cheat"].list.Resize(1);
+	skin.param["cheat"].list[0] = "0";
+
+	skin.param["hidden"].list.Resize(1);
+	skin.param["hidden"].list[0] = "0";
+
+	skin.param["displayname"].list.Resize(1);
+
+	skin.param["selectable"].list.Resize(1);
+	skin.param["selectable"].list[0] = "1";
+	
+	skin.param["colorrange"].list.Resize(2);
 
 	skins.Push(skin);
 }
@@ -1248,6 +1369,8 @@ void R_InitSprites ()
 		const char *pclassface = basetype->Meta.GetMetaString (APMETA_Face);
 
 		strcpy (skins[i].name, "Base");
+		strcpy(skins[i].displayname, "Base");
+
 		if (pclassface == NULL || strcmp(pclassface, "None") == 0)
 		{
 			skins[i].face[0] = 'S';
@@ -1279,6 +1402,31 @@ void R_InitSprites ()
 				}
 			}
 		}
+
+		// [BOF] Base GetSkinInfo
+
+
+
+		skins[i].param["name"].list.Resize(2);
+		skins[i].param["displayname"].list.Resize(1);
+		skins[i].param["displayname"].list[0] =
+		skins[i].param["name"].list[1] = skins[i].param["name"].list[0] = skins[i].name;
+
+		skins[i].param["sprite"].list[0] = sprites[skins[i].sprite].name;
+
+		skins[i].param["face"].list.Resize(1);
+		skins[i].param["face"].list[0] = skins[i].face;
+
+		skins[i].param["scale"].list[0].Format("%i", skins[i].ScaleX);
+		skins[i].param["scale"].list[1].Format("%i", skins[i].ScaleY);
+
+		skins[i].param["class"].list[0] = 0;
+		skins[i].param["class"].list[0].Format("%i", i);
+		skins[i].param["class"].list[1] = basetype->Meta.GetMetaString(APMETA_DisplayName);
+
+		skins[i].param["colorrange"].list[0].Format("%i", skins[i].range0start);
+		skins[i].param["colorrange"].list[1].Format("%i", skins[i].range0end);
+
 	}
 
 	// [BB] Check if any of the skin sprites are ridiculously big to prevent
