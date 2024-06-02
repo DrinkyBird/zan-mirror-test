@@ -269,6 +269,7 @@ protected:
 
 public:
 	bool mEnabled;
+	int mRandomClass; // [BOF] Move here so it can be accessed by playermenu.cpp.
 
 	FListMenuItem(int xpos = 0, int ypos = 0, FName action = NAME_None)
 	{
@@ -346,7 +347,6 @@ class FListMenuItemPlayerDisplay : public FListMenuItem
 	BYTE mMode;	// 0: automatic (used by class selection), 1: manual (used by player setup)
 	BYTE mTranslate;
 	int mSkin;
-	int mRandomClass;
 	int mRandomTimer;
 	int mClassNum;
 

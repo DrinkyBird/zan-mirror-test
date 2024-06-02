@@ -615,7 +615,8 @@ void D_SetupUserInfo ()
 			// [BB] Zandronum still uses its own team code.
 			//case NAME_Team:			coninfo->TeamChanged(team); break;
 			case NAME_PlayerClass:	coninfo->PlayerClassChanged(playerclass); break;
-			case NAME_Skin:			coninfo->SkinChanged(skin, D_PlayerClassToInt(playerclass)); break; // [BOF] CurrentPlayerClass isn't set at this point, use D_PlayerClassToInt instead.
+			case NAME_Skin:			coninfo->SkinChanged(skin, 
+			D_PlayerClassToInt(playerclass) != -1 ? D_PlayerClassToInt(playerclass) : 0); break; // [BOF] CurrentPlayerClass isn't set at this point, use D_PlayerClassToInt instead.
 			case NAME_Gender:		coninfo->GenderChanged(gender); break;
 			// [BB]
 			case NAME_RailColor:			coninfo->RailColorChanged(railcolor); break;

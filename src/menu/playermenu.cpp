@@ -52,6 +52,7 @@
 
 EXTERN_CVAR (String, playerclass)
 EXTERN_CVAR (String, name)
+EXTERN_CVAR(String, skin)
 // [BB]
 //EXTERN_CVAR (Int, team)
 EXTERN_CVAR (Float, autoaim)
@@ -333,6 +334,10 @@ bool FValueTextItem::MenuEvent (int mkey, bool fromcontroller)
 			if (++mSelection >= (int)mSelections.Size()) mSelection = 0;
 			return true;
 		}
+		else if (mkey == MKEY_Clear)
+		{
+			return true;
+		}
 	}
 	return (mkey == MKEY_Enter);	// needs to eat enter keys so that Activate won't get called
 }
@@ -531,6 +536,7 @@ class DPlayerMenu : public DListMenu
 	TArray<int> PlayerColorSets;
 	TArray<int> PlayerSkins;
 	int mRotation;
+	int mRandomClass;
 
 	void PickPlayerClass ();
 	void UpdateColorsets();
@@ -539,7 +545,7 @@ class DPlayerMenu : public DListMenu
 	void SendNewColor (int red, int green, int blue);
 
 	void PlayerNameChanged(FListMenuItem *li);
-	void ColorSetChanged (FListMenuItem *li);
+	void ColorSetChanged (FListMenuItem *li, int mkey);
 	void ClassChanged (FListMenuItem *li);
 	void AutoaimChanged (FListMenuItem *li);
 	void SkinChanged (FListMenuItem *li);
@@ -734,9 +740,17 @@ void DPlayerMenu::UpdateTranslation()
 	int	PlayerSkin = players[consoleplayer].userinfo.GetSkin();
 	int PlayerColorset = players[consoleplayer].userinfo.GetColorSet();
 
+	if (PlayerClassIndex < 0)
+	{
+		FListMenuItem* li = GetItem(NAME_Playerdisplay);
+		mRandomClass = li != NULL ? li->mRandomClass : 0;
+		PlayerSkin = mRandomClass;
+	}
+
 	if (PlayerClass != NULL)
 	{
-		PlayerSkin = R_FindSkin (skins[PlayerSkin].name, int(PlayerClass - &PlayerClasses[0]));
+		// [BOF] Use visible class' base skin translation when random is selected.
+		PlayerSkin = (PlayerClassIndex < 0 ? mRandomClass : R_FindSkin(skin, int(PlayerClass - &PlayerClasses[0])));
 		R_GetPlayerTranslation(PlayerColor,
 			P_GetPlayerColorSet(PlayerClass->Type->TypeName, PlayerColorset),
 			&skins[PlayerSkin], translationtables[TRANSLATION_Players][MAXPLAYERS]);
@@ -751,7 +765,6 @@ void DPlayerMenu::UpdateTranslation()
 
 void DPlayerMenu::PickPlayerClass()
 {
-
 	/*
 	// What's the point of this? Aren't we supposed to edit the
 	// userinfo?
@@ -765,17 +778,15 @@ void DPlayerMenu::PickPlayerClass()
 		int pclass = 0;
 		// [GRB] Pick a class from player class list
 		if (PlayerClasses.Size () > 1)
-		{
 			pclass = players[consoleplayer].userinfo.GetPlayerClassNum();
 
-			if (pclass < 0)
-			{
-				pclass = (MenuTime>>7) % PlayerClasses.Size ();
-			}
-		}
 		PlayerClassIndex = pclass;
 	}
-	PlayerClass = &PlayerClasses[PlayerClassIndex];
+	// [BOF] Base is the only option on 'Random', so just hide the skin item instead.
+	FListMenuItem* skinmenu = GetItem(NAME_Skin);
+	if (skinmenu != NULL) skinmenu->Enable(PlayerClassIndex >= 0);
+
+	PlayerClass = &PlayerClasses[PlayerClassIndex < 0 ? 0 : PlayerClassIndex];
 	UpdateTranslation();
 }
 
@@ -838,47 +849,48 @@ void DPlayerMenu::UpdateColorsets()
 void DPlayerMenu::UpdateSkins()
 {
 	int sel = 0;
-	int skin;
+	// [BOF] When switching through classes, use the Skin CVAR if there's a match.
+	int skinnum;
+	int pclass = players[consoleplayer].userinfo.GetPlayerClassNum();
 	FListMenuItem *li = GetItem(NAME_Skin);
 	if (li != NULL)
 	{
-		if (GetDefaultByType (PlayerClass->Type)->flags4 & MF4_NOSKIN ||
-			players[consoleplayer].userinfo.GetPlayerClassNum() == -1)
+		if (GetDefaultByType (PlayerClass->Type)->flags4 & MF4_NOSKIN || pclass == -1)
 		{
 			li->SetString(0, "Base");
 			li->SetValue(0, 0);
-			skin = 0;
+			skinnum = 0;
 		}
 		else
 		{
 			PlayerSkins.Clear();
-			// [BB] numskins -> skins.Size()
+			// [BB] numskins -> skins.Size()	
 			for(int i=0;i<(int)skins.Size(); i++)
 			{
 				if (PlayerClass->CheckSkin(i))
 				{
 					// [BB] Support for hidden skins.
-					if ( skins[i].bRevealed == false )
-						continue;
+					if (skins[i].bRevealed == false)
+						if (0 == stricmp(skin, skins[i].name)) // [BOF] If you're currently a skin that is hidden
+							skins[i].bRevealed == true; //from a previous session, reveal it and carry on. 
+						else continue;
 					// [BOF] Unselectable Skins don't appear.
 					if (skins[i].bRevealedByDefault == false)
 						continue;
 
 					int j = PlayerSkins.Push(i);
-					li->SetString(j, skins[i].name);
-					if (players[consoleplayer].userinfo.GetSkin() == i)
-					{
+					li->SetString(j, skins[i].displayname);
+					if (R_FindSkin(skin, pclass) == i)
 						sel = j;
-					}
 				}
 			}
 			li->SetValue(0, sel);
-			skin = PlayerSkins[sel];
+			skinnum = PlayerSkins[sel];
 		}
 		li = GetItem(NAME_Playerdisplay);
 		if (li != NULL)
 		{
-			li->SetValue(FListMenuItemPlayerDisplay::PDF_SKIN, skin);
+			li->SetValue(FListMenuItemPlayerDisplay::PDF_SKIN, skinnum);
 		}
 	}
 	UpdateTranslation();
@@ -919,7 +931,7 @@ void DPlayerMenu::PlayerNameChanged(FListMenuItem *li)
 //
 //=============================================================================
 
-void DPlayerMenu::ColorSetChanged (FListMenuItem *li)
+void DPlayerMenu::ColorSetChanged (FListMenuItem *li, int mkey)
 {
 	int	sel;
 
@@ -937,6 +949,28 @@ void DPlayerMenu::ColorSetChanged (FListMenuItem *li)
 		if (red != NULL) red->Enable(mycolorset == -1);
 		if (green != NULL) green->Enable(mycolorset == -1);
 		if (blue != NULL) blue->Enable(mycolorset == -1);
+
+		// [BOF] Clear key on 'Custom' sets color to default skin color if it exists.
+		int skinnum = (PlayerClassIndex < 0 ? 0 : R_FindSkin(skin, PlayerClassIndex));
+		if (mkey == MKEY_Clear && mycolorset == -1 && skins[skinnum].szColor)
+		{
+			S_Sound(CHAN_VOICE | CHAN_UI, "menu/clear", snd_menuvolume, ATTN_NONE);
+			players[consoleplayer].userinfo.ColorChanged(skins[skinnum].szColor);
+			uint32 color = players[consoleplayer].userinfo.GetColor();
+			cvar_set("color", skins[skinnum].param["color"].list[0]);
+			if (red != NULL)
+			{
+				red->SetValue(0, RPART(color));
+			}
+			if (green != NULL)
+			{
+				green->SetValue(0, GPART(color));
+			}
+			if (blue != NULL)
+			{
+				blue->SetValue(0, BPART(color));
+			}
+		}
 
 		char command[24];
 		players[consoleplayer].userinfo.ColorSetChanged(mycolorset);
@@ -1000,8 +1034,8 @@ void DPlayerMenu::SkinChanged (FListMenuItem *li)
 	{
 		sel = PlayerSkins[sel];
 		players[consoleplayer].userinfo.SkinNumChanged(sel);
-		UpdateTranslation();
 		cvar_set ("skin", skins[sel].name);
+		UpdateTranslation();
 
 		li = GetItem(NAME_Playerdisplay);
 		if (li != NULL)
@@ -1065,7 +1099,7 @@ bool DPlayerMenu::MenuEvent (int mkey, bool fromcontroller)
 				break;
 
 			case NAME_Color:
-					ColorSetChanged(li);
+					ColorSetChanged(li, mkey);
 					break;
 
 			case NAME_Red:
@@ -1097,12 +1131,26 @@ bool DPlayerMenu::MenuEvent (int mkey, bool fromcontroller)
 				break;
 
 			case NAME_Skin:
+				if (mkey == MKEY_Clear)
+				{ //  [BOF] With the other default options, may as well add a shortcut to get back to Base skin.
+				S_Sound(CHAN_VOICE | CHAN_UI, "menu/clear", snd_menuvolume, ATTN_NONE);
+				li->SetValue(0, 0);
+				}
 				SkinChanged(li);
 				break;
 
 			case NAME_Gender:
 				if (li->GetValue(0, &v))
 				{
+					// [BOF] If skin has gender defined, you can use Clear to set your gender to the skins.
+					int skinnum = (PlayerClassIndex < 0 ? 0 : R_FindSkin(skin, PlayerClassIndex));
+					if (mkey == MKEY_Clear && skins[skinnum].gender)
+					{
+	
+					S_Sound(CHAN_VOICE | CHAN_UI, "menu/clear", snd_menuvolume, ATTN_NONE);
+					v = skins[skinnum].gender;
+					li->SetValue(0, v);
+					}
 					cvar_set ("gender", v==0? "male" : v==1? "female" : "other");
 				}
 				break;

@@ -412,7 +412,8 @@ void FListMenuItemPlayerDisplay::UpdateTranslation()
 
 	if (mPlayerClass != NULL)
 	{
-		PlayerSkin = R_FindSkin (skins[PlayerSkin].name, int(mPlayerClass - &PlayerClasses[0]));
+		// [BOF] Use visible class' base skin translation when random is selected.
+		PlayerSkin = (mClassNum < 0 ? mRandomClass : R_FindSkin(skins[mSkin].name, int(mPlayerClass - &PlayerClasses[0])));
 		R_GetPlayerTranslation(PlayerColor,
 			P_GetPlayerColorSet(mPlayerClass->Type->TypeName, PlayerColorset),
 			&skins[PlayerSkin], translationtables[TRANSLATION_Players][MAXPLAYERS]);
