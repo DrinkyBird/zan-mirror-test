@@ -798,7 +798,7 @@ public:
 	FNameNoInit	ACSSkin;
 
 	// [geNia] Should the skin set from ACS also override a weapon's preferred skin?
-	bool		ACSSkinOverridesWeaponSkin;
+	bool		ACSSkinOverridesSkinSounds;
 
 	// [BOF] Visible Skin for rebuilding Translations
 	int			VisibleSkin;

@@ -661,7 +661,7 @@ void SERVERCOMMANDS_SetPlayerACSSkin( const unsigned int player, const unsigned 
 	ServerCommands::SetPlayerACSSkin command;
 	command.SetPlayer( &players[player] );
 	command.SetSkinName( players[player].ACSSkin );
-	command.SetOverrideWeaponSkin( players[player].ACSSkinOverridesWeaponSkin );
+	command.SetOverrideSkinSounds( players[player].ACSSkinOverridesSkinSounds);
 	command.sendCommandToClients( playerExtra, flags );
 }
 

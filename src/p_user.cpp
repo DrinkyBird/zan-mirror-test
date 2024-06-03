@@ -362,7 +362,7 @@ player_t::player_t()
   bSpawnTelefragged( 0 ),
   ulTime( 0 ),
   bUnarmed( false ),
-  ACSSkinOverridesWeaponSkin( false )
+  ACSSkinOverridesSkinSounds( false )
 {
 	memset (&cmd, 0, sizeof(cmd));
 	// [BB] Check if this is still necessary.
@@ -524,7 +524,7 @@ player_t &player_t::operator=(const player_t &p)
 	ulTime = p.ulTime;
 	bUnarmed = p.bUnarmed;
 	ACSSkin = p.ACSSkin;
-	ACSSkinOverridesWeaponSkin = p.ACSSkinOverridesWeaponSkin;
+	ACSSkinOverridesSkinSounds = p.ACSSkinOverridesSkinSounds;
 
 	// [AK] Copy the old positions for the unlagged.
 	for ( unsigned int i = 0; i < UNLAGGEDTICS; i++ )
@@ -1379,34 +1379,51 @@ void APlayerPawn::FilterCoopRespawnInventory (APlayerPawn *oldplayer)
 
 const char *APlayerPawn::GetSoundClass() const
 {
+
+	FNameNoInit ACSSkin;
+	bool ACSSounds;
+
+	if (player != NULL)
+	{ 
+		ACSSkin = player->ACSSkin;
+		ACSSounds = player->ACSSkinOverridesSkinSounds;
+	}
+
 	// [AK] If this is a corpse, check which player it originally belonged to.
 	player_t *corpsePlayer = nullptr;
-	for ( unsigned int i = 0; i < BODYQUESIZE; i++ )
+	for (unsigned int i = 0; i < BODYQUESIZE; i++)
 	{
-		if ( this == bodyque[i] )
+		if (this == bodyque[i])
 		{
 			corpsePlayer = bodyquePlayer[i];
+			ACSSkin = corpsePlayer->mo->ACSSkin;
+			ACSSounds = corpsePlayer->mo->ACSSkinOverridesSkinSounds;
 			break;
 		}
 	}
 
+
 	// [BC] If this player's skin is disabled, just use the base sound class.
 	// [BB] Voodoo dolls don't have valid userinfo.
 	// [AK] Also use the player's skin if this is a corpse that belonged to them.
-	if (( player != NULL ) && (( player->mo == this ) || ( player == corpsePlayer )) &&
-		(( cl_skins == 1 ) || (( cl_skins >= 2 ) &&
-		( player->userinfo.GetSkin() < static_cast<signed> (skins.Size()) ) &&
-		( skins[player->userinfo.GetSkin()].bCheat == false ))))
+	// [BOF] If ACS Skin overrides CVAR skin's Sounds
+	if ((player != NULL) && ((player->mo == this) || (player == corpsePlayer)) &&
+		((cl_skins == 1) ||
+		((cl_skins >= 2) &&
+			(player->userinfo.GetSkin() < static_cast<signed> (skins.Size())) &&
+			(skins[player->userinfo.GetSkin()].bCheat == false)) ||
+		(ACSSkin != NAME_None && ACSSounds)))
 	{
 		if (player != NULL &&
-		(player->mo == NULL || !(player->mo->flags4 &MF4_NOSKIN)) &&
+		(player->mo == NULL || 
+		!(player->mo->flags4 &MF4_NOSKIN) &&
 			(unsigned int)player->userinfo.GetSkin() >= PlayerClasses.Size () &&
-			(size_t)player->userinfo.GetSkin() < skins.Size())
+			(size_t)player->userinfo.GetSkin() < skins.Size()) || 
+			(ACSSkin != NAME_None && ACSSounds))
 		{
-			return skins[player->userinfo.GetSkin()].name;
+			return (ACSSkin != NAME_None && ACSSounds == true) ? ACSSkin.GetChars() : skins[player->userinfo.GetSkin()].name;
 		}
 	}
-
 	// [GRB]
 	const char *sclass = GetClass ()->Meta.GetMetaString (APMETA_SoundClass);
 	return sclass != NULL ? sclass : "player";
@@ -4510,7 +4527,7 @@ void player_t::Serialize (FArchive &arc)
 		<< MaxHealthBonus
 		<< cheats2
 		<< ACSSkin
-		<< ACSSkinOverridesWeaponSkin
+		<< ACSSkinOverridesSkinSounds
 		// [BB] Skulltag additions - end
 		;
 	if (SaveVersion < 3427)

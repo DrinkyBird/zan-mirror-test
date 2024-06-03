@@ -8559,12 +8559,12 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 				R_FindSkin(skinName, players[playerIndex].CurrentPlayerClass) != players[playerIndex].CurrentPlayerClass), true) 
 				{
 					players[playerIndex].ACSSkin = skinName;
-					players[playerIndex].ACSSkinOverridesWeaponSkin = overrideWeaponPreferredSkin;
+					players[playerIndex].ACSSkinOverridesSkinSounds = overrideWeaponPreferredSkin;
 				}
 				else
 				{
 					players[playerIndex].ACSSkin = NAME_None;
-					players[playerIndex].ACSSkinOverridesWeaponSkin = false;
+					players[playerIndex].ACSSkinOverridesSkinSounds = false;
 				}
 				if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 					SERVERCOMMANDS_SetPlayerACSSkin( playerIndex );

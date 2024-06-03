@@ -208,7 +208,7 @@ Command SetPlayerACSSkin
 	ExtendedCommand
 	Player player
 	Name skinName
-	bool overrideWeaponSkin
+	bool overrideSkinSounds
 EndCommand
 
 Command UpdatePlayerPing

@@ -1258,7 +1258,7 @@ public:
 
 	// [BOF] For Override Skin corpses when respawning quickly
 	FNameNoInit ACSSkin;
-	bool	ACSSkinOverridesWeaponSkin;
+	bool	ACSSkinOverridesSkinSounds;
 
 };
 

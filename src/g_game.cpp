@@ -2172,7 +2172,7 @@ void G_PlayerReborn (int player, bool bGiveInventory)
 	ULONG		ulWins;
 	ULONG		ulTime;
 	FNameNoInit	ACSSkin;
-	bool		ACSSkinOverridesWeaponSkin;
+	bool		ACSSkinOverridesSkinSounds;
 	int			timefreezer;
 	FName		StartingWeaponName;
 
@@ -2210,7 +2210,7 @@ void G_PlayerReborn (int player, bool bGiveInventory)
 	ulWins = p->ulWins;
 	ulTime = p->ulTime;
 	ACSSkin = p->ACSSkin;
-	ACSSkinOverridesWeaponSkin = p->ACSSkinOverridesWeaponSkin;
+	ACSSkinOverridesSkinSounds = p->ACSSkinOverridesSkinSounds;
 	timefreezer = p->timefreezer;
 	StartingWeaponName = p->StartingWeaponName;
 
@@ -2275,7 +2275,7 @@ void G_PlayerReborn (int player, bool bGiveInventory)
 	p->ulWins = ulWins;
 	p->ulTime = ulTime;
 	p->ACSSkin = ACSSkin;
-	p->ACSSkinOverridesWeaponSkin = ACSSkinOverridesWeaponSkin;
+	p->ACSSkinOverridesSkinSounds = ACSSkinOverridesSkinSounds;
 	// [BB] Players who were able to move while a APowerTimeFreezer is active,
 	// should also be able to do so after being reborn.
 	p->timefreezer = timefreezer;
