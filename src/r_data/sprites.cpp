@@ -35,6 +35,7 @@ char*			spritename;
 // [RH] skin globals
 // [BL] Changed to TArray
 TArray<FPlayerSkin> skins;
+TArray<FPlayerSkinRemover> skinremove; // [BOF]
 BYTE			OtherGameSkinRemap[256];
 PalEntry		OtherGameSkinPalette[256];
 
@@ -593,6 +594,7 @@ void R_InitSkins (void)
 
 			// Ready up for the next potential skin.
 			skins[i].namespc = Wads.GetLumpNamespace (base); 
+			skins[i].parentwad = Wads.GetParentWad(Wads.GetWadnumFromLumpnum(base)); // [BOF] For Removal of Skins outside of KEYCONF wad.
 			for (j = 0; j < NUMSKINSOUNDS; j++) sndlumps[j] = -1; // Clear temp sndlumps
 			remove = false;
 			rangeChanged = false;
@@ -1045,6 +1047,22 @@ void R_InitSkins (void)
 				}
 
 			} while ((!s_skin && !sc.CheckToken('}') && sc.GetToken()) || (s_skin && sc.GetToken())); // Check for closing bracket in SKININFO, and end in S_SKIN
+
+
+			// [BOF] Remove skins through clearplayerskins
+			if (!remove)
+			{	// (clearplayerskins [all?] [class])
+				//pclass = D_PlayerClassToInt(skins[i].param["key"].list[1]); // Have to reinitialize pclass; use skin param.
+				for (j = 0; j < skinremove.Size(); j++)
+				{
+					if (skins[i].parentwad < skinremove[j].KeyConf &&  // Don't delete skins in or after the same wad as the KEYCONF
+						(skinremove[j].ClassNum < 0 || (skinremove[j].ClassNum >= 0 && // If ClassNum is -1 
+							(pclass == skinremove[j].ClassNum))) && // or pclass matches Classnum
+						(skinremove[j].RemoveAll || // Remove all skins if true.
+							skins[i].removable)) //Remove removable skins regardless
+						remove = true;
+				}
+			}
 
 			// [GRB] Assume Doom skin by default
 			if (!remove && basetype == NULL)

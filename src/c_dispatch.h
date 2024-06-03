@@ -209,6 +209,7 @@ extern FButtonStatus Button_Mlook, Button_Klook, Button_Use, Button_AltAttack,
 	Button_VoiceRecord,	// [AK] Added the "voicerecord" button.
 	Button_SB_ScrollUp, Button_SB_ScrollDn; // [AK] Added "sb_scrollup" and "sb_scrolldn" buttons.
 extern bool ParsingKeyConf, UnsafeExecutionContext;
+extern int KeyConfLump; // [BOF] Getting namespace for clearplayerskins
 
 void ResetButtonTriggers ();	// Call ResetTriggers for all buttons
 void ResetButtonStates ();		// Same as above, but also clear bDown

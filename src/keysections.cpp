@@ -161,8 +161,9 @@ void D_LoadWadSettings ()
 	ParsingKeyConf = true;
 	KeySections.Clear();
 	KeyConfWeapons.Clear();
+	KeyConfLump = 0;
 
-	while ((lump = Wads.FindLump ("KEYCONF", &lastlump)) != -1)
+	while ((KeyConfLump = lump = Wads.FindLump ("KEYCONF", &lastlump)) != -1)
 	{
 		FMemLump data = Wads.ReadLump (lump);
 		const char *eof = (char *)data.GetMem() + Wads.LumpLength (lump);

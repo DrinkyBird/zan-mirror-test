@@ -89,12 +89,26 @@ public:
 	intmap		sprites;						// Array variant using the sprite to replace as the key
 	char		displayname[MAX_SKIN_NAME + 1];	// Display name for menu
 
+	bool		removable;						// Allow removal with clearplayerskins when true. False by default.
+												// For mods of mods with skins already bundled in them.
+
+	int			parentwad;						// For Removal of Skins outside of KEYCONF wad.
 
 	// [BC] End of new skin properties.
 };
 
+extern class FPlayerSkinRemover
+{
+public:
+	int  KeyConf; //KeyConf Lump to keep skins in the same namespace.
+	bool RemoveAll; //Remove all skins including those not marked as removable?
+	int  ClassNum; // Remove from a class specifically
+};
+
 // [BL] Use a TArray instead of trying to manage this manually
 extern TArray<FPlayerSkin> skins;		// [RH]
+
+extern TArray<FPlayerSkinRemover> skinremove; // [BOF] Array to correctly iterate should multiple KEYCONFs that do this.
 
 extern BYTE				OtherGameSkinRemap[256];
 extern PalEntry			OtherGameSkinPalette[256];

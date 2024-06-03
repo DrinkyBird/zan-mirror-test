@@ -148,6 +148,7 @@ FButtonStatus Button_Mlook, Button_Klook, Button_Use, Button_AltAttack,
 
 
 bool ParsingKeyConf, UnsafeExecutionContext;
+int KeyConfLump; // [BOF] Getting namespace for clearplayerskins
 
 class UnsafeExecutionScope
 {
