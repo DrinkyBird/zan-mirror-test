@@ -251,7 +251,7 @@ CCMD (playerclasses)
 	}
 }
 
-CCMD(clearplayerskins) // [BOF] Remove Player Skins : clearplayerskins [all?] [class (displayname)]
+CCMD (clearplayerskins) // [BOF] Remove Player Skins : clearplayerskins [all?] [class (displayname)]
 {
 	// Get these into an orderly array for when skins get parsed.
 	if (ParsingKeyConf)
@@ -260,11 +260,11 @@ CCMD(clearplayerskins) // [BOF] Remove Player Skins : clearplayerskins [all?] [c
 		memset(&skinremover, 0, sizeof(FPlayerSkinRemover));
 		skinremover.KeyConf = Wads.GetParentWad(Wads.GetWadnumFromLumpnum(KeyConfLump)); // Get Parent Wad of KEYCONF and leave skins within same parent untouched.
 
-		skinremover.RemoveAll = (argv.argc() >= 1 &&
+		skinremover.RemoveAll = (argv.argc() > 1 &&
 			!stricmp(argv[1], "true") || !stricmp(argv[1], "yes") ?
 			true : false);
 
-		skinremover.ClassNum = (argv.argc() < 2 ? -1 : D_PlayerClassToInt(argv[2]));
+		skinremover.ClassNum = (argv.argc() < 3 ? -1 : D_PlayerClassToInt(argv[2]));
 
 		skinremove.Insert(skinremove.Size(), skinremover);
 	}

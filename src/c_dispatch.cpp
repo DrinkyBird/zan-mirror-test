@@ -226,7 +226,8 @@ static const char *KeyConfCommands[] =
 	"weaponsection",
 	"setslot",
 	"addplayerclass",
-	"clearplayerclasses"
+	"clearplayerclasses",
+	"clearplayerskins"
 };
 
 // CODE --------------------------------------------------------------------

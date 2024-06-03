@@ -939,6 +939,20 @@ void R_InitSkins (void)
 
 				}
 
+				// Removable
+				else if (!key.Compare("removable"))
+				{
+					if ((stricmp(sc.String, "true") == 0) || (stricmp(sc.String, "yes") == 0))
+					{
+						skins[i].removable = true;
+						skins[i].param[key].list[0] = "1";
+					}
+					else 
+					{
+						skins[i].removable = false;
+						skins[i].param[key].list[0] = "0";
+					}
+				}
 
 
 				// Sounds
@@ -1416,6 +1430,9 @@ static void R_CreateSkin()
 	skin.param["selectable"].list[0] = "1";
 	
 	skin.param["colorrange"].list.Resize(2);
+
+	skin.param["removable"].list.Resize(1);
+	skin.param["removable"].list[0] = "0";
 
 	skins.Push(skin);
 }
