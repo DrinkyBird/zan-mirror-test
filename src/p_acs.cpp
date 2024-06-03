@@ -8638,13 +8638,28 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 		
 		case ACSF_GetSkinInfo: // [BOF] Get the parameter of a skin through its index as a string.
 		{
+			enum // [BOF] How should this parameter be parsed?
+			{
+				GETSKININFO_STRING,
+				GETSKININFO_INT,
+				GETSKININFO_FLOAT,
+				GETSKININFO_EXISTS // For easy checking in if/while statements.
+
+			};
 
 			int skinIndex = args[0];
-			if (skinIndex < 0 || skinIndex > skins.Size() - 1) return GlobalACSStrings.AddString("");
+			if (skinIndex < 0 || skinIndex > skins.Size() - 1)
+			{
+				if (args[1] == GETSKININFO_STRING)
+					return GlobalACSStrings.AddString("");
+				if (args[1] == GETSKININFO_EXISTS)
+					return 0;
+				return -1;
+			}
 
-			const char* paramIndex = FBehavior::StaticLookupString(args[1]);
-			int keyValue = argCount >= 3 ? args[2] : 0;
-			char* charKeyValue = argCount >= 3 ? FBehavior::StaticLookupString(args[2]) : "";
+			const char* paramIndex = FBehavior::StaticLookupString(args[2]);
+			int keyValue = argCount >= 4 ? args[3] : 0;
+			const char* charKeyValue = argCount >= 4 ? FBehavior::StaticLookupString(args[3]) : "";
 
 			if (skins[skinIndex].param.CheckKey(paramIndex))
 			{
@@ -8652,15 +8667,44 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 				if (skins[skinIndex].param[paramIndex].charlist.CountUsed() &&
 					skins[skinIndex].param[paramIndex].charlist.CheckKey(charKeyValue))
 				{
-					return GlobalACSStrings.AddString(skins[skinIndex].param[paramIndex].charlist[charKeyValue]);
+					if (args[1] == GETSKININFO_EXISTS)
+						return 1;
+					if (args[1] == GETSKININFO_STRING)
+						return GlobalACSStrings.AddString(skins[skinIndex].param[paramIndex].charlist[charKeyValue]);
+					else if (IsNum(skins[skinIndex].param[paramIndex].charlist[charKeyValue]))
+					{
+						if (args[1] == GETSKININFO_INT)
+							return atoi(skins[skinIndex].param[paramIndex].charlist[charKeyValue]);
+						if (args[1] == GETSKININFO_FLOAT)
+							return FLOAT2FIXED(atof(skins[skinIndex].param[paramIndex].charlist[charKeyValue]));
+						return -1;
+					}
+					return -1;
+						
 				}
 				else if (skins[skinIndex].param[paramIndex].list.Size() &&
 					(keyValue < skins[skinIndex].param[paramIndex].list.Size()))
 				{
-					return GlobalACSStrings.AddString(skins[skinIndex].param[paramIndex].list[keyValue]);
+					if (args[1] == GETSKININFO_EXISTS)
+						return 1;
+					if (args[1] == GETSKININFO_STRING)
+						return GlobalACSStrings.AddString(skins[skinIndex].param[paramIndex].list[keyValue]);
+					else if (IsNum(skins[skinIndex].param[paramIndex].list[keyValue]))
+					{
+						if (args[1] == GETSKININFO_INT)
+							return atoi(skins[skinIndex].param[paramIndex].list[keyValue]);
+						if (args[1] == GETSKININFO_FLOAT)
+							return FLOAT2FIXED(atof(skins[skinIndex].param[paramIndex].list[keyValue]));
+						return -1;
+					}
+				return -1;
 				}
 			}
-			return GlobalACSStrings.AddString("");
+			if (args[1] == GETSKININFO_STRING)
+				return GlobalACSStrings.AddString("");
+			if (args[1] == GETSKININFO_EXISTS)
+				return 0;
+			return -1;
 		}
 
 		case ACSF_GetPlayerCountry:
