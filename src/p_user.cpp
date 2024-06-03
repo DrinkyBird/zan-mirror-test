@@ -2638,18 +2638,9 @@ void P_CheckPlayerSprite(AActor *actor, int &spritenum, fixed_t &scalex, fixed_t
 		player->VisibleSkin = skin;
 	}
 
-	// [BB/AK] An overridden skin also overrides NOSKIN.
-	if (skin != 0 && ( !(player->mo->flags4 & MF4_NOSKIN) || ( overrideSkin != -1 ) ) )
-	{
-		// Convert from default scale to skin scale.
-		fixed_t defscaleY = actor->GetDefault()->scaleY;
-		fixed_t defscaleX = actor->GetDefault()->scaleX;
-		scaley = Scale(scaley, skins[skin].ScaleY, defscaleY);
-		scalex = Scale(scalex, skins[skin].ScaleX, defscaleX);
-	}
-
+	DWORD crouchScale = 0;	
 	// Set the crouch sprite?
-	if (player->crouchfactor < FRACUNIT*3/4)
+	if (player->crouchfactor < FRACUNIT * 3 / 4)
 	{
 		if (actor->GetClass()->ActorInfo->CrouchSprites.CheckKey(spritenum))
 		{
@@ -2666,12 +2657,12 @@ void P_CheckPlayerSprite(AActor *actor, int &spritenum, fixed_t &scalex, fixed_t
 			if (weaponSkin != -1 && skin != weaponSkin &&
 				// Weapon Skin's Sprites Array Check
 				((skins[weaponSkin].sprites.CheckKey(*(DWORD*)sprites[actor->GetClass()->ActorInfo->CrouchSprites[actor->state->sprite]].name) && // What a mouthful
-				skins[skin].sprites.CheckKey(*(DWORD*)sprites[skins[weaponSkin].sprites[*(DWORD*)sprites[actor->GetClass()->ActorInfo->CrouchSprites[actor->state->sprite]].name]].name)) ||
+					skins[skin].sprites.CheckKey(*(DWORD*)sprites[skins[weaponSkin].sprites[*(DWORD*)sprites[actor->GetClass()->ActorInfo->CrouchSprites[actor->state->sprite]].name]].name)) ||
 
-				// Weapon Skin's Crouch Sprite Check
-				((skins[weaponSkin].crouchsprite && actor->state->sprite == actor->SpawnState->sprite) &&
-				skins[skin].sprites.CheckKey(*(DWORD*)sprites[skins[weaponSkin].crouchsprite].name))
-				))
+					// Weapon Skin's Crouch Sprite Check
+					((skins[weaponSkin].crouchsprite && actor->state->sprite == actor->SpawnState->sprite) &&
+						skins[skin].sprites.CheckKey(*(DWORD*)sprites[skins[weaponSkin].crouchsprite].name))
+					))
 
 			{
 				crouchspriteno =
@@ -2683,9 +2674,16 @@ void P_CheckPlayerSprite(AActor *actor, int &spritenum, fixed_t &scalex, fixed_t
 					skins[skin].sprites[*(DWORD*)sprites[skins[weaponSkin].crouchsprite].name] :
 
 					-1; // Shouldn't Happen with the conditions above, but just to be safe.
+
+				crouchScale = skins[weaponSkin].ScaleX.CheckKey(*(DWORD*)sprites[actor->GetClass()->ActorInfo->CrouchSprites[actor->state->sprite]].name) &&
+					skins[skin].sprites.CheckKey(*(DWORD*)sprites[actor->GetClass()->ActorInfo->CrouchSprites[actor->state->sprite]].name) ?
+					*(DWORD*)sprites[skins[weaponSkin].sprites[*(DWORD*)sprites[actor->GetClass()->ActorInfo->CrouchSprites[actor->state->sprite]].name]].name :
+					skins[skin].sprites.CheckKey(*(DWORD*)sprites[skins[weaponSkin].crouchsprite].name) ?
+					*(DWORD*)sprites[skins[weaponSkin].crouchsprite].name :
+					0;
 			}
 			// Check Regular Skin
-			else if ((skins[skin].sprites.CheckKey(*(DWORD*)sprites[actor->GetClass()->ActorInfo->CrouchSprites[actor->state->sprite]].name) || 
+			else if ((skins[skin].sprites.CheckKey(*(DWORD*)sprites[actor->GetClass()->ActorInfo->CrouchSprites[actor->state->sprite]].name) ||
 				(skins[skin].crouchsprite && actor->state->sprite == actor->SpawnState->sprite)) &&
 				weaponSkin == -1 || weaponSkin == skin)
 			{
@@ -2694,22 +2692,49 @@ void P_CheckPlayerSprite(AActor *actor, int &spritenum, fixed_t &scalex, fixed_t
 					skins[skin].sprites[*(DWORD*)sprites[actor->GetClass()->ActorInfo->CrouchSprites[actor->state->sprite]].name] :
 					skins[skin].crouchsprite;
 
+				crouchScale = skins[skin].sprites.CheckKey(*(DWORD*)sprites[actor->GetClass()->ActorInfo->CrouchSprites[actor->state->sprite]].name) ?
+					*(DWORD*)sprites[actor->GetClass()->ActorInfo->CrouchSprites[actor->state->sprite]].name :
+					*(DWORD*)sprites[skins[weaponSkin].crouchsprite].name;
+
 			}
 		}
 		else
 		{ // no sprite -> squash the existing one
 			crouchspriteno = -1;
 		}
-
-		if (crouchspriteno > 0) 
-		{
-			spritenum = crouchspriteno;
-		}
-		else if (player->playerstate != PST_DEAD && player->crouchfactor < FRACUNIT*3/4)
-		{
-			scaley /= 2;
-		}
 	}
+	// [BB/AK] An overridden skin also overrides NOSKIN.
+	if ((weaponSkin != -1 || overrideSkin != -1) || (skin != 0 && (player->mo->flags4 & MF4_NOSKIN) == false))
+	{
+		// Convert from default scale to skin scale.
+		fixed_t defscaleY = actor->GetDefault()->scaleY;
+		fixed_t defscaleX = actor->GetDefault()->scaleX;
+
+		DWORD scaleSprite = crouchScale ? crouchScale :
+			weapSprite != -1 && skin != weaponSkin ? *(DWORD*)sprites[weapSprite].name :
+			*(DWORD*)sprites[actor->state->sprite].name;
+
+		// [BOF] Skin now uses Class's scale if scale is set to 0. Per sprite as well.
+
+		fixed_t skinScaleY = (skins[skin].ScaleY.CheckKey(scaleSprite) ?
+			skins[skin].ScaleY[scaleSprite] : skins[skin].ScaleY[0]);
+		fixed_t skinScaleX = (skins[skin].ScaleX.CheckKey(scaleSprite) ?
+			skins[skin].ScaleX[scaleSprite] : skins[skin].ScaleX[0]);
+
+		scaley = Scale(scaley, skinScaleY, defscaleY);
+		scalex = Scale(scalex, skinScaleX, defscaleX);
+	}
+
+
+	if (crouchspriteno > 0) 
+	{
+		spritenum = crouchspriteno;
+	}
+	else if (player->playerstate != PST_DEAD && player->crouchfactor < FRACUNIT*3/4)
+	{
+		scaley /= 2;
+	}
+	
 }
 
 /*

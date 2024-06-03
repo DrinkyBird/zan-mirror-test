@@ -697,18 +697,19 @@ void R_InitSkins (void)
 				{ // [BOF] You can set X and Y scales independently now. Just one argument will still set both to the same value.
 					sc.UnGet();
 					sc.GetToken();
-					skins[i].ScaleX = clamp<fixed_t>(FLOAT2FIXED(atof(sc.String)), 1, 256 * FRACUNIT);
-					skins[i].param[key].list[1].Format("%i", skins[i].ScaleX);
+					skins[i].ScaleX[0] = clamp<fixed_t>(FLOAT2FIXED(atof(sc.String)), 1, 256 * FRACUNIT);
+					skins[i].param[key].list.Resize(2);
+					skins[i].param[key].list[0].Format("%i", skins[i].ScaleX);
 
 					if (sc.CheckToken(','))
 					{
 						sc.GetToken();
-						skins[i].ScaleY = clamp<fixed_t>(FLOAT2FIXED(atof(sc.String)), 1, 256 * FRACUNIT);
+						skins[i].ScaleY[0] = clamp<fixed_t>(FLOAT2FIXED(atof(sc.String)), 1, 256 * FRACUNIT);
 						skins[i].param[key].list[1].Format("%i", skins[i].ScaleY);
 					}
 					else
 					{
-						skins[i].ScaleY = skins[i].ScaleX;
+						skins[i].ScaleY[0] = skins[i].ScaleX[0];
 						skins[i].param[key].list[1] = skins[i].param[key].list[0];
 					}
 				}
@@ -867,6 +868,21 @@ void R_InitSkins (void)
 
 						skins[i].param[key].charlist[charkey] = sc.String;
 						skins[i].param[key].charlist[charkey].Truncate(4);
+
+						if (!sc.CheckToken(',')) //Set Scale for a sprite,
+						{
+							skins[i].ScaleX[spritename] = -1;
+							skins[i].ScaleY[spritename] = -1;
+							continue;
+						}
+						if (sc.GetToken() && atof(sc.String))
+							skins[i].ScaleX[spritename] = clamp<fixed_t>(FLOAT2FIXED(atof(sc.String)), 1, 256 * FRACUNIT);
+						if (sc.CheckToken(',') && sc.GetString() && atof(sc.String))
+							skins[i].ScaleY[spritename] = clamp<fixed_t>(FLOAT2FIXED(atof(sc.String)), 1, 256 * FRACUNIT);
+						else if (skins[i].ScaleX.CheckKey(spritename))
+						{
+							skins[i].ScaleY[spritename] = skins[i].ScaleX[spritename];
+						}
 					}
 					if (remove == true) break;
 				}
@@ -1072,6 +1088,20 @@ void R_InitSkins (void)
 						type->Meta.GetMetaInt (APMETA_ColorRange) == basetype->Meta.GetMetaInt (APMETA_ColorRange))
 					{
 						PlayerClasses[j].Skins.Push ((int)i);
+
+						// [BOF] Set default Scale for undefined Sprite array scales
+						intmap::Pair* scalepair;
+						intmap::Iterator checkScaleX(skins[i].ScaleX);
+						while (checkScaleX.NextPair(scalepair))
+						{
+							if (scalepair->Value == -1) scalepair->Value = GetDefaultByType(type)->scaleX;
+						}
+						intmap::Iterator checkScaleY(skins[i].ScaleY);
+						while (checkScaleY.NextPair(scalepair))
+						{
+							if (scalepair->Value == -1) scalepair->Value = GetDefaultByType(type)->scaleY;
+						}
+
 						remove = false;
 					}
 				}
@@ -1196,10 +1226,14 @@ void R_InitSkins (void)
 					int sprno = (int)sprites.Push(temp);
 
 					if (sprkey == 0)
+					{
 						skins[i].sprites[0] = skins[i].sprite = sprno;
+					}
 
 					else if (sprkey == -1)
-						skins[i].sprites[-1] = skins[i].crouchsprite = sprno;
+					{
+						skins[i].crouchsprite = sprno;
+					}
 
 					else //if (GetSpriteIndex((char*)&sprkey) != -1)
 						skins[i].sprites[*(DWORD*)&sprkey] = sprno;
@@ -1260,6 +1294,7 @@ void R_InitSkins (void)
 			if (skins[i].face[1] == 0 || skins[i].face[2] == 0)
 			{
 				skins[i].face[0] = 0;
+				skins[i].param["face"].list.Clear();
 			}
 		}
 	}
@@ -1320,8 +1355,10 @@ static void R_CreateSkin()
 	memset(&skin, 0, sizeof(FPlayerSkin));
 
 	const PClass *type = PlayerClasses[0].Type;
-	skin.ScaleX = GetDefaultByType (type)->scaleX;
-	skin.ScaleY = GetDefaultByType (type)->scaleY;
+	skin.ScaleX = (intmap)skin.ScaleX;
+	skin.ScaleY = (intmap)skin.ScaleY;
+	skin.ScaleX[0] = GetDefaultByType(type)->scaleX;
+	skin.ScaleY[0] = GetDefaultByType(type)->scaleY;
 
 	// [BC/BB] We need to initialize the default sprite, because when we create a skin
 	// using SKININFO, we don't necessarily specify a sprite.
@@ -1452,8 +1489,8 @@ void R_InitSprites ()
 		}
 		skins[i].range0start = basetype->Meta.GetMetaInt (APMETA_ColorRange) & 255;
 		skins[i].range0end = basetype->Meta.GetMetaInt (APMETA_ColorRange) >> 8;
-		skins[i].ScaleX = GetDefaultByType (basetype)->scaleX;
-		skins[i].ScaleY = GetDefaultByType (basetype)->scaleY;
+		skins[i].ScaleX[0] = GetDefaultByType(basetype)->scaleX;
+		skins[i].ScaleY[0] = GetDefaultByType(basetype)->scaleY;
 		skins[i].sprite = GetDefaultByType (basetype)->SpawnState->sprite;
 		skins[i].namespc = ns_global;
 
@@ -1512,136 +1549,159 @@ void R_InitSprites ()
 		// [BB] Loop through all the lumps searching for sprites of this skin.
 		// This may look very inefficient, but since this is only called once on
 		// startup it's ok.
-		for ( ULONG ulIdx = 0; static_cast<signed> (ulIdx) < Wads.GetNumLumps( ); ulIdx++ )
-		{
-			Wads.GetLumpName( szTempLumpName, ulIdx );
-			if ( ( strnicmp ( szTempLumpName, sprites[skins[skinIdx].sprite].name, 4 ) == 0 )
-			     // [BB] Only check lumps that possibly can be used as sprite frames.
-			     && ( static_cast<unsigned> ( szTempLumpName[4] - 'A' ) < MAX_SPRITE_FRAMES )
-			     // [BB] No need to check Death/XDeath frames.
-			     && ( szTempLumpName[4] < 'H' ) )
-			{
-				// [BB] Check if the lump can be used as sprite. If not, no need to check it.
-				if ( R_IsCharUsuableAsSpriteRotation ( szTempLumpName[5] ) == false )
-					continue;
 
-				if ( szTempLumpName[6] )
-				{
+		// [BOF] Make it even longer, parsing through potentially
+		// arrays of sprites per skin as well, while we're at it.
+
+		const TMap<int, int>::Pair* sprpair;
+		TMap<int, int>::ConstIterator checkSprite(skins[skinIdx].sprites);
+		while (checkSprite.NextPair(sprpair))
+		{
+			int maxwidth = 0, maxheight = 0;
+			char	szTempLumpName[9];
+			szTempLumpName[8] = 0;
+			FString maxwidthSprite, maxheightSprite;
+
+			int sprval = sprpair->Value;
+			int sprkey = sprpair->Key;
+
+			if (sprval == NULL) continue;
+
+			for (ULONG ulIdx = 0; static_cast<signed> (ulIdx) < Wads.GetNumLumps(); ulIdx++)
+			{
+				Wads.GetLumpName(szTempLumpName, ulIdx);
+				if ((strnicmp(szTempLumpName, sprites[sprval].name, 4) == 0)
 					// [BB] Only check lumps that possibly can be used as sprite frames.
-					if ( static_cast<unsigned> ( szTempLumpName[6] - 'A' ) >= MAX_SPRITE_FRAMES )
-						continue;
-
+					&& (static_cast<unsigned> (szTempLumpName[4] - 'A') < MAX_SPRITE_FRAMES)
 					// [BB] No need to check Death/XDeath frames.
-					if ( szTempLumpName[6] >= 'H' )
-						continue;
-
-					if ( R_IsCharUsuableAsSpriteRotation ( szTempLumpName[7] ) == false )
-						continue;
-				}
-
-				FTextureID texnum = TexMan.CheckForTexture (szTempLumpName, FTexture::TEX_Sprite);
-				FTexture *tex = (texnum.Exists()) ? TexMan[ texnum ] : NULL;
-				if ( tex )
+					&& (szTempLumpName[4] < 'H'))
 				{
-					if ( tex->GetScaledHeight() > maxheight )
+					// [BB] Check if the lump can be used as sprite. If not, no need to check it.
+					if (R_IsCharUsuableAsSpriteRotation(szTempLumpName[5]) == false)
+						continue;
+
+					if (szTempLumpName[6])
 					{
-						maxheight = tex->GetScaledHeight();
-						maxheightSprite = szTempLumpName;
+						// [BB] Only check lumps that possibly can be used as sprite frames.
+						if (static_cast<unsigned> (szTempLumpName[6] - 'A') >= MAX_SPRITE_FRAMES)
+							continue;
+
+						// [BB] No need to check Death/XDeath frames.
+						if (szTempLumpName[6] >= 'H')
+							continue;
+
+						if (R_IsCharUsuableAsSpriteRotation(szTempLumpName[7]) == false)
+							continue;
 					}
-					if ( tex->GetScaledWidth() > maxwidth )
+
+					FTextureID texnum = TexMan.CheckForTexture(szTempLumpName, FTexture::TEX_Sprite);
+					FTexture* tex = (texnum.Exists()) ? TexMan[texnum] : NULL;
+					if (tex)
 					{
-						maxwidth = tex->GetScaledWidth();
-						maxwidthSprite = szTempLumpName;
+						if (tex->GetScaledHeight() > maxheight)
+						{
+							maxheight = tex->GetScaledHeight();
+							maxheightSprite = szTempLumpName;
+						}
+						if (tex->GetScaledWidth() > maxwidth)
+						{
+							maxwidth = tex->GetScaledWidth();
+							maxwidthSprite = szTempLumpName;
+						}
 					}
 				}
 			}
-		}
 
-		int classSkinIdx = -1;
 
-		// [BB] Find the player class this skin belongs to.
-		if ( !skins[skinIdx].othergame )
-		{
-			for ( unsigned int pcIdx = 0; pcIdx < PlayerClasses.Size(); pcIdx++ )
+			int classSkinIdx = -1;
+
+			// [BB] Find the player class this skin belongs to.
+			if (!skins[skinIdx].othergame)
 			{
-				if ( classSkinIdx != -1 )
-					break;
-
-				for ( unsigned int pcSkinIdx = 0; pcSkinIdx < PlayerClasses[pcIdx].Skins.Size(); pcSkinIdx++ )
+				for (unsigned int pcIdx = 0; pcIdx < PlayerClasses.Size(); pcIdx++)
 				{
-					if ( PlayerClasses[pcIdx].Skins[pcSkinIdx] == static_cast<int> (skinIdx) )
-					{
-						classSkinIdx = pcIdx;
+					if (classSkinIdx != -1)
 						break;
+
+					for (unsigned int pcSkinIdx = 0; pcSkinIdx < PlayerClasses[pcIdx].Skins.Size(); pcSkinIdx++)
+					{
+						if (PlayerClasses[pcIdx].Skins[pcSkinIdx] == static_cast<int> (skinIdx))
+						{
+							classSkinIdx = pcIdx;
+							break;
+						}
 					}
 				}
+				// [BB] The skin doesn't seem to belong to any of the the available player classes, so just check it against the standard player class.
+				if (classSkinIdx == -1)
+					classSkinIdx = 0;
 			}
-			// [BB] The skin doesn't seem to belong to any of the the available player classes, so just check it against the standard player class.
-			if ( classSkinIdx == -1 )
+			else
+			{
+				// [BB] The skin doesn't belong to this game, so just check it against the standard player class.
 				classSkinIdx = 0;
-		}
-		else
-		{
-			// [BB] The skin doesn't belong to this game, so just check it against the standard player class.
-			classSkinIdx = 0;
-		}
+			}
 
-		// [TP] How big can the skin be?
-		const FMetaTable& meta = PlayerClasses[classSkinIdx].Type->Meta;
-		fixed_t maxwidthfactor = meta.GetMetaFixed( APMETA_MaxSkinWidthFactor );
-		fixed_t maxheightfactor = meta.GetMetaFixed( APMETA_MaxSkinHeightFactor );
+			// [TP] How big can the skin be?
+			const FMetaTable& meta = PlayerClasses[classSkinIdx].Type->Meta;
+			fixed_t maxwidthfactor = meta.GetMetaFixed(APMETA_MaxSkinWidthFactor);
+			fixed_t maxheightfactor = meta.GetMetaFixed(APMETA_MaxSkinHeightFactor);
 
-		// [TP] If either of the size factors are 0, we can just skip this.
-		if (( maxwidthfactor == 0 ) || ( maxheightfactor == 0 ))
-			continue;
+			// [TP] If either of the size factors are 0, we can just skip this.
+			if ((maxwidthfactor == 0) || (maxheightfactor == 0))
+				continue;
 
-		AActor* def = GetDefaultByType( PlayerClasses[classSkinIdx].Type );
-		fixed_t maxAllowedHeight = FixedMul( maxheightfactor, def->height );
-		// [BB] 2*radius is approximately the actor width.
-		fixed_t maxAllowedWidth = FixedMul( maxwidthfactor, 2 * def->radius );
-		FPlayerSkin& skin = skins[skinIdx];
+			AActor* def = GetDefaultByType(PlayerClasses[classSkinIdx].Type);
+			fixed_t maxAllowedHeight = FixedMul(maxheightfactor, def->height);
+			// [BB] 2*radius is approximately the actor width.
+			fixed_t maxAllowedWidth = FixedMul(maxwidthfactor, 2 * def->radius);
+			FPlayerSkin& skin = skins[skinIdx];
 
-		// [BB] If a skin sprite violates the limits, just downsize it.
-		bool sizeLimitsExceeded = false;
-		// [BB] Compare the maximal sprite height/width to the height/radius of the player class this skin belongs to.
-		// Massmouth is very big, so we have to be pretty lenient here with the checks.
-		// [TP] Also, allow 1px lee-way so that we won't complain about scale being off by a
-		// fraction of a pixel (would cause messages such as "52px, max is 52px").
-		if ( maxheight * skin.ScaleY > maxAllowedHeight + FRACUNIT )
-		{
-			sizeLimitsExceeded = true;
-			Printf ( TEXTCOLOR_RED "Sprite %s of skin %s is too tall (%dpx, max is %dpx). Downsizing.\n",
-				maxheightSprite.GetChars(),
-				skin.name,
-				( maxheight * skin.ScaleY ) >> FRACBITS,
-				maxAllowedHeight >> FRACBITS );
-			const fixed_t oldScaleY = skin.ScaleY;
-			skin.ScaleY = maxAllowedHeight / maxheight;
-			// [BB] Preserve the aspect ration of the sprites.
-			skin.ScaleX = static_cast<fixed_t> ( skin.ScaleX * ( FIXED2FLOAT( skin.ScaleY ) / FIXED2FLOAT( oldScaleY ) ) );
-		}
+			// [BB] If a skin sprite violates the limits, just downsize it.
+			bool sizeLimitsExceeded = false;
+			// [BB] Compare the maximal sprite height/width to the height/radius of the player class this skin belongs to.
+			// Massmouth is very big, so we have to be pretty lenient here with the checks.
+			// [TP] Also, allow 1px lee-way so that we won't complain about scale being off by a
+			// fraction of a pixel (would cause messages such as "52px, max is 52px").
+			int scalekey = sprkey == 0  ? 0 : *(DWORD*)&sprkey;
+			if (maxheight * skin.ScaleY[scalekey] > maxAllowedHeight + FRACUNIT)
+			{
 
-		if ( maxwidth * skin.ScaleX > maxAllowedWidth + FRACUNIT )
-		{
-			sizeLimitsExceeded = true;
-			Printf ( TEXTCOLOR_RED "Sprite %s of skin %s is too wide (%dpx, max is %dpx). Downsizing.\n",
-				maxwidthSprite.GetChars(),
-				skin.name,
-				( maxwidth * skin.ScaleX ) >> FRACBITS,
-				( maxAllowedWidth ) >> FRACBITS );
-			const fixed_t oldScaleX = skin.ScaleX;
-			skin.ScaleX = maxAllowedWidth / maxwidth;
-			// [BB] Preserve the aspect ration of the sprites.
-			skin.ScaleY = static_cast<fixed_t> ( skin.ScaleY * ( FIXED2FLOAT( skin.ScaleX ) / FIXED2FLOAT( oldScaleX ) ) );
-		}
+				sizeLimitsExceeded = true;
+				Printf(TEXTCOLOR_RED "Sprite (%s -> %s) of skin %s is too tall (%dpx, max is %dpx). Downsizing.\n",
+					(sprkey == 0 ? "sprite" : sprkey == -1 ? "crouchsprite" : sprites[sprval].name), maxheightSprite.GetChars(),
+					skin.name,
+					(maxheight * skin.ScaleY[scalekey]) >> FRACBITS,
+					maxAllowedHeight >> FRACBITS);
+				const fixed_t oldScaleY = skin.ScaleY[scalekey];
+				skin.ScaleY[scalekey] = maxAllowedHeight / maxheight;
+				// [BB] Preserve the aspect ration of the sprites.
+				skin.ScaleX[scalekey] =
+				static_cast<fixed_t> (skin.ScaleX[scalekey] * (FIXED2FLOAT(skin.ScaleY[scalekey]) / FIXED2FLOAT(oldScaleY)));
+			}
 
-		// [BB] Don't allow the base skin sprites of the player classes to exceed the limits.
-		if ( sizeLimitsExceeded && ( skinIdx < PlayerClasses.Size () ) )
-		{
-			I_FatalError ( "The base skin sprite of player class %s exceeds the limits!\n", PlayerClasses[skinIdx].Type->TypeName.GetChars() );
+			if (maxwidth * skin.ScaleX[scalekey] > maxAllowedWidth + FRACUNIT)
+			{
+				sizeLimitsExceeded = true;
+				Printf(TEXTCOLOR_RED "Sprite (%s -> %s) of skin %s is too wide (%dpx, max is %dpx). Downsizing.\n",
+					(sprkey == 0 ? "sprite" : sprkey == -1 ? "crouchsprite" : sprites[sprval].name), maxwidthSprite.GetChars(),
+					skin.name,
+					(maxwidth * skin.ScaleX[scalekey]) >> FRACBITS,
+					(maxAllowedWidth) >> FRACBITS);
+				const fixed_t oldScaleX = skin.ScaleX[scalekey];
+				skin.ScaleX[scalekey] = maxAllowedWidth / maxwidth;
+				// [BB] Preserve the aspect ration of the sprites.
+				skin.ScaleY[scalekey] =
+				static_cast<fixed_t> (skin.ScaleY[scalekey] * (FIXED2FLOAT(skin.ScaleX[scalekey]) / FIXED2FLOAT(oldScaleX)));
+			}
+
+			// [BB] Don't allow the base skin sprites of the player classes to exceed the limits.
+			if (sizeLimitsExceeded && (skinIdx < PlayerClasses.Size()))
+			{
+				I_FatalError("The base skin sprite of player class %s exceeds the limits!\n", PlayerClasses[skinIdx].Type->TypeName.GetChars());
+			}
 		}
 	}
-
 	// [RH] Sort the skins, but leave base as skin 0
 	//qsort (&skins[PlayerClasses.Size ()], skins.Size()-PlayerClasses.Size (), sizeof(FPlayerSkin), skinsorter);
 

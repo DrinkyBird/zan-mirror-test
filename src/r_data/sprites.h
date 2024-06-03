@@ -64,8 +64,8 @@ public:
 	BYTE		range0start;
 	BYTE		range0end;
 	bool		othergame;	// [GRB]
-	fixed_t		ScaleX;
-	fixed_t		ScaleY;
+	intmap		ScaleX;
+	intmap		ScaleY;
 	int			sprite;
 	int			crouchsprite;
 	int			namespc;	// namespace for this skin

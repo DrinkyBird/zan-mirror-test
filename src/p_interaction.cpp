@@ -3312,58 +3312,64 @@ bool PLAYER_ShouldForceBaseSkin( player_t *player )
 //
 void PLAYER_ApplySkinScaleToBody( player_t *player, AActor *body, AWeapon *weapon )
 {
-	bool usingOverrideSkin = false;
-	int skinIdx = 0;
 
 	if (( player == nullptr ) || ( body == nullptr ))
 		return;
 
-	// [AK] Check if the player's skin was overridden from ACS and actually exists.
-	if ( player->ACSSkin != NAME_None )
-	{
-		const int acsSkin = R_FindSkin( player->ACSSkin, player->CurrentPlayerClass );
+	const int weaponSkin = PLAYER_GetWeaponSkin(player);
+	const int overrideSkin = PLAYER_GetOverrideSkin(player);
+	int skinIdx = player->userinfo.GetSkin();
+	int weapSprite = -1;
+	int spritenum = -1;
 
-		if ( acsSkin != player->CurrentPlayerClass )
-		{
-			skinIdx = acsSkin;
-			usingOverrideSkin = true;
-		}
+	// [BOF] Split up overrideSkin for ACS and Weapon Skins.
+	if ((weaponSkin != -1) && (weaponSkin != skinIdx) && (weaponSkin != overrideSkin))
+	{
+		//Printf("Weapon skin \n");
+		if ((overrideSkin != -1) && (overrideSkin != skinIdx))
+			skinIdx = overrideSkin;
+
+		weapSprite = spritenum =
+			skins[weaponSkin].sprites.CheckKey(*(DWORD*)sprites[body->state->sprite].name) ?
+			skins[weaponSkin].sprites[*(DWORD*)sprites[body->state->sprite].name] :
+			skins[weaponSkin].sprite;
+		//Printf("Override weapon %s\n", sprites[spritenum].name);
+
+		if (skins[skinIdx].sprites.CheckKey(*(DWORD*)sprites[body->state->sprite].name))
+			spritenum = skins[skinIdx].sprites[*(DWORD*)sprites[body->state->sprite].name];
+
+		else skinIdx = weaponSkin;
+	}
+	else if ((overrideSkin != -1) && (overrideSkin != skinIdx))
+		skinIdx = overrideSkin;
+
+
+
+	// [AK] Don't apply a skin's scale to the body if it's not supposed to be z`sible.
+	if ((weaponSkin != -1 || overrideSkin != -1) || (skinIdx != 0 && (body->flags4 & MF4_NOSKIN) == false))
+	{
+		const AActor* const defaultActor = body->GetDefault();
+		// Convert from default scale to skin scale.
+		fixed_t defscaleY = defaultActor->scaleY;
+		fixed_t defscaleX = defaultActor->scaleX;
+
+		DWORD scaleSprite =
+			weapSprite != -1 && skinIdx != weaponSkin ? *(DWORD*)sprites[weapSprite].name :
+			*(DWORD*)sprites[body->state->sprite].name;
+
+		// [BOF] Skin now uses Class's scale if scale is set to 0. Per sprite as well.
+
+		fixed_t skinScaleY = (skins[skinIdx].ScaleY.CheckKey(scaleSprite) ?
+			skins[skinIdx].ScaleY[scaleSprite] : skins[skinIdx].ScaleY[0]);
+		fixed_t skinScaleX = (skins[skinIdx].ScaleX.CheckKey(scaleSprite) ?
+			skins[skinIdx].ScaleX[scaleSprite] : skins[skinIdx].ScaleX[0]);
+
+		body->scaleY = Scale(body->scaleY, skinScaleY, defscaleY);
+		body->scaleX = Scale(body->scaleX, skinScaleX, defscaleX);
 	}
 
-	// [AK] Next, check if the weapon's PreferredSkin actually exists. Only apply
-	// this skin if the skin from ACS doesn't override it.
-	if (( weapon ) && ( weapon->PreferredSkin != NAME_None ))
-	{
-		if (( usingOverrideSkin == false ) || ( player->ACSSkinOverridesWeaponSkin == false ))
-		{
-			const int weaponSkin = R_FindSkin( weapon->PreferredSkin, player->CurrentPlayerClass );
-
-			if ( weaponSkin != player->CurrentPlayerClass )
-			{
-				skinIdx = weaponSkin;
-				usingOverrideSkin = true;
-			}
-		}
-	}
-
-	// [AK] If the player isn't using an overridden skin, use their personal skin instead.
-	if ( usingOverrideSkin == false )
-		skinIdx = player->userinfo.GetSkin( );
-
-	// [AK] An overridden skin also overrides NOSKIN.
-	if (( usingOverrideSkin ) || ( skinIdx != 0 && ( body->flags4 & MF4_NOSKIN ) == false ))
-	{
-		const FPlayerSkin &skin = skins[skinIdx];
-
-		// [AK] Don't apply a skin's scale to the body if it's not supposed to be visible.
-		if ( skin.sprite == body->sprite )
-		{
-			const AActor *const defaultActor = body->GetDefault( );
-
-			body->scaleX = Scale( body->scaleX, skin.ScaleX, defaultActor->scaleX );
-			body->scaleY = Scale( body->scaleY, skin.ScaleY, defaultActor->scaleY );
-		}
-	}
+	R_BuildPlayerTranslation(player - players); // Set Corpse's Translation
+	
 }
 
 //*****************************************************************************

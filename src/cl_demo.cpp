@@ -393,8 +393,13 @@ void CLIENTDEMO_ReadUserInfo( void )
 			skins[players[consoleplayer].userinfo.GetSkin()].sprites.CheckKey(*(DWORD*)sprites[players[consoleplayer].mo->state->sprite].name) ?
 			skins[players[consoleplayer].userinfo.GetSkin()].sprites[*(DWORD*)sprites[players[consoleplayer].mo->state->sprite].name] : 
 			skins[players[consoleplayer].userinfo.GetSkin()].sprite;
-			players[consoleplayer].mo->scaleX = skins[players[consoleplayer].userinfo.GetSkin()].ScaleX;
-			players[consoleplayer].mo->scaleY = skins[players[consoleplayer].userinfo.GetSkin()].ScaleY;
+
+			players[consoleplayer].mo->scaleX = (skins[players[consoleplayer].userinfo.GetSkin()].ScaleX.CheckKey(*(DWORD*)sprites[players[consoleplayer].mo->state->sprite].name) ?
+				skins[players[consoleplayer].userinfo.GetSkin()].ScaleX[*(DWORD*)sprites[players[consoleplayer].mo->state->sprite].name] : 
+				skins[players[consoleplayer].userinfo.GetSkin()].ScaleX[0]);
+			players[consoleplayer].mo->scaleY = (skins[players[consoleplayer].userinfo.GetSkin()].ScaleY.CheckKey(*(DWORD*)sprites[players[consoleplayer].mo->state->sprite].name) ?
+				skins[players[consoleplayer].userinfo.GetSkin()].ScaleY[*(DWORD*)sprites[players[consoleplayer].mo->state->sprite].name] : 
+				skins[players[consoleplayer].userinfo.GetSkin()].ScaleY[0]);
 		}
 	}
 }

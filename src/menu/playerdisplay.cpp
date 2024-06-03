@@ -581,6 +581,12 @@ void FListMenuItemPlayerDisplay::Drawer(bool selected)
 				(skins[mSkin].sprites.CheckKey(*(DWORD*)sprites[mPlayerState->sprite].name) ?
 				skins[mSkin].sprites[*(DWORD*)sprites[mPlayerState->sprite].name] :
 				skins[mSkin].sprite)].spriteframes + mPlayerState->GetFrame()];
+
+			// [BOF] Per Sprite Scaling
+			scaleX = (skins[mSkin].ScaleX.CheckKey(*(DWORD*)sprites[mPlayerState->sprite].name) ?
+				skins[mSkin].ScaleX[*(DWORD*)sprites[mPlayerState->sprite].name] : skins[mSkin].ScaleX[0]);
+			scaleY = (skins[mSkin].ScaleY.CheckKey(*(DWORD*)sprites[mPlayerState->sprite].name) ?
+				skins[mSkin].ScaleY[*(DWORD*)sprites[mPlayerState->sprite].name] : skins[mSkin].ScaleY[0]);
 		}
 	}
 
