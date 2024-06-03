@@ -97,7 +97,7 @@ public:
 	// [BC] End of new skin properties.
 };
 
-extern class FPlayerSkinRemover
+class FPlayerSkinRemover
 {
 public:
 	int  KeyConf; //KeyConf Lump to keep skins in the same namespace.
