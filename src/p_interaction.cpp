@@ -3209,12 +3209,13 @@ int PLAYER_GetWeaponSkin( player_t *player )
 { // [BOF] Split ACS and Weapon Skins.
 	int skin = -1;
 
-	if ( player != nullptr )
+	if ( player != nullptr && player->ReadyWeapon != NULL) // [BOF] Make sure both the player and the weapon exist.
 	{
 		int overrideSkin = player->CurrentPlayerClass;
 		const char *skinName = nullptr;
 
 		skinName = player->ReadyWeapon->PreferredSkin;
+
 		overrideSkin = R_FindSkin( skinName, player->CurrentPlayerClass, true);
 
 		// [AK] Check if the weapon's PreferredSkin actually exists.
