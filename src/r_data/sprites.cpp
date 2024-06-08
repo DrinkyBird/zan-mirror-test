@@ -562,11 +562,10 @@ void R_InitSkins (void)
 		FScanner sc(base);
 
 		
-		// [BOF] Slight parser rework using Tokens instead of Strings.
-		
+		// [BOF] Slight parser rework.
 
 		// Data is stored as "key = data".
-		while (sc.GetToken())
+		while (sc.GetString())
 		{
 			// [BB] The original SKININFO parser ate everything before the starting bracket.
 			// To retain compatibility with existing wads, we need to keep this behavior.
@@ -589,7 +588,7 @@ void R_InitSkins (void)
 					i++; // new skin
 				}
 				if (s_skin != 2) // If this is at S_SKIN unchangeable then no nothing else get a new string.
-					sc.GetToken();
+					sc.GetString();
 			}
 
 			// Ready up for the next potential skin.
@@ -605,17 +604,20 @@ void R_InitSkins (void)
 
 			do
 			{
+
 				
-				if (!s_skin && sc.End && !sc.CheckToken('}')) // Remove skin at end of SKININFO with no ending bracket
+				if (!s_skin && sc.End && !sc.String[0] != '}') // Remove skin at end of SKININFO with no ending bracket
 				{
 					Printf(PRINT_BOLD, "Unexpected end of file for skin %i. %s\n", i,
 						(strlen(skins[i].name)) ? skins[i].name : "");
 					remove = true;
 					break;
 				}
+
 				
-				key = sc.String;key.ToLower(); // Keep all lowercase to prevent inconsistencies with GetSkinInfo
-				
+
+			key = sc.String;key.ToLower(); // Keep all lowercase to prevent inconsistencies with GetSkinInfo
+
 				if (!sc.CheckToken('='))
 				{
 					Printf(PRINT_BOLD, "Bad format for skin %d: %s\n", (int)i, key);
@@ -624,7 +626,6 @@ void R_InitSkins (void)
 					break;
 				}
 
-				sc.GetString();
 
 				// Name 
 				if (!key.Compare("name"))
@@ -821,9 +822,9 @@ void R_InitSkins (void)
 				// Color
 				else if (!key.Compare("color"))
 				{
-					skins[i].szColor = V_GetColor(NULL, sc.String); // [BOF] Set an actual color now
+					skins[i].color = V_GetColor(NULL, sc.String); // [BOF] Set an actual color now
 					skins[i].param[key].list.Resize(1);
-					skins[i].param[key].list[0].Format("%06X", skins[i].szColor);
+					skins[i].param[key].list[0].Format("%06X", skins[i].color);
 					
 				}
 
@@ -1059,8 +1060,8 @@ void R_InitSkins (void)
 						} while (sc.CheckString(","));
 					}
 				}
-
-			} while ((!s_skin && !sc.CheckToken('}') && sc.GetToken()) || (s_skin && sc.GetToken())); // Check for closing bracket in SKININFO, and end in S_SKIN
+				Printf("Bellend %s, %s\n",key, sc.String);
+			} while ((sc.GetString() && !s_skin && sc.String[0] != ('}')) || (s_skin && sc.GetString())); // Check for closing bracket in SKININFO, and end in S_SKIN
 
 
 			// [BOF] Remove skins through clearplayerskins
@@ -1330,7 +1331,6 @@ void R_InitSkins (void)
 			}
 		}
 	}
-
 	if (skins.Size() > PlayerClasses.Size ())
 	{ // The sound table may have changed, so rehash it.
 		S_HashSounds ();
