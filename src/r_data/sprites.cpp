@@ -626,6 +626,7 @@ void R_InitSkins (void)
 					break;
 				}
 
+				sc.GetString();
 
 				// Name 
 				if (!key.Compare("name"))
@@ -1060,7 +1061,6 @@ void R_InitSkins (void)
 						} while (sc.CheckString(","));
 					}
 				}
-				Printf("Bellend %s, %s\n",key, sc.String);
 			} while ((sc.GetString() && !s_skin && sc.String[0] != ('}')) || (s_skin && sc.GetString())); // Check for closing bracket in SKININFO, and end in S_SKIN
 
 
