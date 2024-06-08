@@ -73,7 +73,7 @@ public:
 
 	// [BC] New skin properties for Skulltag.
 	// Default color used for this skin.
-	int			szColor; // [BOF] Change to an int; use V_GetColor to store value.
+	int			color; // [BOF] Change to an int; use V_GetColor to store value.
 
 	// Can this skin be selected from the menu?
 	bool		bRevealed;

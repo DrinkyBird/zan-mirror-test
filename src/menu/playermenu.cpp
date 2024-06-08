@@ -952,10 +952,10 @@ void DPlayerMenu::ColorSetChanged (FListMenuItem *li, int mkey)
 
 		// [BOF] Clear key on 'Custom' sets color to default skin color if it exists.
 		int skinnum = (PlayerClassIndex < 0 ? 0 : R_FindSkin(skin, PlayerClassIndex));
-		if (mkey == MKEY_Clear && mycolorset == -1 && skins[skinnum].szColor)
+		if (mkey == MKEY_Clear && mycolorset == -1 && skins[skinnum].color)
 		{
 			S_Sound(CHAN_VOICE | CHAN_UI, "menu/clear", snd_menuvolume, ATTN_NONE);
-			players[consoleplayer].userinfo.ColorChanged(skins[skinnum].szColor);
+			players[consoleplayer].userinfo.ColorChanged(skins[skinnum].color);
 			uint32 color = players[consoleplayer].userinfo.GetColor();
 			cvar_set("color", skins[skinnum].param["color"].list[0]);
 			if (red != NULL)
