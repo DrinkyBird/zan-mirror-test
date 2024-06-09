@@ -8551,7 +8551,7 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 			if ( PLAYER_IsValidPlayer( playerIndex ))
 			{
 				const char *skinName = FBehavior::StaticLookupString( args[1] );
-				const bool overrideSkinSounds = argCount > 2 ? !!args[2] : false;
+				const bool acsSkinOverrides = argCount > 2 ? !!args[2] : false;
 
 				// [AK] If an empty string is used, then it should remove the skin.
 
@@ -8562,12 +8562,12 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 				R_FindSkin(skinName, players[playerIndex].CurrentPlayerClass) != players[playerIndex].CurrentPlayerClass), true) 
 				{
 					players[playerIndex].ACSSkin = skinName;
-					players[playerIndex].ACSSkinOverridesSkinSounds = overrideSkinSounds;
+					players[playerIndex].ACSSkinOverrides = acsSkinOverrides;
 				}
 				else
 				{
 					players[playerIndex].ACSSkin = NAME_None;
-					players[playerIndex].ACSSkinOverridesSkinSounds = false;
+					players[playerIndex].ACSSkinOverrides = 0;
 				}
 				if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 					SERVERCOMMANDS_SetPlayerACSSkin( playerIndex );

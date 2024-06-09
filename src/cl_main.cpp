@@ -4513,7 +4513,7 @@ void ServerCommands::SetPlayerLivesLeft::Execute()
 void ServerCommands::SetPlayerACSSkin::Execute()
 {
 	player->ACSSkin = skinName;
-	player->ACSSkinOverridesSkinSounds = overrideSkinSounds;
+	player->ACSSkinOverrides = acsSkinOverrides;
 }
 
 //*****************************************************************************

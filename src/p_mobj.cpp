@@ -5632,8 +5632,8 @@ APlayerPawn *P_SpawnPlayer (FPlayerStart *mthing, int playernum, int flags)
 	// [BOF] Set previous corpse's skin to the last ACSSkin, and clear the Player's ACSSkin.
 	p->mo->ACSSkin = p->ACSSkin;
 	p->ACSSkin = NAME_None;
-	p->mo->ACSSkinOverridesSkinSounds = p->ACSSkinOverridesSkinSounds;
-	p->ACSSkinOverridesSkinSounds = false;
+	p->mo->ACSSkinOverrides = p->ACSSkinOverrides;
+	p->ACSSkinOverrides = 0;
 	p->VisibleSkin = lSkin;
 
 	p->velx = p->vely = 0;		// killough 10/98: initialize bobbing to 0.

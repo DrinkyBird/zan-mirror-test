@@ -380,7 +380,7 @@ player_t::player_t()
   bSpawnTelefragged( 0 ),
   ulTime( 0 ),
   bUnarmed( false ),
-  ACSSkinOverridesSkinSounds( false )
+  ACSSkinOverrides( 0 )
 {
 	memset (&cmd, 0, sizeof(cmd));
 	// [BB] Check if this is still necessary.
@@ -542,7 +542,7 @@ player_t &player_t::operator=(const player_t &p)
 	ulTime = p.ulTime;
 	bUnarmed = p.bUnarmed;
 	ACSSkin = p.ACSSkin;
-	ACSSkinOverridesSkinSounds = p.ACSSkinOverridesSkinSounds;
+	ACSSkinOverrides = p.ACSSkinOverrides;
 
 	// [AK] Copy the old positions for the unlagged.
 	for ( unsigned int i = 0; i < UNLAGGEDTICS; i++ )
@@ -1404,7 +1404,7 @@ const char *APlayerPawn::GetSoundClass() const
 	if (player != NULL)
 	{ 
 		ACSSkin = player->ACSSkin;
-		ACSSounds = player->ACSSkinOverridesSkinSounds;
+		ACSSounds = player->ACSSkinOverrides&1;
 	}
 
 	// [AK] If this is a corpse, check which player it originally belonged to.
@@ -1415,7 +1415,7 @@ const char *APlayerPawn::GetSoundClass() const
 		{
 			corpsePlayer = bodyquePlayer[i];
 			ACSSkin = corpsePlayer->mo->ACSSkin;
-			ACSSounds = corpsePlayer->mo->ACSSkinOverridesSkinSounds;
+			ACSSounds = corpsePlayer->mo->ACSSkinOverrides&1;
 			break;
 		}
 	}
@@ -4545,7 +4545,7 @@ void player_t::Serialize (FArchive &arc)
 		<< MaxHealthBonus
 		<< cheats2
 		<< ACSSkin
-		<< ACSSkinOverridesSkinSounds
+		<< ACSSkinOverrides
 		// [BB] Skulltag additions - end
 		;
 	if (SaveVersion < 3427)

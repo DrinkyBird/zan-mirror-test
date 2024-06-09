@@ -797,8 +797,8 @@ public:
 	// [geNia] Force override the player skin. This can only be set from ACS.
 	FNameNoInit	ACSSkin;
 
-	// [geNia] Should the skin set from ACS also override a weapon's preferred skin?
-	bool		ACSSkinOverridesSkinSounds;
+	// [BOF] Should the skin set from ACS also override player's skin sounds or mugshot.
+	uint32		ACSSkinOverrides;
 
 	// [BOF] Visible Skin for rebuilding Translations
 	int			VisibleSkin;
