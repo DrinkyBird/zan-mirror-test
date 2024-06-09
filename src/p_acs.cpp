@@ -8551,11 +8551,9 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 			if ( PLAYER_IsValidPlayer( playerIndex ))
 			{
 				const char *skinName = FBehavior::StaticLookupString( args[1] );
-				const bool acsSkinOverrides = argCount > 2 ? !!args[2] : 0;
+				const uint32 acsSkinOverrides = argCount > 2 ? args[2] : 0;
 
 				// [AK] If an empty string is used, then it should remove the skin.
-
-
 
 				if (skinName && strlen( skinName ) > 0 && // [BOF] Make sure skinName is valid as well as making sure it has a length greater than 0
 				(!stricmp(skinName, "Base") || // [BOF] Make sure Skin is part of the class.
