@@ -8551,15 +8551,18 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 			if ( PLAYER_IsValidPlayer( playerIndex ))
 			{
 				const char *skinName = FBehavior::StaticLookupString( args[1] );
-				const bool overrideWeaponPreferredSkin = argCount > 2 ? !!args[2] : false;
+				const bool overrideSkinSounds = argCount > 2 ? !!args[2] : false;
 
 				// [AK] If an empty string is used, then it should remove the skin.
-				if ( strlen( skinName ) > 0 && 
+
+
+
+				if (skinName && strlen( skinName ) > 0 && // [BOF] Make sure skinName is valid as well as making sure it has a length greater than 0
 				(!stricmp(skinName, "Base") || // [BOF] Make sure Skin is part of the class.
 				R_FindSkin(skinName, players[playerIndex].CurrentPlayerClass) != players[playerIndex].CurrentPlayerClass), true) 
 				{
 					players[playerIndex].ACSSkin = skinName;
-					players[playerIndex].ACSSkinOverridesSkinSounds = overrideWeaponPreferredSkin;
+					players[playerIndex].ACSSkinOverridesSkinSounds = overrideSkinSounds;
 				}
 				else
 				{
