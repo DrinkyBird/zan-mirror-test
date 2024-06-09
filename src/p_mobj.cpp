@@ -574,24 +574,27 @@ bool AActor::SetState (FState *newstate, bool nofunction)
 						sprite =
 							skins[weaponSkin].sprites.CheckKey(*(DWORD*)sprites[sprite].name) ?
 							skins[weaponSkin].sprites[*(DWORD*)sprites[sprite].name] :
-							skins[weaponSkin].sprite;
+							newsprite == SpawnState->sprite ? skins[weaponSkin].sprite :
+							newsprite;
 
 						if (skins[skin].sprites.CheckKey(*(DWORD*)sprites[sprite].name))
 							sprite = skins[skin].sprites[*(DWORD*)sprites[sprite].name];
 					}
 					else if ( overrideSkin != -1 ) // [AK] Show the overridden skin first if valid.
 					{
-						sprite =
+					sprite =
 						skins[overrideSkin].sprites.CheckKey(*(DWORD*)sprites[newsprite].name) ?
 						skins[overrideSkin].sprites[*(DWORD*)sprites[newsprite].name] :
-						skins[overrideSkin].sprite;
+						newsprite == SpawnState->sprite ? skins[overrideSkin].sprite :
+						newsprite;
 					}
 					else if (player != NULL && ( skins.Size() > static_cast<unsigned int> ( player->userinfo.GetSkin() ) ) ) // [BB] Adapted the skins check
 					{
 						sprite =
 							skins[player->userinfo.GetSkin()].sprites.CheckKey(*(DWORD*)sprites[newsprite].name) ?
 							skins[player->userinfo.GetSkin()].sprites[*(DWORD*)sprites[newsprite].name] :
-							skins[player->userinfo.GetSkin()].sprite;
+							newsprite == SpawnState->sprite ? skins[player->userinfo.GetSkin()].sprite :
+							newsprite;
 					}
 					else if (newsprite != prevsprite)
 					{

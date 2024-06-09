@@ -1168,13 +1168,14 @@ void R_InitSkins (void)
 						{
 							mysnprintf(skins[i].name, countof(skins[i].name), "skin%d", (int)i);
 							Printf(PRINT_BOLD, "Skin %s duplicated as %s\n",
-								skins[PlayerClasses[pclass].Skins[j]].name, skins[i].name);
+							skins[PlayerClasses[pclass].Skins[j]].name, skins[i].name);
 							break;
 						}
 						initialname = true;
 					}
 				}
 
+				skins[i].param["name"].list[0] = skins[i].name; // [BOF] Update CVAR Name for GetSkinInfo param
 
 				if (skins[i].displayname[0] == 0)
 				{

@@ -2631,13 +2631,15 @@ void P_CheckPlayerSprite(AActor *actor, int &spritenum, fixed_t &scalex, fixed_t
 			skin = overrideSkin;
 
 		weapSprite = spritenum =
-			skins[weaponSkin].sprites.CheckKey(*(DWORD*)sprites[spritenum].name) ?
-			skins[weaponSkin].sprites[*(DWORD*)sprites[spritenum].name] :
+			skins[weaponSkin].sprites.CheckKey(*(DWORD*)sprites[actor->state->sprite].name) ?
+			skins[weaponSkin].sprites[*(DWORD*)sprites[actor->state->sprite].name] :
 			skins[weaponSkin].sprite;
+			actor->state->sprite == actor->SpawnState->sprite ? skins[weaponSkin].sprite :
+			actor->state->sprite;
 
-		if (skins[skin].sprites.CheckKey(*(DWORD*)sprites[spritenum].name))
+		if (skins[skin].sprites.CheckKey(*(DWORD*)sprites[actor->state->sprite].name))
 		{
-			spritenum = skins[skin].sprites[*(DWORD*)sprites[spritenum].name];
+			spritenum = skins[skin].sprites[*(DWORD*)sprites[actor->state->sprite].name];
 		}
 		else skin = weaponSkin;
 	}
@@ -2645,10 +2647,12 @@ void P_CheckPlayerSprite(AActor *actor, int &spritenum, fixed_t &scalex, fixed_t
 	else if ((overrideSkin != -1) && (overrideSkin != skin))
 	{
 		skin = overrideSkin;
-				spritenum =
-			skins[skin].sprites.CheckKey(*(DWORD*)sprites[spritenum].name) ?
-			skins[skin].sprites[*(DWORD*)sprites[spritenum].name] :
-			skins[skin].sprite;
+		spritenum =
+			skins[skin].sprites.CheckKey(*(DWORD*)sprites[actor->state->sprite].name) ?
+			skins[skin].sprites[*(DWORD*)sprites[actor->state->sprite].name] :
+			actor->state->sprite == actor->SpawnState->sprite ? skins[skin].sprite :
+			actor->state->sprite;
+
 	}
 
 	// [BB/AK] No longer using an overridden skin, reset the sprite.
