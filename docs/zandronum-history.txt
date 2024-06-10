@@ -24,7 +24,6 @@
 *+	- Added support for voice chat. Audio is encoded and decoded using Opus, allowing it to be transmitted over the network with minimal bandwidth usage and decent quality. Any unwanted noise in the audio is also removed with RNNoise before it's sent to the server. [Kaminsky]
 *+	- Generalized the medal system and added the new MEDALDEF lump to define custom medals. Players can be awarded medals using the ACS and DECORATE functions: "GivePlayerMedal" and "A_GivePlayerMedal". [Kaminsky]
 +	- "SetPlayerSkin" Override Parameter now can replace Sounds, Mugshot, or both [Barrels O' Fun]
-+	- Added Skin Parameter : "displayname" Used for menus similarly to a class's displayname. [Barrels O' Fun]
 +	- Added Skin Parameter : "colorrange" Can be used to override the class's own colorrange. [Barrels O' Fun]
 +	- Added Skin Parameter : "selectable" Prevents skin from being selected; Only accessible through SetPlayerSkin or Weapon.PreferredSkin. [Barrels O' Fun]
 +	- Added Skin Parameter : "removable" Adds the skin to a whitelist of skins that can be removed using newly added KEYCONF command : "clearplayerskins" [Barrels O' Fun]

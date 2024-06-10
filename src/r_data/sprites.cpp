@@ -891,13 +891,6 @@ void R_InitSkins (void)
 					if (remove == true) break;
 				}
 
-				// Display Name for Menus
-				else if (!key.Compare("displayname"))
-				{
-					strncpy(skins[i].displayname, sc.String, MAX_SKIN_NAME);
-					skins[i].param[key].list[0] = skins[i].displayname;
-				}
-
 				// Color Range
 				else if (!key.Compare("colorrange"))
 				{ // [BOF] Override a class's translation with the exception of a class using 0,0 Translation
@@ -1176,13 +1169,6 @@ void R_InitSkins (void)
 				}
 
 				skins[i].param["name"].list[0] = skins[i].name; // [BOF] Update CVAR Name for GetSkinInfo param
-
-				if (skins[i].displayname[0] == 0)
-				{
-					strcpy(skins[i].displayname, skins[i].name); //Use CVAR name if no Displayname is available
-					skins[i].param["displayname"].list.Resize(1);
-					skins[i].param["displayname"].list[0] = skins[i].displayname;
-				}
 
 				// Now collect the sprite frames for this skin. If the sprite name was not
 				// specified, use whatever immediately follows the specifier lump.
@@ -1510,7 +1496,6 @@ void R_InitSprites ()
 		const char *pclassface = basetype->Meta.GetMetaString (APMETA_Face);
 
 		strcpy (skins[i].name, "Base");
-		strcpy(skins[i].displayname, "Base");
 
 		if (pclassface == NULL || strcmp(pclassface, "None") == 0)
 		{

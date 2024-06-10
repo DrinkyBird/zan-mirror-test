@@ -87,7 +87,6 @@ public:
 	// [BOF] Extra SKININFO values for Zandronum.
 	paramlist	param;							// A dynamic list for GetSkinInfo to grab values from SKININFO, including custom ones.
 	intmap		sprites;						// Array variant using the sprite to replace as the key
-	char		displayname[MAX_SKIN_NAME + 1];	// Display name for menu
 
 	bool		removable;						// Allow removal with clearplayerskins when true. False by default.
 												// For mods of mods with skins already bundled in them.

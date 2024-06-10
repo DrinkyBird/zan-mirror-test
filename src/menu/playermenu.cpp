@@ -879,7 +879,7 @@ void DPlayerMenu::UpdateSkins()
 						continue;
 
 					int j = PlayerSkins.Push(i);
-					li->SetString(j, skins[i].displayname);
+					li->SetString(j, skins[i].name);
 					if (R_FindSkin(skin, pclass) == i)
 						sel = j;
 				}
