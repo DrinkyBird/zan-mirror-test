@@ -606,18 +606,10 @@ void R_InitSkins (void)
 			do
 			{
 
-				
-				if (!s_skin && sc.End && !sc.String[0] != '}') // Remove skin at end of SKININFO with no ending bracket
-				{
-					Printf(PRINT_BOLD, "Unexpected end of file for skin %i. %s\n", i,
-						(strlen(skins[i].name)) ? skins[i].name : "");
-					remove = true;
+				if(s_skin == 0 && sc.String[0] == '}')
 					break;
-				}
-
-				
-
-			key = sc.String;key.ToLower(); // Keep all lowercase to prevent inconsistencies with GetSkinInfo
+			
+				key = sc.String;key.ToLower(); // Keep all lowercase to prevent inconsistencies with GetSkinInfo
 
 				if (!sc.CheckToken('='))
 				{
@@ -1055,7 +1047,7 @@ void R_InitSkins (void)
 						} while (sc.CheckString(","));
 					}
 				}
-			} while ((sc.GetString() && !s_skin && sc.String[0] != ('}')) || (s_skin && sc.GetString())); // Check for closing bracket in SKININFO, and end in S_SKIN
+			} while (sc.GetString());
 
 
 			// [BOF] Remove skins through clearplayerskins
