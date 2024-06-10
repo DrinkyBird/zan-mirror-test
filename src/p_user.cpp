@@ -1404,7 +1404,7 @@ const char *APlayerPawn::GetSoundClass() const
 	if (player != NULL)
 	{ 
 		ACSSkin = player->ACSSkin;
-		ACSSounds = player->ACSSkinOverrides&1;
+		ACSSounds = player->ACSSkinOverrides&2;
 	}
 
 	// [AK] If this is a corpse, check which player it originally belonged to.
@@ -1415,7 +1415,7 @@ const char *APlayerPawn::GetSoundClass() const
 		{
 			corpsePlayer = bodyquePlayer[i];
 			ACSSkin = corpsePlayer->mo->ACSSkin;
-			ACSSounds = corpsePlayer->mo->ACSSkinOverrides&1;
+			ACSSounds = corpsePlayer->mo->ACSSkinOverrides&2;
 			break;
 		}
 	}
@@ -2633,13 +2633,12 @@ void P_CheckPlayerSprite(AActor *actor, int &spritenum, fixed_t &scalex, fixed_t
 		weapSprite = spritenum =
 			skins[weaponSkin].sprites.CheckKey(*(DWORD*)sprites[actor->state->sprite].name) ?
 			skins[weaponSkin].sprites[*(DWORD*)sprites[actor->state->sprite].name] :
-			skins[weaponSkin].sprite;
 			actor->state->sprite == actor->SpawnState->sprite ? skins[weaponSkin].sprite :
 			actor->state->sprite;
 
-		if (skins[skin].sprites.CheckKey(*(DWORD*)sprites[actor->state->sprite].name))
+		if (skins[skin].sprites.CheckKey(*(DWORD*)sprites[spritenum].name))
 		{
-			spritenum = skins[skin].sprites[*(DWORD*)sprites[actor->state->sprite].name];
+			spritenum = skins[skin].sprites[*(DWORD*)sprites[spritenum].name];
 		}
 		else skin = weaponSkin;
 	}

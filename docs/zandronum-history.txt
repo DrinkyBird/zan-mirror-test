@@ -23,7 +23,7 @@
 *+	- Added support for custom vote types using the new VOTEINFO lump. [Dusk]
 *+	- Added support for voice chat. Audio is encoded and decoded using Opus, allowing it to be transmitted over the network with minimal bandwidth usage and decent quality. Any unwanted noise in the audio is also removed with RNNoise before it's sent to the server. [Kaminsky]
 *+	- Generalized the medal system and added the new MEDALDEF lump to define custom medals. Players can be awarded medals using the ACS and DECORATE functions: "GivePlayerMedal" and "A_GivePlayerMedal". [Kaminsky]
-+	- "SetPlayerSkin" Override Parameter now can replace Sounds, Mugshot, or both [Barrels O' Fun]
++	- "SetPlayerSkin" Override Parameter now can override Weapon Skins, Sounds, or Mugshots [Barrels O' Fun]
 +	- Added Skin Parameter : "colorrange" Can be used to override the class's own colorrange. [Barrels O' Fun]
 +	- Added Skin Parameter : "selectable" Prevents skin from being selected; Only accessible through SetPlayerSkin or Weapon.PreferredSkin. [Barrels O' Fun]
 +	- Added Skin Parameter : "removable" Adds the skin to a whitelist of skins that can be removed using newly added KEYCONF command : "clearplayerskins" [Barrels O' Fun]
@@ -192,7 +192,6 @@
 -	- Fixed: Fraglimit changes wouldn't end the match properly if a player had more frags than the new limit (addresses 1137). [Ru5tK1ng]
 -	- Fixed: Max bonus amounts for health and armor weren't being sync'd between map changes online (addresses 2706). [Ru5tK1ng]
 !	- "GetPlayerSkin" returns the skin index instead of the skin name now, which can be interfaced with GetSkinInfo. [Barrels O' Fun]
-!	- "SetPlayerSkin" Override Weapon Skin was replaced as Weapon Skins can now be overridden through the sprites array. [Barrels O' Fun]
 !	- In the player menu, when the selected class is "Random", the "Skin" option is hidden since you can't select anything other than base on "Random" anyways.
 !	- The result value of GAMEEVENT_MEDALS event scripts can now be used to determine whether or not the player receives the medal. [Kaminsky]
 !	- GAMEMODE flags are now validated after all GAMEMODE lumps have been parsed instead of after each one. The internal game mode name (e.g. "TeamLMS") is now printed with the error message instead of the actual name. [Kaminsky]

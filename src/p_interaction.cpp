@@ -3209,7 +3209,8 @@ int PLAYER_GetWeaponSkin( player_t *player )
 { // [BOF] Split ACS and Weapon Skins.
 	int skin = -1;
 
-	if ( player != nullptr && player->ReadyWeapon != NULL) // [BOF] Make sure both the player and the weapon exist.
+	if ( player != nullptr && player->ReadyWeapon != NULL && // [BOF] Make sure both the player and the weapon exist.
+		!player->ACSSkinOverrides&1 ) // [BOF] Override Weapon Skin
 	{
 		int overrideSkin = player->CurrentPlayerClass;
 		const char *skinName = nullptr;
