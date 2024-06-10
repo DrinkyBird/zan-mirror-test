@@ -14,6 +14,7 @@
 #include "r_data/sprites.h"
 #include "r_data/voxels.h"
 #include "textures/textures.h"
+// [BOF] New #includes.
 #include "v_video.h"
 
 void gl_InitModels();
@@ -1411,8 +1412,6 @@ static void R_CreateSkin()
 	skin.param["hidden"].list.Resize(1);
 	skin.param["hidden"].list[0] = "0";
 
-	skin.param["displayname"].list.Resize(1);
-
 	skin.param["selectable"].list.Resize(1);
 	skin.param["selectable"].list[0] = "1";
 	
@@ -1533,7 +1532,6 @@ void R_InitSprites ()
 
 
 
-		skins[i].param["displayname"].list[0] =
 		skins[i].param["name"].list[1] = skins[i].param["name"].list[0] = skins[i].name;
 
 		skins[i].param["sprite"].list[0] = sprites[skins[i].sprite].name;
