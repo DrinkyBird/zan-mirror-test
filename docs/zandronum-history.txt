@@ -180,6 +180,7 @@
 -	- Fixed: Fraglimit changes wouldn't end the match properly if a player had more frags than the new limit (addresses 1137). [Ru5tK1ng]
 -	- Fixed: Max bonus amounts for health and armor weren't being sync'd between map changes online (addresses 2706). [Ru5tK1ng]
 -	- Fixed: the client's weapon desynced if they fired it too early after respawning. [Kaminsky]
+-	- Fixed: a RandomPowerup could try giving the player a powerup that isn't actually an inventory item (i.e. the powerup was replaced by a non-inventory actor), causing the game to crash. [Kaminsky]
 !	- The result value of GAMEEVENT_MEDALS event scripts can now be used to determine whether or not the player receives the medal. [Kaminsky]
 !	- GAMEMODE flags are now validated after all GAMEMODE lumps have been parsed instead of after each one. The internal game mode name (e.g. "TeamLMS") is now printed with the error message instead of the actual name. [Kaminsky]
 !	- Added an extra check to ensure that game modes have a (short) name. [Kaminsky]
