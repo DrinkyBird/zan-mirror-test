@@ -329,6 +329,13 @@ DefaultOptionMenu
 	}
 }
 
+// [geNia] Added for Freeform Menu
+DefaultFreeformMenu
+{
+	ScrollSpeed 4
+	TopPadding 0
+}
+
 // [TP] Zandronum additions, these get filled in by the engine
 OptionValue ZA_Levels {}
 OptionValue ZA_Bots {}

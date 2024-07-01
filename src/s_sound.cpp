@@ -1962,7 +1962,8 @@ void S_SetSoundPaused (int state)
 				GSnd->SetInactive(SoundRenderer::INACTIVE_Active);
 			}
 			// [BB] !netgame -> (NETWORK_GetState( ) == NETSTATE_SINGLE)
-			if ((NETWORK_GetState( ) == NETSTATE_SINGLE)
+			// [geNia] Added a check for multiplayer netstate.
+			if ((NETWORK_GetState( ) == NETSTATE_SINGLE || NETWORK_GetState( ) == NETSTATE_SINGLE_MULTIPLAYER)
 #ifdef _DEBUG
 				&& !demoplayback
 #endif
@@ -1984,7 +1985,8 @@ void S_SetSoundPaused (int state)
 					SoundRenderer::INACTIVE_Mute);
 			}
 			// [BB] !netgame -> (NETWORK_GetState( ) == NETSTATE_SINGLE)
-			if ((NETWORK_GetState( ) == NETSTATE_SINGLE)
+			// [geNia] Added a check for multiplayer netstate.
+			if ((NETWORK_GetState( ) == NETSTATE_SINGLE || NETWORK_GetState( ) == NETSTATE_SINGLE_MULTIPLAYER)
 #ifdef _DEBUG
 				&& !demoplayback
 #endif
@@ -1994,6 +1996,19 @@ void S_SetSoundPaused (int state)
 			}
 		}
 	}
+}
+
+//==========================================================================
+//
+// [geNia] S_GetSoundPaused
+//
+// Tells if the sound is currently paused.
+//
+//==========================================================================
+
+bool S_GetSoundPaused()
+{
+	return paused < 0;
 }
 
 //==========================================================================

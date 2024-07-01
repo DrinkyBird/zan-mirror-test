@@ -52,6 +52,7 @@
 // [TP] New #includes
 #include "announcer.h"
 #include "doomerrors.h"
+#include "freeformmenuitems.h"
 
 #include "optionmenuitems.h"
 
@@ -119,7 +120,8 @@ static void SkipSubBlock(FScanner &sc)
 //
 //=============================================================================
 
-static bool CheckSkipGameBlock(FScanner &sc)
+// [AK] Removed static keyword so this function is accessible in "freeformmenu.cpp".
+bool CheckSkipGameBlock(FScanner &sc)
 {
 	bool filter = false;
 	sc.MustGetStringName("(");
@@ -144,7 +146,8 @@ static bool CheckSkipGameBlock(FScanner &sc)
 //
 //=============================================================================
 
-static bool CheckSkipOptionBlock(FScanner &sc)
+// [AK] Removed static keyword so this function is accessible in "freeformmenu.cpp".
+bool CheckSkipOptionBlock(FScanner &sc)
 {
 	bool filter = false;
 	sc.MustGetStringName("(");
@@ -459,7 +462,8 @@ static bool CheckCompatible(FMenuDescriptor *newd, FMenuDescriptor *oldd)
 	return oldd->mClass == newd->mClass;
 }
 
-static bool ReplaceMenu(FScanner &sc, FMenuDescriptor *desc)
+// [AK] Removed static keyword so this function is accessible in "freeformmenu.cpp".
+bool ReplaceMenu(FScanner &sc, FMenuDescriptor *desc)
 {
 	FMenuDescriptor **pOld = MenuDescriptors.CheckKey(desc->mMenuName);
 	if (pOld != NULL && *pOld != NULL) 
@@ -995,6 +999,9 @@ void M_ParseMenuDefs()
 	DefaultListMenuSettings.Reset();
 	DefaultOptionMenuSettings.Reset();
 
+	// [geNia/AK] Reset the default freeform menu settings.
+	DefaultFreeformMenuSettings.Reset();
+
 	atterm(	DeinitMenus);
 	DeinitMenus();
 	while ((lump = Wads.FindLump ("MENUDEF", &lastlump)) != -1)
@@ -1012,6 +1019,25 @@ void M_ParseMenuDefs()
 			{
 				ParseListMenuBody(sc, &DefaultListMenuSettings);
 				if (DefaultListMenuSettings.mItems.Size() > 0)
+				{
+					I_FatalError("You cannot add menu items to the menu default settings.");
+				}
+			}
+			// [geNia] Added for Freeform menu functionality
+			else if (sc.Compare("FREEFORMMENU"))
+			{
+				M_ParseFreeformMenu(sc);
+			}
+			// [geNia] Added for Freeform menu functionality
+			else if (sc.Compare("ADDFREEFORMMENU"))
+			{
+				M_ParseAddFreeformMenu(sc);
+			}
+			// [geNia] Added for Freeform menu functionality
+			else if (sc.Compare("DEFAULTFREEFORMMENU"))
+			{
+				M_ParseFreeformMenuBody(sc, &DefaultFreeformMenuSettings, NULL);
+				if (DefaultFreeformMenuSettings.mItems.Size() > 0)
 				{
 					I_FatalError("You cannot add menu items to the menu default settings.");
 				}
@@ -1116,6 +1142,38 @@ static void BuildEpisodeMenu()
 				}
 				success = true;
 			}
+		}
+		// [geNia] Added for Freeform menu functionality
+		else if ((*desc)->mType == MDESC_FreeformMenu)
+		{
+			// Mod creator decided to make their own episode menu, let's hope they know what they are doing
+			// But we can still add items dynamically if mod developer specified the "EpisodesTop" correctly
+			FFreeformMenuDescriptor* ld = static_cast<FFreeformMenuDescriptor*>(*desc);
+			FFreeformMenuItemSubmenu *listTopItem = static_cast<FFreeformMenuItemSubmenu*>(ld->GetItem("EpisodesTop"));
+			if (listTopItem != NULL)
+			{
+				int yOffset = 0;
+				ld->mSelectedItem = ld->mItems.Size() - 1;
+				for (unsigned i = 0; i < AllEpisodes.Size(); i++)
+				{
+					FFreeformMenuItemSubmenu* it = new FFreeformMenuItemSubmenu();
+					listTopItem->CopyTo(it);
+					it->SetY(it->GetY() + yOffset);
+					it->SetLabel(AllEpisodes[i].mEpisodeName);
+					it->SetAction(NAME_Skillmenu);
+					it->SetParam(i);
+					ld->mItems.Push(it);
+
+					yOffset += it->GetHeight();
+				}
+				if (AllEpisodes.Size() == 1)
+				{
+					ld->mAutoselect = ld->mSelectedItem;
+				}
+
+				ld->DeleteItem("EpisodesTop");
+			}
+			success = true;
 		}
 	}
 	if (!success)
@@ -1245,6 +1303,12 @@ static void BuildPlayerclassMenu()
 				}
 				success = true;
 			}
+		}
+		// [geNia] Added for Freeform menu functionality
+		else if ((*desc)->mType == MDESC_FreeformMenu)
+		{
+			// Mod creator decided to make their own class menu, let's hope they know what they are doing
+			success = true;
 		}
 	}
 	if (!success)
@@ -1614,6 +1678,12 @@ void M_StartupSkillMenu(FGameStartup *gs)
 			{
 				ld->mAutoselect = -1;
 			}
+			success = true;
+		}
+		// [geNia] Added for Freeform menu functionality
+		else if ((*desc)->mType == MDESC_FreeformMenu)
+		{
+			// Mod creator decided to make their own difficuly menu, let's hope they know what they are doing
 			success = true;
 		}
 	}

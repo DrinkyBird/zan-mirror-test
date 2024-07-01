@@ -79,6 +79,8 @@ enum EMenuDescriptorType
 {
 	MDESC_ListMenu,
 	MDESC_OptionsMenu,
+	// [geNia] Added for Freeform menu functionality
+	MDESC_FreeformMenu
 };
 
 struct FMenuDescriptor
@@ -93,6 +95,8 @@ struct FMenuDescriptor
 
 class FListMenuItem;
 class FOptionMenuItem;
+// [geNia] Added for Freeform menu functionality
+class FFreeformMenuItem;
 
 struct FListMenuDescriptor : public FMenuDescriptor
 {
@@ -222,7 +226,10 @@ public:
 	{
 		MOUSE_Click,
 		MOUSE_Move,
-		MOUSE_Release
+		MOUSE_Release,
+		// [geNia/AK] Freeform menus use the right mouse button.
+		MOUSE_RightClick,
+		MOUSE_RightRelease
 	};
 
 	enum
@@ -244,7 +251,8 @@ public:
 	virtual bool TranslateKeyboardEvents();
 	virtual void Close();
 	virtual bool MouseEvent(int type, int x, int y);
-	bool MouseEventBack(int type, int x, int y);
+	// [geNia] Made virtual for Freeform Menus
+	virtual bool MouseEventBack(int type, int x, int y);
 	void SetCapture();
 	void ReleaseCapture();
 	bool HasCapture()
@@ -300,6 +308,9 @@ public:
 	int GetY() { return mYpos; }
 	int GetX() { return mXpos; }
 	void SetX(int x) { mXpos = x; }
+	// [geNia] Added for Freeform menu functionality
+	void SetY(int y) { mYpos = y; }
+	void SetAction(FName action) { mAction = action; }
 };	
 
 class FListMenuItemStaticPatch : public FListMenuItem
@@ -705,6 +716,10 @@ void M_SetLastRconAccessRequest(int tic); // [AK]
 bool M_InServerSetupMenu(); // [AK]
 bool M_IsValidMenu(const char *name); // [AK]
 
+// [AK] Declared some functions defined in "menudef.cpp" here, so they're accessible in "freeformmenu.cpp".
+bool CheckSkipGameBlock(FScanner &sc);
+bool CheckSkipOptionBlock(FScanner &sc);
+bool ReplaceMenu(FScanner &sc, FMenuDescriptor *desc);
 
 
 #endif
