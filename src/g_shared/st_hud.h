@@ -71,7 +71,7 @@ bool	HUD_IsVisible( void );
 bool	HUD_IsFullscreen( void );
 
 void	HUD_Render( ULONG ulDisplayPlayer );
-void	HUD_Refresh( void );
+void	HUD_Refresh( unsigned int displayPlayer );
 void	HUD_RefreshPlayerCounts( void );
 void	HUD_ShouldRefreshBeforeRendering( void );
 void	HUD_DrawTargetName( player_t *pPlayer );

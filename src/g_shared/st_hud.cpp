@@ -264,7 +264,7 @@ void HUD_Render( ULONG ulDisplayPlayer )
 	// [AK] If we need to update the HUD, do so before rendering it.
 	if ( g_bRefreshBeforeRendering )
 	{
-		HUD_Refresh( );
+		HUD_Refresh( ulDisplayPlayer );
 		g_bRefreshBeforeRendering = false;
 	}
 
@@ -334,9 +334,12 @@ void HUD_Render( ULONG ulDisplayPlayer )
 
 //*****************************************************************************
 //
-void HUD_Refresh( void )
+void HUD_Refresh( const unsigned int displayPlayer )
 {
 	ULONG ulNumDuelers = 0;
+
+	if ( displayPlayer >= MAXPLAYERS )
+		return;
 
 	// [AK] Reset the dueler pointers.
 	g_pDuelers[0] = g_pDuelers[1] = NULL;
@@ -357,12 +360,11 @@ void HUD_Refresh( void )
 	// [AK] Determine which player is carrying the terminator sphere, possession hellstone, or white flag.
 	g_pArtifactCarrier = GAMEMODE_GetArtifactCarrier( );
 
-	player_t *player = &players[HUD_GetViewPlayer( )];
-	ULONG ulPlayer = player - players;
+	player_t *player = &players[displayPlayer];
 
-	g_ulRank = PLAYER_CalcRank( ulPlayer );
-	g_lSpread = PLAYER_CalcSpread( ulPlayer );
-	g_bIsTied = HUD_IsTied( ulPlayer );
+	g_ulRank = PLAYER_CalcRank( displayPlayer );
+	g_lSpread = PLAYER_CalcSpread( displayPlayer );
+	g_bIsTied = HUD_IsTied( displayPlayer );
 
 	// [AK] Count how many players are in the game.
 	HUD_RefreshPlayerCounts( );
