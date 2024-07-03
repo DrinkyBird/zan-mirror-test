@@ -2882,7 +2882,7 @@ void PLAYER_SetStatus( player_t *player, const int statuses, const bool enable, 
 
 		// [AK] If we're recording a demo, write a command to update our status.
 		// Don't update the "talking" status since voice chat isn't used in demos.
-		if ( CLIENTDEMO_IsRecording( ))
+		if (( CLIENTDEMO_IsRecording( )) && ( player == &players[consoleplayer] ))
 			CLIENTDEMO_WriteSetStatus( statuses & ~PLAYERSTATUS_TALKING, enable );
 	}
 }
