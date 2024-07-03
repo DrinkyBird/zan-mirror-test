@@ -4702,17 +4702,17 @@ void ServerCommands::SetConsolePlayer::Execute()
 	if (( playerNumber < 0 ) || ( playerNumber >= MAXPLAYERS ))
 		return;
 
+	// [AK] Save a copy of our old name, in case the server assigned a different
+	// name to us. When we apply our local userinfo to the new player slot via
+	// D_SetupUserInfo, we must restore the overridden name.
+	FString oldName = players[consoleplayer].userinfo.GetName( );
+
 	// In a client demo, don't lose the userinfo we gave to our console player.
 	if ( CLIENTDEMO_IsPlaying() && ( playerNumber != consoleplayer ))
 	{
 		players[playerNumber].userinfo.TransferFrom( players[consoleplayer].userinfo );
 		players[consoleplayer].userinfo.Reset();
 	}
-
-	// [AK] Save a copy of our old name, in case the server assigned a different
-	// name to us. When we apply our local userinfo to the new player slot via
-	// D_SetupUserInfo, we must restore the overridden name.
-	FString oldName = players[consoleplayer].userinfo.GetName( );
 
 	// Otherwise, since it's valid, set our local player index to this.
 	consoleplayer = playerNumber;
