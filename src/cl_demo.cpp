@@ -787,6 +787,10 @@ void CLIENTDEMO_WriteWarpCheat ( fixed_t x, fixed_t y )
 //
 void CLIENTDEMO_WriteSetStatus ( const int statuses, const bool enable )
 {
+	// [AK] Don't write the command if no statuses are being updated.
+	if ( statuses == 0 )
+		return;
+
 	clientdemo_CheckDemoBuffer( 4 );
 	g_ByteStream.WriteByte( CLD_LOCALCOMMAND );
 	g_ByteStream.WriteByte( CLD_LCMD_SETSTATUS );
