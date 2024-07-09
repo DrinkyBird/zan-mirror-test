@@ -7205,9 +7205,6 @@ void ServerCommands::MapLoad::Execute()
 		// [BB] viewactive is set in G_InitNew
 		// For right now, the view is not active.
 		//viewactive = false;
-
-		// Kill the console.
-		C_HideConsole( );
 	}
 	else
 		CLIENT_PrintWarning( "client_MapLoad: Unknown map: %s\n", mapName.GetChars() );
