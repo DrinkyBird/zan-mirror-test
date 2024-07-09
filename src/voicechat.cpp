@@ -777,7 +777,7 @@ void VOIPController::ReadRecordSamples( unsigned char *soundBuffer, unsigned int
 	float rms = 0.0f;
 
 	for ( unsigned int i = 0; i < RECORD_SAMPLES_PER_FRAME; i++ )
-		uncompressedBuffer[i] = clamp<float>( voicechat_ByteArrayToFloat( soundBuffer + i * SAMPLE_SIZE ) * voice_recordvolume, -1.0f, 1.0f );
+		uncompressedBuffer[i] = clamp<float>( voicechat_ByteArrayToFloat( soundBuffer + i * SAMPLE_SIZE ) * voice_recordvolume * 25.0f, -25.0f, 25.0f );
 
 	// [AK] Denoise the audio frame.
 	if (( voice_suppressnoise ) && ( denoiseState != nullptr ))
