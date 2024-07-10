@@ -398,7 +398,9 @@ void NETWORK_Construct( USHORT usPort, bool bAllocateLANSocket )
 		{ "MAPINFO", ALL_LUMPS, ns_global },
 		{ "AUTHINFO", ALL_LUMPS, ns_global },
 		{ "VOTEINFO", ALL_LUMPS, ns_global },
-		{ "MEDALDEF", ALL_LUMPS, ns_global }
+		{ "MEDALDEF", ALL_LUMPS, ns_global },
+		{ "ALLYA0", LAST_LUMP, ns_sprites },
+		{ "ENEMA0", LAST_LUMP, ns_sprites }
 	};
 
 	// [AK] Parse any loaded AUTHINFO lumps, which might add new lumps to the authentication list.
