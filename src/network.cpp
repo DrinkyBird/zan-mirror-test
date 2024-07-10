@@ -397,6 +397,7 @@ void NETWORK_Construct( USHORT usPort, bool bAllocateLANSocket )
 		{ "GAMEMODE", ALL_LUMPS, ns_global },
 		{ "MAPINFO", ALL_LUMPS, ns_global },
 		{ "AUTHINFO", ALL_LUMPS, ns_global },
+		{ "VOTEINFO", ALL_LUMPS, ns_global },
 		{ "MEDALDEF", ALL_LUMPS, ns_global }
 	};
 
