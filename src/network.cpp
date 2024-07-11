@@ -1256,6 +1256,8 @@ bool network_GenerateLumpMD5HashAndWarnIfNeeded( const int LumpNum, const char *
 
 }
 
+//*****************************************************************************
+//
 void network_CheckIfDuplicateLump( const int LumpNum )
 {
 	const char *lumpName = Wads.GetLumpFullName( LumpNum );
