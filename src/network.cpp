@@ -249,6 +249,7 @@ static	SOCKET			network_AllocateSocket( void );
 static	bool			network_BindSocketToPort( SOCKET Socket, ULONG ulInAddr, USHORT usPort, bool bReUse );
 static	bool			network_GenerateLumpMD5HashAndWarnIfNeeded( const int LumpNum, const char *LumpName, FString &MD5Hash );
 static	void			network_CheckIfDuplicateLump( const int LumpNum ); // [AK]
+static	void			network_AddSpritesToList( std::set<AUTHENTICATELUMP_s> &list, const char *name, const std::set<char> frames, const LumpAuthenticationMode mode ); // [AK]
 
 //*****************************************************************************
 //	FUNCTIONS
@@ -398,10 +399,12 @@ void NETWORK_Construct( USHORT usPort, bool bAllocateLANSocket )
 		{ "MAPINFO", ALL_LUMPS, ns_global },
 		{ "AUTHINFO", ALL_LUMPS, ns_global },
 		{ "VOTEINFO", ALL_LUMPS, ns_global },
-		{ "MEDALDEF", ALL_LUMPS, ns_global },
-		{ "ALLYA0", LAST_LUMP, ns_sprites },
-		{ "ENEMA0", LAST_LUMP, ns_sprites }
+		{ "MEDALDEF", ALL_LUMPS, ns_global }
 	};
+
+	// [AK] Add all "ALLYA" and "ENEMA" sprites to the authentication list.
+	network_AddSpritesToList( lumpsToAuthenticate, "ALLY", { 'A' }, LAST_LUMP );
+	network_AddSpritesToList( lumpsToAuthenticate, "ENEM", { 'A' }, LAST_LUMP );
 
 	// [AK] Parse any loaded AUTHINFO lumps, which might add new lumps to the authentication list.
 	if ( Wads.CheckNumForName( "AUTHINFO" ) != -1 )
@@ -1276,6 +1279,67 @@ void network_CheckIfDuplicateLump( const int LumpNum )
 				DuplicateLumps.Delete( i );
 				DuplicateLumpFilenames.Delete( i-- );
 			}
+		}
+	}
+}
+
+//*****************************************************************************
+//
+void network_AddSpritesToList( std::set<AUTHENTICATELUMP_s> &list, const char *name, const std::set<char> frames, const LumpAuthenticationMode mode )
+{
+	char lumpName[9];
+
+	if ( name == nullptr )
+		return;
+
+	// [AK] Search all of the loaded sprite lumps. Doing this isn't efficient,
+	// but since this only happens during startup, it shouldn't be a problem.
+	for ( int lump = 0; lump < Wads.GetNumLumps( ); lump++ )
+	{
+		if ( Wads.GetLumpNamespace( lump ) != ns_sprites )
+			continue;
+
+		Wads.GetLumpName( lumpName, lump );
+
+		// [AK] Skip lumps that aren't using the sprite's name.
+		if ( strnicmp( lumpName, name, 4 ) != 0 )
+			continue;
+
+		bool lumpIsValidSprite = false;
+
+		// [AK] Verify that the lump uses the proper naming convention for sprites.
+		// The frame and rotation (e.g. XXXXA1 or XXXXA2A8) must be valid.
+		for ( unsigned int i = 4; i <= 6; i += 2 )
+		{
+			if ( static_cast<unsigned>( lumpName[i] - 'A' ) < MAX_SPRITE_FRAMES )
+			{
+				if ( R_IsCharUsuableAsSpriteRotation( lumpName[i + 1] ))
+				{
+					lumpIsValidSprite = true;
+					break;
+				}
+			}
+		}
+
+		if ( lumpIsValidSprite == false )
+			continue;
+
+		// [AK] If only certain frames of the sprite should be authenticated,
+		// check that the lump's name uses at least one the desired frames.
+		if (( frames.size( ) > 0 ) && ( frames.find( lumpName[4] ) == frames.end( )) && ( frames.find( lumpName[6] ) == frames.end( )))
+			continue;
+
+		AUTHENTICATELUMP_s authenticatingLump = { lumpName, mode, ns_sprites };
+		const auto result = list.insert( authenticatingLump );
+
+		// [AK] If this lump is already on the list, just update the authentication
+		// mode. Note that elements within a set are constant, so the mode can't
+		// be updated directly. The existing entry must be removed first, and
+		// the new entry added in afterward.
+		if (( result.second == false ) && ( result.first->Mode != mode ))
+		{
+			list.erase( authenticatingLump );
+			list.insert( authenticatingLump );
 		}
 	}
 }

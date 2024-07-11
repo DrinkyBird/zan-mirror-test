@@ -81,6 +81,7 @@ extern TArray<FPlayerSkin> skins;		// [RH]
 extern BYTE				OtherGameSkinRemap[256];
 extern PalEntry			OtherGameSkinPalette[256];
 
+bool R_IsCharUsuableAsSpriteRotation (const char rot); // [BB]
 void R_InitSprites ();
 void R_DeinitSpriteData ();
 

@@ -1033,7 +1033,7 @@ static void R_CreateSkin()
 }
 
 // [BB] Helper code for the effective skin sprite width/height check.
-static bool R_IsCharUsuableAsSpriteRotation ( const char rot )
+bool R_IsCharUsuableAsSpriteRotation (const char rot)
 {
 	unsigned rotation = 17;
 
