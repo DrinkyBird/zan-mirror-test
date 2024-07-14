@@ -182,13 +182,14 @@ void MEDAL_Construct( void )
 				if ( sc.StringLen == 0 )
 					sc.ScriptError( "Got an empty string for the value of '%s'.", command.GetChars( ));
 
-				if ( command.CompareNoCase( "icon" ) == 0 )
+				if (( command.CompareNoCase( "icon" ) == 0 ) || ( command.CompareNoCase( "scoreboardicon" ) == 0 ))
 				{
-					medal->icon = TexMan.CheckForTexture( sc.String, FTexture::TEX_MiscPatch );
-				}
-				else if ( command.CompareNoCase( "scoreboardicon" ) == 0 )
-				{
-					medal->scoreboardIcon = TexMan.CheckForTexture( sc.String, FTexture::TEX_MiscPatch );
+					FTextureID &icon = ( command.CompareNoCase( "icon" ) == 0 ) ? medal->icon : medal->scoreboardIcon;
+					icon = TexMan.CheckForTexture( sc.String, FTexture::TEX_MiscPatch );
+
+					// [AK] Make sure that the icon exists.
+					if ( icon.isValid( ) == false )
+						sc.ScriptError( "Icon '%s' wasn't found.", sc.String );
 				}
 				else if ( command.CompareNoCase( "class" ) == 0 )
 				{
@@ -253,8 +254,10 @@ void MEDAL_Construct( void )
 				}
 			}
 
-			// [AK] Throw a fatal error if this medal has no class or state.
-			if ( medal->iconClass == nullptr )
+			// [AK] Throw a fatal error if this medal has no icon, class or state.
+			if ( medal->icon.isValid( ) == false )
+				sc.ScriptError( "Medal '%s' has no icon.", medal->name.GetChars( ));
+			else if ( medal->iconClass == nullptr )
 				sc.ScriptError( "Medal '%s' has no defined class.", medal->name.GetChars( ));
 			else if ( medal->iconState == nullptr )
 				sc.ScriptError( "Medal '%s' has no defined state.", medal->name.GetChars( ));
