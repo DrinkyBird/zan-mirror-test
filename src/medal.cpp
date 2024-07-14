@@ -747,6 +747,10 @@ bool medal_PlayerHasCarrierIcon( player_t *player )
 //
 bool medal_CanShowAllyOrEnemyIcon( const bool checkEnemyIcon )
 {
+	// [AK] Check if we're forbidden from seeing the desired icon.
+	if ( zadmflags & ( checkEnemyIcon ? ZADF_NO_ENEMY_ICONS : ZADF_NO_ALLY_ICONS ))
+		return false;
+
 	const FIntCVar &cvar = checkEnemyIcon ? cl_showenemyicon : cl_showallyicon;
 	return ((( cvar == SHOW_ICON_TEAMS_ONLY ) && ( GAMEMODE_GetCurrentFlags( ) & GMF_PLAYERSONTEAMS )) || ( cvar == SHOW_ICON_ALWAYS ));
 }

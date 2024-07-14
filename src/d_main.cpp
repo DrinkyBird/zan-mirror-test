@@ -665,6 +665,8 @@ CVAR (Flag, sv_dontkeepjoinqueue, zadmflags, ZADF_DONT_KEEP_JOIN_QUEUE);
 CVAR (Flag, sv_donthidestats, zadmflags, ZADF_DONT_HIDE_STATS);
 CVAR (Flag, sv_dontoverrideplayercolors, zadmflags, ZADF_DONT_OVERRIDE_PLAYER_COLORS);
 CVAR (Flag, sv_nospawntelefog, zadmflags, ZADF_NO_SPAWN_TELEFOG);
+CVAR (Flag, sv_noallyicons, zadmflags, ZADF_NO_ALLY_ICONS);
+CVAR (Flag, sv_noenemyicons, zadmflags, ZADF_NO_ENEMY_ICONS);
 
 // Old name kept for compatibility
 CVAR (Flag, sv_forcegldefaults,		zadmflags, ZADF_FORCE_VIDEO_DEFAULTS);

@@ -401,6 +401,12 @@ enum
 
 	// [AK] Teleport fog won't be spawned when a player does.
 	ZADF_NO_SPAWN_TELEFOG = 1 << 26,
+
+	// [AK] Ally icons won't appear over a player's head.
+	ZADF_NO_ALLY_ICONS = 1 << 27,
+
+	// [AK] Enemy icons won't appear over a player's head.
+	ZADF_NO_ENEMY_ICONS = 1 << 28,
 };
 
 // [RH] Compatibility flags.
