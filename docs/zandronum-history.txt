@@ -221,6 +221,7 @@
 !	- Added new and/or improved ally, enemy, and chat icons made by unknownna that are less intrusive and appear correctly in the software renderer for non-Doom IWADs like Hexen or Strife, while still keeping the same style as the old ones. [Kaminsky]
 !	- The ally icon now remains fully opaque even when the player has some type of visibility effect (e.g. BlurSphere), to make it easy to spot teammates. [Kaminsky]
 !	- The console is no longer hidden for clients that were already in the console when a new level is loaded. [Kaminsky]
+!	- All loaded "ALLYA" sprites are now protected. [Kaminsky]
 
 
 3.1
