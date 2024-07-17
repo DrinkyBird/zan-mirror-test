@@ -789,6 +789,7 @@ void HUD_DrawCoopInfo( void )
 //
 static void HUD_DrawBottomString( ULONG ulDisplayPlayer )
 {
+	EColorRange color = CR_RED;
 	FString bottomString;
 
 	// [AK] Show how much time is left before we can respawn if we had to wait for more than one second.
@@ -797,26 +798,24 @@ static void HUD_DrawBottomString( ULONG ulDisplayPlayer )
 		if (( players[consoleplayer].bSpectating == false ) && ( players[consoleplayer].playerstate == PST_DEAD ) && ( g_lRespawnGametic > level.time ))
 		{
 			float fTimeLeft = MIN( g_fRespawnDelay, static_cast<float>( g_lRespawnGametic - level.time ) / TICRATE );
-			bottomString.AppendFormat( TEXTCOLOR_GREEN "Ready to respawn in %.1f seconds\n", fTimeLeft );
+			bottomString.AppendFormat( TEXTCOLOR_GREEN "Ready to respawn in %.1f seconds\n" TEXTCOLOR_NORMAL, fTimeLeft );
 		}
 	}
 
 	// [BB] Draw a message to show that the free spectate mode is active.
 	if ( CLIENTDEMO_IsInFreeSpectateMode( ))
+	{
+		color = CR_WHITE;
 		bottomString.AppendFormat( "Free Spectate Mode" );
+	}
 	// If the console player is looking through someone else's eyes, draw the following message.
 	else if ( ulDisplayPlayer != static_cast<ULONG>( consoleplayer ))
 	{
-		FString color = TEXTCOLOR_RED;
-
 		// [RC] Or draw this in their team's color.
 		if ( GAMEMODE_GetCurrentFlags( ) & GMF_PLAYERSONTEAMS )
-		{
-			color = TEXTCOLOR_ESCAPE;
-			color += TEAM_GetTextColorName( players[ulDisplayPlayer].Team );
-		}
+			color = static_cast<EColorRange>( TEAM_GetTextColor( players[ulDisplayPlayer].Team ));
 
-		bottomString.AppendFormat( "%sFollowing - %s%s", color.GetChars( ), players[ulDisplayPlayer].userinfo.GetName( ), color.GetChars( ));
+		bottomString.AppendFormat( "Following - %s", players[ulDisplayPlayer].userinfo.GetName( ));
 	}
 
 	// [AK] Draw the "waiting for players" or "x allies/opponents left" messages when viewing through a non-spectating player.
@@ -847,7 +846,7 @@ static void HUD_DrawBottomString( ULONG ulDisplayPlayer )
 					else
 					{
 						playersLeftString.Format( TEXTCOLOR_GRAY "%d ", static_cast<int>( g_lNumAlliesLeft ));
-						playersLeftString.AppendFormat( TEXTCOLOR_RED "all%s left", g_lNumAlliesLeft != 1 ? "ies" : "y" );
+						playersLeftString.AppendFormat( TEXTCOLOR_DARKGREEN "all%s left", g_lNumAlliesLeft != 1 ? "ies" : "y" );
 					}
 				}
 			}
@@ -855,19 +854,19 @@ static void HUD_DrawBottomString( ULONG ulDisplayPlayer )
 			else
 			{
 				playersLeftString.Format( TEXTCOLOR_GRAY "%d ", static_cast<int>( g_lNumOpponentsLeft ));
-				playersLeftString.AppendFormat( TEXTCOLOR_RED "opponent%s", g_lNumOpponentsLeft != 1 ? "s" : "" );
+				playersLeftString.AppendFormat( TEXTCOLOR_DARKRED "enem%s", g_lNumOpponentsLeft != 1 ? "ies" : "y" );
 
 				// [AK] Only print how many teammates are left if we actually have any.
 				if (( GAMEMODE_GetCurrentFlags( ) & GMF_PLAYERSONTEAMS ) && ( g_bHasAllies ))
 				{
 					if ( g_lNumAlliesLeft < 1 )
 					{
-						playersLeftString += " left - allies dead";
+						playersLeftString += " left" TEXTCOLOR_NORMAL " - " TEXTCOLOR_DARKGREEN "allies dead";
 					}
 					else
 					{
-						playersLeftString.AppendFormat( ", " TEXTCOLOR_GRAY "%d ", static_cast<int>( g_lNumAlliesLeft ));
-						playersLeftString.AppendFormat( TEXTCOLOR_RED "all%s left", g_lNumAlliesLeft != 1 ? "ies" : "y" );
+						playersLeftString.AppendFormat( TEXTCOLOR_GRAY " %d ", static_cast<int>( g_lNumAlliesLeft ));
+						playersLeftString.AppendFormat( TEXTCOLOR_DARKGREEN "all%s left", g_lNumAlliesLeft != 1 ? "ies" : "y" );
 					}
 				}
 				else
@@ -918,7 +917,7 @@ static void HUD_DrawBottomString( ULONG ulDisplayPlayer )
 	// [RC] Draw the centered bottom message (spectating, following, waiting, etc).
 	if ( bottomString.Len( ) > 0 )
 	{
-		DHUDMessageFadeOut *pMsg = new DHUDMessageFadeOut( SmallFont, bottomString, 1.5f, 1.0f, 0, 0, CR_WHITE, 0.20f, 0.15f );
+		DHUDMessageFadeOut *pMsg = new DHUDMessageFadeOut( SmallFont, bottomString, 1.5f, 1.0f, 0, 0, color, 0.20f, 0.15f );
 		StatusBar->AttachMessage( pMsg, MAKE_ID( 'W', 'A', 'I', 'T' ));
 	}
 }

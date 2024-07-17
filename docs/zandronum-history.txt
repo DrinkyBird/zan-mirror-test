@@ -223,6 +223,7 @@
 !	- The ally icon now remains fully opaque even when the player has some type of visibility effect (e.g. BlurSphere), to make it easy to spot teammates. [Kaminsky]
 !	- The console is no longer hidden for clients that were already in the console when a new level is loaded. [Kaminsky]
 !	- All loaded "ALLYA" sprites are now protected. [Kaminsky]
+!	- Changed "opponents" to "enemies", changed the coloring of "allies" and "enemies" to match those used in the target identification, and removed a redundant comma on the HUD. [Kaminsky]
 
 
 3.1
