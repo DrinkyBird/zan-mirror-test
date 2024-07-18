@@ -52,6 +52,7 @@
 #include <sys/utsname.h>
 #endif
 #include <map>
+#include <cmath>
 #include "networkheaders.h"
 #include "c_dispatch.h"
 #include "cooperative.h"

@@ -50,6 +50,7 @@
 
 #include <algorithm>
 #include <iterator>
+#include <cmath>
 #include <stdarg.h>
 #include <time.h>
 
