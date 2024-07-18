@@ -223,7 +223,7 @@ BEGIN_ENUM( SCOREBOARDFLAG_e )
 	// Row text will be printed in the same color as the player's team.
 	ENUM_ELEMENT2( SCOREBOARDFLAG_USETEAMTEXTCOLOR, 0x01 ),
 	// The text color of the headers is automatically used to color the border lines.
-	ENUM_ELEMENT2( SCOREBOARDFLAG_USEHEADERCOLORFORBORDERS, 0x02 ),
+	ENUM_ELEMENT2( SCOREBOARDFLAG_USEHEADERTEXTCOLORFORBORDERS, 0x02 ),
 	// The borders are drawn using textures instead of lines.
 	ENUM_ELEMENT2( SCOREBOARDFLAG_USETEXTUREFORBORDERS, 0x04 ),
 	// Shows the gaps between columns on the row's background.
@@ -305,13 +305,13 @@ BEGIN_ENUM( SCOREBOARDCMD_e )
 	// The font used to draw the rows for each player.
 	ENUM_ELEMENT( SCOREBOARDCMD_ROWFONT ),
 	// The text color of the column's header.
-	ENUM_ELEMENT( SCOREBOARDCMD_HEADERCOLOR ),
+	ENUM_ELEMENT( SCOREBOARDCMD_HEADERTEXTCOLOR ),
 	// The text color used for the rows of all players.
-	ENUM_ELEMENT( SCOREBOARDCMD_ROWCOLOR ),
+	ENUM_ELEMENT( SCOREBOARDCMD_ROWTEXTCOLOR ),
 	// The text color used for the row of the player being spied on.
-	ENUM_ELEMENT( SCOREBOARDCMD_LOCALROWCOLOR ),
+	ENUM_ELEMENT( SCOREBOARDCMD_LOCALROWTEXTCOLOR ),
 	// Similar to the local row color, but only while watching a demo.
-	ENUM_ELEMENT( SCOREBOARDCMD_LOCALROWDEMOCOLOR ),
+	ENUM_ELEMENT( SCOREBOARDCMD_LOCALROWDEMOTEXTCOLOR ),
 	// The opacity of the contents (e.g. header/row text, borders, and margins) on the scoreboard.
 	ENUM_ELEMENT( SCOREBOARDCMD_CONTENTALPHA ),
 	// The opacity of the row's text for dead players.

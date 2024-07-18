@@ -2532,19 +2532,19 @@ void Scoreboard::Parse( FScanner &sc )
 					SCOREBOARD_ParseFont( sc, pRowFont );
 					break;
 
-				case SCOREBOARDCMD_HEADERCOLOR:
+				case SCOREBOARDCMD_HEADERTEXTCOLOR:
 					SCOREBOARD_ParseTextColor( sc, HeaderColor );
 					break;
 
-				case SCOREBOARDCMD_ROWCOLOR:
+				case SCOREBOARDCMD_ROWTEXTCOLOR:
 					SCOREBOARD_ParseTextColor( sc, RowColor );
 					break;
 
-				case SCOREBOARDCMD_LOCALROWCOLOR:
+				case SCOREBOARDCMD_LOCALROWTEXTCOLOR:
 					SCOREBOARD_ParseTextColor( sc, LocalRowColors[LOCALROW_COLOR_INGAME] );
 					break;
 
-				case SCOREBOARDCMD_LOCALROWDEMOCOLOR:
+				case SCOREBOARDCMD_LOCALROWDEMOTEXTCOLOR:
 					SCOREBOARD_ParseTextColor( sc, LocalRowColors[LOCALROW_COLOR_INDEMO] );
 					break;
 
@@ -3457,7 +3457,7 @@ void Scoreboard::DrawBorder( const EColorRange Color, LONG &lYPos, const float f
 
 		// [AK] Do we want to use the font's translation table and text color to colorize the border,
 		// or the predetermined hexadecimal colors for the border?
-		if ( ulFlags & SCOREBOARDFLAG_USEHEADERCOLORFORBORDERS )
+		if ( ulFlags & SCOREBOARDFLAG_USEHEADERTEXTCOLORFORBORDERS )
 		{
 			// [AK] Get the translation table of the (team) header font with its corresponding color.
 			const FRemapTable *trans = pHeaderFont->GetColorTranslation( Color );
