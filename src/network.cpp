@@ -250,6 +250,7 @@ static	bool			network_BindSocketToPort( SOCKET Socket, ULONG ulInAddr, USHORT us
 static	bool			network_GenerateLumpMD5HashAndWarnIfNeeded( const int LumpNum, const char *LumpName, FString &MD5Hash );
 static	void			network_CheckIfDuplicateLump( const int LumpNum ); // [AK]
 static	void			network_AddSpritesToList( std::set<AUTHENTICATELUMP_s> &list, const char *name, const std::set<char> frames, const LumpAuthenticationMode mode ); // [AK]
+static	void			network_ParseLumpAuthenticationMode( FScanner &sc, LumpAuthenticationMode &mode );
 
 //*****************************************************************************
 //	FUNCTIONS
@@ -441,18 +442,46 @@ void NETWORK_Construct( USHORT usPort, bool bAllocateLANSocket )
 
 					// [AK] Parse the authentication mode if adding a new lump.
 					if ( adding )
-					{
-						sc.MustGetString( );
-
-						if ( stricmp( sc.String, "last" ) == 0 )
-							authenticatingLump.Mode = LAST_LUMP;
-						else if ( stricmp( sc.String, "all" ) == 0 )
-							authenticatingLump.Mode = ALL_LUMPS;
-						else
-							sc.ScriptError( "Unknown authentication mode \"%s\". It must be either \"last\" or \"all\".", sc.String );
-					}
+						network_ParseLumpAuthenticationMode( sc, authenticatingLump.Mode );
 
 					parsedLumps.insert( authenticatingLump );
+				}
+				else if (( stricmp( sc.String, "addsprites" ) == 0 ) || ( stricmp( sc.String, "removesprites" ) == 0 ))
+				{
+					std::set<char> frames;
+					LumpAuthenticationMode mode = LAST_LUMP;
+
+					adding = ( stricmp( sc.String, "addsprites" ) == 0 );
+					nameSpaceText = "sprite";
+
+					sc.MustGetString( );
+
+					// [AK] The sprite's name must be four characters long.
+					if ( sc.StringLen != 4 )
+						sc.ScriptError( "Invalid sprite name \"%s\". It must be 4 characters long.", sc.String );
+
+					const FString spriteName = sc.String;
+					sc.MustGetString( );
+
+					// [AK] Parse the listed frames, unless "all" of them should be authenticated.
+					if ( stricmp( sc.String, "all" ) != 0 )
+					{
+						for ( int i = 0; i < sc.StringLen; i++ )
+						{
+							sc.String[i] = toupper( sc.String[i] );
+
+							if ( static_cast<unsigned>( sc.String[i] - 'A' ) >= MAX_SPRITE_FRAMES )
+								sc.ScriptError( "Invalid sprite frame '%c'.", sc.String[i] );
+
+							frames.insert( sc.String[i] );
+						}
+					}
+
+					// [AK] Parse the authentication mode if adding new sprites.
+					if ( adding )
+						network_ParseLumpAuthenticationMode( sc, mode );
+
+					network_AddSpritesToList( parsedLumps, spriteName.GetChars( ), frames, mode );
 				}
 				else
 				{
@@ -1352,6 +1381,20 @@ void network_AddSpritesToList( std::set<AUTHENTICATELUMP_s> &list, const char *n
 			list.insert( authenticatingLump );
 		}
 	}
+}
+
+//*****************************************************************************
+//
+void network_ParseLumpAuthenticationMode( FScanner &sc, LumpAuthenticationMode &mode )
+{
+	sc.MustGetString( );
+
+	if ( stricmp( sc.String, "last" ) == 0 )
+		mode = LAST_LUMP;
+	else if ( stricmp( sc.String, "all" ) == 0 )
+		mode = ALL_LUMPS;
+	else
+		sc.ScriptError( "Unknown authentication mode \"%s\". It must be either \"last\" or \"all\".", sc.String );
 }
 
 //*****************************************************************************
