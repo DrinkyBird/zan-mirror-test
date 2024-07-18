@@ -417,70 +417,78 @@ void NETWORK_Construct( USHORT usPort, bool bAllocateLANSocket )
 		while (( currentLump = Wads.FindLump( "AUTHINFO", &lastLump )) != -1 )
 		{
 			FScanner sc( currentLump );
-			AUTHENTICATELUMP_s authenticatingLump;
 
 			while ( sc.GetString( ) )
 			{
-				if ( stricmp( sc.String, "addlump" ) == 0 )
-				{
-					FString NameSpaceText = authenticatingLump.GetNameSpace( sc );
+				std::set<AUTHENTICATELUMP_s> parsedLumps;
+				FString nameSpaceText;
+				bool adding = false;
 
-					sc.MustGetString( );
-					authenticatingLump.Name = sc.String;
-					sc.MustGetString( );
-
-					if ( stricmp( sc.String, "last" ) == 0 )
-						authenticatingLump.Mode = LAST_LUMP;
-					else if ( stricmp( sc.String, "all" ) == 0 )
-						authenticatingLump.Mode = ALL_LUMPS;
-					else
-						sc.ScriptError( "Unknown authentication mode \"%s\". It must be either \"last\" or \"all\".", sc.String );
-
-					// [AK] Engineside protected lumps like COLORMAP, PLAYPAL, DECORATE, etc. cannot be modified.
-					if ( lumpsToAuthenticate.find( authenticatingLump ) != lumpsToAuthenticate.end( ))
-					{
-						sc.ScriptMessage( "\"%s\" is an engineside protected lump and cannot be modified.", authenticatingLump.Name.c_str( ));
-						continue;
-					}
-
-					auto result = customLumpsToAuthenticate.insert( authenticatingLump );
-
-					// [AK] If this lump is already on the list, just update the authentication mode. Also print
-					// a message to indicate that the lump was defined twice.
-					if ( result.second == false )
-					{
-						customLumpsToAuthenticate.erase( authenticatingLump );
-						customLumpsToAuthenticate.insert( authenticatingLump );
-
-						sc.ScriptMessage( "\"%s\" in the %s namespace is already on the authentication list.", authenticatingLump.Name.c_str( ), NameSpaceText.GetChars( ));
-					}
-				}
-				else if ( stricmp( sc.String, "removelump" ) == 0 )
-				{
-					authenticatingLump.GetNameSpace( sc );
-
-					sc.MustGetToken( TK_StringConst );
-					authenticatingLump.Name = sc.String;
-
-					// [AK] Engineside protected lumps like COLORMAP, PLAYPAL, DECORATE, etc. cannot be removed.
-					// Technically speaking, it shouldn't be possible to remove these lumps anyways because they're
-					// in a separate list, but the user should at least be made aware of this.
-					if ( lumpsToAuthenticate.find( authenticatingLump ) != lumpsToAuthenticate.end( ) )
-					{
-						sc.ScriptMessage( "\"%s\" is an engineside protected lump and cannot be removed.", authenticatingLump.Name.c_str( ));
-						continue;
-					}
-
-					// [AK] Remove this lump from the list.
-					customLumpsToAuthenticate.erase( authenticatingLump );
-				}
-				else if ( stricmp( sc.String, "clearlumps" ) == 0 )
+				if ( stricmp( sc.String, "clearlumps" ) == 0 )
 				{
 					customLumpsToAuthenticate.clear( );
+					continue;
+				}
+				else if (( stricmp( sc.String, "addlump" ) == 0 ) || ( stricmp( sc.String, "removelump" ) == 0 ))
+				{
+					AUTHENTICATELUMP_s authenticatingLump;
+
+					adding = ( stricmp( sc.String, "addlump" ) == 0 );
+					nameSpaceText = authenticatingLump.GetNameSpace( sc );
+
+					sc.MustGetString( );
+					authenticatingLump.Name = sc.String;
+
+					// [AK] Parse the authentication mode if adding a new lump.
+					if ( adding )
+					{
+						sc.MustGetString( );
+
+						if ( stricmp( sc.String, "last" ) == 0 )
+							authenticatingLump.Mode = LAST_LUMP;
+						else if ( stricmp( sc.String, "all" ) == 0 )
+							authenticatingLump.Mode = ALL_LUMPS;
+						else
+							sc.ScriptError( "Unknown authentication mode \"%s\". It must be either \"last\" or \"all\".", sc.String );
+					}
+
+					parsedLumps.insert( authenticatingLump );
 				}
 				else
 				{
 					sc.ScriptError( "Unknown option '%s', on line %d in AUTHINFO.", sc.String, sc.Line );
+				}
+
+				for ( std::set<AUTHENTICATELUMP_s>::iterator it = parsedLumps.begin( ); it != parsedLumps.end( ); it++ )
+				{
+					// [AK] Engineside protected lumps like COLORMAP, PLAYPAL, DECORATE, etc. cannot be modified
+					// or removed. Technically speaking, it shouldn't be possible to remove these lumps anyways
+					// because they're in a separate list, but the user should at least be made aware of this.
+					if ( lumpsToAuthenticate.find( *it ) != lumpsToAuthenticate.end( ))
+					{
+						sc.ScriptMessage( "\"%s\" is an engineside protected lump and cannot be %s.", it->Name.c_str( ), adding ? "modified" : "removed" );
+						continue;
+					}
+
+					if ( adding )
+					{
+						auto result = customLumpsToAuthenticate.insert( *it );
+
+						// [AK] If this lump is already on the list, just update the authentication mode (elements
+						// within a set are constant, so the existing entry must be removed first, and the new entry
+						// added in afterward). Also print a message to indicate that the lump was defined twice.
+						if ( result.second == false )
+						{
+							customLumpsToAuthenticate.erase( *it );
+							customLumpsToAuthenticate.insert( *it );
+
+							sc.ScriptMessage( "\"%s\" in the %s namespace is already on the authentication list.", it->Name.c_str( ), nameSpaceText.GetChars( ));
+						}
+					}
+					else
+					{
+						customLumpsToAuthenticate.erase( *it );
+					}
 				}
 			}
 		}
