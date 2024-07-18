@@ -3372,25 +3372,29 @@ void Scoreboard::DrawRow( const ULONG ulPlayer, const ULONG ulDisplayPlayer, LON
 			ulColor = LocalRowColors[LOCALROW_COLOR_INGAME];
 	}
 
-	const float fBackgroundAlpha = ( bPlayerIsDead ? fDeadRowBackgroundAmount : fRowBackgroundAmount ) * fAlpha;
-
-	// [AK] Draw the background of the row, but only if the alpha is non-zero. In team-based game modes,
-	// the color of the background is to be the team's own color.
-	if ( fBackgroundAlpha > 0.0f )
+	// [AK] Draw all row backgrounds, or only that of the player we're spying.
+	if ((( ulFlags & SCOREBOARDFLAG_ONLYSHOWLOCALROWBACKGROUND ) == false ) || ( bIsDisplayPlayer ))
 	{
-		ROWBACKGROUND_COLOR_e RowBackground;
+		const float fBackgroundAlpha = ( bPlayerIsDead ? fDeadRowBackgroundAmount : fRowBackgroundAmount ) * fAlpha;
 
-		if (( ulPlayer == ulDisplayPlayer ) && (( ulFlags & SCOREBOARDFLAG_DONTUSELOCALROWBACKGROUNDCOLOR ) == false ))
-			RowBackground = ROWBACKGROUND_COLOR_LOCAL;
-		else
-			RowBackground = bUseLightBackground ? ROWBACKGROUND_COLOR_LIGHT : ROWBACKGROUND_COLOR_DARK;
+		// [AK] Draw the background of the row, but only if the alpha is non-zero. In team-based game modes,
+		// the color of the background is to be the team's own color.
+		if ( fBackgroundAlpha > 0.0f )
+		{
+			ROWBACKGROUND_COLOR_e RowBackground;
 
-		// [AK] If the player is on a team, blend the team's colour into the row background.
-		if (( GAMEMODE_GetCurrentFlags( ) & GMF_PLAYERSONTEAMS ) && ( players[ulPlayer].bOnTeam ))
-			DrawRowBackground( TeamRowBackgroundColors[players[ulPlayer].Team][RowBackground], lYPos, fBackgroundAlpha );
-		// [AK] If the player isn't on a team, use the two background colors that are defined.
-		else
-			DrawRowBackground( RowBackgroundColors[RowBackground], lYPos, fBackgroundAlpha );
+			if (( ulPlayer == ulDisplayPlayer ) && (( ulFlags & SCOREBOARDFLAG_DONTUSELOCALROWBACKGROUNDCOLOR ) == false ))
+				RowBackground = ROWBACKGROUND_COLOR_LOCAL;
+			else
+				RowBackground = bUseLightBackground ? ROWBACKGROUND_COLOR_LIGHT : ROWBACKGROUND_COLOR_DARK;
+
+			// [AK] If the player is on a team, blend the team's colour into the row background.
+			if (( GAMEMODE_GetCurrentFlags( ) & GMF_PLAYERSONTEAMS ) && ( players[ulPlayer].bOnTeam ))
+				DrawRowBackground( TeamRowBackgroundColors[players[ulPlayer].Team][RowBackground], lYPos, fBackgroundAlpha );
+			// [AK] If the player isn't on a team, use the two background colors that are defined.
+			else
+				DrawRowBackground( RowBackgroundColors[RowBackground], lYPos, fBackgroundAlpha );
+		}
 	}
 
 	const float fTextAlpha = ( bPlayerIsDead ? fDeadTextAlpha : fContentAlpha ) * fAlpha;
@@ -3403,7 +3407,11 @@ void Scoreboard::DrawRow( const ULONG ulPlayer, const ULONG ulDisplayPlayer, LON
 	}
 
 	lYPos += ulRowHeightToUse + ulGapBetweenRows;
-	bUseLightBackground = !bUseLightBackground;
+
+	// [AK] Only switch between the "light" and "dark" row backgrounds if more
+	// than one row's background can be drawn.
+	if (( ulFlags & SCOREBOARDFLAG_ONLYSHOWLOCALROWBACKGROUND ) == false )
+		bUseLightBackground = !bUseLightBackground;
 }
 
 //*****************************************************************************
