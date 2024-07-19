@@ -1256,6 +1256,7 @@ OptionMenu ScoreboardOptions
 	TextField "Y-offset",			"cl_scoreboardy"
 	StaticText " "
 	Option "Use custom scale",		"cl_usescoreboardscale", "YesNo"
+	Option "Use screen ratio",		"cl_usescoreboardscale_screenratio", "YesNo", "cl_usescoreboardscale"
 	TextField "Screen width",		"cl_scoreboardscreenwidth", "cl_usescoreboardscale"
 	TextField "Screen height",		"cl_scoreboardscreenheight", "cl_usescoreboardscale"
 

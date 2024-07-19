@@ -124,6 +124,9 @@ CVAR( Bool, cl_useshortcolumnnames, false, CVAR_ARCHIVE );
 // [AK] If true, then the scoreboard will be scaled using its own scale, independent of text scaling.
 CVAR( Bool, cl_usescoreboardscale, false, CVAR_ARCHIVE )
 
+// [AK] Whether to use the screen's ratio to scale the scoreboard, if scaling is enabled.
+CVAR( Bool, cl_usescoreboardscale_screenratio, false, CVAR_ARCHIVE )
+
 // [AK] How much to offset the scoreboard horizontally.
 CVAR( Int, cl_scoreboardx, 0, CVAR_ARCHIVE );
 
@@ -2970,10 +2973,10 @@ void Scoreboard::Refresh( const ULONG ulDisplayPlayer )
 		g_ScreenWidth = cl_scoreboardscreenwidth;
 		g_ScreenHeight = cl_scoreboardscreenheight;
 
-		// [AK] Don't use con_scaletext_usescreenratio if the resolution of the
-		// scoreboard matches the screen's actual ratio.
+		// [AK] Don't use cl_usescoreboardscale_screenratio if the resolution of
+		// the scoreboard matches the screen's actual ratio.
 		if (( g_ScreenWidth != SCREENWIDTH ) || ( g_ScreenHeight != SCREENHEIGHT ))
-			g_KeepScreenRatio = con_scaletext_usescreenratio;
+			g_KeepScreenRatio = cl_usescoreboardscale_screenratio;
 		else
 			g_KeepScreenRatio = true;
 	}
