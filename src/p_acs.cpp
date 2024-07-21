@@ -5470,6 +5470,7 @@ enum EACSFunctions
 	ACSF_GivePlayerMedal,
 	ACSF_GetPlayerJoinQueuePosition,
 	ACSF_SkipJoinQueue,
+	ACSF_GetSkinInfo,
 
 	// ZDaemon
 	ACSF_GetTeamScore = 19620,	// (int team)

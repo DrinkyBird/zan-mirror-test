@@ -41,6 +41,9 @@ struct spritedef_t
 
 extern TArray<spriteframe_t> SpriteFrames;
 
+// [BOF] GetSkinInfo Parameter 
+typedef TMap<FString, TArray<FString>> paramlist;
+
 
 //
 // [RH] Internal "skin" definition.
@@ -62,8 +65,9 @@ public:
 	int			namespc;	// namespace for this skin
 
 	// [BC] New skin properties for Skulltag.
-	// Default color used for this skin.
-	char		szColor[16];
+	// Default color used for this skin. 
+	int			color; // [BOF] Change to an int; use V_GetColor to store value.
+
 	// Can this skin be selected from the menu?
 	bool		bRevealed;
 
@@ -72,6 +76,10 @@ public:
 
 	// Is this skin a cheat skin?
 	bool		bCheat;
+
+	// [BOF] Extra SKININFO values for Zandronum.
+	paramlist	param;// A dynamic list for GetSkinInfo to grab values from SKININFO, including custom ones.
+
 	// [BC] End of new skin properties.
 };
 
