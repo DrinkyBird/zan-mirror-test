@@ -8608,9 +8608,9 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 					if (( skinName != nullptr ) && ( strlen( skinName ) > 0 ))
 						skinIndex = R_FindSkin( skinName, player->CurrentPlayerClass );
 
-					// [AK] If the skin doesn't exist, return an empty string.
+					// [AK/BOF] If the skin doesn't exist, return -1.
 					if (( skinIndex == player->CurrentPlayerClass ) && (( skinName == nullptr ) || ( stricmp( skinName, "Base" ) != 0 )))
-						return GlobalACSStrings.AddString( "" );
+						return -1;
 				}
 				// [AK] ...or if we want to know the skin that's visible using without any
 				// guess and check, then use their overridden skin (i.e. weapon preferred skin
@@ -8625,16 +8625,12 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 						skinIndex = player->userinfo.GetSkin( );
 				}
 
-				// [AK] Return the name of their skin if they're using one, or "Base" if not.
-				if ( skinIndex != player->CurrentPlayerClass )
-					return GlobalACSStrings.AddString( skins[skinIndex].name );
-				else
-					return GlobalACSStrings.AddString( "Base" );
+				// [BOF] Return the Skin Index
+				return skinIndex;
 			}
 
-			// [AK] Return an empty string for invalid players instead.
-			return GlobalACSStrings.AddString( "" );
-		}
+			// [AK/BOF] Returns -1 for invalid players instead.
+			return -1;
 
 		case ACSF_GetPlayerCountry:
 		{
@@ -8723,6 +8719,42 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 
 			return 0;
 		}
+
+		case ACSF_GetSkinInfo: // [BOF] Get the parameter of a skin through its index as a string.
+		{
+			enum // [BOF] How should this parameter be parsed?
+			{
+				GETSKININFO_STRING,
+				GETSKININFO_INT,
+				GETSKININFO_FLOAT,
+				GETSKININFO_EXISTS // For easy checking in if/while statements.
+
+			};
+
+			const unsigned int skinIndex = args[0];
+			const char* paramIndex = FBehavior::StaticLookupString(args[2]);
+			int keyValue = argCount >= 4 ? args[3] : 0;
+			if (skinIndex < skins.Size() 
+			&& skins[skinIndex].param.CheckKey(paramIndex)
+			&& (skins[skinIndex].param[paramIndex].Size() 
+			&& (keyValue < skins[skinIndex].param[paramIndex].Size())))
+			{
+				if (args[1] == GETSKININFO_EXISTS)
+					return 1;
+				if (args[1] == GETSKININFO_STRING)
+					return GlobalACSStrings.AddString(skins[skinIndex].param[paramIndex][keyValue]);
+				else if (IsNum(skins[skinIndex].param[paramIndex][keyValue]))
+				{
+					if (args[1] == GETSKININFO_INT)
+						return atoi(skins[skinIndex].param[paramIndex][keyValue]);
+					if (args[1] == GETSKININFO_FLOAT)
+						return FLOAT2FIXED(atof(skins[skinIndex].param[paramIndex][keyValue]));
+				}
+			}
+			if (args[1] == GETSKININFO_STRING)
+				return GlobalACSStrings.AddString("");
+			return 0;
+		}		
 
 		case ACSF_GetActorFloorTexture:
 		{
