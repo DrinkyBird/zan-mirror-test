@@ -8733,27 +8733,23 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 
 			const unsigned int skinIndex = args[0];
 			const char* paramIndex = FBehavior::StaticLookupString(args[2]);
-			int keyValue = argCount >= 4 ? args[3] : 0;
+			unsigned int keyValue = argCount >= 4 ? args[3] : 0;
 			if (skinIndex < skins.Size() 
 			&& skins[skinIndex].param.CheckKey(paramIndex)
-			&& (skins[skinIndex].param[paramIndex].Size() 
-			&& (keyValue < skins[skinIndex].param[paramIndex].Size())))
+			&& (keyValue < skins[skinIndex].param[paramIndex].Size()))
 			{
 				if (args[1] == GETSKININFO_EXISTS)
 					return 1;
-				if (args[1] == GETSKININFO_STRING)
+				else if (args[1] == GETSKININFO_STRING)
 					return GlobalACSStrings.AddString(skins[skinIndex].param[paramIndex][keyValue]);
-				else if (IsNum(skins[skinIndex].param[paramIndex][keyValue]))
-				{
-					if (args[1] == GETSKININFO_INT)
-						return atoi(skins[skinIndex].param[paramIndex][keyValue]);
-					if (args[1] == GETSKININFO_FLOAT)
+				else if (args[1] == GETSKININFO_INT)
+					return atoi(skins[skinIndex].param[paramIndex][keyValue]);
+				else if (args[1] == GETSKININFO_FLOAT)
 						return FLOAT2FIXED(atof(skins[skinIndex].param[paramIndex][keyValue]));
-				}
 			}
 			if (args[1] == GETSKININFO_STRING)
 				return GlobalACSStrings.AddString("");
-			return 0;
+			else return 0;
 		}		
 
 		case ACSF_GetActorFloorTexture:
