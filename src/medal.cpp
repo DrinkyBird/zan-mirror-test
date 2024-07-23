@@ -444,11 +444,12 @@ bool MEDAL_GiveMedal( const ULONG player, const ULONG medalIndex, const bool sil
 			{
 				queue.push_back( medal );
 
-				// [AK] In case the queue was empty before (there's only one
-				// element now, which is what just got added), set the iterator
-				// to the start so the timer gets reset properly.
-				if ( queue.size( ) == 1 )
-					iterator = queue.begin( );
+				// [AK] Changing the size of the queue invalidates the iterator,
+				// so set it to the last element in the queue. In case the queue
+				// was empty before (there's only one element now, which is what
+				// just got added), then the iterator will now point to the start
+				// so the timer gets reset properly.
+				iterator = queue.end( ) - 1;
 			}
 		}
 
