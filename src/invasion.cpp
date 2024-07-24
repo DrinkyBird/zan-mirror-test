@@ -690,7 +690,7 @@ void INVASION_Tick( void )
 						INVASION_StartCountdown(( 10 * TICRATE ) - 1 );
 
 					// [AK] Respawn any dead players and pop the join queue before starting the next wave.
-					GAMEMODE_RespawnDeadSpectatorsAndPopQueue( );
+					GAMEMODE_RespawnDeadPlayersAndPopQueue( PST_REBORNNOINVENTORY, PST_REBORN );
 				}
 			}
 		}
@@ -1244,7 +1244,7 @@ void INVASION_SetState( INVASIONSTATE_e State )
 		// [BB] Respawn any players who were downed during the previous round.
 		// [BB] INVASION_SetState ( IS_WAITINGFORPLAYERS ) may also be called if invasion is false.
 		if ( invasion )
-			GAMEMODE_RespawnDeadSpectatorsAndPopQueue();
+			GAMEMODE_RespawnDeadPlayersAndPopQueue( );
 
 		// Nothing else to do here if we're not in invasion mode.
 		if ( 1 )//( invasion == false )

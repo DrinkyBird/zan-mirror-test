@@ -761,7 +761,7 @@ void GAMEMODE_GetTimeLeftString( FString &TimeLeftString )
 
 //*****************************************************************************
 //
-void GAMEMODE_RespawnDeadSpectators( BYTE Playerstate )
+void GAMEMODE_RespawnDeadPlayers( playerstate_t deadSpectatorState, playerstate_t deadPlayerState )
 {
 	// [BB] This is server side.
 	if ( NETWORK_InClientMode() )
@@ -794,13 +794,22 @@ void GAMEMODE_RespawnDeadSpectators( BYTE Playerstate )
 			continue;
 		}
 
-		players[ulIdx].bSpectating = false;
-		players[ulIdx].bDeadSpectator = false;
+		// [AK] When dead players (i.e. not dead spectators) are respawned with
+		// PST_REBORN, their lives aren't fully replenished like it is for dead
+		// spectators. If the game was already in progress, then they will also
+		// lose a life upon respawning. This is particularly useful for survival
+		// invasion when dead players respawn after the end of a wave.
 		if ( GAMEMODE_GetCurrentFlags() & GMF_USEMAXLIVES )
 		{
-			PLAYER_SetLivesLeft ( &players[ulIdx], GAMEMODE_GetMaxLives() - 1 );
+			if (( players[ulIdx].bDeadSpectator ) || ( deadPlayerState != PST_REBORN ))
+				PLAYER_SetLivesLeft( &players[ulIdx], GAMEMODE_GetMaxLives( ) - 1 );
+			else if (( GAMEMODE_IsGameInProgress( )) && ( players[ulIdx].ulLivesLeft > 0 ))
+				PLAYER_SetLivesLeft( &players[ulIdx], players[ulIdx].ulLivesLeft - 1 );
 		}
-		players[ulIdx].playerstate = Playerstate;
+
+		players[ulIdx].playerstate = players[ulIdx].bDeadSpectator ? deadSpectatorState : deadPlayerState;
+		players[ulIdx].bSpectating = false;
+		players[ulIdx].bDeadSpectator = false;
 
 		APlayerPawn *oldactor = players[ulIdx].mo;
 
@@ -827,9 +836,9 @@ void GAMEMODE_RespawnDeadSpectators( BYTE Playerstate )
 	dmflags2 = dmflags2.GetGenericRep( CVAR_Int ).Int;
 }
 
-void GAMEMODE_RespawnDeadSpectatorsAndPopQueue( BYTE Playerstate )
+void GAMEMODE_RespawnDeadPlayersAndPopQueue( playerstate_t deadSpectatorState, playerstate_t deadPlayerState )
 {
-	GAMEMODE_RespawnDeadSpectators( Playerstate );
+	GAMEMODE_RespawnDeadPlayers( deadSpectatorState, deadPlayerState );
 	// Let anyone who's been waiting in line join now.
 	JOINQUEUE_PopQueue( -1 );
 }

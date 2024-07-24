@@ -1063,7 +1063,7 @@ void G_DoLoadLevel (int position, bool autosave)
 
 	// [BB] Make sure that dead spectators are respawned before moving to the next map.
 	if ( GAMEMODE_GetCurrentFlags() & GMF_DEADSPECTATORS )
-		GAMEMODE_RespawnDeadSpectatorsAndPopQueue( );
+		GAMEMODE_RespawnDeadPlayersAndPopQueue( );
 	// [BB] If we don't have dead spectators, still pop the queue. Possibly somone tried to join during intermission or the server admin increased sv_maxplayers during intermission.
 	else if ( NETWORK_InClientMode() == false )
 		JOINQUEUE_PopQueue( -1 );
@@ -1730,7 +1730,8 @@ void G_DoWorldDone (void)
 	}
 
 	// [Zandronum] Respawn dead spectators now so their inventory can travel.
-	GAMEMODE_RespawnDeadSpectators( zadmflags & ZADF_DEAD_PLAYERS_CAN_KEEP_INVENTORY ? PST_REBORN : PST_REBORNNOINVENTORY );
+	const playerstate_t playerState = ( zadmflags & ZADF_DEAD_PLAYERS_CAN_KEEP_INVENTORY ) ? PST_REBORN : PST_REBORNNOINVENTORY;
+	GAMEMODE_RespawnDeadPlayers( playerState, playerState );
 
 	G_StartTravel ();
 	G_DoLoadLevel (startpos, true);

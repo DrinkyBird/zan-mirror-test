@@ -656,7 +656,7 @@ void LASTMANSTANDING_SetState( LMSSTATE_e State )
 		LASTMANSTANDING_SetCountdownTicks( 0 );
 
 		if ( lastmanstanding || teamlms )
-			GAMEMODE_RespawnDeadSpectatorsAndPopQueue();
+			GAMEMODE_RespawnDeadPlayersAndPopQueue( );
 
 		break;
 	default:
