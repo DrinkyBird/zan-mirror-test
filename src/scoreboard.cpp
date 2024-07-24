@@ -1583,8 +1583,26 @@ PlayerValue DataScoreColumn::GetValue( const ULONG ulPlayer ) const
 				break;
 
 			case COLUMNTYPE_LIVES:
-				Result.SetValue<int>( players[ulPlayer].bSpectating ? 0 : players[ulPlayer].ulLivesLeft + 1 );
+			{
+				int lives = 0;
+
+				if ( players[ulPlayer].bSpectating == false )
+				{
+					lives = players[ulPlayer].ulLivesLeft;
+
+					// [AK] During intermissions, if the game was already in progress,
+					// then treat dead players as though they lost an extra life.
+					if (( GAMEMODE_IsGameInProgressOrResultSequence( ) == false ) ||
+						( gamestate != GS_INTERMISSION ) ||
+						( players[ulPlayer].playerstate != PST_DEAD ))
+					{
+						lives++;
+					}
+				}
+
+				Result.SetValue<int>( lives );
 				break;
+			}
 
 			case COLUMNTYPE_HANDICAP:
 			{
