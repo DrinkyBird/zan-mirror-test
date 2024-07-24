@@ -302,7 +302,7 @@ Scoreboard
 				{
 					DrawString( value = teamname, font = "BigFont", textcolor = teamtextcolor, bottompadding = 1 )
 
-					IfPlayersHaveLives( false )
+					IfPlayersHaveLives( false ) || IfIntermission( true )
 					{
 						DrawString( value = "Total Players: " + teamplayercount, textcolor = teamtextcolor, bottompadding = 1 )
 					}
