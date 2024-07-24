@@ -892,6 +892,8 @@ void INVASION_BeginWave( ULONG ulWave )
 	// We're now in the middle of the invasion!
 	if ( NETWORK_InClientMode() == false )
 	{
+		// [AK] Respawn any players that died during the countdown, but don't replenish their lives.
+		GAMEMODE_RespawnDeadPlayers( PST_REBORNNOINVENTORY, PST_REBORN );
 		INVASION_SetState( IS_INPROGRESS );
 	}
 
