@@ -3328,16 +3328,16 @@ void PLAYER_ApplySkinScaleToBody( player_t *player, AActor *body, AWeapon *weapo
 
 //*****************************************************************************
 //
-void PLAYER_SetLivesLeft( player_t *pPlayer, ULONG ulLivesLeft )
+void PLAYER_SetLivesLeft( player_t *player, const unsigned int livesLeft, const bool informClients )
 {
 	// [BB] Validity check.
-	if ( pPlayer == NULL )
+	if ( player == nullptr )
 		return;
 
-	pPlayer->ulLivesLeft = ulLivesLeft;
+	player->ulLivesLeft = livesLeft;
 
-	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-		SERVERCOMMANDS_SetPlayerLivesLeft ( static_cast<ULONG> ( pPlayer - players ) );
+	if (( NETWORK_GetState( ) == NETSTATE_SERVER ) && ( informClients ))
+		SERVERCOMMANDS_SetPlayerLivesLeft ( static_cast<ULONG>( player - players ));
 }
 
 //*****************************************************************************

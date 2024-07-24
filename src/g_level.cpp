@@ -742,13 +742,6 @@ void G_ChangeLevel(const char *levelname, int position, int flags, int nextSkill
 			// Un-crouch all players here.
 			player->Uncrouch();
 
-			// [BB] sv_maxlives is meant to specify the number of lives per map.
-			// So restore ulLivesLeft after a map change.
-			if ( GAMEMODE_GetCurrentFlags() & GMF_USEMAXLIVES )
-			{
-				PLAYER_SetLivesLeft ( player, GAMEMODE_GetMaxLives() - 1 );
-			}
-
 			// If this is co-op, respawn any dead players now so they can
 			// keep their inventory on the next map.
 			if (((NETWORK_GetState( ) != NETSTATE_SINGLE) || level.flags2 & LEVEL2_ALLOWRESPAWN) && !deathmatch && player->playerstate == PST_DEAD)
@@ -1403,6 +1396,11 @@ void G_DoLoadLevel (int position, bool autosave)
 		players[i].ulTime = 0;
 		PLAYER_ResetSpecialCounters ( &players[i] );
 //		players[i].bDeadSpectator = false;
+
+		// [BB] sv_maxlives is meant to specify the number of lives per map.
+		// So restore ulLivesLeft after a map change.
+		if ( GAMEMODE_GetCurrentFlags( ) & GMF_USEMAXLIVES )
+			PLAYER_SetLivesLeft( &players[i], GAMEMODE_GetMaxLives( ) - 1, false );
 
 		// If we're the server, update the console.
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )

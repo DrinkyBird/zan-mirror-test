@@ -878,7 +878,7 @@ void	PLAYER_ClearWeapon( player_t *pPlayer );
 int		PLAYER_GetOverrideSkin( player_t *player );
 bool	PLAYER_ShouldForceBaseSkin( player_t *player );
 void	PLAYER_ApplySkinScaleToBody( player_t *player, AActor *body, AWeapon *weapon );
-void	PLAYER_SetLivesLeft( player_t *pPlayer, ULONG ulLivesLeft );
+void	PLAYER_SetLivesLeft( player_t *player, const unsigned int livesLeft, const bool informClients = true );
 bool	PLAYER_IsAliveOrCanRespawn( player_t *pPlayer );
 void	PLAYER_RemoveFriends( const ULONG ulPlayer );
 void	PLAYER_LeavesGame( const ULONG ulPlayer );
