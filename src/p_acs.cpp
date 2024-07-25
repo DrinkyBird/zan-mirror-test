@@ -8728,13 +8728,12 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 				GETSKININFO_INT,
 				GETSKININFO_FLOAT,
 				GETSKININFO_EXISTS // For easy checking in if/while statements.
-
 			};
 
 			const unsigned int skinIndex = args[0];
 			const char* paramIndex = FBehavior::StaticLookupString(args[2]);
 			unsigned int keyValue = argCount >= 4 ? args[3] : 0;
-			if (skinIndex < skins.Size() 
+			if (skinIndex < skins.Size()
 			&& skins[skinIndex].param.CheckKey(paramIndex)
 			&& (keyValue < skins[skinIndex].param[paramIndex].Size()))
 			{
