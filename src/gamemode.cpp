@@ -836,6 +836,8 @@ void GAMEMODE_RespawnDeadPlayers( playerstate_t deadSpectatorState, playerstate_
 	dmflags2 = dmflags2.GetGenericRep( CVAR_Int ).Int;
 }
 
+//*****************************************************************************
+//
 void GAMEMODE_RespawnDeadPlayersAndPopQueue( playerstate_t deadSpectatorState, playerstate_t deadPlayerState )
 {
 	GAMEMODE_RespawnDeadPlayers( deadSpectatorState, deadPlayerState );
