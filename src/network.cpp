@@ -1339,6 +1339,7 @@ void network_AddSpritesToList( std::set<AUTHENTICATELUMP_s> &list, const char *n
 			continue;
 
 		Wads.GetLumpName( lumpName, lump );
+		lumpName[sizeof( lumpName ) - 1] = 0;
 
 		// [AK] Skip lumps that aren't using the sprite's name.
 		if ( strnicmp( lumpName, name, 4 ) != 0 )
