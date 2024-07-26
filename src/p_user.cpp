@@ -3370,7 +3370,8 @@ void P_DeathThink (player_t *player)
 				player->mo->special1 = 0;
 			}
 			// [BB] The player will be reborn, so take away one life, but only if the game is already in progress.
-			if ( ( player->ulLivesLeft > 0 ) && GAMEMODE_IsGameInProgress ( ) )
+			// [AK] Don't take a life away in survival invasion when a wave is complete.
+			if (( player->ulLivesLeft > 0 ) && (( GAMEMODE_IsGameInProgress( )) && ( invasion == false || INVASION_GetState( ) != IS_WAVECOMPLETE )))
 			{
 				PLAYER_SetLivesLeft ( player, player->ulLivesLeft - 1 );
 			}
