@@ -134,7 +134,7 @@ void G_AddViewPitch (int look, bool mouse = false);
 void G_AddViewAngle (int yaw, bool mouse = false);
 
 // [AK] Finishing changing the consoleplayer's view to another player.
-void G_FinishChangeSpy ( ULONG ulPlayer );
+void G_FinishChangeSpy (const int pnum, const bool fromLineSpecial);
 
 #define BODYQUESIZE 	32
 class AActor;

@@ -1104,7 +1104,7 @@ static void ChangeSpy (int changespy)
 			if (( lastmanstanding ) || (( teamlms ) && (( players[consoleplayer].bOnTeam == false ) ||
 				( PLAYER_IsTrueSpectator( &players[consoleplayer] )))))
 			{
-				G_FinishChangeSpy( consoleplayer );
+				G_FinishChangeSpy( consoleplayer, false );
 				return;
 			}
 		}
@@ -1150,30 +1150,41 @@ static void ChangeSpy (int changespy)
 	}
 
 	// [BC] When we're all done, put the camera in the display player's body, etc.
-	G_FinishChangeSpy( pnum );
+	G_FinishChangeSpy( pnum, false );
 }
 
 // [BC] Split this out of ChangeSpy() so it can be called from within that function.
 // [AK] Made this function accessible outside of g_game.cpp for LS_ChangeCamera.
-void G_FinishChangeSpy( ULONG ulPlayer )
+void G_FinishChangeSpy (const int pnum, const bool fromLineSpecial)
 {
-	// [AK] If we're a spectator and want to teleport ourselves to the player we just
-	// spied on, do it when we switch back to our own view.
-	if (( cl_telespy ) && ( static_cast<int>( ulPlayer ) == consoleplayer ) && ( players[consoleplayer].bSpectating ))
-	{
-		if (( players[consoleplayer].camera ) && ( players[consoleplayer].camera != players[consoleplayer].mo ))
-		{
-			P_TeleportMove( players[consoleplayer].mo, players[consoleplayer].camera->x,
-				players[consoleplayer].camera->y, players[consoleplayer].camera->z, false );
+	// [AK] Sanity check to ensure the player is valid.
+	if ( PLAYER_IsValidPlayerWithMo( pnum ) == false )
+		return;
 
-			players[consoleplayer].mo->angle = players[consoleplayer].camera->angle;
-			players[consoleplayer].mo->pitch = players[consoleplayer].camera->pitch;
+	// [AK] Added this pointer to make the code below more readable.
+	player_t *const localPlayer = &players[consoleplayer];
+
+	// [AK] Handling cl_telespy and changing the local player's camera should only
+	// be done when this wasn't triggered by LS_ChangeCamera. The line special already
+	// changes the player's camera.
+	if ( fromLineSpecial == false )
+	{
+		if (( cl_telespy ) && ( pnum == consoleplayer ) && ( localPlayer->bSpectating ))
+		{
+			if (( localPlayer->camera ) && ( localPlayer->camera != localPlayer->mo ))
+			{
+				P_TeleportMove( localPlayer->mo, localPlayer->camera->x, localPlayer->camera->y, localPlayer->camera->z, false );
+
+				localPlayer->mo->angle = localPlayer->camera->angle;
+				localPlayer->mo->pitch = localPlayer->camera->pitch;
+			}
 		}
+
+		localPlayer->camera = players[pnum].mo;
 	}
 
-	players[consoleplayer].camera = players[ulPlayer].mo;
-	S_UpdateSounds(players[consoleplayer].camera);
-	StatusBar->AttachToPlayer (&players[ulPlayer]);
+	S_UpdateSounds(localPlayer->camera);
+	StatusBar->AttachToPlayer (&players[pnum]);
 
 	// [AK] If we're using the free chasecam, reset the orientation so that it's facing
 	// in the same direction of whoever we're spying.
@@ -1195,7 +1206,7 @@ void G_FinishChangeSpy( ULONG ulPlayer )
 
 	// [BC] If we're a client, tell the server that we're switching our displayplayer.
 	if ( NETWORK_GetState( ) == NETSTATE_CLIENT )
-		CLIENTCOMMANDS_ChangeDisplayPlayer( ulPlayer );
+		CLIENTCOMMANDS_ChangeDisplayPlayer( pnum );
 
 	// [BC] Also, refresh the HUD since the display player is changing.
 	HUD_ShouldRefreshBeforeRendering( );

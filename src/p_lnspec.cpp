@@ -2950,9 +2950,14 @@ FUNC(LS_ChangeCamera)
 		}
 	}
 
-	// [AK] Reset the local player's HUD if we change to another player's view.
-	if (( NETWORK_GetState( ) != NETSTATE_SERVER ) && ( players[consoleplayer].camera->player ))
-		G_FinishChangeSpy( ULONG( players[consoleplayer].camera->player - players ));
+	// [AK] Change the HUD to match the player that we should be looking through.
+	if ( NETWORK_GetState( ) != NETSTATE_SERVER )
+	{
+		if ( players[consoleplayer].camera->player )
+			G_FinishChangeSpy( static_cast<int>( players[consoleplayer].camera->player - players ), true );
+		else
+			G_FinishChangeSpy( consoleplayer, true );
+	}
 
 	return true;
 }

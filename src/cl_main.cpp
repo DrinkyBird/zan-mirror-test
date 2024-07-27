@@ -4339,7 +4339,7 @@ void ServerCommands::SetPlayerCamera::Execute()
 			R_ClearPastViewer (players[consoleplayer].camera);
 
 		// [AK] Change to our HUD if we've switched back to our view.
-		G_FinishChangeSpy( consoleplayer );
+		G_FinishChangeSpy( consoleplayer, true );
 		return;
 	}
 
@@ -4353,9 +4353,11 @@ void ServerCommands::SetPlayerCamera::Execute()
 	if (oldcamera != players[consoleplayer].camera)
 		R_ClearPastViewer (players[consoleplayer].camera);
 
-	// [AK] Change the HUD to match the player that we're looking through.
+	// [AK] Change the HUD to match the player that we should be looking through.
 	if ( players[consoleplayer].camera->player )
-		G_FinishChangeSpy( ULONG( players[consoleplayer].camera->player - players ));
+		G_FinishChangeSpy( static_cast<int>( players[consoleplayer].camera->player - players ), true );
+	else
+		G_FinishChangeSpy( consoleplayer, true );
 }
 
 //*****************************************************************************

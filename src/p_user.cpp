@@ -3031,6 +3031,10 @@ void P_MovePlayer (player_t *player)
 		{
 			player->cheats &= ~CF_REVERTPLEASE;
 			player->camera = player->mo;
+
+			// [AK] Revert the HUD back to the local player too.
+			if (( NETWORK_GetState( ) != NETSTATE_SERVER ) && ( player == &players[consoleplayer] ))
+				G_FinishChangeSpy( consoleplayer, true );
 		}
 	}
 

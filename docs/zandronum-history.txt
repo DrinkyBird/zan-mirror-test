@@ -183,6 +183,7 @@
 -	- Fixed: the client's weapon desynced if they fired it too early after respawning. [Kaminsky]
 -	- Fixed: a RandomPowerup could try giving the player a powerup that isn't actually an inventory item (i.e. the powerup was replaced by a non-inventory actor), causing the game to crash. [Kaminsky]
 -	- Fixed: while in free spectate mode, the free spectator itself was used to refresh the HUD instead of the local player. [Kaminsky]
+-	- Fixed: the ChangeCamera line special didn't revert the HUD back to the local player if they were spying on another player and their view changed to a non-player actor, or reverted back to them because they moved. [Kaminsky]
 !	- The result value of GAMEEVENT_MEDALS event scripts can now be used to determine whether or not the player receives the medal. [Kaminsky]
 !	- GAMEMODE flags are now validated after all GAMEMODE lumps have been parsed instead of after each one. The internal game mode name (e.g. "TeamLMS") is now printed with the error message instead of the actual name. [Kaminsky]
 !	- Added an extra check to ensure that game modes have a (short) name. [Kaminsky]
