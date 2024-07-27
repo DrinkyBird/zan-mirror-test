@@ -1181,6 +1181,9 @@ void G_FinishChangeSpy (const int pnum, const bool fromLineSpecial)
 		}
 
 		localPlayer->camera = players[pnum].mo;
+
+		// [AK] Spying on another player without the line special disables this bit.
+		localPlayer->cheats &= ~CF_REVERTPLEASE;
 	}
 
 	S_UpdateSounds(localPlayer->camera);
