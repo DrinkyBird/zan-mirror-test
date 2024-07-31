@@ -149,8 +149,8 @@ void client_SRPStartAuthentication ( const char *Username )
     int lenA = 0;
     const char * authUsername = NULL; 
 
-	if ( g_usr != NULL )
-		srp_user_delete( g_usr );
+	CLIENT_LogOut( );
+
 	g_usr = srp_user_new( SRP_SHA256, SRP_NG_2048, Username, reinterpret_cast<const unsigned char*> ( g_password.GetChars() ), g_password.Len(), NULL, NULL, 1 );
 	srp_user_start_authentication( g_usr, &authUsername, &bytesA, &lenA );
 	if ( strcmp( authUsername, Username ) != 0 )
@@ -239,12 +239,30 @@ void CLIENT_ProcessSRPServerCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 }
 
 //*****************************************************************************
+//
+void CLIENT_LogOut( void )
+{
+	if ( g_usr != nullptr )
+	{
+		srp_user_delete( g_usr );
+		g_usr = nullptr;
+	}
+}
+
+//*****************************************************************************
 //	CONSOLE COMMANDS
 
 CCMD( login )
 {
 	if ( NETWORK_GetState( ) != NETSTATE_CLIENT )
 		return;
+
+	// [AK] There's no need to request another login if we're already logged in.
+	if (( g_usr != nullptr ) && ( srp_user_is_authenticated( g_usr )))
+	{
+		Printf( "You are already logged in.\n" );
+		return;
+	}
 
 #ifdef _WIN32
 	if (argv.argc () <= 2)

@@ -2513,6 +2513,9 @@ void CLIENT_QuitNetworkGame( const char *pszString )
 	// [AK] Since we disconnected, we don't have RCON access anymore.
 	g_HasRCONAccess = false;
 
+	// [AK] Log the client out of their account now so that they can log in again.
+	CLIENT_LogOut( );
+
 	// [AK] Close the server setup menu if we're still in it.
 	if ( M_InServerSetupMenu( ))
 		M_ClearMenus( );

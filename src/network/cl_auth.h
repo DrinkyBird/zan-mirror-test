@@ -49,5 +49,6 @@
 #define __CL_AUTH_H__
 
 void	CLIENT_ProcessSRPServerCommand( LONG lCommand, BYTESTREAM_s *pByteStream );
+void	CLIENT_LogOut( void );
 
 #endif	// __CL_AUTH_H__
