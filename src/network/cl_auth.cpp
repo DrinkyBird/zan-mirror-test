@@ -228,7 +228,7 @@ void CLIENT_ProcessSRPServerCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 			if ( !srp_user_is_authenticated ( g_usr ) )
 				Printf( "Server authentication failed!\n" );
 			else
-				Printf ( "Login successful\n" );
+				Printf( "Login successful.\n" );
 		}
 		break;
 
