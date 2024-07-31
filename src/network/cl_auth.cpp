@@ -250,6 +250,13 @@ void CLIENT_LogOut( void )
 }
 
 //*****************************************************************************
+//
+bool CLIENT_IsLoggedIn( void )
+{
+	return (( g_usr != nullptr ) && ( srp_user_is_authenticated( g_usr )));
+}
+
+//*****************************************************************************
 //	CONSOLE COMMANDS
 
 CCMD( login )
@@ -258,7 +265,7 @@ CCMD( login )
 		return;
 
 	// [AK] There's no need to request another login if we're already logged in.
-	if (( g_usr != nullptr ) && ( srp_user_is_authenticated( g_usr )))
+	if ( CLIENT_IsLoggedIn( ))
 	{
 		Printf( "You are already logged in.\n" );
 		return;

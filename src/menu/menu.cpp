@@ -65,6 +65,7 @@
 #include "cl_main.h"
 #include "cl_demo.h"
 #include "cl_commands.h"
+#include "network/cl_auth.h"
 
 //
 // Todo: Move these elsewhere
@@ -495,6 +496,15 @@ void M_SetMenu(FName menu, int param)
 		// [TP] Make the server setup menu redirect to RCON login if not logged in yet
 		if (( NETWORK_GetState() == NETSTATE_CLIENT ) && ( CLIENT_HasRCONAccess() == false ))
 			menu = NAME_ZA_RconLoginMenu;
+		break;
+
+	case NAME_ZA_LoginMenu:
+		// [AK] Prevent the login menu from opening if the client is already logged in.
+		if (( NETWORK_GetState() == NETSTATE_CLIENT ) && ( CLIENT_IsLoggedIn()))
+		{
+			M_StartMessage( "You are already logged in.\n\npress a key.", 1 );
+			return;
+		}
 		break;
 	}
 

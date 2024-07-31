@@ -50,5 +50,6 @@
 
 void	CLIENT_ProcessSRPServerCommand( LONG lCommand, BYTESTREAM_s *pByteStream );
 void	CLIENT_LogOut( void );
+bool	CLIENT_IsLoggedIn( void );
 
 #endif	// __CL_AUTH_H__

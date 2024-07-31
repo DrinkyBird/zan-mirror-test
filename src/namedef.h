@@ -620,6 +620,10 @@ xx(ChooseBotSkill)
 xx(sv_nocallvote)
 xx(ZA_ServerSetupMenu)
 xx(ZA_RconLoginMenu)
+
+// [AK] For the login menu
+xx(ZA_LoginMenu)
+
 // [TP] Doom decal names, so we can send these over the network easier
 xx(BulletChip)
 xx(BloodSplat)
