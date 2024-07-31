@@ -3577,6 +3577,24 @@ void Scoreboard::RemoveInvalidColumnsInRankOrder( void )
 
 //*****************************************************************************
 //
+// [AK] Scoreboard::ClearColumnsAndMargins
+//
+// Empties the column order and rank order lists, and empties all margins.
+//
+//*****************************************************************************
+
+void Scoreboard::ClearColumnsAndMargins( void )
+{
+	ColumnOrder.Clear( );
+	RankOrder.Clear( );
+	MainHeader.ClearCommands( );
+	TeamHeader.ClearCommands( );
+	SpectatorHeader.ClearCommands( );
+	Footer.ClearCommands( );
+}
+
+//*****************************************************************************
+//
 // [AK] Scoreboard::ShouldSeparateTeams
 //
 // Checks if the scoreboard should separate players into their respective teams.
@@ -3695,6 +3713,31 @@ void SCOREBOARD_Construct( void )
 			}
 		}
 	}
+}
+
+//*****************************************************************************
+//
+// [AK] SCOREBOARD_Destruct
+//
+// Deletes all of the columns and the scoreboard's column lists and margins.
+// This is called when using the "restart" CCMD.
+//
+//*****************************************************************************
+
+void SCOREBOARD_Destruct( void )
+{
+	TMapIterator<FName, ScoreColumn *> it( g_Columns );
+	TMap<FName, ScoreColumn *>::Pair *pair;
+
+	g_Scoreboard.ClearColumnsAndMargins( );
+
+	while ( it.NextPair( pair ))
+	{
+		delete pair->Value;
+		pair->Value = nullptr;
+	}
+
+	g_Columns.Clear( );
 }
 
 //*****************************************************************************

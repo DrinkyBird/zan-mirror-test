@@ -1929,9 +1929,9 @@ void VOIPController::VOIPChannel::UpdateEndDelay( const bool resetEpoch )
 //*****************************************************************************
 
 VOIPPanel::VOIPPanel( void ) :
-	speakerIcon( TexMan.FindTexture( "SPKRMINI" )),
+	speakerIcon( nullptr ),
 	speakerXPos( 0 ),
-	speakerXOffset( speakerIcon ? speakerIcon->GetScaledWidth( ) + SmallFont->GetCharWidth( 32 ) : 0 ),
+	speakerXOffset( 0 ),
 	lastRefreshGametic( 0 ) { }
 
 //*****************************************************************************
@@ -2033,9 +2033,14 @@ void VOIPPanel::Refresh( void )
 	if ( alignBottom )
 		yPos += viewheight <= ST_Y ? static_cast<int>( ST_Y * g_rYScale ) : HUD_GetHeight( );
 
+	speakerIcon = TexMan.FindTexture( "SPKRMINI" );
+
 	// [AK] Set the x-position of the speaker icon.
 	if ( speakerIcon != nullptr )
+	{
 		speakerXPos = xPos - ( alignRight ? speakerIcon->GetScaledWidth( ) : 0 );
+		speakerXOffset = speakerIcon->GetScaledWidth( ) + SmallFont->GetCharWidth( 32 );
+	}
 
 	// [AK] Update the text, and then set the positions of the text and the
 	// y-position of the speaker icon of each row.

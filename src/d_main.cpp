@@ -3305,6 +3305,7 @@ void D_DoomMain (void)
 
 			// [BB]
 			NETWORK_Destruct();
+			SCOREBOARD_Destruct();			// [AK] Clear everything from the scoreboard.
 
 			GC::FullGC();					// perform one final garbage collection before deleting the class data
 			PClass::ClearRuntimeData();		// clear all runtime generated class data

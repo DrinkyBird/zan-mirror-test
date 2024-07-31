@@ -432,6 +432,7 @@ public:
 	void Parse( FScanner &sc );
 	void Refresh( const ULONG displayPlayer, const ULONG newWidth, const int newRelX );
 	void Render( const ULONG ulDisplayPlayer, const ULONG ulTeam, LONG &lYPos, const float fAlpha ) const;
+	void ClearCommands( void ) { Block.Clear( ); }
 
 	// [AK] Indicates that this margin is drawing for no team.
 	const static unsigned int NO_TEAM = UCHAR_MAX;
@@ -525,6 +526,7 @@ struct Scoreboard
 	void DrawRowBackground( const PalEntry color, int x, int y, int width, int height, const float fAlpha ) const;
 	void DrawRowBackground( const PalEntry color, const int y, const float fAlpha ) const;
 	void RemoveInvalidColumnsInRankOrder( void );
+	void ClearColumnsAndMargins( void );
 	bool ShouldSeparateTeams( void ) const;
 
 private:
@@ -558,6 +560,7 @@ private:
 //	PROTOTYPES
 
 void			SCOREBOARD_Construct( void );
+void			SCOREBOARD_Destruct( void );
 void			SCOREBOARD_ParseFont( FScanner &sc, FFont *&font );
 void			SCOREBOARD_ParseTextColor( FScanner &sc, EColorRange &color );
 void			SCOREBOARD_Reset( void );

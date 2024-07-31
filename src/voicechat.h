@@ -329,7 +329,7 @@ private:
 
 	VOIPPanel( void );
 
-	FTexture *const speakerIcon;
+	FTexture *speakerIcon;
 	std::set<unsigned int> playersTalking;
 	std::vector<VOIPPanelRow> rows;
 	int speakerXPos;
