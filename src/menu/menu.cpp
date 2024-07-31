@@ -505,6 +505,20 @@ void M_SetMenu(FName menu, int param)
 			M_StartMessage( "You are already logged in.\n\npress a key.", 1 );
 			return;
 		}
+
+#ifdef WIN32
+		FBaseCVar *usernameCVar = FindCVar( "menu_authusername", nullptr );
+
+		// [AK] Set the username in the login menu to the client's default username when the menu's opened
+		// for the first time (i.e. "menu_authusername" hasn't been changed yet).
+		if (( usernameCVar != nullptr ) && ( strlen( usernameCVar->GetGenericRep( CVAR_String ).String ) == 0 ))
+		{
+			UCVarValue val;
+			val.String = login_default_user.GetGenericRep( CVAR_String ).String;
+			usernameCVar->SetGenericRep( val, CVAR_String );
+		}
+#endif
+
 		break;
 	}
 

@@ -228,6 +228,7 @@
 !	- Changed "opponents" to "enemies", changed the coloring of "allies" and "enemies" to match those used in the target identification, and removed a redundant comma on the HUD. [Kaminsky]
 !	- Changed the default value of "cl_ticsperupdate" from 3 to 1. [Kaminsky]
 !	- Removed the "you fragged x" and "you were fragged by x" console messages that printed when large frag messages appeared. [Kaminsky]
+!	- The login menu automatically sets the username to the client's default username when it's opened for the first time (Windows only). [Kaminsky]
 
 
 3.1
