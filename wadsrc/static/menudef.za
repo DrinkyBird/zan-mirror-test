@@ -66,7 +66,7 @@ OptionMenu ZA_MultiplayerOptions
 	Command		"Disconnect",			"menu_disconnect"
 	StaticText	" "
 	SubMenu		"Network Options",		"ZA_NetworkOptions"
-	Submenu		"Server Administration",	"ZA_ServerSetupMenu"
+	Submenu		"Server settings",		"ZA_ServerSetupMenu"
 	StaticText	" "
 	Option		"Start as spectator",		"cl_startasspectator",		"YesNo"
 	TextField	"Server password",			"cl_password"
