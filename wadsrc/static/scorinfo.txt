@@ -52,6 +52,7 @@ Column "Points"
 
 	Alignment = Right
 	EarnType = Points
+	ForbiddenGameModes = Domination
 	GameType = Deathmatch, TeamGame
 	ShortName = "Pts"
 	Size = 16
@@ -64,6 +65,7 @@ Column "Wins"
 
 	Alignment = Right
 	EarnType = Wins
+	PriorityGameModes = Duel
 	GameType = Deathmatch, TeamGame
 	Size = 16
 }

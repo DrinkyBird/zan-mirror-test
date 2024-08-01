@@ -261,6 +261,10 @@ BEGIN_ENUM( COLUMNCMD_e )
 	ENUM_ELEMENT( COLUMNCMD_SIZE ),
 	// A list of game modes where this column is only active, if not empty.
 	ENUM_ELEMENT( COLUMNCMD_GAMEMODE ),
+	// A list of game modes that are excepted from the game and earn type checks.
+	ENUM_ELEMENT( COLUMNCMD_PRIORITYGAMEMODES ),
+	// A list of game modes that this column can't be active in.
+	ENUM_ELEMENT( COLUMNCMD_FORBIDDENGAMEMODES ),
 	// The game types this column is only active in (i.e. cooperative, deathmatch, teamgame).
 	ENUM_ELEMENT( COLUMNCMD_GAMETYPE ),
 	// What players must earn for this column to be active (i.e. kills, frags, points, wins).

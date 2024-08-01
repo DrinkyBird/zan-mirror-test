@@ -239,6 +239,8 @@ protected:
 	ULONG ulFlags;
 	ULONG ulGameAndEarnTypeFlags;
 	std::set<GAMEMODE_e> GameModeList;
+	std::set<GAMEMODE_e> PriorityGameModeList;
+	std::set<GAMEMODE_e> ForbiddenGameModeList;
 	ULONG ulSizing;
 	ULONG ulShortestWidth;
 	ULONG ulShortestHeight;

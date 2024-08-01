@@ -822,12 +822,18 @@ void ScoreColumn::ParseCommand( FScanner &sc, const COLUMNCMD_e Command, const F
 		}
 
 		case COLUMNCMD_GAMEMODE:
+		case COLUMNCMD_PRIORITYGAMEMODES:
+		case COLUMNCMD_FORBIDDENGAMEMODES:
 		case COLUMNCMD_GAMETYPE:
 		case COLUMNCMD_EARNTYPE:
 		{
 			// [AK] Clear all game modes.
 			if ( Command == COLUMNCMD_GAMEMODE )
 				GameModeList.clear( );
+			else if ( Command == COLUMNCMD_PRIORITYGAMEMODES )
+				PriorityGameModeList.clear( );
+			else if ( Command == COLUMNCMD_FORBIDDENGAMEMODES )
+				ForbiddenGameModeList.clear( );
 			// ...or reset all game type flags.
 			else if ( Command == COLUMNCMD_GAMETYPE )
 				ulGameAndEarnTypeFlags &= ~GAMETYPE_MASK;
@@ -839,9 +845,16 @@ void ScoreColumn::ParseCommand( FScanner &sc, const COLUMNCMD_e Command, const F
 			{
 				sc.MustGetToken( TK_Identifier );
 
-				if ( Command == COLUMNCMD_GAMEMODE )
+				if (( Command == COLUMNCMD_GAMEMODE ) || ( Command == COLUMNCMD_PRIORITYGAMEMODES ) || ( Command == COLUMNCMD_FORBIDDENGAMEMODES ))
 				{
-					GameModeList.insert( static_cast<GAMEMODE_e>( sc.MustGetEnumName( "game mode", "GAMEMODE_", GetValueGAMEMODE_e, true )));
+					const GAMEMODE_e gameMode = static_cast<GAMEMODE_e>( sc.MustGetEnumName( "game mode", "GAMEMODE_", GetValueGAMEMODE_e, true ));
+
+					if ( Command == COLUMNCMD_GAMEMODE )
+						GameModeList.insert( gameMode );
+					else if ( Command == COLUMNCMD_PRIORITYGAMEMODES )
+						PriorityGameModeList.insert( gameMode );
+					else
+						ForbiddenGameModeList.insert( gameMode );
 				}
 				else if ( Command == COLUMNCMD_GAMETYPE )
 				{
@@ -947,24 +960,30 @@ void ScoreColumn::CheckIfUsable( void )
 	if ( pScoreboard == NULL )
 		return;
 
+	const GAMEMODE_e gameMode = GAMEMODE_GetCurrentMode( );
+
 	// [AK] If the current game mode isn't allowed for this column, then it can't be active.
-	if ( GameModeList.find( GAMEMODE_GetCurrentMode( )) == GameModeList.end( ))
+	if (( GameModeList.find( gameMode ) == GameModeList.end( )) || ( ForbiddenGameModeList.find( gameMode ) != ForbiddenGameModeList.end( )))
 		return;
 
 	const ULONG ulGameModeFlags = GAMEMODE_GetCurrentFlags( );
 
-	// [AK] Check if the current game type won't allow this column to be active.
-	if ( ulGameAndEarnTypeFlags & GAMETYPE_MASK )
+	// [AK] Check the current game and earn type if the current game mode isn't a priority.
+	if ( PriorityGameModeList.find( gameMode ) == PriorityGameModeList.end( ))
 	{
-		if ((( ulGameModeFlags & ulGameAndEarnTypeFlags ) & GAMETYPE_MASK ) == 0 )
-			return;
-	}
+		// [AK] Check if the current game type won't allow this column to be active.
+		if ( ulGameAndEarnTypeFlags & GAMETYPE_MASK )
+		{
+			if ((( ulGameModeFlags & ulGameAndEarnTypeFlags ) & GAMETYPE_MASK ) == 0 )
+				return;
+		}
 
-	// [AK] Check if the current game mode's earn type won't allow this column to be active.
-	if ( ulGameAndEarnTypeFlags & EARNTYPE_MASK )
-	{
-		if ((( ulGameModeFlags & ulGameAndEarnTypeFlags ) & EARNTYPE_MASK ) == 0 )
-			return;
+		// [AK] Check if the current game mode's earn type won't allow this column to be active.
+		if ( ulGameAndEarnTypeFlags & EARNTYPE_MASK )
+		{
+			if ((( ulGameModeFlags & ulGameAndEarnTypeFlags ) & EARNTYPE_MASK ) == 0 )
+				return;
+		}
 	}
 
 	ULONG ulRequiredFlags = 0;
