@@ -262,7 +262,10 @@ bool CLIENT_IsLoggedIn( void )
 CCMD( login )
 {
 	if ( NETWORK_GetState( ) != NETSTATE_CLIENT )
+	{
+		Printf( "You can't use login if you're not in an online game.\n" );
 		return;
+	}
 
 	// [AK] There's no need to request another login if we're already logged in.
 	if ( CLIENT_IsLoggedIn( ))
