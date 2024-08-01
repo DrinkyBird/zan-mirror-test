@@ -74,7 +74,14 @@ CUSTOM_CVAR( Bool, cl_hideaccount, false, CVAR_ARCHIVE )
 }
 
 #ifdef _WIN32
-CVAR( String, login_default_user, "", CVAR_ARCHIVE )
+EXTERN_CVAR( Bool, cl_autologin )
+
+CUSTOM_CVAR( String, login_default_user, "", CVAR_ARCHIVE )
+{
+	// [AK] Log in automatically when setting a default username, if applicable.
+	if (( NETWORK_GetState( ) == NETSTATE_CLIENT ) && ( CLIENT_IsLoggedIn( ) == false ) && ( cl_autologin ))
+		CLIENT_RetrieveUserAndLogIn( self.GetGenericRep( CVAR_String ).String );
+}
 #endif
 
 //*****************************************************************************
@@ -257,6 +264,24 @@ bool CLIENT_IsLoggedIn( void )
 }
 
 //*****************************************************************************
+//
+#ifdef _WIN32
+void CLIENT_RetrieveUserAndLogIn( const FString username )
+{
+	FString password;
+
+	// [AK] Don't try to log in if the username is empty.
+	if ( username.IsEmpty( ))
+		return;
+
+	if ( client_RetrieveCredentials( username, password ))
+		client_RequestLogin( username.GetChars( ), password.GetChars( ));
+	else
+		Printf( "No password saved for user %s. Use login_add to save a password.\n", username.GetChars( ));
+}
+#endif
+
+//*****************************************************************************
 //	CONSOLE COMMANDS
 
 CCMD( login )
@@ -291,11 +316,7 @@ CCMD( login )
 		else
 			username = argv[1];
 
-		FString password;
-		if ( client_RetrieveCredentials ( username, password ) )
-			client_RequestLogin ( username.GetChars(), password.GetChars() );
-		else
-			Printf ( "No password saved for user %s. Use login_add to save a password.\n", username.GetChars() );
+		CLIENT_RetrieveUserAndLogIn( username );
 		return;
 	}
 #endif

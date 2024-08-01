@@ -181,6 +181,16 @@ CVAR( Bool, cl_showpacketloss, false, CVAR_ARCHIVE )
 // [JS] Always makes us ready when we are in intermission.
 CVAR( Bool, cl_autoready, false, CVAR_ARCHIVE )
 
+#ifdef WIN32
+// [AK] Automatically logs us into our default account (i.e. login_default_user).
+CUSTOM_CVAR( Bool, cl_autologin, false, CVAR_ARCHIVE )
+{
+	// [AK] Log in automatically when enabling this CVar, if not already.
+	if (( self ) && ( CLIENT_IsLoggedIn( ) == false ))
+		CLIENT_RetrieveUserAndLogIn( login_default_user.GetGenericRep( CVAR_String ).String );
+}
+#endif
+
 // [AK] Restores the old mouse behaviour from Skulltag.
 CVAR( Bool, cl_useskulltagmouse, false, CVAR_GLOBALCONFIG | CVAR_ARCHIVE )
 
@@ -3429,6 +3439,12 @@ void ServerCommands::EndSnapshot::Execute()
 
 	// [AK] Reset the scoreboard.
 	SCOREBOARD_Reset( );
+
+#ifdef WIN32
+	// [AK] Allow the client to log into their default account automatically.
+	if ( cl_autologin )
+		CLIENT_RetrieveUserAndLogIn( login_default_user.GetGenericRep( CVAR_String ).String );
+#endif
 
 	// Display the message of the day.
 	C_MOTDPrint( g_MOTD );

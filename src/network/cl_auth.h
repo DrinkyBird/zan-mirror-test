@@ -55,6 +55,10 @@ void	CLIENT_ProcessSRPServerCommand( LONG lCommand, BYTESTREAM_s *pByteStream );
 void	CLIENT_LogOut( void );
 bool	CLIENT_IsLoggedIn( void );
 
+#ifdef WIN32
+void	CLIENT_RetrieveUserAndLogIn( const FString username );
+#endif
+
 //*****************************************************************************
 //	EXTERNAL CONSOLE VARIABLES
 
