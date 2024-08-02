@@ -454,6 +454,13 @@ bool SERVER_ProcessSRPClientCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 			if ( pClient->loggedIn )
 				return ( false );
 
+			// [AK] Don't allow multiple clients to log into the same account.
+			if ( SERVER_FindClientWithUsername( username.GetChars()) != MAXPLAYERS )
+			{
+				SERVER_PrintfPlayer( SERVER_GetCurrentClient(), "User %s is already being used.\n", username.GetChars());
+				return ( false );
+			}
+
 			pClient->username = username;
 			pClient->clientSessionID = M_Random.GenRand32();
 
