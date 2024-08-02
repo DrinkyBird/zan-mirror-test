@@ -227,6 +227,7 @@
 !	- All loaded "ALLYA" sprites are now protected. [Kaminsky]
 !	- Changed "opponents" to "enemies", changed the coloring of "allies" and "enemies" to match those used in the target identification, and removed a redundant comma on the HUD. [Kaminsky]
 !	- Changed the default value of "cl_ticsperupdate" from 3 to 1. [Kaminsky]
+!	- Removed the "you fragged x" and "you were fragged by x" console messages that printed when large frag messages appeared. [Kaminsky]
 
 
 3.1

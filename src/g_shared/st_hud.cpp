@@ -1185,9 +1185,6 @@ static void HUD_DrawFragMessage( void )
 	// [AK] Substitute the fragged/fragging player's name into the message if we can.
 	message.Substitute( "%s", g_pFragMessagePlayer->userinfo.GetName( ));
 
-	// Print the frag message out in the console.
-	Printf( "%s\n", message.GetChars( ));
-
 	DHUDMessageFadeOut *pMsg = new DHUDMessageFadeOut( BigFont, message.GetChars( ), 1.5f, 0.325f, 0, 0, CR_RED, 2.5f, 0.5f );
 	StatusBar->AttachMessage( pMsg, MAKE_ID( 'F', 'R', 'A', 'G'));
 
