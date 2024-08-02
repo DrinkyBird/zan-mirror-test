@@ -1175,6 +1175,10 @@ static void HUD_RenderCountdown( ULONG ulTimeLeft )
 //
 static void HUD_DrawFragMessage( void )
 {
+	// [AK] Don't draw large frag messages when the game's no longer in progress.
+	if ( GAMEMODE_IsGameInProgress( ) == false )
+		return;
+
 	FString message = GStrings( g_bFraggedBy ? "GM_YOUWEREFRAGGED" : "GM_YOUFRAGGED" );
 	message.StripLeftRight( );
 
