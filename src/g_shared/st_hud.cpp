@@ -1303,38 +1303,31 @@ void HUD_PrepareToDrawFragMessage( player_t *pPlayer, AActor *pSource, int Means
 	if ( GAMEMODE_IsGameInProgress( ) == false )
 		return;
 
-	const ULONG ulGameModeFlags = GAMEMODE_GetCurrentFlags( );
-
-	if (((( ulGameModeFlags & GMF_PLAYERSEARNFRAGS ) == false ) || (( fraglimit == 0 ) || ( pSource->player->fragcount < fraglimit ))) &&
-		(((( ulGameModeFlags & GMF_PLAYERSEARNWINS ) && !( ulGameModeFlags & GMF_PLAYERSONTEAMS )) == false ) || (( winlimit == 0 ) || ( pSource->player->ulWins < static_cast<ULONG>( winlimit )))) &&
-		(((( ulGameModeFlags & GMF_PLAYERSEARNWINS ) && ( ulGameModeFlags & GMF_PLAYERSONTEAMS )) == false ) || (( winlimit == 0 ) || ( TEAM_GetWinCount( pSource->player->Team ) < winlimit ))))
+	// Prepare a large "You were fragged by <name>." message in the middle of the screen.
+	if ( pPlayer == &players[consoleplayer] )
 	{
-		// Prepare a large "You were fragged by <name>." message in the middle of the screen.
-		if ( pPlayer == &players[consoleplayer] )
+		if ( cl_showlargefragmessages )
 		{
-			if ( cl_showlargefragmessages )
-			{
-				g_pFragMessagePlayer = pSource->player;
-				g_bFraggedBy = true;
-			}
-
-			// [RC] Also show the message on the Logitech G15 (if enabled).
-			if ( G15_IsReady( ))
-				G15_ShowLargeFragMessage( pSource->player->userinfo.GetName( ), false );
+			g_pFragMessagePlayer = pSource->player;
+			g_bFraggedBy = true;
 		}
-		// Prepare a large "You fragged <name>!" message in the middle of the screen.
-		else if ( static_cast<int>( pSource->player - players ) == consoleplayer )
+
+		// [RC] Also show the message on the Logitech G15 (if enabled).
+		if ( G15_IsReady( ))
+			G15_ShowLargeFragMessage( pSource->player->userinfo.GetName( ), false );
+	}
+	// Prepare a large "You fragged <name>!" message in the middle of the screen.
+	else if ( static_cast<int>( pSource->player - players ) == consoleplayer )
+	{
+		if ( cl_showlargefragmessages )
 		{
-			if ( cl_showlargefragmessages )
-			{
-				g_pFragMessagePlayer = pPlayer;
-				g_bFraggedBy = false;
-			}
-
-			// [RC] Also show the message on the Logitech G15 (if enabled).
-			if ( G15_IsReady( ))
-				G15_ShowLargeFragMessage( pPlayer->userinfo.GetName( ), true );
+			g_pFragMessagePlayer = pPlayer;
+			g_bFraggedBy = false;
 		}
+
+		// [RC] Also show the message on the Logitech G15 (if enabled).
+		if ( G15_IsReady( ))
+			G15_ShowLargeFragMessage( pPlayer->userinfo.GetName( ), true );
 	}
 }
 
