@@ -1576,7 +1576,8 @@ void DBaseStatusBar::DrawCornerScore ()
 	if( !(cl_stfullscreenhud && gameinfo.gametype == GAME_Doom) && (gameinfo.gametype != GAME_Strife)  )
 	{
 		// Draw the player's counter (points, frags, wins).
-		if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNPOINTS )
+		// [AK] Players don't receive points in domination, so don't draw anything.
+		if (( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNPOINTS ) && ( domination == false ))
 			DrBNumberOuter (CPlayer->lPointCount, -44, 1);
 		else if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNFRAGS )
 			DrBNumberOuter (CPlayer->fragcount, -44, 1);

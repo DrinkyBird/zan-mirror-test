@@ -699,8 +699,10 @@ void DrawFullHUD_GameInformation()
 	{
 		if ( possession || teampossession )
 			sprintf( szString, "%d", static_cast<int> (CPlayer->lPointCount) );
-		else if ( teamlms )
-			szString[0] = 0; // Frags would be distracting and confusing with the 'x left' being wins.
+		// Frags would be distracting and confusing with the 'x left' being wins.
+		// [AK] Players don't receive points in domination either, so don't draw anything.
+		else if (( teamlms ) || ( domination ))
+			szString[0] = 0;
 		else if ( lastmanstanding )
 			sprintf( szString, "%d", static_cast<unsigned int> (CPlayer->ulWins) );
 		else if ( deathmatch )
