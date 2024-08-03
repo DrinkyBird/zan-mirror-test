@@ -208,7 +208,7 @@ Column "ArtifactIcon"
 
 	Alignment = Center
 	ClipRectHeight = -2
-	GameMode = Terminator, Possession, TeamPossession, CTF, OneFlagCTF, Skulltag
+	GameModes = Terminator, Possession, TeamPossession, CTF, OneFlagCTF, Skulltag
 	Size = 13
 }
 

@@ -821,14 +821,14 @@ void ScoreColumn::ParseCommand( FScanner &sc, const COLUMNCMD_e Command, const F
 			break;
 		}
 
-		case COLUMNCMD_GAMEMODE:
+		case COLUMNCMD_GAMEMODES:
 		case COLUMNCMD_PRIORITYGAMEMODES:
 		case COLUMNCMD_FORBIDDENGAMEMODES:
 		case COLUMNCMD_GAMETYPE:
 		case COLUMNCMD_EARNTYPE:
 		{
 			// [AK] Clear all game modes.
-			if ( Command == COLUMNCMD_GAMEMODE )
+			if ( Command == COLUMNCMD_GAMEMODES )
 				GameModeList.clear( );
 			else if ( Command == COLUMNCMD_PRIORITYGAMEMODES )
 				PriorityGameModeList.clear( );
@@ -845,11 +845,11 @@ void ScoreColumn::ParseCommand( FScanner &sc, const COLUMNCMD_e Command, const F
 			{
 				sc.MustGetToken( TK_Identifier );
 
-				if (( Command == COLUMNCMD_GAMEMODE ) || ( Command == COLUMNCMD_PRIORITYGAMEMODES ) || ( Command == COLUMNCMD_FORBIDDENGAMEMODES ))
+				if (( Command == COLUMNCMD_GAMEMODES ) || ( Command == COLUMNCMD_PRIORITYGAMEMODES ) || ( Command == COLUMNCMD_FORBIDDENGAMEMODES ))
 				{
 					const GAMEMODE_e gameMode = static_cast<GAMEMODE_e>( sc.MustGetEnumName( "game mode", "GAMEMODE_", GetValueGAMEMODE_e, true ));
 
-					if ( Command == COLUMNCMD_GAMEMODE )
+					if ( Command == COLUMNCMD_GAMEMODES )
 						GameModeList.insert( gameMode );
 					else if ( Command == COLUMNCMD_PRIORITYGAMEMODES )
 						PriorityGameModeList.insert( gameMode );

@@ -260,7 +260,7 @@ BEGIN_ENUM( COLUMNCMD_e )
 	// The size of the column (can be either the whole width or padding), in pixels.
 	ENUM_ELEMENT( COLUMNCMD_SIZE ),
 	// A list of game modes where this column is only active, if not empty.
-	ENUM_ELEMENT( COLUMNCMD_GAMEMODE ),
+	ENUM_ELEMENT( COLUMNCMD_GAMEMODES ),
 	// A list of game modes that are excepted from the game and earn type checks.
 	ENUM_ELEMENT( COLUMNCMD_PRIORITYGAMEMODES ),
 	// A list of game modes that this column can't be active in.
