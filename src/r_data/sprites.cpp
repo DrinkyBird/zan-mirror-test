@@ -607,7 +607,7 @@ void R_InitSkins (void)
 				if (s_skin == 0 && sc.String[0] == '}')
 					break;
 
-				strncpy(key, sc.String, sizeof(key) - 1);
+				strncpy (key, sc.String, sizeof(key)-1);
 				if ((!sc.GetString() || sc.String[0] != '=') ||
 					strchr(key, ':')) // [BOF] Colon used for GetSkinInfo to fetch character arrays, so don't allow in key name.
 				{
@@ -736,7 +736,7 @@ void R_InitSkins (void)
 					else if (( stricmp(sc.String, "false") == 0 ) || ( stricmp(sc.String, "no") == 0 ))
 						skins[i].bCheat = false;
 				}
-				else if (0 == stricmp (key, "color"))
+				else if (0 == stricmp( key, "color" ))
 				{
 					skins[i].color = V_GetColor(NULL, sc.String); // [BOF] Set an actual color now
 				}
