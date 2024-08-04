@@ -763,6 +763,14 @@ void R_InitSkins (void)
 					skins[i].range0end = MAX(tempbyte[0], tempbyte[1]);
 					rangeChanged = true;
 				}
+				else if (0 == stricmp (key, "xscale"))
+				{ // [BOF] Separate X Scale
+					skins[i].ScaleX = clamp<fixed_t> (FLOAT2FIXED(atof (sc.String)), 1, 256*FRACUNIT);
+				}
+				else if (0 == stricmp (key, "yscale"))
+				{ // [BOF] Separate Y Scale
+					skins[i].ScaleY = clamp<fixed_t> (FLOAT2FIXED(atof (sc.String)), 1, 256*FRACUNIT);
+				}
 				else if (key[0] == '*')
 				{ // Player sound replacment (ZDoom extension)
 					int lump = Wads.CheckNumForName (sc.String, skins[i].namespc);
