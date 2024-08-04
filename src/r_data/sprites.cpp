@@ -512,10 +512,7 @@ void R_InitSkins (void)
 	FSoundID playersoundrefs[NUMSKINSOUNDS];
 	spritedef_t temp;
 	int sndlumps[NUMSKINSOUNDS];
-
-	// [BOF] Allow key to be any length
-	FString key;
-
+	char key[65];
 	DWORD intname, crouchname;
 	int i;
 	int j, k, base;
@@ -528,6 +525,7 @@ void R_InitSkins (void)
 	int pclass; // [BOF] Move pclass outside of class parameter for duplicate name checking.
 	bool rangeChanged; // [BOF] For colorrange parameter
 
+	key[sizeof(key)-1] = 0; 
 	i = PlayerClasses.Size () - 1;
 	lastlump = 0;
 
@@ -591,6 +589,7 @@ void R_InitSkins (void)
 			skins[i].namespc = Wads.GetLumpNamespace (base);
 			intname = 0;
 			crouchname = 0;
+
 			remove = false;
 			basetype = NULL;
 			transtype = NULL;
@@ -608,25 +607,20 @@ void R_InitSkins (void)
 				if (s_skin == 0 && sc.String[0] == '}')
 					break;
 
-				key = sc.String; key.ToLower(); // [BOF] Keep all lowercase to prevent inconsistencies with GetSkinInfo
-
-				if (!sc.CheckToken('=') ||
+				strncpy(key, sc.String, sizeof(key) - 1);
+				if ((!sc.GetString() || sc.String[0] != '=') ||
 					strchr(key, ':')) // [BOF] Colon used for GetSkinInfo to fetch character arrays, so don't allow in key name.
 				{
-					Printf(PRINT_BOLD, "Bad format for skin %d: %s\n", (int)i, key);
+					Printf (PRINT_BOLD, "Bad format for skin %d: %s\n", (int)i, key);
 					// [BB] If there was a problem parsing the skin, remove it. Otherwise bad things may happen.
 					remove = true;
 					break;
 				}
-				sc.GetString();
-
-				// Name 
-				if (!key.Compare("name"))
+				sc.GetString ();
+				if (0 == stricmp (key, "name"))
 				{
 					// [BC] MAX_SKIN_NAME.
 					strncpy(skins[i].name, sc.String, MAX_SKIN_NAME);
-
-					skins[i].param[key][1] = skins[i].param[key][0] = skins[i].name;
 
 					// [BOF] Prevent skins from intentionally being named 'skin#'
 					if (strncmp(skins[i].name, "skin", 4) == 0 && sc.StringLen > 4)
@@ -641,74 +635,34 @@ void R_InitSkins (void)
 						}
 					}
 				}
-
-				// Sprite
-				else if (!key.Compare("sprite"))
+				else if (0 == stricmp (key, "sprite"))
 				{
 					for (j = 3; j >= 0; j--)
 						sc.String[j] = toupper (sc.String[j]);
 					intname = *((DWORD *)sc.String);
-
-					skins[i].param[key][0] = sc.String;
-					skins[i].param[key][0].Truncate(4);
 				}
-
-				// Crouching Sprite
-				else if (!key.Compare("crouchsprite"))
+				else if (0 == stricmp (key, "crouchsprite"))
 				{
 					for (j = 3; j >= 0; j--)
 						sc.String[j] = toupper (sc.String[j]);
 					crouchname = *((DWORD *)sc.String);
-
-					skins[i].param[key].Resize(1);
-					skins[i].param[key][0] = sc.String;
-					skins[i].param[key][0].Truncate(4);
 				}
-
-				// HUD Face
-				else if (!key.Compare("face"))
+				else if (0 == stricmp (key, "face"))
 				{
 					for (j = 2; j >= 0; j--)
-						skins[i].face[j] = toupper(sc.String[j]);
+						skins[i].face[j] = toupper (sc.String[j]);
 					skins[i].face[3] = '\0';
-
-					skins[i].param[key].Resize(1);
-					skins[i].param[key][0] = skins[i].face;
 				}
-
-				// Gender
-				else if (!key.Compare("gender"))
+				else if (0 == stricmp (key, "gender"))
 				{
-					skins[i].gender = D_GenderToInt(sc.String);
-
-					skins[i].param[key].Resize(2);
-					skins[i].param[key][0].Format("%i", skins[i].gender);	// Integer value of gender
-					skins[i].param[key][1] = sc.String;		// Actual field entry
+					skins[i].gender = D_GenderToInt (sc.String);
 				}
-
-				// Scale
-				else if (!key.Compare("scale"))
-				{ // [BOF] You can set X and Y scales independently now. Just one argument will still set both to the same value.
-					sc.UnGet();
-					sc.GetToken();
-					skins[i].ScaleX = clamp<fixed_t>(FLOAT2FIXED(atof(sc.String)), 1, 256 * FRACUNIT);
-					skins[i].param[key].Resize(2);
-					skins[i].param[key][0].Format("%i", skins[i].ScaleX);
-
-					if (sc.CheckToken(','))
-					{
-						sc.GetToken();
-						skins[i].ScaleY = clamp<fixed_t>(FLOAT2FIXED(atof(sc.String)), 1, 256 * FRACUNIT);
-					}
-					else
-					{
-						skins[i].ScaleY = skins[i].ScaleX;
-					}
-					skins[i].param[key][1].Format("%i", skins[i].ScaleY);
+				else if (0 == stricmp (key, "scale"))
+				{
+					skins[i].ScaleX = clamp<fixed_t> (FLOAT2FIXED(atof (sc.String)), 1, 256*FRACUNIT);
+					skins[i].ScaleY = skins[i].ScaleX;
 				}
-
-				// Game
-				else if (!key.Compare("game"))
+				else if (0 == stricmp (key, "game"))
 				{
 					if (gameinfo.gametype == GAME_Heretic)
 						basetype = PClass::FindClass (NAME_HereticPlayer);
@@ -753,15 +707,11 @@ void R_InitSkins (void)
 
 					if (remove)
 						break;
-
-					skins[i].param[key].Resize(1);
-					skins[i].param[key][0] = sc.String;
 				}
 
-				// Class
-				else if (!key.Compare("class"))
+				else if (0 == stricmp (key, "class"))
 				{ // [GRB] Define the skin for a specific player class
-					pclass = D_PlayerClassToInt(sc.String);
+					pclass = D_PlayerClassToInt (sc.String);
 
 					if (pclass < 0)
 					{
@@ -770,57 +720,28 @@ void R_InitSkins (void)
 					}
 
 					basetype = transtype = PlayerClasses[pclass].Type;
-
-					skins[i].param[key].Resize(2);
-					skins[i].param[key][0].Format("%i", pclass); //Class Number
-					skins[i].param[key][1] = sc.String; //Class Name
 				}
-
-
 				// [BL] Skulltag additions
-
-				// Hidden Skin				
-				else if (!key.Compare("hidden"))
-				{ // [BOF] This is backwards, but should be left untouched for compatability.
-					if ((stricmp(sc.String, "true") == 0) || (stricmp(sc.String, "yes") == 0))
-					{
-						skins[i].bRevealed = true;
-						skins[i].param[key][0] = "0";
-					}
-					else if ((stricmp(sc.String, "false") == 0) || (stricmp(sc.String, "no") == 0))
-					{
-						skins[i].bRevealed = false;
-						skins[i].param[key][0] = "1";
-					}
-				}
-
-				// Cheat Skin
-				else if (!key.Compare("cheat"))
+				else if (0 == stricmp (key, "hidden"))
 				{
-					if ((stricmp(sc.String, "true") == 0) || (stricmp(sc.String, "yes") == 0))
-					{
-						skins[i].bCheat = true;
-						skins[i].param[key][0] = "1";
-					}
-					else if ((stricmp(sc.String, "false") == 0) || (stricmp(sc.String, "no") == 0))
-					{
-						skins[i].bCheat = false;
-						skins[i].param[key][0] = "0";
-					}
+					if (( stricmp(sc.String, "true") == 0 ) || ( stricmp(sc.String, "yes") == 0 ))
+						skins[i].bRevealed = true;
+					else if (( stricmp(sc.String, "false") == 0 ) || ( stricmp(sc.String, "no") == 0 ))
+						skins[i].bRevealed = false;
 				}
-
-				// Color
-				else if (!key.Compare("color"))
+				else if (0 == stricmp (key, "cheat"))
+				{
+					if (( stricmp(sc.String, "true") == 0 ) || ( stricmp(sc.String, "yes") == 0 ))
+						skins[i].bCheat = true;
+					else if (( stricmp(sc.String, "false") == 0 ) || ( stricmp(sc.String, "no") == 0 ))
+						skins[i].bCheat = false;
+				}
+				else if (0 == stricmp (key, "color"))
 				{
 					skins[i].color = V_GetColor(NULL, sc.String); // [BOF] Set an actual color now
-					skins[i].param[key].Resize(1);
-					skins[i].param[key][0].Format("%06X", skins[i].color);
 				}
-
 				// [BOF] Zandronum additions
-
-				// Color Range
-				else if (!key.Compare("colorrange"))
+				else if (0 == stricmp (key, "colorrange"))
 				{ // [BOF] Override a class's translation with the exception of a class using 0,0 Translation
 					sc.UnGet();
 					sc.GetToken();
@@ -841,53 +762,44 @@ void R_InitSkins (void)
 					skins[i].range0start = MIN(tempbyte[0], tempbyte[1]);
 					skins[i].range0end = MAX(tempbyte[0], tempbyte[1]);
 					rangeChanged = true;
-
-					skins[i].param[key][0].Format("%i", skins[i].range0start);
-					skins[i].param[key][1].Format("%i", skins[i].range0end);
 				}
-
-
-
-				// ZDoom Sound Replacement
 				else if (key[0] == '*')
 				{ // Player sound replacment (ZDoom extension)
-					int lump = Wads.CheckNumForName(sc.String, skins[i].namespc);
+					int lump = Wads.CheckNumForName (sc.String, skins[i].namespc);
 					if (lump == -1)
 					{
-						lump = Wads.CheckNumForFullName(sc.String, true, ns_sounds);
+						lump = Wads.CheckNumForFullName (sc.String, true, ns_sounds);
 					}
 					if (lump != -1)
 					{
-						if (stricmp(key, "*pain") == 0)
+						if (stricmp (key, "*pain") == 0)
 						{ // Replace all pain sounds in one go
-							aliasid = S_AddPlayerSound(skins[i].name, skins[i].gender,
+							aliasid = S_AddPlayerSound (skins[i].name, skins[i].gender,
 								playersoundrefs[0], lump, true);
 							for (int l = 3; l > 0; --l)
 							{
-								S_AddPlayerSoundExisting(skins[i].name, skins[i].gender,
+								S_AddPlayerSoundExisting (skins[i].name, skins[i].gender,
 									playersoundrefs[l], aliasid, true);
 							}
 						}
 						else
 						{
-							int sndref = S_FindSoundNoHash(key);
+							int sndref = S_FindSoundNoHash (key);
 							if (sndref != 0)
 							{
-								S_AddPlayerSound(skins[i].name, skins[i].gender, sndref, lump, true);
+								S_AddPlayerSound (skins[i].name, skins[i].gender, sndref, lump, true);
 							}
 						}
 					}
 				}
 				else
 				{
-
-					// Sound Replacement
 					bool cont = false;
 					for (j = 0; j < NUMSKINSOUNDS; j++)
 					{
-						if (stricmp(key, skinsoundnames[j][0]) == 0)
+						if (stricmp (key, skinsoundnames[j][0]) == 0)
 						{
-							sndlumps[j] = Wads.CheckNumForName(sc.String, skins[i].namespc);
+							sndlumps[j] = Wads.CheckNumForName (sc.String, skins[i].namespc);
 							if (sndlumps[j] == -1)
 							{ // [BL] no replacement, search all wads?
 								sndlumps[j] = Wads.CheckNumForName (sc.String);
@@ -898,13 +810,10 @@ void R_InitSkins (void)
 							}
 							cont = true;
 						}
-
 					}
-					if (cont) continue; // Don't parse these audio files again below
-
+					if (cont) continue; // [BOF] Don't parse these audio files again below
 
 					// [BOF] Custom value support for GetSkinInfo
-
 					if (sc.String[0] == '[')
 					{
 						sc.GetString();
@@ -980,8 +889,6 @@ void R_InitSkins (void)
 				{
 					skins[i].range0start = range0start;
 					skins[i].range0end = range0end;
-					skins[i].param["colorrange"][0].Format("%i", skins[i].range0start);
-					skins[i].param["colorrange"][1].Format("%i", skins[i].range0end);
 				}
 
 				remove = true;
@@ -1002,10 +909,7 @@ void R_InitSkins (void)
 			if (!remove)
 			{
 				if (skins[i].name[0] == 0)
-				{
 					mysnprintf (skins[i].name, countof(skins[i].name), "skin%d", (int)i);
-					skins[i].param["name"][1] = skins[i].name;
-				}
 
 				// [BOF] Check Skin name within its own class instead of globally.
 				bool initialname = false;
@@ -1023,8 +927,6 @@ void R_InitSkins (void)
 						initialname = true;
 					}
 				}
-
-				skins[i].param["name"][0] = skins[i].name; // [BOF] Update CVAR Name for GetSkinInfo param
 
 				// Now collect the sprite frames for this skin. If the sprite name was not
 				// specified, use whatever immediately follows the specifier lump.
@@ -1232,32 +1134,6 @@ static void R_CreateSkin()
 	skin.bRevealed = true;
 	skin.bRevealedByDefault = true;
 
-	// [BOF] Default Param Values
-	skin.param = (paramlist)skin.param;
-
-
-	skin.param["name"].Resize(2);
-
-	skin.param["sprite"].Resize(1);
-	skin.param["sprite"][0] = sprites[skin.sprite].name;
-
-	skin.param["scale"].Resize(2);
-	skin.param["scale"][0].Format("%i", skin.ScaleX);
-	skin.param["scale"][1].Format("%i", skin.ScaleY);
-
-	skin.param["class"].Resize(2);
-	skin.param["class"][0] = "0";
-	skin.param["class"][1] = type->Meta.GetMetaString(APMETA_DisplayName);
-
-	skin.param["cheat"].Resize(1);
-	skin.param["cheat"][0] = "0";
-
-	skin.param["colorrange"].Resize(2);
-
-	skin.param["hidden"].Resize(1);
-	skin.param["hidden"][0] = "0";
-
-
 	skins.Push(skin);
 }
 
@@ -1363,26 +1239,6 @@ void R_InitSprites ()
 				}
 			}
 		}
-
-		// [BOF] Base GetSkinInfo
-
-		skins[i].param["name"][1] = skins[i].param["name"][0] = skins[i].name;
-
-		skins[i].param["sprite"][0] = sprites[skins[i].sprite].name;
-
-		skins[i].param["face"].Resize(1);
-		skins[i].param["face"][0] = skins[i].face;
-
-		skins[i].param["scale"][0].Format("%i", skins[i].ScaleX);
-		skins[i].param["scale"][1].Format("%i", skins[i].ScaleY);
-
-		skins[i].param["class"][0] = 0;
-		skins[i].param["class"][0].Format("%i", i);
-		skins[i].param["class"][1] = basetype->Meta.GetMetaString(APMETA_DisplayName);
-
-		skins[i].param["colorrange"][0].Format("%i", skins[i].range0start);
-		skins[i].param["colorrange"][1].Format("%i", skins[i].range0end);
-
 	}
 
 	// [BB] Check if any of the skin sprites are ridiculously big to prevent
