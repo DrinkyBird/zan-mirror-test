@@ -1158,7 +1158,7 @@ static void ChangeSpy (int changespy)
 void G_FinishChangeSpy (const int pnum, const bool fromLineSpecial)
 {
 	// [AK] Sanity check to ensure the player is valid.
-	if ( PLAYER_IsValidPlayerWithMo( pnum ) == false )
+	if (( PLAYER_IsValidPlayer( pnum ) == false ) || ( players[pnum].mo == nullptr ))
 		return;
 
 	// [AK] Added this pointer to make the code below more readable.
