@@ -78,7 +78,8 @@ public:
 	bool		bCheat;
 
 	// [BOF] Extra SKININFO values for Zandronum.
-	paramlist	param;// A dynamic list for GetSkinInfo to grab values from SKININFO, including custom ones.
+	paramlist	param; // A dynamic list for GetSkinInfo to grab values from SKININFO, including custom ones.
+	int			classNum; // Fetch the class number of the skin.
 
 	// [BC] End of new skin properties.
 };

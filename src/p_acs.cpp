@@ -5471,6 +5471,8 @@ enum EACSFunctions
 	ACSF_GetPlayerJoinQueuePosition,
 	ACSF_SkipJoinQueue,
 	ACSF_GetSkinInfo,
+	ACSF_GetCustomSkinInfo,
+	ACSF_CheckCustomSkinInfo,
 
 	// ZDaemon
 	ACSF_GetTeamScore = 19620,	// (int team)
@@ -8631,6 +8633,7 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 
 			// [AK/BOF] Returns -1 for invalid players instead.
 			return -1;
+		}
 
 		case ACSF_GetPlayerCountry:
 		{
@@ -8720,36 +8723,61 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 			return 0;
 		}
 
-		case ACSF_GetSkinInfo: // [BOF] Get the parameter of a skin through its index as a string.
+		case ACSF_GetSkinInfo: // [BOF] Grab a parameter from a skin.
 		{
-			enum // [BOF] How should this parameter be parsed?
-			{
-				GETSKININFO_STRING,
-				GETSKININFO_INT,
-				GETSKININFO_FLOAT,
-				GETSKININFO_EXISTS // For easy checking in if/while statements.
-			};
-
 			const unsigned int skinIndex = args[0];
-			const char* paramIndex = FBehavior::StaticLookupString(args[2]);
-			unsigned int keyValue = argCount >= 4 ? args[3] : 0;
+			if (skinIndex > skins.Size() - 1) return 0;
+			const unsigned int paramIndex = args[1];
+			switch (paramIndex)
+			{
+			case SKIN_NAME: return GlobalACSStrings.AddString(skins[skinIndex].name);
+			case SKIN_SPRITE: return GlobalACSStrings.AddString(sprites[skins[skinIndex].sprite].name);
+			case SKIN_CROUCHSPRITE: return GlobalACSStrings.AddString(sprites[skins[skinIndex].crouchsprite].name);
+			case SKIN_FACE: return GlobalACSStrings.AddString(skins[skinIndex].face);
+			case SKIN_GENDER: return skins[skinIndex].gender;
+			case SKIN_XSCALE: return skins[skinIndex].ScaleX;
+			case SKIN_YSCALE: return skins[skinIndex].ScaleY;
+			case SKIN_OTHERGAME: return skins[skinIndex].othergame;
+			case SKIN_CLASSNUM: return skins[skinIndex].classNum;
+			case SKIN_REVEALED: return skins[skinIndex].bRevealed;
+			case SKIN_CHEAT: return skins[skinIndex].bCheat;
+			case SKIN_COLOR: return skins[skinIndex].color;
+			case SKIN_RANGESTART: return skins[skinIndex].range0start;
+			case SKIN_RANGEEND: return skins[skinIndex].range0end;
+			default: return 0;
+			}
+		}
+		
+		case ACSF_GetCustomSkinInfo: // [BOF] Grab a custom parameter from a skin.
+		{
+			const unsigned int skinIndex = args[0];
+			const char* paramIndex = FBehavior::StaticLookupString(args[1]);
+			unsigned int keyValue = argCount >= 3 ? args[2] : 0;
+			if (skinIndex < skins.Size()
+				&& skins[skinIndex].param.CheckKey(paramIndex)
+				&& (keyValue < skins[skinIndex].param[paramIndex].Size()))
+			{
+				if (skins[skinIndex].param[paramIndex][keyValue].IsInt())
+					return atoi(skins[skinIndex].param[paramIndex][keyValue]);
+				else if (skins[skinIndex].param[paramIndex][keyValue].IsFloat())
+					return FLOAT2FIXED(atof(skins[skinIndex].param[paramIndex][keyValue]));
+				else
+					return GlobalACSStrings.AddString(skins[skinIndex].param[paramIndex][keyValue]);
+			}	
+			return 0;
+		}
+
+		case ACSF_CheckCustomSkinInfo: // [BOF] Check if a custom parameter for a skin exists.
+		{
+			const unsigned int skinIndex = args[0];
+			const char* paramIndex = FBehavior::StaticLookupString(args[1]);
+			unsigned int keyValue = argCount >= 3 ? args[2] : 0;
 			if (skinIndex < skins.Size()
 			&& skins[skinIndex].param.CheckKey(paramIndex)
 			&& (keyValue < skins[skinIndex].param[paramIndex].Size()))
-			{
-				if (args[1] == GETSKININFO_EXISTS)
-					return 1;
-				else if (args[1] == GETSKININFO_STRING)
-					return GlobalACSStrings.AddString(skins[skinIndex].param[paramIndex][keyValue]);
-				else if (args[1] == GETSKININFO_INT)
-					return atoi(skins[skinIndex].param[paramIndex][keyValue]);
-				else if (args[1] == GETSKININFO_FLOAT)
-						return FLOAT2FIXED(atof(skins[skinIndex].param[paramIndex][keyValue]));
-			}
-			if (args[1] == GETSKININFO_STRING)
-				return GlobalACSStrings.AddString("");
-			else return 0;
-		}		
+				return 1;
+			return 0;
+		}
 
 		case ACSF_GetActorFloorTexture:
 		{

@@ -522,10 +522,9 @@ void R_InitSkins (void)
 	const PClass *basetype, *transtype;
 	int s_skin = 1; // (0 = skininfo, 1 = s_skin, 2 = s_skin non-changeable)
 	bool lumpSkininfo = false; // are we parsing the SKININFO lumps
-	int pclass; // [BOF] Move pclass outside of class parameter for duplicate name checking.
 	bool rangeChanged; // [BOF] For colorrange parameter
 
-	key[sizeof(key)-1] = 0; 
+	key[sizeof(key)-1] = 0;
 	i = PlayerClasses.Size () - 1;
 	lastlump = 0;
 
@@ -595,7 +594,6 @@ void R_InitSkins (void)
 			transtype = NULL;
 
 			// [BOF] New reinits
-			pclass = NULL; 
 			rangeChanged = false;
 
 			if(s_skin == 1)
@@ -604,7 +602,7 @@ void R_InitSkins (void)
 			//[BL] We'll now go until we hit a '}' in SKININFO format
 			do
 			{
-				if (s_skin == 0 && sc.String[0] == '}')
+				if(s_skin == 0 && sc.String[0] == '}')
 					break;
 
 				strncpy (key, sc.String, sizeof(key)-1);
@@ -620,7 +618,7 @@ void R_InitSkins (void)
 				if (0 == stricmp (key, "name"))
 				{
 					// [BC] MAX_SKIN_NAME.
-					strncpy(skins[i].name, sc.String, MAX_SKIN_NAME);
+					strncpy (skins[i].name, sc.String, MAX_SKIN_NAME);
 
 					// [BOF] Prevent skins from intentionally being named 'skin#'
 					if (strncmp(skins[i].name, "skin", 4) == 0 && sc.StringLen > 4)
@@ -711,13 +709,15 @@ void R_InitSkins (void)
 
 				else if (0 == stricmp (key, "class"))
 				{ // [GRB] Define the skin for a specific player class
-					pclass = D_PlayerClassToInt (sc.String);
+					int pclass = D_PlayerClassToInt (sc.String);
 
 					if (pclass < 0)
 					{
 						remove = true;
 						break;
 					}
+
+					skins[i].classNum = pclass;
 
 					basetype = transtype = PlayerClasses[pclass].Type;
 				}
@@ -824,34 +824,34 @@ void R_InitSkins (void)
 					// [BOF] Custom value support for GetSkinInfo
 					if (sc.String[0] == '[')
 					{
-						sc.GetString();
+						sc.GetToken();
 						do
 						{
 							if (sc.String[0] == ']')
 								break;
 							FString charkey;
 							charkey.Format("%s:%s", key, sc.String); // [BOF] GetSkinInfo Syntax - "key:charkey"
-
+							charkey.ToLower();
 							// If there's no more parsing without hitting ']' or you hit '}' the skin is considered invalid
-							if (!sc.GetString() || sc.String[0] != '=' || sc.String[0] == '}')
+							if (!sc.GetToken() || sc.String[0] != '=' || sc.String[0] == '}')
 							{
 								Printf(PRINT_BOLD, "Bad format for skin %d: %s\n", (int)i, key);
 								remove = true;
 
 								break;
 							}
-							sc.GetString();
+							sc.GetToken();
 							do
 							{
 								if (skins[i].param[charkey].Size() != 0)
-									sc.GetString();
+									sc.GetToken();
 								skins[i].param[charkey].Insert(
-									skins[i].param[charkey].Size(),
-									sc.String);
-							} while (sc.CheckString(","));
+								skins[i].param[charkey].Size(),
+								sc.String);
+							} while (sc.CheckToken(','));
 
-						} while (sc.GetString());
-						if (remove == true) break;
+						} while (sc.GetToken());
+						if (remove == true) throw;
 					}
 
 					else
@@ -859,11 +859,11 @@ void R_InitSkins (void)
 						do
 						{
 							if (skins[i].param[key].Size() != 0)
-								sc.GetString();
+								sc.GetToken();
 							skins[i].param[key].Insert(
-								skins[i].param[key].Size(),
-								sc.String);
-						} while (sc.CheckString(","));
+							skins[i].param[key].Size(),
+							sc.String);
+						} while (sc.CheckToken(','));
 					}
 				}
 			}
@@ -921,15 +921,15 @@ void R_InitSkins (void)
 
 				// [BOF] Check Skin name within its own class instead of globally.
 				bool initialname = false;
-				for (j = 0; j < PlayerClasses[pclass].Skins.Size(); j++)
+				for (j = 0; j < PlayerClasses[skins[i].classNum].Skins.Size(); j++)
 				{
-					if (stricmp(skins[i].name, skins[PlayerClasses[pclass].Skins[j]].name) == 0)
+					if (stricmp(skins[i].name, skins[PlayerClasses[skins[i].classNum].Skins[j]].name) == 0)
 					{
 						if (initialname == true)
 						{
 							mysnprintf(skins[i].name, countof(skins[i].name), "skin%d", (int)i);
 							Printf(PRINT_BOLD, "Skin %s duplicated as %s\n",
-								skins[PlayerClasses[pclass].Skins[j]].name, skins[i].name);
+								skins[PlayerClasses[skins[i].classNum].Skins[j]].name, skins[i].name);
 							break;
 						}
 						initialname = true;
@@ -1142,6 +1142,12 @@ static void R_CreateSkin()
 	skin.bRevealed = true;
 	skin.bRevealedByDefault = true;
 
+	// [BOF] Values for GetSkinInfo
+	skin.classNum = 0; 
+	skin.gender = 0;
+	skin.color = 0;
+	skin.othergame = false;
+
 	skins.Push(skin);
 }
 
@@ -1233,6 +1239,7 @@ void R_InitSprites ()
 		skins[i].ScaleY = GetDefaultByType (basetype)->scaleY;
 		skins[i].sprite = GetDefaultByType (basetype)->SpawnState->sprite;
 		skins[i].namespc = ns_global;
+		skins[i].classNum = i; // [BOF] classNum corresponds to skin number for Base skins.
 
 		PlayerClasses[i].Skins.Push (i);
 
