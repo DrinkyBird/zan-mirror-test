@@ -238,7 +238,7 @@
 !	- All loaded "ALLYA" sprites are now protected. [Kaminsky]
 !	- Changed "opponents" to "enemies", changed the coloring of "allies" and "enemies" to match those used in the target identification, and removed a redundant comma on the HUD. [Kaminsky]
 !	- Changed the default value of "cl_ticsperupdate" from 3 to 1. [Kaminsky]
-!	- Removed the "you fragged x" and "you were fragged by x" console messages that printed when large frag messages appeared. [Kaminsky]
+!	- Large frag messages no longer print console messages when they appear, and are now displayed according to the spied player's perspective. [Kaminsky]
 !	- The login menu automatically sets the username to the client's default username when it's opened for the first time (Windows only). [Kaminsky]
 !	- Clients now update their ping during intermissions and won't timeout when the server receives their response. Lagging icons now appear properly on the scoreboard without clients thinking that they're lagging when they're not. [Kaminsky]
 !	- Ally and enemy icons no longer appear above the head of a player being spied on. [Kaminsky]

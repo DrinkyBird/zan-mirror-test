@@ -151,7 +151,7 @@ static	void	HUD_RenderTeamScores( void );
 static	void	HUD_RenderRankAndSpread( void );
 static	void	HUD_RenderInvasionStats( void );
 static	void	HUD_RenderCountdown( ULONG ulTimeLeft );
-static	void	HUD_DrawFragMessage( void );
+static	void	HUD_DrawFragMessage( const unsigned int displayPlayer );
 
 //*****************************************************************************
 //	CONSOLE VARIABLES
@@ -287,7 +287,7 @@ void HUD_Render( ULONG ulDisplayPlayer )
 	// [AK] Draw the frag message if we have to.
 	if ( g_pFragMessagePlayer != NULL )
 	{
-		HUD_DrawFragMessage( );
+		HUD_DrawFragMessage( ulDisplayPlayer );
 		g_pFragMessagePlayer = NULL;
 		g_bFraggedBy = false;
 	}
@@ -1173,7 +1173,7 @@ static void HUD_RenderCountdown( ULONG ulTimeLeft )
 
 //*****************************************************************************
 //
-static void HUD_DrawFragMessage( void )
+static void HUD_DrawFragMessage( const unsigned int displayPlayer )
 {
 	// [AK] Don't draw large frag messages when the game's no longer in progress.
 	if ( GAMEMODE_IsGameInProgress( ) == false )
@@ -1193,7 +1193,7 @@ static void HUD_DrawFragMessage( void )
 	StatusBar->AttachMessage( pMsg, MAKE_ID( 'F', 'R', 'A', 'G'));
 
 	// [AK] Build the place string.
-	message = HUD_BuildPlaceString( consoleplayer );
+	message = HUD_BuildPlaceString( displayPlayer );
 
 	if ( g_bFraggedBy == false )
 	{
@@ -1204,11 +1204,11 @@ static void HUD_DrawFragMessage( void )
 		{
 			ulMenLeftStanding = GAME_CountLivingAndRespawnablePlayers( ) - 1;
 		}
-		else if (( teamlms ) && ( players[consoleplayer].bOnTeam ))
+		else if (( teamlms ) && ( players[displayPlayer].bOnTeam ))
 		{
 			for ( ULONG ulIdx = 0; ulIdx < teams.Size( ); ulIdx++ )
 			{
-				if (( TEAM_ShouldUseTeam( ulIdx ) == false ) || ( ulIdx == players[consoleplayer].Team ))
+				if (( TEAM_ShouldUseTeam( ulIdx ) == false ) || ( ulIdx == players[displayPlayer].Team ))
 					continue;
 
 				ulMenLeftStanding += TEAM_CountLivingAndRespawnablePlayers( ulIdx );
@@ -1290,6 +1290,8 @@ void HUD_DrawSUBSMessage( const char *pszMessage, EColorRange color, float fHold
 //
 void HUD_PrepareToDrawFragMessage( player_t *pPlayer, AActor *pSource, int MeansOfDeath )
 {
+	player_t *displayPlayer = &players[consoleplayer];
+
 	// [AK] Don't display large frag messages in a cooperative games.
 	if ( GAMEMODE_GetCurrentFlags( ) & GMF_COOPERATIVE )
 		return;
@@ -1303,8 +1305,12 @@ void HUD_PrepareToDrawFragMessage( player_t *pPlayer, AActor *pSource, int Means
 	if ( GAMEMODE_IsGameInProgress( ) == false )
 		return;
 
+	// [AK] Display large frag messages according to the spied player's perspective.
+	if (( players[consoleplayer].camera != nullptr ) && ( players[consoleplayer].camera->player != nullptr ))
+		displayPlayer = players[consoleplayer].camera->player;
+
 	// Prepare a large "You were fragged by <name>." message in the middle of the screen.
-	if ( pPlayer == &players[consoleplayer] )
+	if ( pPlayer == displayPlayer )
 	{
 		if ( cl_showlargefragmessages )
 		{
@@ -1317,7 +1323,7 @@ void HUD_PrepareToDrawFragMessage( player_t *pPlayer, AActor *pSource, int Means
 			G15_ShowLargeFragMessage( pSource->player->userinfo.GetName( ), false );
 	}
 	// Prepare a large "You fragged <name>!" message in the middle of the screen.
-	else if ( static_cast<int>( pSource->player - players ) == consoleplayer )
+	else if ( pSource->player == displayPlayer )
 	{
 		if ( cl_showlargefragmessages )
 		{
