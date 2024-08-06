@@ -183,10 +183,10 @@ CVAR( Bool, cl_autoready, false, CVAR_ARCHIVE )
 
 #ifdef WIN32
 // [AK] Automatically logs us into our default account (i.e. login_default_user).
-CUSTOM_CVAR( Bool, cl_autologin, false, CVAR_ARCHIVE )
+CUSTOM_CVAR( Bool, cl_autologin, false, CVAR_ARCHIVE | CVAR_NOINITCALL )
 {
 	// [AK] Log in automatically when enabling this CVar, if not already.
-	if (( self ) && ( CLIENT_IsLoggedIn( ) == false ))
+	if (( self ) && ( NETWORK_GetState( ) == NETSTATE_CLIENT ) && ( CLIENT_IsLoggedIn( ) == false ))
 		CLIENT_RetrieveUserAndLogIn( login_default_user.GetGenericRep( CVAR_String ).String );
 }
 #endif

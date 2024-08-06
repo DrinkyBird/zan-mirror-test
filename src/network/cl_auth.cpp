@@ -76,7 +76,7 @@ CUSTOM_CVAR( Bool, cl_hideaccount, false, CVAR_ARCHIVE )
 #ifdef _WIN32
 EXTERN_CVAR( Bool, cl_autologin )
 
-CUSTOM_CVAR( String, login_default_user, "", CVAR_ARCHIVE )
+CUSTOM_CVAR( String, login_default_user, "", CVAR_ARCHIVE | CVAR_NOINITCALL )
 {
 	// [AK] Log in automatically when setting a default username, if applicable.
 	if (( NETWORK_GetState( ) == NETSTATE_CLIENT ) && ( CLIENT_IsLoggedIn( ) == false ) && ( cl_autologin ))
