@@ -9854,15 +9854,22 @@ CVAR( Float, cl_motdtime, 5.0, CVAR_ARCHIVE )
 CVAR( Bool, cl_taunts, true, CVAR_ARCHIVE )
 CVAR( Int, cl_showcommands, 0, CVAR_ARCHIVE|CVAR_DEBUGONLY )
 CVAR( Int, cl_showspawnnames, 0, CVAR_ARCHIVE )
-CVAR( Int, cl_connect_flags, CCF_STARTASSPECTATOR, CVAR_ARCHIVE );
-CVAR( Flag, cl_startasspectator, cl_connect_flags, CCF_STARTASSPECTATOR );
-CVAR( Flag, cl_dontrestorefrags, cl_connect_flags, CCF_DONTRESTOREFRAGS )
-CVAR( Flag, cl_hidecountry, cl_connect_flags, CCF_HIDECOUNTRY )
 // [BB] Don't archive the passwords! Otherwise Skulltag would always send
 // the last used passwords to all servers it connects to.
 CVAR( String, cl_password, "password", 0 )
 CVAR( String, cl_joinpassword, "password", 0 )
 CVAR( Bool, cl_hitscandecalhack, true, CVAR_ARCHIVE )
+
+CUSTOM_CVAR( Int, cl_connect_flags, CCF_STARTASSPECTATOR, CVAR_ARCHIVE )
+{
+	// [AK] If CCF_HIDECOUNTRY changed, tell the server to (un)hide our country.
+	if (( NETWORK_GetState( ) == NETSTATE_CLIENT ) && (( self.GetPastValue( ) ^ self ) & CCF_HIDECOUNTRY ))
+		CLIENTCOMMANDS_SetWantHideInfo( HIDEINFO_COUNTRY, !!( self & CCF_HIDECOUNTRY ));
+}
+
+CVAR( Flag, cl_startasspectator, cl_connect_flags, CCF_STARTASSPECTATOR );
+CVAR( Flag, cl_dontrestorefrags, cl_connect_flags, CCF_DONTRESTOREFRAGS )
+CVAR( Flag, cl_hidecountry, cl_connect_flags, CCF_HIDECOUNTRY )
 
 //*****************************************************************************
 //	STATISTICS

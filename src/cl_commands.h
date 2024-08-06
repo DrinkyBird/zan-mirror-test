@@ -112,7 +112,7 @@ void	CLIENTCOMMANDS_InfoCheat( AActor* mobj, bool extended );
 void	CLIENTCOMMANDS_WarpCheat( fixed_t x, fixed_t y );
 void	CLIENTCOMMANDS_KillCheat( const char* what );
 void	CLIENTCOMMANDS_SpecialCheat( int special, const TArray<int>& args );
-void	CLIENTCOMMANDS_SetWantHideAccount( bool wantHideCountry );
+void	CLIENTCOMMANDS_SetWantHideInfo( const int info, const bool value );
 void	CLIENTCOMMANDS_SetVideoResolution();
 void	CLIENTCOMMANDS_RCONSetCVar( const char *cvarName, const char *cvarValue );
 void	CLIENTCOMMANDS_VoIPAudioPacket( const unsigned int frame, const unsigned char *data, const unsigned int length );

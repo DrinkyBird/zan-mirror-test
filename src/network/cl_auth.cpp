@@ -70,7 +70,7 @@ static FString g_password;
 CUSTOM_CVAR( Bool, cl_hideaccount, false, CVAR_ARCHIVE )
 {
 	if ( NETWORK_GetState() == NETSTATE_CLIENT )
-		CLIENTCOMMANDS_SetWantHideAccount( self );
+		CLIENTCOMMANDS_SetWantHideInfo( HIDEINFO_ACCOUNTNAME, self );
 }
 
 #ifdef _WIN32

@@ -851,11 +851,12 @@ void CLIENTCOMMANDS_SpecialCheat( int special, const TArray<int> &args )
 }
 
 //*****************************************************************************
-// [TP]
-void CLIENTCOMMANDS_SetWantHideAccount( bool wantHideAccount )
+// [TP/AK]
+void CLIENTCOMMANDS_SetWantHideInfo( const int info, const bool value )
 {
-	CLIENT_GetLocalBuffer( )->ByteStream.WriteByte( CLC_SETWANTHIDEACCOUNT );
-	CLIENT_GetLocalBuffer( )->ByteStream.WriteByte( wantHideAccount );
+	CLIENT_GetLocalBuffer( )->ByteStream.WriteByte( CLC_SETWANTHIDEINFO );
+	CLIENT_GetLocalBuffer( )->ByteStream.WriteByte( info );
+	CLIENT_GetLocalBuffer( )->ByteStream.WriteByte( value );
 }
 
 //*****************************************************************************

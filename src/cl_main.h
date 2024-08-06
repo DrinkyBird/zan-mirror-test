@@ -89,6 +89,16 @@ enum CONNECTIONSTATE_e
 
 };
 
+// [AK] Information that the client can tell the server to (un)hide.
+enum
+{
+	// Their account name.
+	HIDEINFO_ACCOUNTNAME,
+
+	// Their country.
+	HIDEINFO_COUNTRY,
+};
+
 //[BB] Client connect flags.
 enum
 {

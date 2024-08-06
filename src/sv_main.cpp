@@ -5150,16 +5150,30 @@ bool SERVER_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 		}
 		break;
 
-	case CLC_SETWANTHIDEACCOUNT:
-		// [TP] Player changes his stance on whether or not he wants his account to be displayed.
+	case CLC_SETWANTHIDEINFO:
+		// [TP/AK] Player changes his stance on whether or not he wants his info to be displayed.
 		{
 			// [TP] If the client is flooding the server with commands, the client is
 			// kicked and we don't need to handle the command.
 			if ( server_CheckForClientMinorCommandFlood ( g_lCurrentClient ) == true )
 				return ( true );
 
-			SERVER_GetClient( SERVER_GetCurrentClient() )->WantHideAccount = !!pByteStream->ReadByte();
-			SERVERCOMMANDS_SetPlayerAccountName( g_lCurrentClient );
+			CLIENT_s *const client = SERVER_GetClient( SERVER_GetCurrentClient());
+			const int info = pByteStream->ReadByte();
+			const bool value = !!pByteStream->ReadByte();
+
+			if ( info == HIDEINFO_ACCOUNTNAME )
+			{
+				client->WantHideAccount = value;
+				SERVERCOMMANDS_SetPlayerAccountName( g_lCurrentClient );
+			}
+			else if ( info == HIDEINFO_COUNTRY )
+			{
+				client->bWantHideCountry = value;
+
+				if ( players[g_lCurrentClient].ulCountryIndex > 0 )
+					SERVERCOMMANDS_SetPlayerCountry( g_lCurrentClient );
+			}
 		}
 		return false;
 

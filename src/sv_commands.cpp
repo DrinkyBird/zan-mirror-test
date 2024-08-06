@@ -634,7 +634,13 @@ void SERVERCOMMANDS_SetPlayerCountry( ULONG ulPlayer, ULONG ulPlayerExtra, Serve
 {
 	ServerCommands::SetPlayerCountry command;
 	command.SetPlayer( &players[ulPlayer] );
-	command.SetCountry( players[ulPlayer].ulCountryIndex );
+
+	// [AK] Set the country to "N/A" if the player so wishes.
+	if ( SERVER_GetClient( ulPlayer )->bWantHideCountry )
+		command.SetCountry( 0 );
+	else
+		command.SetCountry( players[ulPlayer].ulCountryIndex );
+
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
