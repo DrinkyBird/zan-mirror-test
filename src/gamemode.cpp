@@ -852,6 +852,10 @@ void GAMEMODE_RespawnAllPlayers( BOTEVENT_e BotEvent, playerstate_t PlayerState 
 	// [BB] This is server side.
 	if ( NETWORK_InClientMode() == false )
 	{
+		// [AK] In offline games, remember the old player that was being spied on.
+		player_t *const localPlayer = &players[consoleplayer];
+		player_t *const oldSpiedPlayer = (( NETWORK_GetState( ) != NETSTATE_SERVER ) && ( localPlayer->camera )) ? localPlayer->camera->player : nullptr;
+
 		// Respawn the players.
 		for ( ULONG ulIdx = 0; ulIdx < MAXPLAYERS; ulIdx++ )
 		{
@@ -886,6 +890,15 @@ void GAMEMODE_RespawnAllPlayers( BOTEVENT_e BotEvent, playerstate_t PlayerState 
 
 			if ( players[ulIdx].pSkullBot && ( BotEvent < NUM_BOTEVENTS ) )
 				players[ulIdx].pSkullBot->PostEvent( BotEvent );
+		}
+
+		// [AK] After all players have respawned, return the local player's view
+		// back to the player they were spying on before, if they were spectating.
+		// We must do this here because the old player's body was destroyed.
+		if (( NETWORK_GetState( ) != NETSTATE_SERVER ) && ( localPlayer->bSpectating ))
+		{
+			if (( oldSpiedPlayer != nullptr ) && ( oldSpiedPlayer != localPlayer ) && ( oldSpiedPlayer->mo != nullptr ))
+				localPlayer->camera = oldSpiedPlayer->mo;
 		}
 	}
 }
