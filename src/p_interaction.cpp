@@ -3803,7 +3803,16 @@ CCMD( spectate )
 
 	// Already a spectator!
 	if ( PLAYER_IsTrueSpectator( &players[consoleplayer] ))
+	{
+		// [AK] If the local player is in the join queue, then remove them.
+		if ( JOINQUEUE_GetPositionInLine( consoleplayer ) != -1 )
+		{
+			JOINQUEUE_RemovePlayerFromQueue( consoleplayer );
+			Printf( "You have been removed from the join queue.\n" );
+		}
+
 		return;
+	}
 
 	// Make the player a spectator.
 	PLAYER_SetSpectator( &players[consoleplayer], true, false );
