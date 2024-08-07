@@ -120,6 +120,24 @@ void P_SerializePlayers (FArchive &arc, bool skipload)
 		}
 		// Redo pitch limits, since the spawned player has them at 0.
 		players[consoleplayer].SendPitchLimits();
+
+		// [AK] Stuff to do if the local player was spectating.
+		if ( players[consoleplayer].bSpectating )
+		{
+			// [AK] If they're a dead spectator, make them a true spectator.
+			if ( players[consoleplayer].bDeadSpectator )
+				PLAYER_SetSpectator( &players[consoleplayer], false, false );
+
+			// [AK] Set the NOINTERACTION flag depending on whether or not
+			// they're using source-engine noclipping.
+			if ( players[consoleplayer].mo != nullptr )
+			{
+				if ( P_IsUsingSourceEngineNoClip( players[consoleplayer].mo ))
+					players[consoleplayer].mo->flags5 |= MF5_NOINTERACTION;
+				else
+					players[consoleplayer].mo->flags5 &= ~MF5_NOINTERACTION;
+			}
+		}
 	}
 }
 

@@ -188,6 +188,7 @@
 -	- Fixed: players would lose a life if they stayed dead before a wave began, or respawned when a wave was complete, in survival invasion. [Kaminsky]
 -	- Fixed: the local player didn't keep viewing whoever they were spying on (as a spectator) when all players respawned during a map reset in offline games. [Kaminsky]
 -	- Fixed: the local player couldn't remove themselves from the join queue with the "spectate" CCMD in offline games. [Kaminsky]
+-	- Fixed: savegames didn't store the player's spectator status. [Kaminsky]
 !	- The result value of GAMEEVENT_MEDALS event scripts can now be used to determine whether or not the player receives the medal. [Kaminsky]
 !	- GAMEMODE flags are now validated after all GAMEMODE lumps have been parsed instead of after each one. The internal game mode name (e.g. "TeamLMS") is now printed with the error message instead of the actual name. [Kaminsky]
 !	- Added an extra check to ensure that game modes have a (short) name. [Kaminsky]

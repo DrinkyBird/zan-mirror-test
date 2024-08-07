@@ -4411,6 +4411,8 @@ void player_t::Serialize (FArchive &arc)
 		<< bOnTeam
 		<< Team
 		<< statuses
+		<< bSpectating
+		<< bDeadSpectator
 		<< RailgunShots
 		<< MaxHealthBonus
 		<< cheats2
