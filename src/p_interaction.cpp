@@ -2436,6 +2436,9 @@ void PLAYER_SetSpectator( player_t *pPlayer, bool bBroadcast, bool bDeadSpectato
 
 				// This player no longer has a team affiliation.
 				pPlayer->bOnTeam = false;
+
+				// [AK] The spectator count has changed, so refresh the HUD.
+				HUD_ShouldRefreshBeforeRendering( );
 			}
 		}
 
