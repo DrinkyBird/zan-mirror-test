@@ -3374,6 +3374,13 @@ void P_DeathThink (player_t *player)
 			{
 				PLAYER_SetLivesLeft ( player, player->ulLivesLeft - 1 );
 			}
+
+			// [AK] Destroy the player's icon at this time too.
+			if ( player->pIcon != nullptr )
+			{
+				player->pIcon->Destroy( );
+				player->pIcon = nullptr;
+			}
 		}
 //		else if ( player->pSkullBot )
 //		{

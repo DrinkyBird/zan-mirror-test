@@ -311,7 +311,8 @@ void MEDAL_Tick( void )
 
 		// [BB] If the player is being awarded a medal at the moment but has no icon, restore the medal.
 		// This happens when the player respawns while being awarded a medal.
-		if (( medalQueue[ulIdx].medals.empty( ) == false ) && ( players[ulIdx].pIcon == nullptr ))
+		// [AK] Don't spawn the icon while the player is still respawning.
+		if (( medalQueue[ulIdx].medals.empty( ) == false ) && ( players[ulIdx].pIcon == nullptr ) && ( players[ulIdx].playerstate != PST_REBORN ))
 			medal_TriggerMedal( ulIdx );
 
 		// [BB] Remove any old carrier icons.
@@ -1136,7 +1137,8 @@ void medal_SelectIcon( player_t *player )
 
 		if (( player->pIcon == nullptr ) || ( desiredSprite != player->pIcon->currentSprite ))
 		{
-			if ( player->pIcon == NULL )
+			// [AK] Don't spawn the icon while the player is still respawning.
+			if (( player->pIcon == nullptr ) && ( player->playerstate != PST_REBORN ))
 			{
 				player->pIcon = Spawn<AFloatyIcon>( player->mo->x, player->mo->y, player->mo->z + player->mo->height + ( 4 * FRACUNIT ), ALLOW_REPLACE );
 
