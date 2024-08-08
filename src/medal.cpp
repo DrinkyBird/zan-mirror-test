@@ -831,7 +831,8 @@ ULONG medal_GetDesiredIcon( player_t *pPlayer, AInventory *&pTeamItem )
 		player_t *viewedPlayer = &players[HUD_GetViewPlayer( )];
 
 		// [BB] Dead spectators shall see the icons for their teammates or enemies.
-		if ( PLAYER_IsTrueSpectator( viewedPlayer ) == false )
+		// [AK] Don't draw the icon for the player being spied on.
+		if (( PLAYER_IsTrueSpectator( viewedPlayer ) == false ) && ( viewedPlayer != pPlayer ))
 		{
 			if ( pPlayer->mo->IsTeammate( viewedPlayer->mo ))
 			{
@@ -970,12 +971,13 @@ void medal_SelectIcon( player_t *player )
 
 				// Ally icon. Delete it if the player is now our enemy or if we're spectating.
 				// [BB] Dead spectators shall keep the icon for their teammates.
+				// [AK] Also delete it if the player is who we're spying on.
 				case SPRITE_ALLY:
 				case SPRITE_ENEMY:
 				{
 					player_t *viewedPlayer = &players[HUD_GetViewPlayer( )];
 
-					if ( PLAYER_IsTrueSpectator( viewedPlayer ))
+					if (( PLAYER_IsTrueSpectator( viewedPlayer )) || ( viewedPlayer == player ))
 					{
 						deleteIcon = true;
 					}
