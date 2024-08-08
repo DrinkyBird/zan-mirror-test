@@ -179,9 +179,6 @@ CCMD ( acstime )
 
 extern FILE *Logfile;
 
-// [AK] We need this for SetPlayerClass.
-extern FRandom pr_classchoice;
-
 FRandom pr_acs ("ACS");
 
 // I imagine this much stack space is probably overkill, but it could
@@ -7517,10 +7514,6 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 						return 0;
 
 					player->userinfo.PlayerClassNumChanged( -1 );
-
-					// [AK] In a singleplayer game, we must also change the class the player would start as.
-					if ( NETWORK_GetState() != NETSTATE_SERVER )
-						SinglePlayerClass[ulPlayer] = ( pr_classchoice() ) % PlayerClasses.Size();
 				}
 				else
 				{
@@ -7536,11 +7529,11 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 						return 0;
 
 					player->userinfo.PlayerClassChanged( playerclass->Meta.GetMetaString( APMETA_DisplayName ));
-
-					// [AK] In a singleplayer game, we must also change the class the player would start as.
-					if ( NETWORK_GetState() != NETSTATE_SERVER )
-						SinglePlayerClass[ulPlayer] = player->userinfo.GetPlayerClassNum();
 				}
+
+				// [AK] In a singleplayer game, we must also change the class the player would start as.
+				if ( NETWORK_GetState() != NETSTATE_SERVER )
+					G_UpdateSinglePlayerClass( ulPlayer );
 
 				// [AK] If we're the server, tell the clients about the player's new class.
 				if ( NETWORK_GetState() == NETSTATE_SERVER )

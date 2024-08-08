@@ -190,6 +190,7 @@
 -	- Fixed: the local player couldn't remove themselves from the join queue with the "spectate" CCMD in offline games. [Kaminsky]
 -	- Fixed: savegames didn't store the player's spectator status. [Kaminsky]
 -	- Fixed: when the player changed their class through the class selection menu or console, it didn't take effect when they spawned for the first time in offline games. [Kaminsky]
+-	- Fixed: the "SetPlayerClass" ACS function could assign a random class that's forbidden to the player's team in offline games. [Kaminsky]
 !	- The result value of GAMEEVENT_MEDALS event scripts can now be used to determine whether or not the player receives the medal. [Kaminsky]
 !	- GAMEMODE flags are now validated after all GAMEMODE lumps have been parsed instead of after each one. The internal game mode name (e.g. "TeamLMS") is now printed with the error message instead of the actual name. [Kaminsky]
 !	- Added an extra check to ensure that game modes have a (short) name. [Kaminsky]
