@@ -320,7 +320,7 @@ void MEDAL_Tick( void )
 		// Don't render icons floating above our own heads.
 		if ( players[ulIdx].pIcon )
 		{
-			if (( players[ulIdx].mo->CheckLocalView( consoleplayer )) && (( players[ulIdx].cheats & CF_CHASECAM ) == false ))
+			if (( players[ulIdx].mo->CheckLocalView( consoleplayer )) && (( players[consoleplayer].cheats & CF_CHASECAM ) == false ))
 				players[ulIdx].pIcon->renderflags |= RF_INVISIBLE;
 			else
 				players[ulIdx].pIcon->renderflags &= ~RF_INVISIBLE;
