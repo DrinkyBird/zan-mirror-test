@@ -132,7 +132,6 @@ void G_VerifySkill();
 
 
 static FRandom pr_classchoice ("RandomPlayerClassChoice");
-static	FRandom		g_RandomMapSeed( "MapSeed" );
 
 extern level_info_t TheDefaultLevelInfo;
 extern bool timingdemo;
