@@ -3440,14 +3440,7 @@ void PLAYER_JoinGameFromSpectators( int iChar )
 	}
 
 	// [BB] In single player, allow the player to switch its class when changing from spectator to player.
-	if ( ( NETWORK_GetState( ) == NETSTATE_SINGLE ) || ( NETWORK_GetState( ) == NETSTATE_SINGLE_MULTIPLAYER ) )
-	{
-		SinglePlayerClass[consoleplayer] = players[consoleplayer].userinfo.GetPlayerClassNum();
-
-		// [AK] Assign a random class for the player if necessary.
-		if ( SinglePlayerClass[consoleplayer] < 0 )
-			SinglePlayerClass[consoleplayer] = ( pr_classchoice() ) % PlayerClasses.Size();
-	}
+	G_UpdateSinglePlayerClass( consoleplayer );
 
 	PLAYER_SpectatorJoinsGame( &players[consoleplayer] );
 	players[consoleplayer].camera = players[consoleplayer].mo;

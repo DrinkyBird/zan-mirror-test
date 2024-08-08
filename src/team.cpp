@@ -2158,6 +2158,9 @@ CCMD( changeteam )
 		// Set the new team.
 		PLAYER_SetTeam( &players[consoleplayer], lDesiredTeam, true );
 
+		// [AK] Allow the local player to switch their class in single player games.
+		G_UpdateSinglePlayerClass( consoleplayer );
+
 		// Player was on a team, so tell everyone that he's changing teams.
 		if ( bOnTeam )
 		{

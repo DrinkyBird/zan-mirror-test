@@ -559,6 +559,7 @@ struct PNGHandle;
 void G_ReadSnapshots (PNGHandle *png);
 void G_WriteSnapshots (FILE *file);
 void G_ClearHubInfo();
+void G_UpdateSinglePlayerClass (const unsigned int player); // [AK]
 
 enum ESkillProperty
 {

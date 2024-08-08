@@ -1067,6 +1067,11 @@ CCMD ( menu_joingamewithclass )
 			playerclass = "Random";
 		else
 			playerclass = GetPrintableDisplayName( PlayerClasses[menu_joinclassidx].Type );
+
+		// [AK] It's not enough to change the playerclass CVar to the new class's name.
+		// The local player's userinfo must be updated too.
+		players[consoleplayer].userinfo.PlayerClassChanged( playerclass );
+
 		M_DoJoinFromMenu();
 	}
 }

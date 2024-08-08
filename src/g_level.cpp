@@ -373,6 +373,32 @@ static void InitPlayerClasses ()
 
 //==========================================================================
 //
+// [AK] Updates a player's class in single player games.
+//
+//==========================================================================
+
+void G_UpdateSinglePlayerClass (const unsigned int player)
+{
+	if ((NETWORK_GetState() != NETSTATE_SINGLE) && (NETWORK_GetState() != NETSTATE_SINGLE_MULTIPLAYER))
+		return;
+
+	if (PLAYER_IsValidPlayer(player) == false)
+		return;
+
+	SinglePlayerClass[player] = players[player].userinfo.GetPlayerClassNum();
+
+	// [AK] Assign a random class for the player if necessary.
+	if (SinglePlayerClass[player] < 0)
+	{
+		if (players[player].bOnTeam)
+			SinglePlayerClass[player] = TEAM_SelectRandomValidPlayerClass(players[player].Team);
+		else
+			SinglePlayerClass[player] = (pr_classchoice()) % PlayerClasses.Size();
+	}
+}
+
+//==========================================================================
+//
 //
 //==========================================================================
 
