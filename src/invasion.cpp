@@ -99,6 +99,23 @@ static	FString				g_CurrentWaveString; // [AK]
 static	std::vector<AActor*> g_MonsterCorpsesFromPreviousWave;
 
 //*****************************************************************************
+//	CONSOLE VARIABLES
+
+CVAR( Int, sv_invasioncountdowntime, 10, CVAR_ARCHIVE | CVAR_GAMEPLAYSETTING )
+CVAR( Bool, sv_usemapsettingswavelimit, true, CVAR_ARCHIVE | CVAR_GAMEPLAYSETTING )
+
+CUSTOM_CVAR( Int, wavelimit, 0, CVAR_CAMPAIGNLOCK | CVAR_SERVERINFO | CVAR_GAMEPLAYSETTING )
+{
+	if ( self >= 256 )
+		self = 255;
+	if ( self < 0 )
+		self = 0;
+
+	// [AK] Update the clients and update the server console.
+	SERVER_SettingChanged( self, true );
+}
+
+//*****************************************************************************
 //	STRUCTURES
 
 FName ABaseMonsterInvasionSpot::GetSpawnName( void )
@@ -1627,19 +1644,3 @@ static void invasion_BuildCurrentWaveString( void )
 
 	g_CurrentWaveString += " Wave";
 }
-
-//*****************************************************************************
-//	CONSOLE COMMANDS/VARIABLES
-
-CVAR( Int, sv_invasioncountdowntime, 10, CVAR_ARCHIVE | CVAR_GAMEPLAYSETTING );
-CUSTOM_CVAR( Int, wavelimit, 0, CVAR_CAMPAIGNLOCK | CVAR_SERVERINFO | CVAR_GAMEPLAYSETTING )
-{
-	if ( self >= 256 )
-		self = 255;
-	if ( self < 0 )
-		self = 0;
-
-	// [AK] Update the clients and update the server console.
-	SERVER_SettingChanged( self, true );
-}
-CVAR( Bool, sv_usemapsettingswavelimit, true, CVAR_ARCHIVE | CVAR_GAMEPLAYSETTING );
