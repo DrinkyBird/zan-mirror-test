@@ -228,6 +228,7 @@ bool		GAMEMODE_AreSpectatorsForbiddenToChatToPlayers( const bool doVoice );
 bool		GAMEMODE_IsClientForbiddenToChatToPlayers( const ULONG client, const bool doVoice );
 bool		GAMEMODE_PreventPlayersFromJoining( ULONG ulExcludePlayer = MAXPLAYERS );
 bool		GAMEMODE_AreLivesLimited( void );
+bool		GAMEMODE_ShouldPlayerLoseLife( void );
 bool		GAMEMODE_IsPlayerCarryingGameModeItem( player_t *player );
 unsigned int	GAMEMODE_GetMaxLives( void );
 void		GAMEMODE_AdjustActorSpawnFlags ( AActor *pActor );

@@ -1211,6 +1211,18 @@ void INVASION_DoWaveComplete( void )
 	// Put the invasion state in the win sequence state.
 	if ( NETWORK_InClientMode() == false )
 	{
+		// [AK] In survival invasion, any players that are still dead and haven't
+		// respawned at this point must lose one life. They won't lose a life
+		// if they respawn when a wave is complete.
+		if ( sv_maxlives > 0 )
+		{
+			for ( unsigned int i = 0; i < MAXPLAYERS; i++ )
+			{
+				if (( playeringame[i] ) && ( players[i].playerstate == PST_DEAD ) && ( players[i].ulLivesLeft > 0 ))
+					PLAYER_SetLivesLeft( &players[i], players[i].ulLivesLeft - 1 );
+			}
+		}
+
 		INVASION_SetState( IS_WAVECOMPLETE );
 	}
 

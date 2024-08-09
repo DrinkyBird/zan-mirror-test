@@ -723,7 +723,7 @@ void AActor::Die (AActor *source, AActor *inflictor, int dmgflags)
 		FBehavior::StaticStartTypedScripts (SCRIPT_Death, this, true);
 
 		// [EP] Avoid instant body disappearing if the player had no lives left.
-		bool bNoMoreLivesLeft = ( GAMEMODE_AreLivesLimited() && GAMEMODE_IsGameInProgress() && ( player->ulLivesLeft == 0 ));
+		bool bNoMoreLivesLeft = (( GAMEMODE_ShouldPlayerLoseLife( )) && ( player->ulLivesLeft == 0 ));
 
 		// [RH] Force a delay between death and respawn
 		if ((( zacompatflags & ZACOMPATF_INSTANTRESPAWN ) == false ) ||

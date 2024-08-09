@@ -3317,8 +3317,8 @@ void P_DeathThink (player_t *player)
 		}
 	}
 
-	// [BB] If lives are limited and the game is in progess, possibly put the player in dead spectator mode.
-	if ( GAMEMODE_AreLivesLimited ( ) && GAMEMODE_IsGameInProgress ( ) )
+	// [BB/AK] If lives are limited and the player must lose a life, possibly put the player in dead spectator mode.
+	if ( GAMEMODE_ShouldPlayerLoseLife( ))
 	{
 		if ( level.time >= player->respawn_time )
 		{
@@ -3369,9 +3369,8 @@ void P_DeathThink (player_t *player)
 			{
 				player->mo->special1 = 0;
 			}
-			// [BB] The player will be reborn, so take away one life, but only if the game is already in progress.
-			// [AK] Don't take a life away in survival invasion when a wave is complete.
-			if (( player->ulLivesLeft > 0 ) && (( GAMEMODE_IsGameInProgress( )) && ( invasion == false || INVASION_GetState( ) != IS_WAVECOMPLETE )))
+			// [BB/AK] The player will be reborn, so take away one life, but only if they must lose one.
+			if (( player->ulLivesLeft > 0 ) && ( GAMEMODE_ShouldPlayerLoseLife( )))
 			{
 				PLAYER_SetLivesLeft ( player, player->ulLivesLeft - 1 );
 			}

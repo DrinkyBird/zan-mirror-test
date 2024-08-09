@@ -1029,6 +1029,14 @@ bool GAMEMODE_AreLivesLimited( void )
 
 //*****************************************************************************
 //
+bool GAMEMODE_ShouldPlayerLoseLife( void )
+{
+	// [AK] Players don't lose lives in survival invasion when a wave is complete.
+	return (( GAMEMODE_AreLivesLimited( )) && ( GAMEMODE_IsGameInProgress( )) && (( invasion == false ) || ( INVASION_GetState( ) != IS_WAVECOMPLETE )));
+}
+
+//*****************************************************************************
+//
 bool GAMEMODE_IsPlayerCarryingGameModeItem( player_t *player )
 {
 	GAMEMODE_e mode = GAMEMODE_GetCurrentMode( );
