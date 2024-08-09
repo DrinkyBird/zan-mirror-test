@@ -794,6 +794,18 @@ void GAMEMODE_RespawnDeadPlayers( playerstate_t deadSpectatorState, playerstate_
 			continue;
 		}
 
+		// [AK] Using PST_DEAD for the state means to ignore them, in case only
+		// dead players should respawn but not dead spectators, and vice-versa.
+		if ( players[ulIdx].bDeadSpectator )
+		{
+			if ( deadSpectatorState == PST_DEAD )
+				continue;
+		}
+		else if ( deadPlayerState == PST_DEAD )
+		{
+			continue;
+		}
+
 		// [AK] When dead players (i.e. not dead spectators) are respawned with
 		// PST_REBORN, their lives aren't fully replenished like it is for dead
 		// spectators. If the game was already in progress, then they will also
@@ -999,6 +1011,10 @@ bool GAMEMODE_PreventPlayersFromJoining( ULONG ulExcludePlayer )
 	// (the consoleplayer is spawned as spectator in this case and leaves a ghost player upon joining)
 	if ( ( gameaction != ga_worlddone ) && ( gameaction != ga_newgame ) && GAMEMODE_AreLivesLimited() && GAMEMODE_IsGameInProgressOrResultSequence() )
 			return true;
+
+	// [AK] Check if it's survival invasion and the player is allowed to join.
+	if ( INVASION_PreventPlayersFromJoining( ))
+		return true;
 
 	return false;
 }
