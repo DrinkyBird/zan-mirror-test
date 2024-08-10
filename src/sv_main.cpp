@@ -1129,12 +1129,11 @@ void SERVER_CheckTimeouts( void )
 		}
 
 		// Also check to see if the client is lagging.
-		// [AK] Spectators don't send updates as often as in-game players do, so give
-		// them more time before marking them as lagging.
-		if ( lastCommandTicDiff >= ( players[ulIdx].bSpectating ? TICRATE * 5 : TICRATE ))
+		// [AK] Players don't send updates as often during intermissions or when
+		// they're spectating, so give them more time before marking them as lagging.
+		if ( lastCommandTicDiff >= (( gamestate == GS_INTERMISSION || players[ulIdx].bSpectating ) ? TICRATE * 5 : TICRATE ))
 		{
-			// Have not heard from the client in at least one second; mark him as
-			// lagging and tell clients.
+			// Have not heard from them in a while; mark them as lagging and tell clients.
 			if (( players[ulIdx].statuses & PLAYERSTATUS_LAGGING ) == false )
 				PLAYER_SetStatus( &players[ulIdx], PLAYERSTATUS_LAGGING, true );
 		}
@@ -3272,7 +3271,7 @@ void SERVER_SendHeartBeat( void )
 	ULONG	ulIdx;
 
 	// Ping clients once every second.
-	if (( gametic % ( 1 * TICRATE )) || ( gamestate == GS_INTERMISSION ))
+	if ( gametic % TICRATE )
 		return;
 
 	SERVERCOMMANDS_Ping( I_MSTime( ));
@@ -6340,6 +6339,9 @@ static bool server_UpdateClientPing( BYTESTREAM_s *pByteStream )
 		if ( p->ulPingAverages < 20 )
 			p->ulPingAverages++;
 	}
+
+	// [AK] Don't let the client timeout.
+	g_aClients[g_lCurrentClient].ulLastCommandTic = gametic;
 
 	return ( false );
 }
