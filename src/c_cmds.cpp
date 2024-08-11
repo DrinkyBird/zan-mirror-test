@@ -97,7 +97,13 @@ extern char g_szActualLogFilename[512];
 
 // [AK] Don't let ConsoleCommand change the value of sv_cheats.
 CVAR (Bool, sv_cheats, false, CVAR_SERVERINFO | CVAR_LATCH | CVAR_NOSETBYACS)
-CVAR (Bool, sv_unlimited_pickup, false, CVAR_SERVERINFO)
+
+// [AK] Changed sv_unlimited_pickup to CUSTOM_CVAR, to sync the value with clients.
+CUSTOM_CVAR (Bool, sv_unlimited_pickup, false, CVAR_SERVERINFO)
+{
+	SERVER_SettingChanged(self, false);
+}
+
 CVAR (Bool, sv_logfilenametimestamp, true, CVAR_ARCHIVE)
 CVAR (Bool, sv_logfile_append, false, CVAR_ARCHIVE)
 

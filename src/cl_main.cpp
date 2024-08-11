@@ -164,6 +164,7 @@ EXTERN_CVAR( Bool, cl_hideaccount )
 EXTERN_CVAR( Int, cl_ticsperupdate )
 EXTERN_CVAR( String, name )
 EXTERN_CVAR( Bool, cl_telespy )
+EXTERN_CVAR( Bool, sv_unlimited_pickup )
 
 //*****************************************************************************
 //	CONSOLE COMMANDS/VARIABLES
@@ -6090,16 +6091,20 @@ static void client_SetGameModeLimits( BYTESTREAM_s *pByteStream )
 	sv_coop_damagefactor.ForceSet( Value, CVAR_Float );
 
 	// [WS] Read in, and set the value for alwaysapplydmflags.
-	Value.Bool = !!pByteStream->ReadByte();
+	Value.Bool = pByteStream->ReadBit();
 	alwaysapplydmflags.ForceSet( Value, CVAR_Bool );
 
-	// [AM] Read in, and set the value for lobby.
-	Value.String = const_cast<char*>(pByteStream->ReadString());
-	lobby.ForceSet( Value, CVAR_String );
+	// [AK] Read in, and set the value for sv_unlimited_pickup.
+	Value.Bool = pByteStream->ReadBit();
+	sv_unlimited_pickup.ForceSet( Value, CVAR_Bool );
 
 	// [TP] Yea.
-	Value.Bool = !!pByteStream->ReadByte();
+	Value.Bool = pByteStream->ReadBit();
 	sv_limitcommands.ForceSet( Value, CVAR_Bool );
+
+	// [AM] Read in, and set the value for lobby.
+	Value.String = const_cast<char*>( pByteStream->ReadString());
+	lobby.ForceSet( Value, CVAR_String );
 
 	// [AK] Read in, and set the value for sv_allowprivatechat.
 	Value.Int = pByteStream->ReadByte();

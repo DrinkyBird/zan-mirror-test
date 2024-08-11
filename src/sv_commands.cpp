@@ -90,6 +90,7 @@
 CVAR (Bool, sv_showwarnings, false, CVAR_GLOBALCONFIG|CVAR_ARCHIVE)
 
 EXTERN_CVAR( Float, sv_aircontrol )
+EXTERN_CVAR( Bool, sv_unlimited_pickup )
 
 //*****************************************************************************
 //	FUNCTIONS
@@ -2480,11 +2481,13 @@ void SERVERCOMMANDS_SetGameModeLimits( ULONG ulPlayerExtra, ServerCommandFlags f
 	// [WS] Send in sv_coop_damagefactor.
 	command.addFloat( sv_coop_damagefactor );
 	// [WS] Send in alwaysapplydmflags.
-	command.addByte( alwaysapplydmflags );
+	command.addBit( alwaysapplydmflags );
+	// [AK] Send sv_unlimited_pickup.
+	command.addBit( sv_unlimited_pickup );
+	// [TP] Send sv_limitcommands
+	command.addBit( sv_limitcommands );
 	// [AM] Send lobby map.
 	command.addString( lobby );
-	// [TP] Send sv_limitcommands
-	command.addByte( sv_limitcommands );
 	// [AK] Send sv_allowprivatechat.
 	command.addByte( sv_allowprivatechat );
 	// [AK] Send sv_allowvoicechat.
