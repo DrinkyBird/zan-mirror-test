@@ -317,15 +317,6 @@ void MEDAL_Tick( void )
 
 		// [BB] Remove any old carrier icons.
 		medal_PlayerHasCarrierIcon( &players[ulIdx] );
-
-		// Don't render icons floating above our own heads.
-		if ( players[ulIdx].pIcon )
-		{
-			if (( players[ulIdx].mo->CheckLocalView( consoleplayer )) && (( players[consoleplayer].cheats & CF_CHASECAM ) == false ))
-				players[ulIdx].pIcon->renderflags |= RF_INVISIBLE;
-			else
-				players[ulIdx].pIcon->renderflags &= ~RF_INVISIBLE;
-		}
 	}
 }
 
