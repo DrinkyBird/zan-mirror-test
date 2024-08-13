@@ -74,6 +74,7 @@
 #include "st_hud.h"
 #include "c_console.h"
 #include "voicechat.h"
+#include "p_tick.h"
 
 // [AK] Implement the string table and the conversion functions for the medal enums.
 #define GENERATE_ENUM_STRINGS  // Start string generation
@@ -271,9 +272,9 @@ void MEDAL_Construct( void )
 //
 void MEDAL_Tick( void )
 {
-	ULONG	ulIdx;
+	const bool isPaused = (( paused ) || ( P_CheckTickerPaused( )));
 
-	for ( ulIdx = 0; ulIdx < MAXPLAYERS; ulIdx++ )
+	for ( ULONG ulIdx = 0; ulIdx < MAXPLAYERS; ulIdx++ )
 	{
 		// No need to do anything.
 		if ( playeringame[ulIdx] == false )
@@ -281,7 +282,7 @@ void MEDAL_Tick( void )
 
 		// Tick down the duration of the medal on the top of the queue. If time
 		// has expired on this medal, pop it and potentially trigger a new one.
-		if (( medalQueue[ulIdx].medals.empty( ) == false ) && ( medalQueue[ulIdx].ticks ) && ( --medalQueue[ulIdx].ticks == 0 ))
+		if (( isPaused == false ) && ( medalQueue[ulIdx].medals.empty( ) == false ) && ( medalQueue[ulIdx].ticks ) && ( --medalQueue[ulIdx].ticks == 0 ))
 		{
 			medalQueue[ulIdx].medals.erase( medalQueue[ulIdx].medals.begin( ));
 
