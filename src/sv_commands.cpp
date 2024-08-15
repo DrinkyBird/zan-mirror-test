@@ -2486,6 +2486,8 @@ void SERVERCOMMANDS_SetGameModeLimits( ULONG ulPlayerExtra, ServerCommandFlags f
 	command.addBit( sv_unlimited_pickup );
 	// [TP] Send sv_limitcommands
 	command.addBit( sv_limitcommands );
+	// [AK] Send sv_respawninsurvivalinvasion.
+	command.addBit( sv_respawninsurvivalinvasion );
 	// [AM] Send lobby map.
 	command.addString( lobby );
 	// [AK] Send sv_allowprivatechat.

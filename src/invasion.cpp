@@ -125,6 +125,9 @@ CUSTOM_CVAR( Bool, sv_respawninsurvivalinvasion, false, CVAR_ARCHIVE | CVAR_SERV
 		if (( invasion ) && ( sv_maxlives > 0 ) && ( INVASION_PreventPlayersFromJoining( ) == false ))
 			invasion_RespawnSpectatorsAndReplenishLives( false );
 	}
+
+	// [AK] Notify the clients about the change.
+	SERVER_SettingChanged( self, false );
 }
 
 //*****************************************************************************
