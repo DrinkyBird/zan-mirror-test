@@ -94,6 +94,7 @@
 #include "scoreboard.h"
 #include "menu/menu.h"
 #include "sv_ban.h"
+#include "joinqueue.h"
 
 #include "g_shared/a_pickups.h"
 
@@ -5467,6 +5468,7 @@ enum EACSFunctions
 	ACSF_GetPlayerCountry,
 	ACSF_SetNextMapPosition,
 	ACSF_GivePlayerMedal,
+	ACSF_GetPlayerJoinQueuePosition,
 
 	// ZDaemon
 	ACSF_GetTeamScore = 19620,	// (int team)
@@ -8684,6 +8686,11 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 				return 0;
 
 			return MEDAL_GiveMedal( args[0], FBehavior::StaticLookupString( args[1] ), !!args[2] );
+		}
+
+		case ACSF_GetPlayerJoinQueuePosition:
+		{
+			return JOINQUEUE_GetPositionInLine( args[0] );
 		}
 
 		case ACSF_GetActorFloorTexture:

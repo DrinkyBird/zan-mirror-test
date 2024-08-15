@@ -106,10 +106,14 @@ void JOINQUEUE_RemovePlayerAtPosition ( unsigned int position )
 {
 	if ( position < g_JoinQueue.Size() )
 	{
+		const unsigned int player = g_JoinQueue[position].player;
 		g_JoinQueue.Delete( position );
 
 		if ( NETWORK_GetState() == NETSTATE_SERVER )
 			SERVERCOMMANDS_RemoveFromJoinQueue( position );
+
+		// [AK] Trigger an event script when the player leaves the join queue.
+		GAMEMODE_HandleEvent( GAMEEVENT_JOINQUEUECHANGED, nullptr, player, -1 );
 
 		JOINQUEUE_QueueChanged();
 	}
@@ -363,6 +367,9 @@ unsigned int JOINQUEUE_AddPlayer( unsigned int player, unsigned int team )
 	// [TP] Tell clients of the join queue's most recent addition
 	if ( NETWORK_GetState() == NETSTATE_SERVER )
 		SERVERCOMMANDS_PushToJoinQueue();
+
+	// [AK] Trigger an event script when the player is added to the join queue.
+	GAMEMODE_HandleEvent( GAMEEVENT_JOINQUEUECHANGED, nullptr, player, JOINQUEUE_GetPositionInLine( player ));
 
 	JOINQUEUE_QueueChanged();
 	return result;
