@@ -5469,6 +5469,7 @@ enum EACSFunctions
 	ACSF_SetNextMapPosition,
 	ACSF_GivePlayerMedal,
 	ACSF_GetPlayerJoinQueuePosition,
+	ACSF_SkipJoinQueue,
 
 	// ZDaemon
 	ACSF_GetTeamScore = 19620,	// (int team)
@@ -8691,6 +8692,37 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 		case ACSF_GetPlayerJoinQueuePosition:
 		{
 			return JOINQUEUE_GetPositionInLine( args[0] );
+		}
+
+		case ACSF_SkipJoinQueue:
+		{
+			// [AK] Don't let the clients change the join queue.
+			if ( NETWORK_InClientMode( ) == false )
+			{
+				const unsigned int playerIndex = args[0];
+
+				// [AK] Make sure the intended player is a true spectator.
+				if (( PLAYER_IsValidPlayer( playerIndex )) && ( PLAYER_IsTrueSpectator( &players[playerIndex] )))
+				{
+					// [AK] Don't let any more players join than what's permitted on the server.
+					if ( NETWORK_GetState( ) == NETSTATE_SERVER )
+					{
+						if ( SERVER_CalcNumNonSpectatingPlayers( MAXPLAYERS ) >= static_cast<unsigned>( sv_maxplayers ))
+							return 0;
+					}
+
+					const int joinQueuePosition = JOINQUEUE_GetPositionInLine( playerIndex );
+
+					// [AK] Make sure they're also in the join queue.
+					if ( joinQueuePosition != -1 )
+					{
+						JOINQUEUE_PlayerJoinsAtPosition( joinQueuePosition );
+						return 1;
+					}
+				}
+			}
+
+			return 0;
 		}
 
 		case ACSF_GetActorFloorTexture:
