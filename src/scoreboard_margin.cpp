@@ -943,6 +943,8 @@ protected:
 		DRAWSTRING_POINTSTRING,
 		// The current player's rank and score.
 		DRAWSTRING_PLACESTRING,
+		// The name of the player who's in the lead, or how many players are tied.
+		DRAWSTRING_PLAYERLEADSTRING,
 		// The amount of time that has passed since the level started.
 		DRAWSTRING_LEVELTIME,
 		// The amount of time left in the round (or level).
@@ -1003,6 +1005,7 @@ protected:
 			{ "limitstrings",			{ DRAWSTRING_LIMITSTRINGS,			MARGINTYPE_HEADER_OR_FOOTER }},
 			{ "pointstring",			{ DRAWSTRING_POINTSTRING,			MARGINTYPE_HEADER_OR_FOOTER }},
 			{ "placestring",			{ DRAWSTRING_PLACESTRING,			MARGINTYPE_HEADER_OR_FOOTER }},
+			{ "playerleadstring",		{ DRAWSTRING_PLAYERLEADSTRING,		MARGINTYPE_HEADER_OR_FOOTER }},
 			{ "leveltime",				{ DRAWSTRING_LEVELTIME,				MARGINTYPE_HEADER_OR_FOOTER }},
 			{ "leveltimeleft",			{ DRAWSTRING_LEVELTIMELEFT,			MARGINTYPE_HEADER_OR_FOOTER }},
 			{ "intermissiontimeleft",	{ DRAWSTRING_INTERMISSIONTIMELEFT,	MARGINTYPE_HEADER_OR_FOOTER }},
@@ -1191,6 +1194,88 @@ protected:
 					case DRAWSTRING_PLACESTRING:
 						text += HUD_BuildPlaceString( ulDisplayPlayer );
 						break;
+
+					case DRAWSTRING_PLAYERLEADSTRING:
+					{
+						const unsigned int gameModeFlags = GAMEMODE_GetCurrentFlags( );
+
+						if (( gameModeFlags & ( GMF_PLAYERSEARNFRAGS | GMF_PLAYERSEARNPOINTS | GMF_PLAYERSEARNWINS )) && !( gameModeFlags & GMF_PLAYERSONTEAMS ))
+						{
+							unsigned int highestPlayer = MAXPLAYERS;
+							unsigned int numPlayersTied = 1;
+							int highestScore = INT_MIN;
+
+							// [AK] determine who is in the lead, or how many players are tied for the lead.
+							for ( unsigned int i = 0; i < MAXPLAYERS; i++ )
+							{
+								int playerScore = 0;
+
+								if (( playeringame[i] == false ) || ( PLAYER_IsTrueSpectator( &players[i] )))
+									continue;
+
+								if ( gameModeFlags & GMF_PLAYERSEARNFRAGS )
+									playerScore = players[i].fragcount;
+								else if ( gameModeFlags & GMF_PLAYERSEARNPOINTS )
+									playerScore = players[i].lPointCount;
+								else
+									playerScore = players[i].ulWins;
+
+								if ( playerScore > highestScore )
+								{
+									highestPlayer = i;
+									numPlayersTied = 1;
+									highestScore = playerScore;
+								}
+								else if ( playerScore == highestScore )
+								{
+									highestPlayer = MAXPLAYERS;
+									numPlayersTied++;
+								}
+							}
+
+							// [AK] There's a player who's taken the lead.
+							if ( highestPlayer != MAXPLAYERS )
+							{
+								text.AppendFormat( "%s %s with", players[highestPlayer].userinfo.GetName( ), gamestate == GS_LEVEL ? "leads" : "has won" );
+							}
+							// [AK] There are multiple players tied for the lead.
+							else if ( numPlayersTied > 1 )
+							{
+								if ( numPlayersTied == HUD_GetNumPlayers( ))
+								{
+									if ( numPlayersTied == 2 )
+										text += "Both";
+									else
+										text += "All";
+								}
+								else
+								{
+									text.AppendFormat( "%d", numPlayersTied );
+								}
+
+								text.AppendFormat( " players %s tied at", gamestate == GS_LEVEL ? "are" : "have" );
+							}
+							// [AK] There's nobody in-game, don't write anything to the string.
+							else
+							{
+								break;
+							}
+
+							text.AppendFormat( " %d ", highestScore );
+
+							if ( gameModeFlags & GMF_PLAYERSEARNFRAGS )
+								text += "frag";
+							else if ( gameModeFlags & GMF_PLAYERSEARNPOINTS )
+								text += "point";
+							else
+								text += "win";
+
+							if ( highestScore != 1 )
+								text += 's';
+						}
+
+						break;
+					}
 
 					case DRAWSTRING_LEVELTIME:
 					case DRAWSTRING_LEVELTIMELEFT:

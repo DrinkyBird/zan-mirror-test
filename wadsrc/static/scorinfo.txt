@@ -273,15 +273,23 @@ Scoreboard
 			// Draw the time, frags, points, or kills we have left until the level ends.
 			DrawString( value = limitstrings, textcolor = "Grey", bottompadding = 1 )
 
-			// Draw the team scores and their relation (tied, red leads, etc).
-			IfPlayersOnTeams( true ) && IfEarnType( Frags, Points, Wins )
+			IfEarnType( Frags, Points, Wins )
 			{
-				DrawString( value = pointstring, textcolor = "Grey", bottompadding = 1 )
-			}
-			// Draw my rank and my frags, points, etc. Don't draw it if we're in the intermission.
-			Else IfIntermission( false ) && IfShouldShowRank( true )
-			{
-				DrawString( value = placestring, textcolor = "Grey", bottompadding = 1 )
+				// Draw the team scores and their relation (tied, red leads, etc).
+				IfPlayersOnTeams( true )
+				{
+					DrawString( value = pointstring, textcolor = "Grey", bottompadding = 1 )
+				}
+				// [AK] Draw whoever's leading during intermissions or when we're a true spectator looking at ourselves.
+				Else IfIntermission( true ) || IfSpectator( true ) && IfDeadSpectator( false ) && IfSpying( false )
+				{
+					DrawString( value = playerleadstring, textcolor = "Grey", bottompadding = 1 )
+				}
+				// Draw my rank and my frags, points, etc. Don't draw it if we're in the intermission.
+				Else IfShouldShowRank( true )
+				{
+					DrawString( value = placestring, textcolor = "Grey", bottompadding = 1 )
+				}
 			}
 
 			// [JS] Intermission countdown display.
