@@ -1220,6 +1220,13 @@ OptionValue ZA_CountryCodeFormat
 }
 
 // [AK]
+OptionValue ZA_LimitStringFormat
+{
+	0, "Score limit to win"
+	1, "How much score left"
+}
+
+// [AK]
 OptionValue ZA_HorizontalAlignment
 {
 	0, "Left"
@@ -1244,6 +1251,7 @@ OptionMenu ScoreboardOptions
 	Option "Use short column names",	"cl_useshortcolumnnames", "YesNo"
 	Option "Show intermission timer",	"cl_intermissiontimer", "YesNo"
 	Option "Country code format",		"cl_usealpha3countrycode", "ZA_CountryCodeFormat"
+	Option "Limit string format",		"cl_showscoreleft", "ZA_LimitStringFormat"
 	Slider "Translucency",			"cl_scoreboardalpha", 0, 1, 0.05
 	Slider "Scroll speed",			"cl_scoreboardscrollspeed", 1, 64, 1
 	StaticText " "

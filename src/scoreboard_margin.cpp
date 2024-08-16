@@ -169,6 +169,12 @@ static	level_info_t *g_pNextLevel;
 static	ScoreMargin::BaseCommand	*scoreboard_CreateMarginCommand( FScanner &sc, ScoreMargin *pMargin, ScoreMargin::BaseCommand *pParentCommand, const bool bOnlyFlowControl );
 
 //*****************************************************************************
+//	CONSOLE VARIABLES
+
+// [AK] If true, then show how much score (i.e. frags, points, or wins) is left to win.
+CVAR( Bool, cl_showscoreleft, true, CVAR_ARCHIVE )
+
+//*****************************************************************************
 //	CLASSES
 
 //*****************************************************************************
@@ -2675,20 +2681,26 @@ void scoreboard_TryToPrependLimit( std::list<FString> &lines, FString &limit )
 //
 // [RC] scoreboard_AddSingleLimit
 //
-// Helper method for SCOREBOARD_BuildLimitStrings. Creates a "x things remaining"
-// message. [AK] Added the bWantToPrepend parameter.
+// Helper method for SCOREBOARD_BuildLimitStrings. Creates a "x things left"
+// message. [AK] Added the prependLimit and showLeft parameters, the latter of
+// which is used to create a "x things to win" message if disabled instead.
 //
 //*****************************************************************************
 
-void scoreboard_AddSingleLimit( std::list<FString> &lines, bool condition, int remaining, const char *pszUnitName, bool bWantToPrepend = false )
+void scoreboard_AddSingleLimit( std::list<FString> &lines, const bool condition, const int value, const char *name, const bool prependLimit = false, const bool showLeft = true )
 {
-	if ( condition && remaining > 0 )
+	if (( condition ) && ( value > 0 ))
 	{
 		FString limitString;
-		limitString.Format( "%d %s%s left", static_cast<int>( remaining ), pszUnitName, remaining == 1 ? "" : "s" );
+		limitString.Format( "%d %s%s ", value, name, value == 1 ? "" : "s" );
+
+		if ( showLeft )
+			limitString += "left";
+		else
+			limitString += "to win";
 
 		// [AK] Try to make this string appear on the same line as a previous string if we want to.
-		if ( bWantToPrepend )
+		if ( prependLimit )
 			scoreboard_TryToPrependLimit( lines, limitString );
 
 		lines.push_back( limitString );
@@ -2738,7 +2750,7 @@ void SCOREBOARD_BuildLimitStrings( std::list<FString> &lines, bool bAcceptColors
 	FString text;
 
 	// Build the fraglimit string.
-	scoreboard_AddSingleLimit( lines, fraglimit && ( ulFlags & GMF_PLAYERSEARNFRAGS ), lRemaining, "frag" );
+	scoreboard_AddSingleLimit( lines, fraglimit && ( ulFlags & GMF_PLAYERSEARNFRAGS ), lRemaining, "frag", false, cl_showscoreleft );
 
 	// Build the duellimit and "wins" string.
 	if ( duel && duellimit )
@@ -2812,8 +2824,8 @@ void SCOREBOARD_BuildLimitStrings( std::list<FString> &lines, bool bAcceptColors
 	}
 
 	// Build the pointlimit, winlimit, and/or wavelimit strings.
-	scoreboard_AddSingleLimit( lines, pointlimit && ( ulFlags & GMF_PLAYERSEARNPOINTS ), lRemaining, "point" );
-	scoreboard_AddSingleLimit( lines, winlimit && ( ulFlags & GMF_PLAYERSEARNWINS ), lRemaining, "win" );
+	scoreboard_AddSingleLimit( lines, pointlimit && ( ulFlags & GMF_PLAYERSEARNPOINTS ), lRemaining, "point", false, cl_showscoreleft );
+	scoreboard_AddSingleLimit( lines, winlimit && ( ulFlags & GMF_PLAYERSEARNWINS ), lRemaining, "win", false, cl_showscoreleft );
 	scoreboard_AddSingleLimit( lines, invasion && wavelimit, wavelimit - INVASION_GetCurrentWave( ), "wave" );
 
 	// [AK] Build the coop strings.
@@ -2950,7 +2962,10 @@ LONG SCOREBOARD_GetLeftToLimit( void )
 	}
 
 	// [BB] In a team game with only empty teams or if there are no players at all, just return the appropriate limit.
-	if ((( GAMEMODE_GetCurrentFlags( ) & GMF_PLAYERSONTEAMS ) && ( TEAM_TeamsWithPlayersOn( ) == 0 )) || ( SERVER_CalcNumNonSpectatingPlayers( MAXPLAYERS ) == 0 ))
+	// [AK] Also do this if we're not showing how much score is left.
+	if ((( GAMEMODE_GetCurrentFlags( ) & GMF_PLAYERSONTEAMS ) && ( TEAM_TeamsWithPlayersOn( ) == 0 )) ||
+		( SERVER_CalcNumNonSpectatingPlayers( MAXPLAYERS ) == 0 ) ||
+		( cl_showscoreleft == false ))
 	{
 		if ( GAMEMODE_GetCurrentFlags( ) & GMF_PLAYERSEARNWINS )
 			return winlimit;
