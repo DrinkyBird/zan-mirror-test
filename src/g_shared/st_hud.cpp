@@ -1468,15 +1468,15 @@ FString HUD_SpellOrdinal( int ranknum, bool bColored )
 		switch ( ranknum )
 		{
 			case 0:
-				result = TEXTCOLOR_BLUE;
+				result = TEXTCOLOR_YELLOW;
 				break;
 
 			case 1:
-				result = TEXTCOLOR_RED;
+				result = TEXTCOLOR_DARKGRAY;
 				break;
 
 			case 2:
-				result = TEXTCOLOR_GREEN;
+				result = TEXTCOLOR_BROWN;
 				break;
 		}
 	}
