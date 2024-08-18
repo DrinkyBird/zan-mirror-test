@@ -1476,7 +1476,7 @@ FString HUD_SpellOrdinal( int ranknum, bool bColored )
 				break;
 
 			case 2:
-				result = TEXTCOLOR_BROWN;
+				result = TEXTCOLOR_DARKBROWN;
 				break;
 		}
 	}
