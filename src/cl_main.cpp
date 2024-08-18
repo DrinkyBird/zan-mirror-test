@@ -179,6 +179,9 @@ CVAR( Bool, cl_showwarnings, false, CVAR_ARCHIVE )
 // [Leo] Show how many packets we missed when we experience packet loss.
 CVAR( Bool, cl_showpacketloss, false, CVAR_ARCHIVE )
 
+// [AK] Prevents the server's settings from being discard when the client disconnects.
+CVAR( Bool, cl_keepserversettings, false, CVAR_ARCHIVE | CVAR_DEBUGONLY )
+
 // [JS] Always makes us ready when we are in intermission.
 CVAR( Bool, cl_autoready, false, CVAR_ARCHIVE )
 
@@ -2546,7 +2549,8 @@ void CLIENT_QuitNetworkGame( const char *pszString )
 	// [AK] We'll also restore any serverinfo CVars saved in our config and discard
 	// all of the server's settings. This is especially so that the server's settings
 	// don't overwrite ours if they're archived later.
-	CLIENT_RestoreServerInfoCVars( );
+	if ( cl_keepserversettings == false )
+		CLIENT_RestoreServerInfoCVars( );
 
 	// If we're recording a demo, then finish it!
 	if ( CLIENTDEMO_IsRecording( ))
