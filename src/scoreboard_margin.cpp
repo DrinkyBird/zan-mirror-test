@@ -2828,14 +2828,15 @@ void SCOREBOARD_BuildLimitStrings( std::list<FString> &lines, bool bAcceptColors
 	if ( gamestate != GS_LEVEL )
 		return;
 
+	const bool showScoreLeft = ( NETWORK_GetState( ) != NETSTATE_SERVER ) ? cl_showscoreleft : true;
+	const bool bTimeLimitActive = GAMEMODE_IsTimelimitActive( );
 	ULONG ulFlags = GAMEMODE_GetCurrentFlags( );
 	LONG lRemaining = SCOREBOARD_GetLeftToLimit( );
-	const bool bTimeLimitActive = GAMEMODE_IsTimelimitActive( );
 	bool bTimeLimitAdded = false;
 	FString text;
 
 	// Build the fraglimit string.
-	scoreboard_AddSingleLimit( lines, fraglimit && ( ulFlags & GMF_PLAYERSEARNFRAGS ), lRemaining, "frag", false, cl_showscoreleft );
+	scoreboard_AddSingleLimit( lines, fraglimit && ( ulFlags & GMF_PLAYERSEARNFRAGS ), lRemaining, "frag", false, showScoreLeft );
 
 	// Build the duellimit and "wins" string.
 	if ( duel && duellimit )
@@ -2909,8 +2910,8 @@ void SCOREBOARD_BuildLimitStrings( std::list<FString> &lines, bool bAcceptColors
 	}
 
 	// Build the pointlimit, winlimit, and/or wavelimit strings.
-	scoreboard_AddSingleLimit( lines, pointlimit && ( ulFlags & GMF_PLAYERSEARNPOINTS ), lRemaining, "point", false, cl_showscoreleft );
-	scoreboard_AddSingleLimit( lines, winlimit && ( ulFlags & GMF_PLAYERSEARNWINS ), lRemaining, "win", false, cl_showscoreleft );
+	scoreboard_AddSingleLimit( lines, pointlimit && ( ulFlags & GMF_PLAYERSEARNPOINTS ), lRemaining, "point", false, showScoreLeft );
+	scoreboard_AddSingleLimit( lines, winlimit && ( ulFlags & GMF_PLAYERSEARNWINS ), lRemaining, "win", false, showScoreLeft );
 	scoreboard_AddSingleLimit( lines, invasion && wavelimit, wavelimit - INVASION_GetCurrentWave( ), "wave" );
 
 	// [AK] Build the coop strings.
@@ -3048,9 +3049,9 @@ LONG SCOREBOARD_GetLeftToLimit( void )
 
 	// [BB] In a team game with only empty teams or if there are no players at all, just return the appropriate limit.
 	// [AK] Also do this if we're not showing how much score is left.
-	if ((( GAMEMODE_GetCurrentFlags( ) & GMF_PLAYERSONTEAMS ) && ( TEAM_TeamsWithPlayersOn( ) == 0 )) ||
-		( SERVER_CalcNumNonSpectatingPlayers( MAXPLAYERS ) == 0 ) ||
-		( cl_showscoreleft == false ))
+	if ((( NETWORK_GetState( ) != NETSTATE_SERVER ) && ( cl_showscoreleft == false )) ||
+		(( GAMEMODE_GetCurrentFlags( ) & GMF_PLAYERSONTEAMS ) && ( TEAM_TeamsWithPlayersOn( ) == 0 )) ||
+		( SERVER_CalcNumNonSpectatingPlayers( MAXPLAYERS ) == 0 ))
 	{
 		if ( GAMEMODE_GetCurrentFlags( ) & GMF_PLAYERSEARNWINS )
 			return winlimit;
