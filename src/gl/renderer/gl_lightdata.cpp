@@ -63,7 +63,8 @@ int fogdensity;
 int outsidefogdensity;
 int skyfog;
 
-CUSTOM_CVAR (Int, gl_light_ambient, 20, CVAR_ARCHIVE | CVAR_GLOBALCONFIG)
+// [AK] Added CVAR_GAMEPLAYSETTING.
+CUSTOM_CVAR (Int, gl_light_ambient, 20, CVAR_ARCHIVE | CVAR_GLOBALCONFIG | CVAR_GAMEPLAYSETTING)
 {
 	// ambient of 0 does not work correctly because light level 0 is special.
 	if (self < 1) self = 1;
@@ -97,7 +98,8 @@ bool gl_GlowActive()
 //
 //==========================================================================
 
-CUSTOM_CVAR (Int, gl_distfog, 70, CVAR_ARCHIVE | CVAR_GLOBALCONFIG)
+// [AK] Added CVAR_GAMEPLAYSETTING.
+CUSTOM_CVAR (Int, gl_distfog, 70, CVAR_ARCHIVE | CVAR_GLOBALCONFIG | CVAR_GAMEPLAYSETTING)
 {
 	// [BB/EP] Take care of gl_distfog and ZADF_FORCE_VIDEO_DEFAULTS.
 	OVERRIDE_INT_GL_CVAR_IF_NECESSARY( gl_distfog );
@@ -127,14 +129,16 @@ CUSTOM_CVAR (Int, gl_distfog, 70, CVAR_ARCHIVE | CVAR_GLOBALCONFIG)
 	}
 }
 
-CUSTOM_CVAR(Int,gl_fogmode,1,CVAR_ARCHIVE|CVAR_NOINITCALL)
+// [AK] Added CVAR_GAMEPLAYSETTING.
+CUSTOM_CVAR(Int,gl_fogmode,1,CVAR_ARCHIVE|CVAR_NOINITCALL|CVAR_GAMEPLAYSETTING)
 {
 	if (self>2) self=2;
 	if (self<0) self=0;
 	if (self == 2 && gl.shadermodel < 4) self = 1;
 }
 
-CUSTOM_CVAR(Int, gl_lightmode, 3 ,CVAR_ARCHIVE|CVAR_NOINITCALL)
+// [AK] Added CVAR_GAMEPLAYSETTING.
+CUSTOM_CVAR(Int, gl_lightmode, 3 ,CVAR_ARCHIVE|CVAR_NOINITCALL|CVAR_GAMEPLAYSETTING)
 {
 	int newself = self;
 	if (newself > 4) newself=8;	// use 8 for software lighting to avoid conflicts with the bit mask

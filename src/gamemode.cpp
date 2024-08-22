@@ -1650,13 +1650,21 @@ bool GAMEMODE_IsGameplaySettingLocked( FBaseCVar *pCVar )
 //
 void GAMEMODE_ResetGameplaySettings( bool bLockedOnly, bool bResetToDefault )
 {
-	// [AK] Don't let clients reset the CVars by themselves. The server will update them accordingly.
-	if ( NETWORK_InClientMode( ))
-		return;
-
 	for ( unsigned int i = 0; i < g_GameModes[g_CurrentGameMode].GameplaySettings.Size( ); i++ )
 	{
 		GAMEPLAYSETTING_s *const pSetting = &g_GameModes[g_CurrentGameMode].GameplaySettings[i];
+
+		// [AK] Don't let clients reset serverinfo CVars by themselves.
+		if ( pSetting->pCVar->IsServerCVar( ))
+		{
+			if ( NETWORK_InClientMode( ))
+				continue;
+		}
+		// [AK] Likewise, don't let the server reset non-serverinfo CVars.
+		else if ( NETWORK_GetState( ) == NETSTATE_SERVER )
+		{
+			continue;
+		}
 
 		// [AK] Only reset unlocked CVars if we need to. Also, CVars that are "offlineonly" should only
 		// be reset in offline games, and CVars that are "onlineonly" should only be reset in online games.

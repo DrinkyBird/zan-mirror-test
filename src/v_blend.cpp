@@ -55,7 +55,7 @@
 #include "a_hexenglobal.h"
 
 // [BB]
-CVAR( Float, blood_fade_scalar, 0.5f, CVAR_ARCHIVE )
+CVAR( Float, blood_fade_scalar, 0.5f, CVAR_ARCHIVE | CVAR_GAMEPLAYSETTING )
 
 // [RH] Amount of red flash for up to 114 damage points. Calculated by hand
 //		using a logarithmic scale and my trusty HP48G.

@@ -101,7 +101,7 @@ EXTERN_CVAR (Bool, show_obituaries)
 
 // [AK] If true, the intensity of the blood on the screen takes into account
 // the player's max health instead of a hard-coded health of 100.
-CVAR( Bool, blood_fade_usemaxhealth, false, CVAR_ARCHIVE )
+CVAR( Bool, blood_fade_usemaxhealth, false, CVAR_ARCHIVE | CVAR_GAMEPLAYSETTING )
 
 FName MeansOfDeath;
 bool FriendlyFire;

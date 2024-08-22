@@ -156,12 +156,12 @@ static	void	HUD_DrawFragMessage( const unsigned int displayPlayer );
 //*****************************************************************************
 //	CONSOLE VARIABLES
 
-CVAR( Int, cl_identifytarget, IDENTIFY_TARGET_NAME, CVAR_ARCHIVE )
-CVAR( Int, cl_identifymonsters, IDENTIFY_MONSTERS_OFF, CVAR_ARCHIVE )
-CVAR( Bool, cl_showlargefragmessages, true, CVAR_ARCHIVE )
-CVAR( Bool, cl_drawcoopinfo, true, CVAR_ARCHIVE )
-CVAR( Bool, r_drawspectatingstring, true, CVAR_ARCHIVE | CVAR_GLOBALCONFIG )
-CVAR( Bool, r_drawrespawnstring, true, CVAR_ARCHIVE | CVAR_GLOBALCONFIG )
+CVAR( Int, cl_identifytarget, IDENTIFY_TARGET_NAME, CVAR_ARCHIVE | CVAR_GAMEPLAYSETTING )
+CVAR( Int, cl_identifymonsters, IDENTIFY_MONSTERS_OFF, CVAR_ARCHIVE | CVAR_GAMEPLAYSETTING )
+CVAR( Bool, cl_showlargefragmessages, true, CVAR_ARCHIVE | CVAR_GAMEPLAYSETTING )
+CVAR( Bool, cl_drawcoopinfo, true, CVAR_ARCHIVE | CVAR_GAMEPLAYSETTING )
+CVAR( Bool, r_drawspectatingstring, true, CVAR_ARCHIVE | CVAR_GLOBALCONFIG | CVAR_GAMEPLAYSETTING )
+CVAR( Bool, r_drawrespawnstring, true, CVAR_ARCHIVE | CVAR_GLOBALCONFIG | CVAR_GAMEPLAYSETTING )
 EXTERN_CVAR( Int, con_notifylines )
 EXTERN_CVAR( Bool, cl_stfullscreenhud )
 EXTERN_CVAR( Int, screenblocks )

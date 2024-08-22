@@ -28,7 +28,8 @@ HeightLevel *height_cur = NULL;
 int CurrentMirror = 0;
 int CurrentSkybox = 0;
 
-CVAR(Int, r_3dfloors, true, 0);
+// [AK] Added CVAR_GAMEPLAYSETTING.
+CVAR(Int, r_3dfloors, true, CVAR_GAMEPLAYSETTING);
 
 // private variables
 int height_max = -1;
