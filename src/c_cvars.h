@@ -156,6 +156,9 @@ public:
 	virtual bool IsMaskCVar() { return false; }
 	bool IsServerCVar();
 
+	// [AK] Backups up the CVar's original value, if changed by ACS or GAMEMODE.
+	void BackupValue (const UCVarValue val, const ECVarType type);
+
 protected:
 	FBaseCVar () {}
 	virtual void DoSet (UCVarValue value, ECVarType type) = 0;

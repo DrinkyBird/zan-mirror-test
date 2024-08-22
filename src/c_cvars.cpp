@@ -91,8 +91,8 @@ FBaseCVar *CVars = NULL;
 
 int cvar_defflags;
 
-// [AK] Prevents CVars changed by ConsoleCommand from being written into the user's config file.
-CVAR( Bool, cl_protectcvars, true, CVAR_ARCHIVE | CVAR_NOSETBYACS );
+// [AK] Prevents CVars changed by ACS or GAMEMODE from being written into the user's config file.
+CVAR( Bool, protectcvars, true, CVAR_ARCHIVE | CVAR_NOSETBYACS );
 
 EXTERN_CVAR( Bool, sv_cheats );
 
@@ -198,32 +198,7 @@ void FBaseCVar::SetGenericRep (UCVarValue value, ECVarType type)
 		if ( Flags & CVAR_NOSETBYACS )
 			return;
 
-		const char *originalValue = GetGenericRep( CVAR_String ).String;
-
-		// [AK] If the value is changed, keep a copy of the original value. This way,
-		// the CVar can be reset back to its original value upon exit.
-		if ( strcmp( originalValue, ToString( value, type )) != 0 )
-		{
-			bool bSaveValue = true;
-
-			// [AK] First check if this CVar isn't already on the list.
-			for ( unsigned int i = 0; i < SavedValues.Size( ); i++ )
-			{
-				if ( SavedValues[i].Variable == this )
-				{
-					bSaveValue = false;
-					break;
-				}
-			}
-
-			if ( bSaveValue )
-			{
-				FLatchedValue saved;
-				saved.Variable = this;
-				saved.Value.String = ncopystring( originalValue );
-				SavedValues.Push( saved );
-			}
-		}
+		BackupValue( value, type );
 	}
 
 	if ( sv_cheats == false )
@@ -801,6 +776,30 @@ bool FBaseCVar::IsServerCVar()
 		return static_cast<FMaskCVar*>( this )->GetValueVar()->IsServerCVar();
 
 	return !!( Flags & ( CVAR_SERVERINFO | CVAR_SENSITIVESERVERSETTING ));
+}
+
+// [AK]
+void FBaseCVar::BackupValue (const UCVarValue val, const ECVarType type)
+{
+	const char *originalValue = GetGenericRep (CVAR_String).String;
+
+	// [AK] If the value is changed, keep a copy of the original value. This way,
+	// the CVar can be reset back to its original value upon exit.
+	if (strcmp (originalValue, ToString (val, type)) != 0)
+	{
+		// [AK] First check if this CVar isn't already on the list.
+		for (unsigned int i = 0; i < SavedValues.Size(); i++)
+		{
+			if (SavedValues[i].Variable == this)
+				return;
+		}
+
+		FLatchedValue saved;
+		saved.Variable = this;
+		saved.Value.String = ncopystring (originalValue);
+
+		SavedValues.Push (saved);
+	}
 }
 
 //
@@ -1738,8 +1737,8 @@ void C_ArchiveCVars (FConfigFile *f, uint32 filter)
 			(CVAR_GLOBALCONFIG|CVAR_ARCHIVE|CVAR_MOD|CVAR_AUTO|CVAR_USERINFO|CVAR_SERVERINFO|CVAR_NOSAVE))
 			== filter)
 		{
-			// [AK] Reset the CVar back to its original value if it was changed by ConsoleCommand.
-			if ( cl_protectcvars )
+			// [AK] Reset the CVar back to its original value if it was changed by ACS or GAMEMODE.
+			if ( protectcvars )
 			{
 				// [AK] We're just resetting the value, so don't execute any callbacks.
 				FBaseCVar::DisableCallbacks( );

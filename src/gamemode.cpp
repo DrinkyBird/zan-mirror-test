@@ -1611,6 +1611,7 @@ void GAMEMODE_SetGameplaySetting( FBaseCVar *pCVar, UCVarValue Val, ECVarType Ty
 		pSetting->bIsLocked = false;
 	}
 
+	pCVar->BackupValue( Val, Type );
 	pCVar->ForceSet( Val, Type );
 
 	// [AK] After changing the value of the CVar, its saved value must also be updated.
