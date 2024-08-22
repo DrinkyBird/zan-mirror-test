@@ -102,8 +102,8 @@ static	std::vector<AActor*> g_MonsterCorpsesFromPreviousWave;
 //*****************************************************************************
 //	CONSOLE VARIABLES
 
-CVAR( Int, sv_invasioncountdowntime, 10, CVAR_ARCHIVE | CVAR_GAMEPLAYSETTING )
-CVAR( Bool, sv_usemapsettingswavelimit, true, CVAR_ARCHIVE | CVAR_GAMEPLAYSETTING )
+CVAR( Int, sv_invasioncountdowntime, 10, CVAR_ARCHIVE | CVAR_SERVERINFO | CVAR_GAMEPLAYSETTING )
+CVAR( Bool, sv_usemapsettingswavelimit, true, CVAR_ARCHIVE | CVAR_SERVERINFO | CVAR_GAMEPLAYSETTING )
 
 CUSTOM_CVAR( Int, wavelimit, 0, CVAR_CAMPAIGNLOCK | CVAR_SERVERINFO | CVAR_GAMEPLAYSETTING )
 {

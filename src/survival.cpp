@@ -362,4 +362,4 @@ void SURVIVAL_SetState( SURVIVALSTATE_e State )
 //*****************************************************************************
 //	CONSOLE COMMANDS/VARIABLES
 
-CVAR( Int, sv_survivalcountdowntime, 10, CVAR_ARCHIVE | CVAR_GAMEPLAYSETTING );
+CVAR( Int, sv_survivalcountdowntime, 10, CVAR_ARCHIVE | CVAR_SERVERINFO | CVAR_GAMEPLAYSETTING );

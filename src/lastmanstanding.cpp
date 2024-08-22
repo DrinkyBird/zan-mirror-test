@@ -691,7 +691,7 @@ void LASTMANSTANDING_SetStartNextMatchOnLevelLoad( bool bStart )
 //*****************************************************************************
 //	CONSOLE COMMANDS/VARIABLES
 
-CVAR( Int, sv_lmscountdowntime, 10, CVAR_ARCHIVE | CVAR_GAMEPLAYSETTING );
+CVAR( Int, sv_lmscountdowntime, 10, CVAR_ARCHIVE | CVAR_SERVERINFO | CVAR_GAMEPLAYSETTING );
 CUSTOM_CVAR( Int, winlimit, 0, CVAR_SERVERINFO | CVAR_CAMPAIGNLOCK | CVAR_GAMEPLAYSETTING )
 {
 	if ( self >= 256 )
