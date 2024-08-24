@@ -31,7 +31,7 @@
 +	- Added the AAPTR_PLAYER_GETCAMERA constant that returns the actor a player is looking from. [Kaminsky]
 +	- Added an argument to GAMEEVENT_ACTOR_SPAWNED representing a bitfield that indicates how the actor was spawned. [Kaminsky]
 +	- Added the dmflag "sv_donthidestats" to show an enemy player's stats. [DoomJoshuaBoy]
-+	- Added a new SelfObituary actor property for when a player kills themselves with an actor. This replaces Skulltag's hardcoded self obituaries for the BFG10K and Grenades. [Sean]
++	- Added a new SelfObituary actor property for when a player kills themselves with an actor or whenever an unowned actor kills a player. This replaces Skulltag's hardcoded self obituaries for the BFG10K and Grenades. [Sean]
 +	- Added an option to filter the server list by name within the built-in server browser menu. [Kaminsky]
 +	- Added the dmflag "sv_dontoverrideplayercolors", which prevents player colors from being overriden. [Kaminsky]
 +	- Added the EVENT script types for domination: GAMEEVENT_DOMINATION_CONTROL for when a team takes control of a point sector, and GAMEEVENT_DOMINATION_POINT for when a team gets a point for owning a sector. [Kaminsky]

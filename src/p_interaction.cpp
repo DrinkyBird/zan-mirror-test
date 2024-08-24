@@ -367,6 +367,12 @@ void ClientObituary (AActor *self, AActor *inflictor, AActor *attacker, int dmgf
 			}
 		}
 	}
+	// [TRSR] If the inflictor exists and is unowned, check for selfobituary here too.
+	else if (message == NULL && attacker == NULL && inflictor != NULL)
+	{
+		message = inflictor->GetClass()->Meta.GetMetaString (AMETA_SelfObituary);
+		attacker = self;
+	}
 	else attacker = self;	// for the message creation
 
 	if (message != NULL && message[0] == '$') 
