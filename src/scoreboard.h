@@ -578,4 +578,9 @@ ScoreColumn		*SCOREBOARD_GetColumn( FName Name, const bool bMustBeUsable );
 LONG			SCOREBOARD_GetLeftToLimit( void );
 void			SCOREBOARD_SetNextLevel( const char *pszMapName );
 
+//*****************************************************************************
+//	EXTERNAL CONSOLE VARIABLES
+
+EXTERN_CVAR( Bool, cl_showscoreleft )
+
 #endif // __SCOREBOARD_H__

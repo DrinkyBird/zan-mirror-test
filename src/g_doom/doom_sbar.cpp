@@ -716,13 +716,14 @@ void DrawFullHUD_GameInformation()
 		if(left > 0)
 		{
 			// [BB Be careful when using sprintf to append something.
-			if ( ( dmflags2 & DF2_KILL_MONSTERS) == false )
-				sprintf( szString + strlen(szString), " \\cb(%d left)", static_cast<int> (left) );
+			// [AK] Using a percentage should only be done in game modes where players earn kills.
+			if (( GAMEMODE_GetCurrentFlags( ) & GMF_PLAYERSEARNKILLS ) && ( dmflags2 & DF2_KILL_MONSTERS ))
+				sprintf( szString + strlen( szString ), TEXTCOLOR_TAN " (%ld%% left)", left );
+			else if ( cl_showscoreleft )
+				sprintf( szString + strlen( szString ), TEXTCOLOR_TAN " (%ld left)", left );
 			else
-				sprintf( szString + strlen(szString), " \\cb(%d%% left)", static_cast<int> (left) );
+				sprintf( szString + strlen( szString ), TEXTCOLOR_TAN " (%ld to win)", left );
 		}
-		
-		V_ColorizeString( szString );
 
 		HUD_DrawText( ConFont, CR_RED,
 				ulCurXPos - ConFont->StringWidth( szString ),
