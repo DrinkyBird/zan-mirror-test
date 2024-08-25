@@ -1305,6 +1305,15 @@ void HUD_PrepareToDrawFragMessage( player_t *pPlayer, AActor *pSource, int Means
 	if ( GAMEMODE_IsGameInProgress( ) == false )
 		return;
 
+	// [AK] Don't display large frag messages in (T)LMS if fragging a player, or
+	// being fragged by them, will end the game, because the game doesn't necessarily
+	// end in the same tick as the last enemy player dies.
+	if ((( lastmanstanding ) && ( GAME_CountLivingAndRespawnablePlayers( ) < 2 )) ||
+		(( teamlms ) && ( LASTMANSTANDING_TeamsWithAlivePlayersOn( ) < 2 )))
+	{
+		return;
+	}
+
 	// [AK] Display large frag messages according to the spied player's perspective.
 	if (( players[consoleplayer].camera != nullptr ) && ( players[consoleplayer].camera->player != nullptr ))
 		displayPlayer = players[consoleplayer].camera->player;
