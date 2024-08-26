@@ -715,14 +715,21 @@ void DrawFullHUD_GameInformation()
 		LONG left = SCOREBOARD_GetLeftToLimit( );
 		if(left > 0)
 		{
+			const bool playersEarnKills = !!( GAMEMODE_GetCurrentFlags( ) & GMF_PLAYERSEARNKILLS );
+
 			// [BB Be careful when using sprintf to append something.
 			// [AK] Using a percentage should only be done in game modes where players earn kills.
-			if (( GAMEMODE_GetCurrentFlags( ) & GMF_PLAYERSEARNKILLS ) && ( dmflags2 & DF2_KILL_MONSTERS ))
-				sprintf( szString + strlen( szString ), TEXTCOLOR_TAN " (%ld%% left)", left );
-			else if ( cl_showscoreleft )
-				sprintf( szString + strlen( szString ), TEXTCOLOR_TAN " (%ld left)", left );
+			if (( playersEarnKills ) || ( cl_showscoreleft ))
+			{
+				if (( playersEarnKills ) && ( dmflags2 & DF2_KILL_MONSTERS ))
+					sprintf( szString + strlen( szString ), TEXTCOLOR_TAN " (%ld%% left)", left );
+				else
+					sprintf( szString + strlen( szString ), TEXTCOLOR_TAN " (%ld left)", left );
+			}
 			else
+			{
 				sprintf( szString + strlen( szString ), TEXTCOLOR_TAN " (%ld to win)", left );
+			}
 		}
 
 		HUD_DrawText( ConFont, CR_RED,
