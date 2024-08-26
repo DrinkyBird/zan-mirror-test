@@ -919,12 +919,13 @@ void AActor::Die (AActor *source, AActor *inflictor, int dmgflags)
 		Destroy();
 	}
 
-	// [AK] Try to draw a large frag message if we (the consoleplayer) were fragged (by) another player.
-	HUD_PrepareToDrawFragMessage( player, source, MeansOfDeath );
-
 	// [RH] Death messages
 	if (( player ) && ( NETWORK_InClientMode() == false ))
+	{
+		// [AK] Try to draw a large frag message if the player (was) fragged (by) another player.
+		HUD_PrepareToDrawFragMessage( player, source, MeansOfDeath );
 		ClientObituary (this, inflictor, source, dmgflags, MeansOfDeath);
+	}
 
 }
 
