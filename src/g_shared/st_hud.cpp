@@ -1288,7 +1288,7 @@ void HUD_DrawSUBSMessage( const char *pszMessage, EColorRange color, float fHold
 
 //*****************************************************************************
 //
-void HUD_PrepareToDrawFragMessage( player_t *pPlayer, AActor *pSource, int MeansOfDeath )
+void HUD_PrepareToDrawFragMessage( player_t *pPlayer, AActor *pSource, FName MeansOfDeath )
 {
 	player_t *displayPlayer = &players[consoleplayer];
 

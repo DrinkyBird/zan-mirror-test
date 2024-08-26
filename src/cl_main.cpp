@@ -4053,7 +4053,7 @@ void ServerCommands::KillPlayer::Execute()
 	if ( player->health <= 0 )
 		player->health = 0;
 
-	// [AK] Try to draw a large frag message if we (the consoleplayer) were fragged (by) another player.
+	// [AK] Try to draw a large frag message if the player (was) fragged (by) another player.
 	HUD_PrepareToDrawFragMessage( player, source, MOD );
 
 	// [BB] Temporarily change the ReadyWeapon of ulSourcePlayer to the one the server told us.
