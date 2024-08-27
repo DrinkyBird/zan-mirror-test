@@ -197,6 +197,7 @@
 -	- Fixed: icons would only render above the head of another player being spied on if they had chasecam enabled, instead of if the local player did. Also, icons didn't appear above the head of the player when they're being rendered in a mirror unless chasecam was enabled. [Kaminsky]
 -	- Fixed: Bots no longer attempt to pathfind across monster blocking linedefs if they have -NOBLOCKMONST. [Trillster]
 -	- Fixed: Large frag messages still appeared on the screen for spawn telefrags in online games. [Kaminsky]
+-	- Fixed: sv_respawndelaytime wasn't ignored when players were spawn telefragged in game modes that didn't use lives. [Kaminsky]
 !	- The result value of GAMEEVENT_MEDALS event scripts can now be used to determine whether or not the player receives the medal. [Kaminsky]
 !	- GAMEMODE flags are now validated after all GAMEMODE lumps have been parsed instead of after each one. The internal game mode name (e.g. "TeamLMS") is now printed with the error message instead of the actual name. [Kaminsky]
 !	- Added an extra check to ensure that game modes have a (short) name. [Kaminsky]

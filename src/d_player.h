@@ -784,8 +784,7 @@ public:
 	// [BB] Did the client already select a weapon with CLIENTCOMMANDS_WeaponSelect? (only the server keeps track of this)
 	bool		bClientSelectedWeapon;
 
-	// If this player was telefragged at the beginning of a round, allow him to respawn normally
-	// in LMS games.
+	// If this player was telefragged at the beginning of a round, allow him to respawn normally.
 	bool		bSpawnTelefragged;
 
 	// Amount of time this player has been on the server.

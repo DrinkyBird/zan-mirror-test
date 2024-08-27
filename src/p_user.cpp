@@ -3381,6 +3381,10 @@ void P_DeathThink (player_t *player)
 				player->pIcon->Destroy( );
 				player->pIcon = nullptr;
 			}
+
+			// [AK] If the player was marked as being spawn telefragged, disable it now.
+			if ( player->bSpawnTelefragged )
+				player->bSpawnTelefragged = false;
 		}
 //		else if ( player->pSkullBot )
 //		{
