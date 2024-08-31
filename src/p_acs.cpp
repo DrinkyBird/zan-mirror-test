@@ -8670,7 +8670,7 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 
 				if (( position < MAPROTATION_GetNumEntries( )) && ( position != MAPROTATION_GetNextPosition( )))
 				{
-					MAPROTATION_SetNextPosition( position );
+					MAPROTATION_SetNextPosition( position, !!args[1] );
 					SERVERCOMMANDS_SetNextMapPosition( );
 
 					return 1;

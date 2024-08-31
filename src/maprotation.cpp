@@ -69,6 +69,9 @@ std::vector<MapRotationEntry>	g_MapRotationEntries;
 static	ULONG					g_ulCurMapInList;
 static	ULONG					g_ulNextMapInList;
 
+// [AK] This is true when the next map should ignore its player limits.
+static	bool					g_NextMapIgnoresLimits;
+
 //*****************************************************************************
 //	FUNCTIONS
 
@@ -76,6 +79,7 @@ void MAPROTATION_Construct( void )
 {
 	g_MapRotationEntries.clear( );
 	g_ulCurMapInList = g_ulNextMapInList = 0;
+	g_NextMapIgnoresLimits = false;
 
 	// [AK] If we're the server, tell the clients to clear their map lists too.
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
@@ -128,9 +132,17 @@ void MAPROTATION_SetCurrentPosition( ULONG ulPosition )
 
 //*****************************************************************************
 //
-void MAPROTATION_SetNextPosition( ULONG position )
+void MAPROTATION_SetNextPosition( unsigned int position, const bool ignoreLimits )
 {
 	g_ulNextMapInList = position;
+	g_NextMapIgnoresLimits = ignoreLimits;
+}
+
+//*****************************************************************************
+//
+bool MAPROTATION_ShouldNextMapIgnoreLimits( void )
+{
+	return g_NextMapIgnoresLimits;
 }
 
 //*****************************************************************************
@@ -139,6 +151,12 @@ bool MAPROTATION_CanEnterMap( ULONG ulIdx, ULONG ulPlayerCount )
 {
 	if ( ulIdx >= g_MapRotationEntries.size( ))
 		return ( false );
+
+	// [AK] If this is the next map in the rotation and it should ignore its
+	// player limits because of the SetNextMapPosition ACS function, then it can
+	// be entered regardless of whether or not the player count is admissable.
+	if (( ulIdx == g_ulNextMapInList ) && ( g_NextMapIgnoresLimits ))
+		return true;
 
 	return (( g_MapRotationEntries[ulIdx].minPlayers <= ulPlayerCount ) && ( g_MapRotationEntries[ulIdx].maxPlayers >= ulPlayerCount ));
 }
@@ -192,6 +210,9 @@ void MAPROTATION_CalcNextMap( const bool updateClients )
 	ULONG ulLowestLimit;
 	ULONG ulHighestLimit;
 	bool bUseMaxLimit;
+
+	// [AK] Before determining the next map, make sure it won't ignore its limits.
+	g_NextMapIgnoresLimits = false;
 
 	// If all the maps have been played, make them all available again.
 	{
@@ -339,7 +360,7 @@ void MAPROTATION_SetPositionToMap( const char *mapName, const bool setNextMap )
 
 	// [AK] Set the next map position to the current position, if desired.
 	if ( setNextMap )
-		g_ulNextMapInList = g_ulCurMapInList;
+		MAPROTATION_SetNextPosition( g_ulCurMapInList, false );
 }
 
 //*****************************************************************************

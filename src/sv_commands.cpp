@@ -5291,6 +5291,7 @@ void SERVERCOMMANDS_SetNextMapPosition( unsigned int playerExtra, ServerCommandF
 	NetCommand command( SVC2_UPDATEMAPROTATION );
 	command.addByte( UPDATE_MAPROTATION_SETNEXTPOSITION );
 	command.addShort( MAPROTATION_GetNextPosition( ));
+	command.addBit( MAPROTATION_ShouldNextMapIgnoreLimits( ));
 	command.sendCommandToClients( playerExtra, flags );
 }
 
