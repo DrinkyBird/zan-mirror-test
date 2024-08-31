@@ -127,6 +127,9 @@ ULONG MAPROTATION_GetNextPosition( void )
 //
 void MAPROTATION_SetCurrentPosition( ULONG ulPosition )
 {
+	if ( ulPosition >= g_MapRotationEntries.size( ))
+		return;
+
 	g_ulCurMapInList = ulPosition;
 }
 
@@ -134,6 +137,9 @@ void MAPROTATION_SetCurrentPosition( ULONG ulPosition )
 //
 void MAPROTATION_SetNextPosition( unsigned int position, const bool ignoreLimits )
 {
+	if ( position >= g_MapRotationEntries.size( ))
+		return;
+
 	g_ulNextMapInList = position;
 	g_NextMapIgnoresLimits = ignoreLimits;
 }
