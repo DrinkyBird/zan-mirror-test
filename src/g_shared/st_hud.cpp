@@ -1197,12 +1197,12 @@ static void HUD_DrawFragMessage( const unsigned int displayPlayer )
 
 	if ( g_bFraggedBy == false )
 	{
-		ULONG ulMenLeftStanding = 0;
+		unsigned int enemiesLeftStanding = 0;
 
-		// [AK] Count how many opponents are currently left.
+		// [AK] Count how many enemies are currently left.
 		if ( lastmanstanding )
 		{
-			ulMenLeftStanding = GAME_CountLivingAndRespawnablePlayers( ) - 1;
+			enemiesLeftStanding = GAME_CountLivingAndRespawnablePlayers( ) - 1;
 		}
 		else if (( teamlms ) && ( players[displayPlayer].bOnTeam ))
 		{
@@ -1211,13 +1211,13 @@ static void HUD_DrawFragMessage( const unsigned int displayPlayer )
 				if (( TEAM_ShouldUseTeam( ulIdx ) == false ) || ( ulIdx == players[displayPlayer].Team ))
 					continue;
 
-				ulMenLeftStanding += TEAM_CountLivingAndRespawnablePlayers( ulIdx );
+				enemiesLeftStanding += TEAM_CountLivingAndRespawnablePlayers( ulIdx );
 			}
 		}
 
-		// [AK] If there are any opponents left, display that instead of the place string.
-		if ( ulMenLeftStanding > 0 )
-			message.Format( "%d opponent%s left standing", static_cast<unsigned int>( ulMenLeftStanding ), ulMenLeftStanding != 1 ? "s" : "" );
+		// [AK] If there are any enemies left, display that instead of the place string.
+		if ( enemiesLeftStanding > 0 )
+			message.Format( "%u enem%s left standing", enemiesLeftStanding, enemiesLeftStanding != 1 ? "ies" : "y" );
 	}
 
 	// [AK] Changed the subtext color to grey to make it more neutral.
