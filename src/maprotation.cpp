@@ -50,16 +50,9 @@
 #include <string.h>
 #include <vector>
 #include "c_cvars.h"
-#include "c_dispatch.h"
-#include "g_level.h"
-#include "m_random.h"
 #include "maprotation.h"
-#include "p_setup.h"
 #include "joinqueue.h"
-#include "sv_main.h"
 #include "sv_commands.h"
-#include "network.h"
-#include "v_text.h"
 
 //*****************************************************************************
 //	VARIABLES
