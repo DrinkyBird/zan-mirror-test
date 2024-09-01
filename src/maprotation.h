@@ -76,24 +76,24 @@ struct MapRotationEntry
 
 void			MAPROTATION_Construct( void );
 unsigned int	MAPROTATION_CountEligiblePlayers( void );
-ULONG			MAPROTATION_GetNumEntries( void );
-ULONG			MAPROTATION_GetCurrentPosition( void );
-ULONG			MAPROTATION_GetNextPosition( void );
-void			MAPROTATION_SetCurrentPosition( ULONG ulPosition );
+unsigned int	MAPROTATION_GetNumEntries( void );
+unsigned int	MAPROTATION_GetCurrentPosition( void );
+unsigned int	MAPROTATION_GetNextPosition( void );
+void			MAPROTATION_SetCurrentPosition( unsigned int position );
 void			MAPROTATION_SetNextPosition( unsigned int position, const bool ignoreLimits );
 bool			MAPROTATION_ShouldNextMapIgnoreLimits( void );
-bool			MAPROTATION_CanEnterMap( ULONG ulIdx, ULONG ulPlayerCount );
+bool			MAPROTATION_CanEnterMap( unsigned int position, unsigned int playerCount );
 void			MAPROTATION_CalcNextMap( const bool updateClients );
 level_info_t	*MAPROTATION_GetNextMap( void );
-level_info_t	*MAPROTATION_GetMap( ULONG ulIdx );
-ULONG			MAPROTATION_GetPlayerLimits( ULONG ulIdx, bool bMaxPlayers );
+level_info_t	*MAPROTATION_GetMap( unsigned int position );
+unsigned int	MAPROTATION_GetPlayerLimits( unsigned int position, bool getMaxPlayers );
 void			MAPROTATION_SetPositionToMap( const char *mapName, const bool setNextMap );
-bool			MAPROTATION_IsMapInRotation( const char *pszMapName );
-bool			MAPROTATION_IsUsed( ULONG ulIdx );
-void			MAPROTATION_SetUsed( ULONG ulIdx, bool bUsed = true );
-void			MAPROTATION_AddMap( FCommandLine &argv, bool bSilent, bool bInsert = false );
-void			MAPROTATION_AddMap( const char *pszMapName, int iPosition, ULONG ulMinPlayers, ULONG ulMaxPlayers, bool bSilent );
-void			MAPROTATION_DelMap( const char *pszMapName, bool bSilent );
+bool			MAPROTATION_IsMapInRotation( const char *mapName );
+bool			MAPROTATION_IsUsed( unsigned int position );
+void			MAPROTATION_SetUsed( unsigned int position, bool used = true );
+void			MAPROTATION_AddMap( FCommandLine &argv, bool silent, bool insert = false );
+void			MAPROTATION_AddMap( const char *mapName, int position, unsigned int minPlayers, unsigned int maxPlayers, bool silent );
+void			MAPROTATION_DelMap( const char *mapName, bool silent );
 
 //*****************************************************************************
 //  EXTERNAL CONSOLE VARIABLES
