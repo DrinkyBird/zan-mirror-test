@@ -1122,17 +1122,15 @@ static bool callvote_CheckValidity( FString &Command, FString &Parameters )
 				SERVER_PrintfPlayer( SERVER_GetCurrentClient( ), "That map does not exist.\n" );
 			return ( false );
 		}
-		
+
 		// Don't allow us to leave the map rotation.
-		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
+		// [BB] Regardless of sv_maprotation, if the server has maps in the rotation,
+		// assume players are restricted to these maps.
+		if (( MAPROTATION_GetNumEntries( ) > 0 ) && ( MAPROTATION_IsMapInRotation( Parameters.GetChars( )) == false ))
 		{
-			// [BB] Regardless of sv_maprotation, if the server has maps in the rotation,
-			// assume players are restricted to these maps.
-			if ( ( MAPROTATION_GetNumEntries() > 0 ) && ( MAPROTATION_IsMapInRotation( Parameters.GetChars( ) ) == false ) )
-			{
+			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 				SERVER_PrintfPlayer( SERVER_GetCurrentClient( ), "That map is not in the map rotation.\n" );
-				return ( false );
-			}
+			return ( false );
 		}
 		break;
 	case VOTECMD_FRAGLIMIT:

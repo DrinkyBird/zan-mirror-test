@@ -81,6 +81,28 @@ void MAPROTATION_Construct( void )
 
 //*****************************************************************************
 //
+void MAPROTATION_StartNewGame( void )
+{
+	// [K6] Start with a random map if we are using sv_randommaprotation.
+	// [AK] The player limits assigned to each map entry must be respected, so
+	// if a random map should be picked, or if the first entry can't be entered,
+	// pick one that can.
+	// Note: the next map position should always start at zero here.
+	if (( sv_randommaprotation ) || ( MAPROTATION_CanEnterMap( 0, MAPROTATION_CountEligiblePlayers( )) == false ))
+		MAPROTATION_CalcNextMap( false );
+
+	// [BB] G_InitNew seems to alter the contents of the first argument, which it
+	// shouldn't. This causes the "Frags" bug. The following is just a workaround,
+	// the behavior of G_InitNew should be fixed.
+	char levelname[10];
+	sprintf( levelname, "%s", MAPROTATION_GetNextMap( )->mapname );
+
+	MAPROTATION_SetPositionToMap( levelname, true );
+	G_InitNew( levelname, false );
+}
+
+//*****************************************************************************
+//
 unsigned int MAPROTATION_CountEligiblePlayers( void )
 {
 	unsigned int playerCount = 0;
@@ -470,7 +492,7 @@ void MAPROTATION_AddMap( const char *mapName, int position, unsigned int minPlay
 
 	// [AK] If there's more than one entry in the map rotation now, and the
 	// current and next entries are the same, calculate a new next map.
-	if (( NETWORK_GetState( ) == NETSTATE_SERVER ) && ( g_MapRotationEntries.size( ) > 1 ) && ( g_CurMapInList == g_NextMapInList ))
+	if (( g_MapRotationEntries.size( ) > 1 ) && ( g_CurMapInList == g_NextMapInList ))
 		MAPROTATION_CalcNextMap( true );
 
 	if ( !silent )
@@ -533,7 +555,7 @@ void MAPROTATION_DelMap( const char *mapName, bool silent )
 			gotcha = true;
 
 			// [AK] If the deleted map was the next entry, calculate a new one.
-			if (( NETWORK_GetState( ) == NETSTATE_SERVER ) && ( g_MapRotationEntries.size( ) > 0 ) && ( entry == nextEntry ))
+			if (( g_MapRotationEntries.size( ) > 0 ) && ( entry == nextEntry ))
 				MAPROTATION_CalcNextMap( true );
 
 			break;

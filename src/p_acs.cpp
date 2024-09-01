@@ -8663,18 +8663,16 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 
 		case ACSF_SetNextMapPosition:
 		{
-			// [AK] Only the server may set the next map position.
-			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-			{
-				const unsigned int position = args[0] - 1;
+			const unsigned int position = args[0] - 1;
 
-				if (( position < MAPROTATION_GetNumEntries( )) && ( position != MAPROTATION_GetNextPosition( )))
-				{
-					MAPROTATION_SetNextPosition( position, !!args[1] );
+			if (( position < MAPROTATION_GetNumEntries( )) && ( position != MAPROTATION_GetNextPosition( )))
+			{
+				MAPROTATION_SetNextPosition( position, !!args[1] );
+
+				if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 					SERVERCOMMANDS_SetNextMapPosition( );
 
-					return 1;
-				}
+				return 1;
 			}
 
 			return 0;

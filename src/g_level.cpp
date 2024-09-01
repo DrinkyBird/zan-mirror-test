@@ -197,17 +197,14 @@ CCMD (map)
 			}
 			else
 			{
+				if ( sv_maprotation )
+					MAPROTATION_SetPositionToMap( argv[1], true );
+
+				// Tell the clients about the map change.
 				if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-				{
-					if ( sv_maprotation )
-						MAPROTATION_SetPositionToMap( argv[1], true );
-
-					// Tell the clients about the mapchange.
 					SERVER_ReconnectNewLevel( argv[1] );
-				}
-
 				// Tell the server we're leaving the game.
-				if ( NETWORK_GetState( ) == NETSTATE_CLIENT )
+				else if ( NETWORK_GetState( ) == NETSTATE_CLIENT )
 					CLIENT_QuitNetworkGame( NULL );
 
 				// Turn campaign mode back on.
@@ -816,9 +813,7 @@ const char *G_GetExitMap()
 		return lobby;
 	}
 	// Check to see if we're using map rotation.
-	else if (( sv_maprotation ) &&
-			 ( NETWORK_GetState( ) == NETSTATE_SERVER ) &&
-			 ( MAPROTATION_GetNumEntries( ) != 0 ))
+	else if (( sv_maprotation ) && ( MAPROTATION_GetNumEntries( ) != 0 ))
 	{
 		// [BB] It's possible that G_GetExitMap() is called multiple times before a map change.
 		// Therefore we may not advance the map, but just peek at it.
@@ -1098,7 +1093,7 @@ void G_DoLoadLevel (int position, bool autosave)
 		CALLVOTE_ClearVote();
 
 	// [AK] Things to do to the map rotation upon entering a new level.
-	if (( sv_maprotation ) && ( NETWORK_GetState( ) == NETSTATE_SERVER ))
+	if ( sv_maprotation )
 	{
 		// [BB] We need to update the map rotation if the changemap cheat was used.
 		if ( level.flags & LEVEL_CHANGEMAPCHEAT )
@@ -1732,7 +1727,7 @@ void G_DoWorldDone (void)
 	else
 	{
 		// [AK] Check if we're using the map rotation for the next level.
-		if (( NETWORK_GetState() == NETSTATE_SERVER ) && ( sv_maprotation ) && (( level.flags & LEVEL_CHANGEMAPCHEAT ) == false ))
+		if (( sv_maprotation ) && (( level.flags & LEVEL_CHANGEMAPCHEAT ) == false ))
 		{
 			const unsigned int nextMapEntry = MAPROTATION_GetNextPosition( );
 			level_info_t* nextMapInfo = MAPROTATION_GetMap( nextMapEntry );

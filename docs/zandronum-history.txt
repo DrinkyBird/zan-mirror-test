@@ -249,6 +249,7 @@
 !	- Clients now update their ping during intermissions and won't timeout when the server receives their response. Lagging icons now appear properly on the scoreboard without clients thinking that they're lagging when they're not. [Kaminsky]
 !	- Ally and enemy icons no longer appear above the head of a player being spied on. [Kaminsky]
 !	- The "next round in..." message is now used in (team) LMS during countdown sequences. [Kaminsky]
+!	- Map rotations are no longer exclusive to online games and can now be used in offline games. [Kaminsky]
 
 
 3.1

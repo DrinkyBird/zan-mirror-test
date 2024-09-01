@@ -75,6 +75,7 @@ struct MapRotationEntry
 //	PROTOTYPES
 
 void			MAPROTATION_Construct( void );
+void			MAPROTATION_StartNewGame( void );
 unsigned int	MAPROTATION_CountEligiblePlayers( void );
 unsigned int	MAPROTATION_GetNumEntries( void );
 unsigned int	MAPROTATION_GetCurrentPosition( void );
