@@ -74,6 +74,7 @@
 #include "p_trace.h"
 #include "win32/g15/g15.h"
 #include "voicechat.h"
+#include "possession.h"
 
 // [AK] Message levels used for cl_identifytarget.
 enum
@@ -1148,7 +1149,9 @@ static void HUD_RenderCountdown( ULONG ulTimeLeft )
 	else
 	{
 		// [AK] TLMS and team possession should still keep "team" in the title for consistency.
-		if ( invasion )
+		if (( possession || teampossession ) && ( POSSESSION_GetState( ) == PSNS_NEXTROUNDCOUNTDOWN ))
+			text = "Next round in...";
+		else if ( invasion )
 			text = INVASION_GetCurrentWaveString( );
 		else
 			text = GAMEMODE_GetCurrentName( );
