@@ -4189,6 +4189,10 @@ void GAME_ResetMap( bool bRunEnterScripts )
 			pNewActor->flags &= ~MF_DROPPED;
 			pNewActor->STFlags |= STFL_LEVELSPAWNED;
 
+			// [BOF] If the default Skybox, then transfer to new the actor.
+			if (level.DefaultSkybox == pActor)
+				level.DefaultSkybox = static_cast<ASkyViewpoint *>( pNewActor );
+
 			// Handle the spawn flags of the item.
 			pNewActor->HandleSpawnFlags( );
 
