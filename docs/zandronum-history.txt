@@ -201,6 +201,7 @@
 -	- Fixed: Skyboxes that have been moved now reset properly on map reset. [Barrels O' Fun]
 -	- Fixed: the "next round in..." message was missing in (team) possession since 3.1. [Kaminsky]
 -	- Fixed: the intermission timer on the scoreboard wasn't always accurate and on some occassions was longer than it should've been. [Kaminsky]
+-	- Fixed: player limits assigned to entries in the map rotation weren't respected when the server started up, so it could still choose a map that shouldn't be enterable. [Kaminsky]
 !	- The result value of GAMEEVENT_MEDALS event scripts can now be used to determine whether or not the player receives the medal. [Kaminsky]
 !	- GAMEMODE flags are now validated after all GAMEMODE lumps have been parsed instead of after each one. The internal game mode name (e.g. "TeamLMS") is now printed with the error message instead of the actual name. [Kaminsky]
 !	- Added an extra check to ensure that game modes have a (short) name. [Kaminsky]

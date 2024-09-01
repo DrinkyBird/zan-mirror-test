@@ -3185,12 +3185,18 @@ void D_DoomMain (void)
 					// Check if we have map rotation setup. If we do, use the first map there.
 					if (( sv_maprotation ) && ( MAPROTATION_GetNumEntries( ) > 0 ))
 					{
+						// [K6] Start with a random map if we are using sv_randommaprotation.
+						// [AK] The player limits assigned to each map entry must be respected, so if a random
+						// map should be picked, or if the first entry can't be entered, pick one that can.
+						// Note: the next map position should always start at zero here.
+						if (( sv_randommaprotation ) || ( MAPROTATION_CanEnterMap( 0, MAPROTATION_CountEligiblePlayers( )) == false ))
+							MAPROTATION_CalcNextMap( false );
+
 						// [BB] G_InitNew seems to alter the contents of the first argument, which it shouldn't.
 						// This causes the "Frags" bug. The following is just a workaround, the behavior of
 						// G_InitNew should be fixed.
 						char levelname[10];
-						// [K6] Start with a random map if we are using sv_randommaprotation.
-						sprintf( levelname, "%s", MAPROTATION_GetMap( sv_randommaprotation ? M_Random.Random( ) % MAPROTATION_GetNumEntries( ) : 0 )->mapname );
+						sprintf( levelname, "%s", MAPROTATION_GetNextMap( )->mapname );
 						MAPROTATION_SetPositionToMap( levelname, true );
 						G_InitNew( levelname, false );
 						//G_InitNew( MAPROTATION_GetMapName( 0 ), false );
