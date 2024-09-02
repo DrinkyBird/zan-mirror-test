@@ -1152,7 +1152,7 @@ static void HUD_RenderCountdown( ULONG ulTimeLeft )
 		if ((( lastmanstanding || teamlms ) && ( LASTMANSTANDING_GetState( ) == LMSS_NEXTROUNDCOUNTDOWN )) ||
 			(( possession || teampossession ) && ( POSSESSION_GetState( ) == PSNS_NEXTROUNDCOUNTDOWN )))
 		{
-			text = "Next round in...";
+			text = GStrings( "GM_NEXTROUNDIN" );
 		}
 		else if ( invasion )
 		{
