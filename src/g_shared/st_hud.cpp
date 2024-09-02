@@ -1148,7 +1148,7 @@ static void HUD_RenderCountdown( ULONG ulTimeLeft )
 	}
 	else
 	{
-		// [AK] TLMS and team possession should still keep "team" in the title for consistency.
+		// [AK] Use the "next round in..." string for (team) LMS or (team) possession.
 		if ((( lastmanstanding || teamlms ) && ( LASTMANSTANDING_GetState( ) == LMSS_NEXTROUNDCOUNTDOWN )) ||
 			(( possession || teampossession ) && ( POSSESSION_GetState( ) == PSNS_NEXTROUNDCOUNTDOWN )))
 		{
