@@ -618,8 +618,20 @@ CCMD( maplist )
 			// [AK] Highlight the current position in the map rotation in green, but only if we're actually playing on that map.
 			if (( g_CurMapInList == i ) && ( stricmp( level.mapname, g_MapRotationEntries[g_CurMapInList].map->mapname ) == 0 ))
 			{
-				message.Insert( 0, canEnter ? TEXTCOLOR_GREEN : TEXTCOLOR_DARKGREEN );
-				message += "(Current) ";
+				message += "(Current";
+
+				// [AK] If the current and next positions are the same, use cyan or turquoise instead.
+				if ( g_NextMapInList == i )
+				{
+					message.Insert( 0, canEnter ? TEXTCOLOR_CYAN : "\034[Turquoise]" );
+					message += " and next";
+				}
+				else
+				{
+					message.Insert( 0, canEnter ? TEXTCOLOR_GREEN : TEXTCOLOR_DARKGREEN );
+				}
+
+				message += ") ";
 			}
 			// [AK] Highlight the next position in the map rotation in blue.
 			else if ( g_NextMapInList == i )
