@@ -103,36 +103,31 @@ void LASTMANSTANDING_Tick( void )
 	switch ( g_LMSState )
 	{
 	case LMSS_WAITINGFORPLAYERS:
+	case LMSS_PRENEXTROUNDCOUNTDOWN:
 
 		if ( NETWORK_InClientMode() )
 		{
 			break;
 		}
 
-		if ( lastmanstanding )
+		// [AK] Set the state back to waiting for players if there's not enough
+		// players and we're in the pre-next round countdown state.
+		if ((( lastmanstanding ) && ( GAME_CountActivePlayers( ) >= 2 )) ||
+			(( teamlms ) && ( TEAM_TeamsWithPlayersOn( ) > 1 )))
 		{
-			// Two players are here now, being the countdown!
-			if ( GAME_CountActivePlayers( ) >= 2 )
-			{
-				if ( sv_lmscountdowntime > 0 )
-					LASTMANSTANDING_StartCountdown(( sv_lmscountdowntime * TICRATE ) - 1 );
-				else
-					LASTMANSTANDING_StartCountdown(( 10 * TICRATE ) - 1 );
-			}
+			if ( sv_lmscountdowntime > 0 )
+				LASTMANSTANDING_StartCountdown(( sv_lmscountdowntime * TICRATE ) - 1 );
+			else
+				LASTMANSTANDING_StartCountdown(( 10 * TICRATE ) - 1 );
+		}
+		else if ( LASTMANSTANDING_GetState( ) == LMSS_PRENEXTROUNDCOUNTDOWN )
+		{
+			LASTMANSTANDING_SetState( LMSS_WAITINGFORPLAYERS );
 		}
 
-		if ( teamlms )
-		{
-			if ( TEAM_TeamsWithPlayersOn( ) > 1 )
-			{
-				if ( sv_lmscountdowntime > 0 )
-					LASTMANSTANDING_StartCountdown(( sv_lmscountdowntime * TICRATE ) - 1 );
-				else
-					LASTMANSTANDING_StartCountdown(( 10 * TICRATE ) - 1 );
-			}
-		}
 		break;
 	case LMSS_COUNTDOWN:
+	case LMSS_NEXTROUNDCOUNTDOWN:
 
 		if ( g_ulLMSCountdownTicks )
 		{
@@ -348,14 +343,14 @@ void LASTMANSTANDING_StartCountdown( ULONG ulTicks )
 	// Put the game in a countdown state.
 	if ( NETWORK_InClientMode() == false )
 	{
-		LASTMANSTANDING_SetState( LMSS_COUNTDOWN );
+		LASTMANSTANDING_SetState( LASTMANSTANDING_GetState( ) == LMSS_PRENEXTROUNDCOUNTDOWN ? LMSS_NEXTROUNDCOUNTDOWN : LMSS_COUNTDOWN );
 	}
 
 	// Set the LMS countdown ticks.
 	LASTMANSTANDING_SetCountdownTicks( ulTicks );
 
 	// Announce that the fight will soon start.
-	ANNOUNCER_PlayEntry( cl_announcer, "PrepareToFight" );
+	ANNOUNCER_PlayEntry( cl_announcer, LASTMANSTANDING_GetState( ) == LMSS_COUNTDOWN ? "PrepareToFight" : "NextRoundIn" );
 
 	// Tell clients to start the countdown.
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
@@ -651,6 +646,7 @@ void LASTMANSTANDING_SetState( LMSSTATE_e State )
 
 		break;
 	case LMSS_WAITINGFORPLAYERS:
+	case LMSS_PRENEXTROUNDCOUNTDOWN:
 
 		// Zero out the countdown ticker.
 		LASTMANSTANDING_SetCountdownTicks( 0 );

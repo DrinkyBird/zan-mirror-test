@@ -1897,13 +1897,13 @@ void G_Ticker ()
 						}
 						else
 						{
-							LASTMANSTANDING_SetState( LMSS_WAITINGFORPLAYERS );
+							LASTMANSTANDING_SetState( LMSS_PRENEXTROUNDCOUNTDOWN );
 							LASTMANSTANDING_Tick( );
 						}
 					}
 					else
 					{
-						LASTMANSTANDING_SetState( LMSS_WAITINGFORPLAYERS );
+						LASTMANSTANDING_SetState( LMSS_PRENEXTROUNDCOUNTDOWN );
 						LASTMANSTANDING_Tick( );
 					}
 				}

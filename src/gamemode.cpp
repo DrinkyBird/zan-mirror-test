@@ -622,7 +622,7 @@ bool GAMEMODE_IsGameInCountdown( void )
 	else if ( duel )
 		return ( DUEL_GetState( ) == DS_COUNTDOWN );
 	else if ( teamlms || lastmanstanding )
-		return ( LASTMANSTANDING_GetState( ) == LMSS_COUNTDOWN );
+		return ( ( LASTMANSTANDING_GetState( ) == LMSS_COUNTDOWN ) || ( LASTMANSTANDING_GetState( ) == LMSS_NEXTROUNDCOUNTDOWN ) );
 	// [BB] What about PSNS_PRENEXTROUNDCOUNTDOWN?
 	else if ( possession || teampossession )
 		return ( ( POSSESSION_GetState( ) == PSNS_COUNTDOWN ) || ( POSSESSION_GetState( ) == PSNS_NEXTROUNDCOUNTDOWN ) );

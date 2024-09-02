@@ -1149,12 +1149,19 @@ static void HUD_RenderCountdown( ULONG ulTimeLeft )
 	else
 	{
 		// [AK] TLMS and team possession should still keep "team" in the title for consistency.
-		if (( possession || teampossession ) && ( POSSESSION_GetState( ) == PSNS_NEXTROUNDCOUNTDOWN ))
+		if ((( lastmanstanding || teamlms ) && ( LASTMANSTANDING_GetState( ) == LMSS_NEXTROUNDCOUNTDOWN )) ||
+			(( possession || teampossession ) && ( POSSESSION_GetState( ) == PSNS_NEXTROUNDCOUNTDOWN )))
+		{
 			text = "Next round in...";
+		}
 		else if ( invasion )
+		{
 			text = INVASION_GetCurrentWaveString( );
+		}
 		else
+		{
 			text = GAMEMODE_GetCurrentName( );
+		}
 
 		// [AK] Append "co-op" to the end of "survival".
 		if (( survival ) && ( text.CompareNoCase( "Survival" ) == 0 ))
