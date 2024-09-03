@@ -1287,7 +1287,8 @@ static bool snl_pointeron = false;
 
 void WI_initShowNextLoc ()
 {
-	if (wbs->next_ep == -1) 
+	// [AK] The server should always end the intermission after 15 seconds.
+	if (NETWORK_GetState() == NETSTATE_SERVER || wbs->next_ep == -1) 
 	{
 		// Last map in episode - there is no next location!
 		WI_End();
@@ -2789,8 +2790,4 @@ LONG WI_GetStopWatch( void )
 void WI_ResetStopWatch( void )
 {
 	g_lStopWatch = SERVERSTOPWATCHDELAY * TICRATE;
-
-	// [AK] Add a few extra seconds to the stopwatch for clients.
-	if ( NETWORK_InClientMode( ))
-		g_lStopWatch += ( SHOWNEXTLOCDELAY + 1 ) * TICRATE;
 }
