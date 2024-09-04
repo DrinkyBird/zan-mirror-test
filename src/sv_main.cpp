@@ -6600,6 +6600,18 @@ static bool server_RequestRCON( BYTESTREAM_s *pByteStream )
 			Printf( "RCON access for %s is granted!\n", players[g_lCurrentClient].userinfo.GetName() );
 
 			SERVERCOMMANDS_RCONAccess( g_lCurrentClient );
+
+			// [AK] After giving the client RCON access, send all non-default
+			// server settings to them. The client resets these on their end first.
+			for ( FBaseCVar *cvar = CVars; cvar != nullptr; cvar = cvar->GetNext( ))
+			{
+				// [AK] Ignore flag and mask CVars, use their respective flagsets instead.
+				if (( cvar->IsFlagCVar( )) || ( cvar->IsMaskCVar( )))
+					continue;
+
+				if (( cvar->IsServerCVar( )) && (( cvar->GetFlags( ) & CVAR_ISDEFAULT ) == false ))
+					SERVERCOMMANDS_SetCVar( *cvar, g_lCurrentClient, SVCF_ONLYTHISCLIENT );
+			}
 		}
 		else
 		{

@@ -2291,6 +2291,10 @@ void CLIENT_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 						// to reset the CVars.
 						for ( FBaseCVar* cvar = CVars; cvar; cvar = cvar->GetNext() )
 						{
+							// [AK] Ignore all flag and mask CVars, reset their respective flagsets instead.
+							if (( cvar->IsFlagCVar() ) || ( cvar->IsMaskCVar() ))
+								continue;
+
 							if ( cvar->IsServerCVar() )
 								cvar->ResetToDefault();
 						}
