@@ -4364,6 +4364,10 @@ bool GAME_IsMapRestRequested( void )
 //
 AActor* GAME_SelectRandomSpotForArtifact ( const PClass *pArtifactType, const TArray<FPlayerStart> &Spots )
 {
+	// [BOF] Don't allow artifact to duplicate if a player is already holding it.
+	if ( GAMEMODE_GetArtifactCarrier() )
+		return NULL;
+
 	if ( Spots.Size() == 0 )
 		return NULL;
 
