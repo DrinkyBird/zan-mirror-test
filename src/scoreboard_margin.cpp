@@ -975,6 +975,38 @@ protected:
 		DRAWSTRING_STATIC = -1
 	};
 
+	struct StringChunk
+	{
+		StringChunk( void ) : specialValue( DRAWSTRING_STATIC ) { }
+
+		void ParseSpecialValue( DRAWSTRINGVALUE_e value, FScanner &sc )
+		{
+			specialValue = value;
+
+			if ( specialValue == DRAWSTRING_CVAR )
+			{
+				sc.MustGetToken( '(' );
+				sc.MustGetToken( TK_Identifier );
+
+				FString cvarName = sc.String;
+				FBaseCVar *cvar = FindCVar( cvarName.GetChars( ), nullptr );
+
+				if ( cvar == nullptr )
+					sc.ScriptError( "'%s' is not a CVar.", cvarName.GetChars( ));
+
+				sc.MustGetToken( ')' );
+				string = cvarName;
+			}
+			else if ( specialValue == DRAWSTRING_STATIC )
+			{
+				string = sc.String;
+			}
+		}
+
+		DRAWSTRINGVALUE_e specialValue;
+		FString string;
+	};
+
 	struct PreprocessedString
 	{
 		FBrokenLines *pLines;
@@ -1029,25 +1061,10 @@ protected:
 				do
 				{
 					const DRAWSTRINGVALUE_e SpecialValue = GetSpecialValue( sc, SpecialValues );
+					StringChunk chunk;
 
-					if ( SpecialValue == DRAWSTRING_CVAR )
-					{
-						sc.MustGetToken( '(' );
-						sc.MustGetToken( TK_Identifier );
-
-						FString CVarName = sc.String;
-						FBaseCVar *pCVar = FindCVar( CVarName.GetChars( ), NULL );
-
-						if ( pCVar == NULL )
-							sc.ScriptError( "'%s' is not a CVar.", CVarName.GetChars( ));
-
-						sc.MustGetToken( ')' );
-						StringChunks.Push( { SpecialValue, CVarName } );
-					}
-					else
-					{
-						StringChunks.Push( { SpecialValue, ( SpecialValue != DRAWSTRING_STATIC ) ? "" : sc.String } );
-					}
+					chunk.ParseSpecialValue( SpecialValue, sc );
+					StringChunks.Push( chunk );
 
 				} while ( sc.CheckToken( '+' ));
 
@@ -1111,19 +1128,17 @@ protected:
 		// [AK] Create the final string using all of the string chunks.
 		for ( unsigned int i = 0; i < StringChunks.Size( ); i++ )
 		{
-			if ( StringChunks[i].first != DRAWSTRING_STATIC )
+			if ( StringChunks[i].specialValue != DRAWSTRING_STATIC )
 			{
-				const DRAWSTRINGVALUE_e Value = StringChunks[i].first;
-
-				switch ( Value )
+				switch ( StringChunks[i].specialValue )
 				{
 					case DRAWSTRING_CVAR:
 					{
-						FBaseCVar *pCVar = FindCVar( StringChunks[i].second.GetChars( ), NULL );
+						FBaseCVar *cvar = FindCVar( StringChunks[i].string, nullptr );
 
-						if ( pCVar != NULL )
+						if ( cvar != nullptr )
 						{
-							FString CVarValue = pCVar->GetGenericRep( CVAR_String ).String;
+							FString CVarValue = cvar->GetGenericRep( CVAR_String ).String;
 							V_ColorizeString( CVarValue );
 
 							text += CVarValue;
@@ -1154,7 +1169,7 @@ protected:
 						// [AK] The next level is only available on the intermission screen.
 						if (( gamestate == GS_INTERMISSION ) && ( g_pNextLevel != NULL ))
 						{
-							if ( Value == DRAWSTRING_NEXTLEVELNAME )
+							if ( StringChunks[i].specialValue == DRAWSTRING_NEXTLEVELNAME )
 								text += g_pNextLevel->LookupLevelName( );
 							else
 								text += g_pNextLevel->mapname;
@@ -1280,7 +1295,7 @@ protected:
 					case DRAWSTRING_LEVELTIME:
 					case DRAWSTRING_LEVELTIMELEFT:
 					{
-						if ( Value == DRAWSTRING_LEVELTIME )
+						if ( StringChunks[i].specialValue == DRAWSTRING_LEVELTIME )
 						{
 							// [AK] The level time is only active while in the level.
 							if ( gamestate == GS_LEVEL )
@@ -1359,10 +1374,10 @@ protected:
 			else
 			{
 				// [AK] If the string begins with a '$', look up the string in the LANGUAGE lumps.
-				if (( StringChunks[i].second.Len( ) > 1 ) && ( StringChunks[i].second[0] == '$' ))
-					text += GStrings( StringChunks[i].second.GetChars( ) + 1 );
+				if (( StringChunks[i].string.Len( ) > 1 ) && ( StringChunks[i].string[0] == '$' ))
+					text += GStrings( StringChunks[i].string.GetChars( ) + 1 );
 				else
-					text += StringChunks[i].second;
+					text += StringChunks[i].string;
 			}
 		}
 
@@ -1413,7 +1428,7 @@ protected:
 		}
 	}
 
-	TArray<std::pair<DRAWSTRINGVALUE_e, FString>> StringChunks;
+	TArray<StringChunk> StringChunks;
 	TArray<PreprocessedString> PreprocessedStrings;
 	FFont *pFont;
 	EColorRange Color;
