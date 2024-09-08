@@ -295,7 +295,7 @@ Scoreboard
 			// [JS] Intermission countdown display.
 			IfIntermission( true ) && IfOnlineGame( true ) && IfCVar( cl_intermissiontimer == true )
 			{
-				DrawString( value = "Entering " + nextlevellump + ": " + nextlevelname + " in " + intermissiontimeleft + " second(s)", textcolor = "Green" )
+				DrawString( value = "Entering " + nextlevellump + ": " + nextlevelname + pluralize( " in # second{s}", intermissiontimeleft ), textcolor = "Green" )
 			}
 		}
 	}

@@ -95,6 +95,10 @@ enum MARGINTYPE_e
 	MARGINTYPE_HEADER_OR_FOOTER,
 	MARGINTYPE_TEAM,
 	MARGINTYPE_SPECTATOR,
+
+	// [AK] This is only used to allow special values for certain margin commands
+	// ( e.g. DrawString, DrawColor, or DrawTexture ) to be used in all margins.
+	MARGINTYPE_ALL,
 };
 
 //*****************************************************************************

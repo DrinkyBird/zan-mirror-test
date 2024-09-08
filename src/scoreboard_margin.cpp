@@ -766,7 +766,7 @@ protected:
 				const MARGINTYPE_e MarginType = value->second.second;
 
 				// [AK] Throw an error if this value can't be used in the margin that the commands belongs to.
-				if ( MarginType != pParentMargin->GetType( ))
+				if (( MarginType != MARGINTYPE_ALL ) && ( MarginType != pParentMargin->GetType( )))
 					sc.ScriptError( "Special value '%s' can't be used inside a '%s' margin.", sc.String, pParentMargin->GetName( ));
 
 				// [AK] Return the constant that corresponds to this special value.
@@ -971,16 +971,41 @@ protected:
 		DRAWSTRING_TEAMDEATHCOUNT,
 		// The number of true spectators.
 		DRAWSTRING_SPECTATORCOUNT,
+		// A pluralize function that's used with some other special values.
+		DRAWSTRING_PLURALIZE,
 
 		DRAWSTRING_STATIC = -1
 	};
 
 	struct StringChunk
 	{
-		StringChunk( void ) : specialValue( DRAWSTRING_STATIC ) { }
+		StringChunk( const bool pluralize ) : pluralize( pluralize ), specialValue( DRAWSTRING_STATIC ) { }
 
 		void ParseSpecialValue( DRAWSTRINGVALUE_e value, FScanner &sc )
 		{
+			// [AK] DRAWSTRING_PLURALIZE can't be used here (this should never happen).
+			if ( value == DRAWSTRING_PLURALIZE )
+				sc.ScriptError( "Special value '%s' can't be parsed here.", sc.String );
+
+			if ( pluralize )
+			{
+				// [AK] All special values that can be used in a pluralize function.
+				const std::set<DRAWSTRINGVALUE_e> admissableSpecialValues =
+				{
+					DRAWSTRING_CVAR, DRAWSTRING_INTERMISSIONTIMELEFT, DRAWSTRING_TOTALPLAYERS,
+					DRAWSTRING_PLAYERSINGAME, DRAWSTRING_TEAMPLAYERCOUNT, DRAWSTRING_TEAMLIVEPLAYERCOUNT,
+					DRAWSTRING_TEAMFRAGCOUNT, DRAWSTRING_TEAMPOINTCOUNT, DRAWSTRING_TEAMWINCOUNT,
+					DRAWSTRING_TEAMDEATHCOUNT, DRAWSTRING_SPECTATORCOUNT
+
+				};
+
+				// [AK] Throw a fatal error if the special value is unacceptable.
+				if ( value == DRAWSTRING_STATIC )
+					sc.ScriptError( "Static text can't be used for the special value in a pluralize function.", sc.String );
+				else if ( admissableSpecialValues.find( value ) == admissableSpecialValues.end( ))
+					sc.ScriptError( "Special value '%s' can't be used in a pluralize function.", sc.String );
+			}
+
 			specialValue = value;
 
 			if ( specialValue == DRAWSTRING_CVAR )
@@ -1003,6 +1028,16 @@ protected:
 			}
 		}
 
+		FString LookupString( void )
+		{
+			// [AK] If the string begins with a '$', look up the string in the LANGUAGE lumps.
+			if (( string.Len( ) > 1 ) && ( string[0] == '$' ))
+				return GStrings( string.GetChars( ) + 1 );
+			else
+				return string;
+		}
+
+		const bool pluralize;
 		DRAWSTRINGVALUE_e specialValue;
 		FString string;
 	};
@@ -1051,6 +1086,7 @@ protected:
 			{ "teamwincount",			{ DRAWSTRING_TEAMWINCOUNT,			MARGINTYPE_TEAM }},
 			{ "teamdeathcount",			{ DRAWSTRING_TEAMDEATHCOUNT,		MARGINTYPE_TEAM }},
 			{ "spectatorcount",			{ DRAWSTRING_SPECTATORCOUNT,		MARGINTYPE_SPECTATOR }},
+			{ "pluralize",				{ DRAWSTRING_PLURALIZE,				MARGINTYPE_ALL }},
 		};
 
 		switch ( Parameter )
@@ -1061,9 +1097,29 @@ protected:
 				do
 				{
 					const DRAWSTRINGVALUE_e SpecialValue = GetSpecialValue( sc, SpecialValues );
-					StringChunk chunk;
+					StringChunk chunk( SpecialValue == DRAWSTRING_PLURALIZE );
 
-					chunk.ParseSpecialValue( SpecialValue, sc );
+					if ( chunk.pluralize )
+					{
+						sc.MustGetToken( '(' );
+						sc.MustGetToken( TK_StringConst );
+
+						// [AK] The text shouldn't be empty.
+						if ( sc.StringLen == 0 )
+							sc.ScriptError( "The text can't be empty in a pluralize function." );
+
+						chunk.string = sc.String;
+						sc.MustGetToken( ',' );
+
+						// [AK] Get the special value that should be used.
+						chunk.ParseSpecialValue( GetSpecialValue( sc, SpecialValues ), sc );
+						sc.MustGetToken( ')' );
+					}
+					else
+					{
+						chunk.ParseSpecialValue( SpecialValue, sc );
+					}
+
 					StringChunks.Push( chunk );
 
 				} while ( sc.CheckToken( '+' ));
@@ -1130,6 +1186,8 @@ protected:
 		{
 			if ( StringChunks[i].specialValue != DRAWSTRING_STATIC )
 			{
+				FString specialValueText;
+
 				switch ( StringChunks[i].specialValue )
 				{
 					case DRAWSTRING_CVAR:
@@ -1141,26 +1199,26 @@ protected:
 							FString CVarValue = cvar->GetGenericRep( CVAR_String ).String;
 							V_ColorizeString( CVarValue );
 
-							text += CVarValue;
+							specialValueText = CVarValue;
 						}
 
 						break;
 					}
 
 					case DRAWSTRING_GAMEMODE:
-						text += GAMEMODE_GetCurrentName( );
+						specialValueText = GAMEMODE_GetCurrentName( );
 						break;
 
 					case DRAWSTRING_PLAYERNAME:
-						text += players[ulDisplayPlayer].userinfo.GetName( );
+						specialValueText = players[ulDisplayPlayer].userinfo.GetName( );
 						break;
 
 					case DRAWSTRING_LEVELNAME:
-						text += level.LevelName;
+						specialValueText = level.LevelName;
 						break;
 
 					case DRAWSTRING_LEVELLUMP:
-						text += level.mapname;
+						specialValueText = level.mapname;
 						break;
 
 					case DRAWSTRING_NEXTLEVELNAME:
@@ -1170,20 +1228,20 @@ protected:
 						if (( gamestate == GS_INTERMISSION ) && ( g_pNextLevel != NULL ))
 						{
 							if ( StringChunks[i].specialValue == DRAWSTRING_NEXTLEVELNAME )
-								text += g_pNextLevel->LookupLevelName( );
+								specialValueText = g_pNextLevel->LookupLevelName( );
 							else
-								text += g_pNextLevel->mapname;
+								specialValueText = g_pNextLevel->mapname;
 						}
 						else
 						{
-							text += "???";
+							specialValueText = "???";
 						}
 
 						break;
 					}
 
 					case DRAWSTRING_SKILLNAME:
-						text += G_SkillName( );
+						specialValueText = G_SkillName( );
 						break;
 
 					case DRAWSTRING_LIMITSTRINGS:
@@ -1194,20 +1252,20 @@ protected:
 						for ( std::list<FString>::iterator it = lines.begin( ); it != lines.end( ); it++ )
 						{
 							if ( it != lines.begin( ))
-								text += '\n';
+								specialValueText += '\n';
 
-							text += *it;
+							specialValueText += *it;
 						}
 
 						break;
 					}
 
 					case DRAWSTRING_POINTSTRING:
-						text += HUD_BuildPointString( );
+						specialValueText = HUD_BuildPointString( );
 						break;
 
 					case DRAWSTRING_PLACESTRING:
-						text += HUD_BuildPlaceString( ulDisplayPlayer );
+						specialValueText = HUD_BuildPlaceString( ulDisplayPlayer );
 						break;
 
 					case DRAWSTRING_PLAYERLEADSTRING:
@@ -1251,7 +1309,7 @@ protected:
 							// [AK] There's a player who's taken the lead.
 							if ( highestPlayer != MAXPLAYERS )
 							{
-								text.AppendFormat( "%s %s with", players[highestPlayer].userinfo.GetName( ), gamestate == GS_LEVEL ? "leads" : "has won" );
+								specialValueText.Format( "%s %s with", players[highestPlayer].userinfo.GetName( ), gamestate == GS_LEVEL ? "leads" : "has won" );
 							}
 							// [AK] There are multiple players tied for the lead.
 							else if ( numPlayersTied > 1 )
@@ -1259,16 +1317,16 @@ protected:
 								if ( numPlayersTied == HUD_GetNumPlayers( ))
 								{
 									if ( numPlayersTied == 2 )
-										text += "Both";
+										specialValueText = "Both";
 									else
-										text += "All";
+										specialValueText = "All";
 								}
 								else
 								{
-									text.AppendFormat( "%d", numPlayersTied );
+									specialValueText.Format( "%d", numPlayersTied );
 								}
 
-								text.AppendFormat( " players %s tied at", gamestate == GS_LEVEL ? "are" : "have" );
+								specialValueText.AppendFormat( " players %s tied at", gamestate == GS_LEVEL ? "are" : "have" );
 							}
 							// [AK] There's nobody in-game, don't write anything to the string.
 							else
@@ -1276,17 +1334,17 @@ protected:
 								break;
 							}
 
-							text.AppendFormat( " %d ", highestScore );
+							specialValueText.AppendFormat( " %d ", highestScore );
 
 							if ( gameModeFlags & GMF_PLAYERSEARNFRAGS )
-								text += "frag";
+								specialValueText += "frag";
 							else if ( gameModeFlags & GMF_PLAYERSEARNPOINTS )
-								text += "point";
+								specialValueText += "point";
 							else
-								text += "win";
+								specialValueText += "win";
 
 							if ( highestScore != 1 )
-								text += 's';
+								specialValueText += 's';
 						}
 
 						break;
@@ -1301,7 +1359,7 @@ protected:
 							if ( gamestate == GS_LEVEL )
 							{
 								const int levelTime = level.time / TICRATE;
-								text.AppendFormat( "%02d:%02d:%02d", levelTime / 3600, ( levelTime % 3600 ) / 60, levelTime % 60 );
+								specialValueText.Format( "%02d:%02d:%02d", levelTime / 3600, ( levelTime % 3600 ) / 60, levelTime % 60 );
 
 								break;
 							}
@@ -1314,70 +1372,159 @@ protected:
 								FString TimeLeft;
 								GAMEMODE_GetTimeLeftString( TimeLeft );
 
-								text += TimeLeft;
+								specialValueText = TimeLeft;
 								break;
 							}
 						}
 
-						text += "00:00:00";
+						specialValueText = "00:00:00";
 						break;
 					}
 
 					case DRAWSTRING_INTERMISSIONTIMELEFT:
-						text.AppendFormat( "%ld", ( gamestate == GS_INTERMISSION ) ? WI_GetStopWatch( ) / TICRATE + 1 : 0 );
+						specialValueText.Format( "%ld", ( gamestate == GS_INTERMISSION ) ? WI_GetStopWatch( ) / TICRATE + 1 : 0 );
 						break;
 
 					case DRAWSTRING_TOTALPLAYERS:
-						text.AppendFormat( "%lu", SERVER_CountPlayers( true ));
+						specialValueText.Format( "%lu", SERVER_CountPlayers( true ));
 						break;
 
 					case DRAWSTRING_PLAYERSINGAME:
-						text.AppendFormat( "%lu", HUD_GetNumPlayers( ));
+						specialValueText.Format( "%lu", HUD_GetNumPlayers( ));
 						break;
 
 					case DRAWSTRING_TEAMNAME:
-						text += TEAM_GetName( ulTeam );
+						specialValueText = TEAM_GetName( ulTeam );
 						break;
 
 					case DRAWSTRING_TEAMPLAYERCOUNT:
-						text.AppendFormat( "%lu", TEAM_CountPlayers( ulTeam ));
+						specialValueText.Format( "%lu", TEAM_CountPlayers( ulTeam ));
 						break;
 
 					case DRAWSTRING_TEAMLIVEPLAYERCOUNT:
-						text.AppendFormat( "%lu", TEAM_CountLivingAndRespawnablePlayers( ulTeam ));
+						specialValueText.Format( "%lu", TEAM_CountLivingAndRespawnablePlayers( ulTeam ));
 						break;
 
 					case DRAWSTRING_TEAMFRAGCOUNT:
-						text.AppendFormat( "%ld", TEAM_GetFragCount( ulTeam ));
+						specialValueText.Format( "%ld", TEAM_GetFragCount( ulTeam ));
 						break;
 
 					case DRAWSTRING_TEAMPOINTCOUNT:
-						text.AppendFormat( "%ld", TEAM_GetPointCount( ulTeam ));
+						specialValueText.Format( "%ld", TEAM_GetPointCount( ulTeam ));
 						break;
 
 					case DRAWSTRING_TEAMWINCOUNT:
-						text.AppendFormat( "%ld", TEAM_GetWinCount( ulTeam ));
+						specialValueText.Format( "%ld", TEAM_GetWinCount( ulTeam ));
 						break;
 
 					case DRAWSTRING_TEAMDEATHCOUNT:
-						text.AppendFormat( "%ld", TEAM_GetDeathCount( ulTeam ));
+						specialValueText.Format( "%ld", TEAM_GetDeathCount( ulTeam ));
 						break;
 
 					case DRAWSTRING_SPECTATORCOUNT:
-						text.AppendFormat( "%lu", HUD_GetNumSpectators( ));
+						specialValueText.Format( "%lu", HUD_GetNumSpectators( ));
 						break;
 
 					default:
 						break;
 				}
+
+				// [AK] Pluralize the string chunk's text using the special value.
+				if ( StringChunks[i].pluralize )
+				{
+					const bool usePluralWords = ( specialValueText.ToDouble( ) != 1.0 );
+					const FString stringToUse = StringChunks[i].LookupString( );
+					bool scanningPhrase = false;
+					FString phrase;
+
+					for ( unsigned int i = 0; i < stringToUse.Len( ); i++ )
+					{
+						if (( stringToUse[i] == '#' ) || ( stringToUse[i] == '{' ))
+						{
+							// [AK] If a singular/plural phrase is being scanned (a '{'
+							// was scanned before), put the character in and move on.
+							if ( scanningPhrase )
+							{
+								phrase += stringToUse[i];
+								continue;
+							}
+
+							if ( stringToUse[i] == '#' )
+								text += specialValueText;
+							else
+								scanningPhrase = true;
+						}
+						else if ( stringToUse[i] == '}' )
+						{
+							// [AK] If no '{' was scanned, put the '}' in and move on.
+							if ( scanningPhrase == false )
+							{
+								text += stringToUse[i];
+								continue;
+							}
+
+							scanningPhrase = false;
+
+							// [AK] If there's no text between the braces, or if there's
+							// a '#' or an extra '{' somewhere, leave it unformatted.
+							if ( phrase.IsEmpty( ))
+							{
+								text += "{}";
+								continue;
+							}
+							else if (( phrase.IndexOf( '#' ) != -1 ) || ( phrase.IndexOf( '{' ) != -1 ))
+							{
+								text.AppendFormat( "{%s}", phrase.GetChars( ));
+								continue;
+							}
+
+							const long slashIndex = phrase.IndexOf( '/' );
+
+							// [AK] If there's no slash, the text between "{ }" is always
+							// used for plural. Otherwise, text on the left of it is used
+							// for singular, while text on the right is used for plural.
+							if ( slashIndex == -1 )
+							{
+								if ( usePluralWords )
+									text += phrase;
+							}
+							else
+							{
+								// [AK] If the slash was entered incorrectly, or there's
+								// more than one, don't format the phrase.
+								if (( slashIndex == 0 ) || ( slashIndex == phrase.Len( ) - 1 ) || ( phrase.LastIndexOf( '/' ) != slashIndex ))
+									text.AppendFormat( "{%s}", phrase.GetChars( ));
+								// [AK] Choose either the singular or plural text.
+								else if ( usePluralWords == false )
+									text += phrase.Left( slashIndex );
+								else
+									text += phrase.Right( phrase.Len( ) - ( slashIndex + 1 ));
+							}
+
+							phrase.Truncate( 0 );
+						}
+						else
+						{
+							if ( scanningPhrase )
+								phrase += stringToUse[i];
+							else
+								text += stringToUse[i];
+						}
+					}
+
+					// [AK] If a phrase wasn't ended properly (i.e. "{ }" wasn't closed),
+					// add whatever was scanned already, but don't leave out the '{'.
+					if ( scanningPhrase )
+						text.AppendFormat( "{%s", phrase.GetChars( ));
+				}
+				else
+				{
+					text += specialValueText;
+				}
 			}
 			else
 			{
-				// [AK] If the string begins with a '$', look up the string in the LANGUAGE lumps.
-				if (( StringChunks[i].string.Len( ) > 1 ) && ( StringChunks[i].string[0] == '$' ))
-					text += GStrings( StringChunks[i].string.GetChars( ) + 1 );
-				else
-					text += StringChunks[i].string;
+				text += StringChunks[i].LookupString( );
 			}
 		}
 
