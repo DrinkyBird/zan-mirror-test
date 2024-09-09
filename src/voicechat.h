@@ -309,6 +309,24 @@ private:
 class VOIPPanel
 {
 public:
+	enum
+	{
+		// The panel will not be shown.
+		SHOW_OFF,
+
+		// Aligned to the top-left corner of the screen.
+		SHOW_TOPLEFT,
+
+		// Aligned to the bottom-left corner of the screen.
+		SHOW_BOTTOMLEFT,
+
+		// Aligned to the top-right corner of the screen.
+		SHOW_TOPRIGHT,
+
+		// Aligned to the bottom-right corner of the screen.
+		SHOW_BOTTOMRIGHT,
+	};
+
 	static VOIPPanel &GetInstance( void ) { static VOIPPanel instance; return instance; }
 	void Refresh( void );
 	void Render( void );

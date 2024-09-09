@@ -183,6 +183,15 @@ OptionValue ZA_VoiceChatFilter
 	2, "Players or spectators only"
 }
 
+OptionValue ZA_ShowVoicePanel
+{
+	0, "No"
+	1, "Top-left"
+	2, "Bottom-left"
+	3, "Top-right"
+	4, "Bottom-right"
+}
+
 OptionValue ZA_VoicePanelShowTeams
 {
 	0, "No"
@@ -207,7 +216,7 @@ OptionMenu "ZA_VoiceChatOptions"
 	Option		"Use noise suppression",	"voice_suppressnoise",		"YesNo"
 	TextField	"RNNoise model file",		"voice_noisemodelfile",		"voice_suppressnoise"
 	StaticText	" "
-	Option		"Show voice panel",		"voice_showpanel",		"YesNo"
+	Option		"Show voice panel",		"voice_showpanel",		"ZA_ShowVoicePanel"
 	TextField	"Panel x-pos",			"voice_panelx",			"voice_showpanel"
 	TextField	"Panel y-pos",			"voice_panely",			"voice_showpanel"
 	NumberField	"Max panel rows",		"voice_panelrows",		1, 64, 1,			"voice_showpanel"

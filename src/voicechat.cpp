@@ -79,14 +79,28 @@ CVAR( Bool, voice_suppressnoise, true, CVAR_ARCHIVE | CVAR_NOSETBYACS | CVAR_GLO
 // [AK] Allows the client to load a custom RNNoise model file.
 CVAR( String, voice_noisemodelfile, "", CVAR_ARCHIVE | CVAR_NOSETBYACS | CVAR_GLOBALCONFIG )
 
-// [AK] If enabled, displays a list of all players talking on the screen.
-CVAR( Bool, voice_showpanel, true, CVAR_ARCHIVE )
+// [AK] If non-zero, displays a list of all players talking on the screen.
+CUSTOM_CVAR( Int, voice_showpanel, VOIPPanel::SHOW_BOTTOMRIGHT, CVAR_ARCHIVE )
+{
+	const int clampedValue = clamp<int>( self, VOIPPanel::SHOW_OFF, VOIPPanel::SHOW_BOTTOMRIGHT );
+
+	if ( self != clampedValue )
+		self = clampedValue;
+}
 
 // [AK] The x-position of the voice panel.
-CVAR( Int, voice_panelx, -7, CVAR_ARCHIVE )
+CUSTOM_CVAR( Int, voice_panelx, 7, CVAR_ARCHIVE )
+{
+	if ( self < 0 )
+		self = 0;
+}
 
 // [AK] The y-position of the voice panel.
-CVAR( Int, voice_panely, -40, CVAR_ARCHIVE )
+CUSTOM_CVAR( Int, voice_panely, 40, CVAR_ARCHIVE )
+{
+	if ( self < 0 )
+		self = 0;
+}
 
 // [AK] The maximum number of rows that can appear on the voice panel.
 CUSTOM_CVAR( Int, voice_panelrows, 10, CVAR_ARCHIVE )
@@ -2024,14 +2038,14 @@ void VOIPPanel::Refresh( void )
 	// [AK] Determine the position and alignment of the panel on the screen.
 	int xPos = voice_panelx.GetGenericRep( CVAR_Int ).Int;
 	int yPos = voice_panely.GetGenericRep( CVAR_Int ).Int;
-	const bool alignRight = ( xPos < 0 );
-	const bool alignBottom = ( yPos < 0 );
+	const bool alignRight = ( voice_showpanel == SHOW_TOPRIGHT || voice_showpanel == SHOW_BOTTOMRIGHT );
+	const bool alignBottom = ( voice_showpanel == SHOW_BOTTOMLEFT || voice_showpanel == SHOW_BOTTOMRIGHT );
 
 	if ( alignRight )
-		xPos += HUD_GetWidth( );
+		xPos = HUD_GetWidth( ) - xPos;
 
 	if ( alignBottom )
-		yPos += viewheight <= ST_Y ? static_cast<int>( ST_Y * g_rYScale ) : HUD_GetHeight( );
+		yPos = ( viewheight <= ST_Y ? static_cast<int>( ST_Y * g_rYScale ) : HUD_GetHeight( )) - yPos;
 
 	speakerIcon = TexMan( TexMan.CheckForTexture( "SPKMINI1", FTexture::TEX_MiscPatch ));
 
