@@ -1677,7 +1677,7 @@ PlayerValue DataScoreColumn::GetValue( const ULONG ulPlayer ) const
 				if ( players[ulPlayer].statuses & PLAYERSTATUS_LAGGING )
 					Result.SetValue<FTexture *>( TexMan.FindTexture( "LAGMINI" ));
 				else if ( players[ulPlayer].statuses & PLAYERSTATUS_TALKING )
-					Result.SetValue<FTexture *>( TexMan.FindTexture( "SPKRMINI" ));
+					Result.SetValue<FTexture *>( TexMan( TexMan.CheckForTexture( "SPKMINI1", FTexture::TEX_MiscPatch )));
 				else if ( players[ulPlayer].statuses & PLAYERSTATUS_CHATTING )
 					Result.SetValue<FTexture *>( TexMan.FindTexture( "TLKMINI" ));
 				else if ( players[ulPlayer].statuses & PLAYERSTATUS_INCONSOLE )

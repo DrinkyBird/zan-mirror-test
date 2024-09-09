@@ -2033,7 +2033,7 @@ void VOIPPanel::Refresh( void )
 	if ( alignBottom )
 		yPos += viewheight <= ST_Y ? static_cast<int>( ST_Y * g_rYScale ) : HUD_GetHeight( );
 
-	speakerIcon = TexMan.FindTexture( "SPKRMINI" );
+	speakerIcon = TexMan( TexMan.CheckForTexture( "SPKMINI1", FTexture::TEX_MiscPatch ));
 
 	// [AK] Set the x-position of the speaker icon.
 	if ( speakerIcon != nullptr )
