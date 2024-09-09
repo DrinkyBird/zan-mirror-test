@@ -1694,6 +1694,10 @@ void UnlatchCVars (void)
 		if (var.Type == CVAR_String)
 			delete[] var.Value.String;
 		var.Variable->Flags = oldflags;
+
+		// [AK] Setting the CVar is supposed to remove the CVAR_ISDEFAULT flag,
+		// but restoring the old flags can re-enable it. Make sure it stays off.
+		var.Variable->Flags &= ~CVAR_ISDEFAULT;
 	}
 }
 
