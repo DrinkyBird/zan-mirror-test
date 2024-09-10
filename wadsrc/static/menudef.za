@@ -206,6 +206,7 @@ OptionMenu "ZA_VoiceChatOptions"
 	Class "VoiceChatMenu"
 
 	Option		"Enable voice chat",		"voice_enable",			"ZA_VoiceMode"
+	Option		"Mute yourself",		"voice_muteself",		"YesNo",			"voice_enable"
 	Option		"Listen filter",		"voice_listenfilter",		"ZA_VoiceChatFilter",		"voice_enable"
 	Option		"Transmit filter",		"voice_transmitfilter",		"ZA_VoiceChatFilter",		"voice_enable"
 	StaticText	" "

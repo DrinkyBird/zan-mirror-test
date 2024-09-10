@@ -120,6 +120,26 @@ CUSTOM_CVAR( Int, voice_panelshowteams, VOICEPANEL_TEAMFORMAT_NAME, CVAR_ARCHIVE
 		self = clampedValue;
 }
 
+// [AK] If enabled, stops recording from the input device.
+CUSTOM_CVAR( Bool, voice_muteself, false, CVAR_ARCHIVE | CVAR_NOSETBYACS | CVAR_GLOBALCONFIG )
+{
+	VOIPController &instance = VOIPController::GetInstance( );
+
+	// [AK] Don't do anything if voice chat isn't allowed or during a microphone test.
+	if (( instance.IsVoiceChatAllowed( ) == false ) || ( instance.IsTestingMicrophone( )))
+		return;
+
+	if ( self )
+	{
+		if ( instance.IsRecording( ))
+			instance.StopRecording( );
+	}
+	else if ( instance.IsRecording( ) == false )
+	{
+		instance.StartRecording( );
+	}
+}
+
 // [AK] Which input device to use when recording audio.
 CUSTOM_CVAR( Int, voice_recorddriver, 0, CVAR_ARCHIVE | CVAR_NOSETBYACS | CVAR_GLOBALCONFIG )
 {
@@ -507,7 +527,9 @@ void VOIPController::Activate( void )
 	if (( isInitialized == false ) || ( isActive ) || ( CLIENTDEMO_IsPlaying( )))
 		return;
 
-	StartRecording( );
+	if ( voice_muteself == false )
+		StartRecording( );
+
 	isActive = true;
 }
 
@@ -651,7 +673,7 @@ void VOIPController::Tick( void )
 
 		if ( players[consoleplayer].userinfo.GetVoiceEnable( ) == VOICEMODE_PUSHTOTALK )
 		{
-			if ( IsVoiceChatAllowed( ))
+			if (( IsVoiceChatAllowed( )) || ( voice_muteself ))
 			{
 				if ( isNotIgnored )
 					StartTransmission( TRANSMISSIONTYPE_BUTTON, true );
@@ -679,11 +701,13 @@ void VOIPController::Tick( void )
 	if (( isActive == false ) && ( isTesting == false ))
 		return;
 
+	const bool isUsingVoiceActivity = ( players[consoleplayer].userinfo.GetVoiceEnable( ) == VOICEMODE_VOICEACTIVITY );
+
 	// [AK] Are we're transmitting audio by pressing the "voicerecord" button right
 	// now, or using voice activity detection? We'll check if we have enough new
 	// samples recorded to fill an audio frame that can be encoded and sent out.
 	// This also applies while testing the microphone.
-	if ((( isNotIgnored ) && (( transmissionType != TRANSMISSIONTYPE_OFF ) || ( players[consoleplayer].userinfo.GetVoiceEnable( ) == VOICEMODE_VOICEACTIVITY ))) || ( isTesting ))
+	if (( isNotIgnored && !voice_muteself && ( transmissionType != TRANSMISSIONTYPE_OFF || isUsingVoiceActivity )) || ( isTesting ))
 	{
 		unsigned int recordPosition = 0;
 
@@ -1233,7 +1257,7 @@ void VOIPController::SetMicrophoneTest( const bool enable )
 	{
 		// [AK] Stop recording if we're not allowed to (i.e. we only started
 		// recording for the sake of testing).
-		if (( IsVoiceChatAllowed( ) == false ) && ( isRecording ))
+		if ((( IsVoiceChatAllowed( ) == false ) || ( voice_muteself )) && ( isRecording ))
 			StopRecording( );
 
 		testRMSVolume = MIN_DECIBELS;
@@ -1287,7 +1311,13 @@ FString VOIPController::GrabStats( void ) const
 {
 	FString out;
 
-	out.Format( "VoIP controller status: %s\n", transmissionType != TRANSMISSIONTYPE_OFF ? "transmitting" : ( isActive ? "activated" : "deactivated" ));
+	out.Format( "VoIP controller status: %s", transmissionType != TRANSMISSIONTYPE_OFF ? "transmitting" : ( isActive ? "activated" : "deactivated" ));
+
+	// [AK] Indicate if whether or not the VoIP controller is recording audio.
+	if ( isActive )
+		out.AppendFormat( " (%srecording)", IsRecording( ) ? "" : "not " );
+
+	out += '\n';
 
 	for ( unsigned int i = 0; i < MAXPLAYERS; i++ )
 	{
