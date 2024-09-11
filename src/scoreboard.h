@@ -415,7 +415,7 @@ public:
 	public:
 		~CommandBlock( void ) { Clear( ); }
 
-		void ParseBlock( FScanner &sc, ScoreMargin *pMargin, BaseCommand *pParentCommand );
+		void ParseBlock( FScanner &sc, ScoreMargin *margin, BaseCommand *parentCommand, const bool clearCommands );
 		void ParseCommand( FScanner &sc, ScoreMargin *pMargin, BaseCommand *pParentCommand, const bool bOnlyFlowControl );
 		void Clear( void );
 		void Refresh( const ULONG ulDisplayPlayer );

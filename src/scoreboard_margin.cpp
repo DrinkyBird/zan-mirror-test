@@ -482,7 +482,7 @@ public:
 	virtual void Parse( FScanner &sc )
 	{
 		ElementBaseCommand::Parse( sc );
-		Block.ParseBlock( sc, pParentMargin, this );
+		Block.ParseBlock( sc, pParentMargin, this, true );
 	}
 
 	//*************************************************************************
@@ -2253,7 +2253,7 @@ private:
 
 	void ParseBlock( FScanner &sc, const bool bWhichBlock )
 	{
-		Blocks[bWhichBlock].ParseBlock( sc, pParentMargin, pParentCommand );
+		Blocks[bWhichBlock].ParseBlock( sc, pParentMargin, pParentCommand, true );
 
 		// [AK] There needs to be at least one command inside the block.
 		if ( Blocks[bWhichBlock].HasCommands( ) == false )
@@ -2711,13 +2711,15 @@ ScoreMargin::BaseCommand::BaseCommand( ScoreMargin *pMargin, BaseCommand *pParen
 //
 //*****************************************************************************
 
-void ScoreMargin::CommandBlock::ParseBlock( FScanner &sc, ScoreMargin *pMargin, BaseCommand *pParentCommand )
+void ScoreMargin::CommandBlock::ParseBlock( FScanner &sc, ScoreMargin *margin, BaseCommand *parentCommand, const bool clearCommands )
 {
-	Clear( );
+	if ( clearCommands )
+		Clear( );
+
 	sc.MustGetToken( '{' );
 
 	while ( sc.CheckToken( '}' ) == false )
-		ParseCommand( sc, pMargin, pParentCommand, false );
+		ParseCommand( sc, margin, parentCommand, false );
 }
 
 //*****************************************************************************
@@ -2839,7 +2841,17 @@ ScoreMargin::ScoreMargin( MARGINTYPE_e MarginType, const char *pszName ) :
 
 void ScoreMargin::Parse( FScanner &sc )
 {
-	Block.ParseBlock( sc, this, NULL );
+	bool appendCommands = false;
+
+	if ( sc.CheckToken( TK_Identifier ))
+	{
+		if ( stricmp( sc.String, "append" ) == 0 )
+			appendCommands = true;
+		else
+			sc.ScriptError( "Expected 'append', but got '%s' instead.", sc.String );
+	}
+
+	Block.ParseBlock( sc, this, nullptr, !appendCommands );
 }
 
 //*****************************************************************************
