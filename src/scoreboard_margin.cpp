@@ -2713,7 +2713,7 @@ ScoreMargin::BaseCommand::BaseCommand( ScoreMargin *pMargin, BaseCommand *pParen
 
 void ScoreMargin::CommandBlock::ParseBlock( FScanner &sc, ScoreMargin *pMargin, BaseCommand *pParentCommand )
 {
-	Commands.Clear( );
+	Clear( );
 	sc.MustGetToken( '{' );
 
 	while ( sc.CheckToken( '}' ) == false )
