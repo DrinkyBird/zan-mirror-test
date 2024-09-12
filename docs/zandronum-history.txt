@@ -28,7 +28,7 @@
 +	- Added new BotScript commands that allow controlling more inputs (e.g. altfire, crouch, and use), and also to execute ACS_ExecuteWithResult. [TDRR]
 +	- Added the CVar "snd_lockmusic" which prevents any music changes as if a playlist was playing, based on a feature from ZCC. [Kaminsky]
 +	- Added the CVar "blood_fade_usemaxhealth", which scales the intensity of the blood based on the player's max health instead of a hardcoded health of 100, unless the server wants to force max blood on the screen. [Kaminsky]
-+	- Added the AAPTR_PLAYER_GETCAMERA constant that returns the actor a player is looking from. [Kaminsky]
++	- Added AAPTR_PLAYER_GETFLOATYICON and AAPTR_PLAYER_GETCAMERA constants that return the floaty icon above the player's head and the actor a player is looking from respectively. [Kaminsky]
 +	- Added an argument to GAMEEVENT_ACTOR_SPAWNED representing a bitfield that indicates how the actor was spawned. [Kaminsky]
 +	- Added the dmflag "sv_donthidestats" to show an enemy player's stats. [DoomJoshuaBoy]
 +	- Added a new SelfObituary actor property for when a player kills themselves with an actor or whenever an unowned actor kills a player. This replaces Skulltag's hardcoded self obituaries for the BFG10K and Grenades. [Sean]

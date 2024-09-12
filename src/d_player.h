@@ -738,7 +738,7 @@ public:
 	unsigned int RailgunShots;
 
 	// Icon currently above this player's head.
-	AFloatyIcon	*pIcon;
+	TObjPtr<AFloatyIcon> pIcon;
 
 	// Bonus to the maximum amount of health the player can have.
 	int			MaxHealthBonus;
