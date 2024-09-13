@@ -393,15 +393,6 @@ void VOIPController::Init( FMOD::System *mainSystem )
 		return;
 	}
 
-	FMOD_CREATESOUNDEXINFO exinfo = CreateSoundExInfo( RECORD_SAMPLE_RATE, RECORD_SOUND_LENGTH );
-
-	// [AK] Abort if creating the sound to record into failed.
-	if ( system->createSound( nullptr, FMOD_LOOP_NORMAL | FMOD_2D | FMOD_OPENUSER, &exinfo, &recordSound ) != FMOD_OK )
-	{
-		Printf( TEXTCOLOR_ORANGE "Failed to create sound for recording.\n" );
-		return;
-	}
-
 	// [AK] Create the player VoIP channel group.
 	if ( system->createChannelGroup( "VoIP", &VoIPChannelGroup ) != FMOD_OK )
 	{
@@ -482,12 +473,6 @@ void VOIPController::Shutdown( void )
 	{
 		opus_repacketizer_destroy( repacketizer );
 		repacketizer = nullptr;
-	}
-
-	if ( recordSound != nullptr )
-	{
-		recordSound->release( );
-		recordSound = nullptr;
 	}
 
 	if ( VoIPChannelGroup != nullptr )
@@ -968,6 +953,15 @@ void VOIPController::StartRecording( void )
 	{
 		if ( numRecordDrivers > 0 )
 		{
+			FMOD_CREATESOUNDEXINFO exinfo = CreateSoundExInfo( RECORD_SAMPLE_RATE, RECORD_SOUND_LENGTH );
+
+			// [AK] Abort if creating the sound to record into failed.
+			if ( system->createSound( nullptr, FMOD_LOOP_NORMAL | FMOD_2D | FMOD_OPENUSER, &exinfo, &recordSound ) != FMOD_OK )
+			{
+				Printf( TEXTCOLOR_ORANGE "Failed to create sound for recording.\n" );
+				return;
+			}
+
 			if ( voice_recorddriver >= numRecordDrivers )
 			{
 				Printf( "Record driver %d doesn't exist. Using 0 instead.\n", *voice_recorddriver );
@@ -979,7 +973,16 @@ void VOIPController::StartRecording( void )
 			}
 
 			if ( system->recordStart( recordDriverID, recordSound, true ) != FMOD_OK )
+			{
 				Printf( TEXTCOLOR_ORANGE "Failed to start VoIP recording.\n" );
+
+				// [AK] Delete the recording sound if it was created.
+				if ( recordSound != nullptr )
+				{
+					recordSound->release( );
+					recordSound = nullptr;
+				}
+			}
 		}
 		else
 		{
@@ -1010,6 +1013,12 @@ void VOIPController::StopRecording( void )
 
 	if ( system->recordStop( recordDriverID ) != FMOD_OK )
 		Printf( TEXTCOLOR_ORANGE "Failed to stop voice recording.\n" );
+
+	if ( recordSound != nullptr )
+	{
+		recordSound->release( );
+		recordSound = nullptr;
+	}
 }
 
 //*****************************************************************************
