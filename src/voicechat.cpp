@@ -174,7 +174,7 @@ CUSTOM_CVAR( Float, voice_recordvolume, 1.0f, CVAR_ARCHIVE | CVAR_NOSETBYACS | C
 // [AK] Controls the volume of everyone's voices on the client's end.
 CUSTOM_CVAR( Float, voice_outputvolume, 1.0f, CVAR_ARCHIVE | CVAR_NOSETBYACS | CVAR_GLOBALCONFIG )
 {
-	const float clampedValue = clamp<float>( self, 0.0f, 2.0f );
+	const float clampedValue = clamp<float>( self, 0.0f, 1.0f );
 
 	if ( self != clampedValue )
 	{
