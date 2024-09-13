@@ -528,6 +528,10 @@ void VOIPController::Deactivate( void )
 	for ( unsigned int i = 0; i < MAXPLAYERS; i++ )
 		RemoveVoIPChannel( i );
 
+	// [AK] Disable the local player's "talking" status.
+	if ( players[consoleplayer].statuses & PLAYERSTATUS_TALKING )
+		PLAYER_SetStatus( &players[consoleplayer], PLAYERSTATUS_TALKING, false );
+
 	StopRecording( );
 
 	framesSent = 0;
