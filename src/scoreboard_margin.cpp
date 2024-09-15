@@ -979,7 +979,7 @@ protected:
 
 	struct StringChunk
 	{
-		StringChunk( const bool pluralize ) : pluralize( pluralize ), specialValue( DRAWSTRING_STATIC ) { }
+		StringChunk( const bool pluralize ) : pluralize( pluralize ), specialValue( DRAWSTRING_STATIC ), cvar( nullptr ) { }
 
 		void ParseSpecialValue( DRAWSTRINGVALUE_e value, FScanner &sc )
 		{
@@ -1013,14 +1013,12 @@ protected:
 				sc.MustGetToken( '(' );
 				sc.MustGetToken( TK_Identifier );
 
-				FString cvarName = sc.String;
-				FBaseCVar *cvar = FindCVar( cvarName.GetChars( ), nullptr );
+				cvar = FindCVar( sc.String, nullptr );
 
 				if ( cvar == nullptr )
-					sc.ScriptError( "'%s' is not a CVar.", cvarName.GetChars( ));
+					sc.ScriptError( "'%s' is not a CVar.", sc.String );
 
 				sc.MustGetToken( ')' );
-				string = cvarName;
 			}
 			else if ( specialValue == DRAWSTRING_STATIC )
 			{
@@ -1039,6 +1037,7 @@ protected:
 
 		const bool pluralize;
 		DRAWSTRINGVALUE_e specialValue;
+		FBaseCVar *cvar;
 		FString string;
 	};
 
@@ -1192,11 +1191,9 @@ protected:
 				{
 					case DRAWSTRING_CVAR:
 					{
-						FBaseCVar *cvar = FindCVar( StringChunks[i].string, nullptr );
-
-						if ( cvar != nullptr )
+						if ( StringChunks[i].cvar != nullptr )
 						{
-							FString CVarValue = cvar->GetGenericRep( CVAR_String ).String;
+							FString CVarValue = StringChunks[i].cvar->GetGenericRep( CVAR_String ).String;
 							V_ColorizeString( CVarValue );
 
 							specialValueText = CVarValue;
