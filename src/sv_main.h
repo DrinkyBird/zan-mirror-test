@@ -451,7 +451,7 @@ struct CLIENT_s
 	bool			bIsBacktracing;
 
 	// [BB] A record of the gametics the client called protected commands, e.g. send_password.
-	RingBuffer<LONG, 6> commandInstances;
+	RingBuffer<LONG, 8> commandInstances;
 
 	// [BB] A record of the gametics the client called protected minor commands, e.g. toggleconsole.
 	RingBuffer<LONG, 100> minorCommandInstances;
