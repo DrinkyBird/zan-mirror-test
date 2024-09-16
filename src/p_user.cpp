@@ -356,6 +356,7 @@ player_t::player_t()
   bIsBot( 0 ),
   ulPing( 0 ),
   ulPingAverages( 0 ),
+  connectionStrength( 0 ),
   ulCountryIndex( 0 ),
   pCorpse( 0 ),
   OldPendingWeapon( 0 ),
@@ -515,6 +516,7 @@ player_t &player_t::operator=(const player_t &p)
 	ignoreVoice = p.ignoreVoice;
 	ulPing = p.ulPing;
 	ulPingAverages = p.ulPingAverages;
+	connectionStrength = p.connectionStrength;
 	ulCountryIndex = p.ulCountryIndex;
 	pCorpse = p.pCorpse;
 	OldPendingWeapon = p.OldPendingWeapon;

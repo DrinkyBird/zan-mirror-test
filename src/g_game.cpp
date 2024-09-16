@@ -2182,6 +2182,7 @@ void G_PlayerReborn (int player, bool bGiveInventory)
 	IgnoreComm	ignoreVoice;
 	ULONG		ulPing;
 	ULONG		ulPingAverages;
+	unsigned int connectionStrength;
 	ULONG		ulCountryIndex;
 	ULONG		ulWins;
 	ULONG		ulTime;
@@ -2220,6 +2221,7 @@ void G_PlayerReborn (int player, bool bGiveInventory)
 	ignoreVoice = p->ignoreVoice;
 	ulPing = p->ulPing;
 	ulPingAverages = p->ulPingAverages;
+	connectionStrength = p->connectionStrength;
 	ulCountryIndex = p->ulCountryIndex;
 	ulWins = p->ulWins;
 	ulTime = p->ulTime;
@@ -2285,6 +2287,7 @@ void G_PlayerReborn (int player, bool bGiveInventory)
 	p->ignoreVoice = ignoreVoice;
 	p->ulPing = ulPing;
 	p->ulPingAverages = ulPingAverages;
+	p->connectionStrength = connectionStrength;
 	p->ulCountryIndex = ulCountryIndex;
 	p->ulWins = ulWins;
 	p->ulTime = ulTime;

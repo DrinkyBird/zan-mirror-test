@@ -514,6 +514,9 @@ struct CLIENT_s
 	// [BB] Amount of the consistency warnings the client caused since connecting to the server.
 	ULONG			ulNumConsistencyWarnings;
 
+	// [AK] The number of times a client's packet (e.g. CLC_CLIENTMOVE) was missing.
+	unsigned int	numMissingPackets;
+
 	// What is the name of the client's skin?
 	char			szSkin[MAX_SKIN_NAME+1];
 

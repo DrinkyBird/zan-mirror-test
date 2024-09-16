@@ -158,6 +158,8 @@ BEGIN_ENUM( COLUMNTYPE_e )
 	ENUM_ELEMENT( COLUMNTYPE_ARTIFACTICON ),
 	// The skill level of a bot.
 	ENUM_ELEMENT( COLUMNTYPE_BOTSKILLICON ),
+	// The connection strength of a client.
+	ENUM_ELEMENT( COLUMNTYPE_CONNECTIONSTRENGTH ),
 	// The full name of the country that the player is connecting from.
 	ENUM_ELEMENT( COLUMNTYPE_COUNTRYNAME ),
 	// The country code (alpha-2 or alpha-3) that the player is connecting from.

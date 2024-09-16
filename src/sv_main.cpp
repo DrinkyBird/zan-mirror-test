@@ -736,6 +736,18 @@ void SERVER_Tick( void )
 		// Recieve packets.
 		SERVER_GetPackets( );
 
+		// [AK] After receiving packets, check if we didn't receive a movement
+		// command from an in-game players during this gametic. If that's the
+		// case, increment the number of missing packets for the player.
+		for ( unsigned int i = 0; i < MAXPLAYERS; i++ )
+		{
+			if (( SERVER_IsValidClient( i ) == false ) || ( players[i].bSpectating ))
+				continue;
+
+			if ( g_aClients[i].lLastMoveTick != gametic )
+				g_aClients[i].numMissingPackets++;
+		}
+
 		// We have to record player positions before their mobj moves.
 		// [BB] Tick the unlagged module.
 		UNLAGGED_Tick( );
@@ -2109,6 +2121,7 @@ void SERVER_SetupNewConnection( BYTESTREAM_s *pByteStream, bool bNewPlayer )
 	g_aClients[lClient].bRunEnterScripts = false;
 	g_aClients[lClient].bSuspicious = false;
 	g_aClients[lClient].ulNumConsistencyWarnings = 0;
+	g_aClients[lClient].numMissingPackets = 0;
 	g_aClients[lClient].szSkin[0] = 0;
 	g_aClients[lClient].commRules.clear( );
 	g_aClients[lClient].ScreenWidth = 0;
@@ -6305,6 +6318,9 @@ static bool server_MissingPacket( BYTESTREAM_s *pByteStream )
 			return ( true );
 		}
 	}
+
+	// [AK] Increment the number of missing packets for this client.
+	g_aClients[g_lCurrentClient].numMissingPackets++;
 
 	// Mark this client as having requested missing packets.
 	g_aClients[g_lCurrentClient].lLastPacketLossTick = gametic;

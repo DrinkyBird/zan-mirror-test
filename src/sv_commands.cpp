@@ -962,9 +962,37 @@ void SERVERCOMMANDS_UpdatePlayerPing( ULONG ulPlayer, ULONG ulPlayerExtra, Serve
 	if ( PLAYER_IsValidPlayer( ulPlayer ) == false )
 		return;
 
+	CLIENT_s *const client = SERVER_GetClient( ulPlayer );
+	unsigned int connectionStrength = 4;
+
+	// [AK] Update the client's connection strength according to how many packets
+	// they missed since the last ping update. The levels work as follows:
+	//
+	// 10 or more = severe (red, one bar)
+	// 7-9 = high (orange, two bars)
+	// 4-6 = moderate (yellow, three bars)
+	// 0-3 = low (green, four bars)
+	if ( client->numMissingPackets > 0 )
+	{
+		const unsigned int packetLossLevels[3] = { 10, 7, 4 };
+
+		for ( unsigned int i = 0; i < 3; i++ )
+		{
+			if ( client->numMissingPackets >= packetLossLevels[i] )
+			{
+				connectionStrength = i + 1;
+				break;
+			}
+		}
+
+		// [AK] Reset the counter.
+		client->numMissingPackets = 0;
+	}
+
 	ServerCommands::UpdatePlayerPing command;
 	command.SetPlayer( &players[ulPlayer] );
 	command.SetPing( players[ulPlayer].ulPing );
+	command.SetConnectionStrength( connectionStrength );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 

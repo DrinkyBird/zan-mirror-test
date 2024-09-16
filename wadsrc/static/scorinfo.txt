@@ -222,6 +222,17 @@ Column "BotSkillIcon"
 	ClipRectHeight = -2
 }
 
+Column "ConnectionStrength"
+{
+	AddFlag ONLINEONLY
+	AddFlag DONTSHOWHEADER
+	AddFlag ALWAYSUSESHORTESTWIDTH
+	AddFlag DISABLEIFEMPTY
+
+	Alignment = Center
+	ClipRectHeight = -2
+}
+
 Column "CountryFlag"
 {
 	AddFlag ONLINEONLY
@@ -433,7 +444,7 @@ Scoreboard
 	ColumnPadding = 1
 	HeaderHeight = -2
 	RowHeight = -2
-	ColumnOrder = "BotSkillIcon", "Index", "ReadyToGoAndStatusIcons", "ArtifactIcon", "PlayerIcon", "CountryFlag", "Player", "Vote", "Handicap", "Wins", "Points", "Frags", "Kills", "Damage", "Lives", "Secrets", "Deaths", "Time", "Ping"
+	ColumnOrder = "BotSkillIcon", "Index", "ReadyToGoAndStatusIcons", "ArtifactIcon", "PlayerIcon", "CountryFlag", "Player", "Vote", "Handicap", "Wins", "Points", "Frags", "Kills", "Damage", "Lives", "Secrets", "Deaths", "Time", "Ping", "ConnectionStrength"
 	RankOrder = "Wins", "Points", "Frags", "Kills", "Damage", "Lives", "Secrets", "Deaths"
 
 	AddFlag UseHeaderTextColorForBorders

@@ -215,6 +215,7 @@ Command UpdatePlayerPing
 	UnreliableCommand
 	Player player
 	UShort ping
+	Byte connectionStrength
 EndCommand
 
 Command UpdatePlayerExtraData

@@ -3171,6 +3171,7 @@ void PLAYER_ResetPlayerData( player_t *pPlayer )
 	pPlayer->bIsBot = 0;
 	pPlayer->ulPing = 0;
 	pPlayer->ulPingAverages = 0;
+	pPlayer->connectionStrength = 0;
 	pPlayer->ulCountryIndex = 0;
 	pPlayer->pCorpse = NULL;
 	pPlayer->OldPendingWeapon = 0;
@@ -4549,6 +4550,7 @@ void ServerCommands::SetPlayerACSSkin::Execute()
 void ServerCommands::UpdatePlayerPing::Execute()
 {
 	player->ulPing = ping;
+	player->connectionStrength = connectionStrength;
 }
 
 //*****************************************************************************

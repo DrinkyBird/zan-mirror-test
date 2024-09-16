@@ -1380,6 +1380,7 @@ DATATYPE_e DataScoreColumn::GetDataType( void ) const
 		case COLUMNTYPE_PLAYERICON:
 		case COLUMNTYPE_ARTIFACTICON:
 		case COLUMNTYPE_BOTSKILLICON:
+		case COLUMNTYPE_CONNECTIONSTRENGTH:
 		case COLUMNTYPE_COUNTRYFLAG:
 			return DATATYPE_TEXTURE;
 
@@ -1748,14 +1749,32 @@ PlayerValue DataScoreColumn::GetValue( const ULONG ulPlayer ) const
 			}
 
 			case COLUMNTYPE_BOTSKILLICON:
+			case COLUMNTYPE_CONNECTIONSTRENGTH:
 			{
-				if ( players[ulPlayer].bIsBot )
-				{
-					FString IconName;
-					IconName.Format( "BOTSKIL%d", botskill.GetGenericRep( CVAR_Int ).Int );
+				FString iconName;
 
-					Result.SetValue<FTexture *>( TexMan.FindTexture( IconName.GetChars( )));
+				// [AK] Bot skill icons are relevant to bots only.
+				if ( NativeType == COLUMNTYPE_BOTSKILLICON )
+				{
+					if ( players[ulPlayer].bIsBot )
+						iconName.Format( "BOTSKIL%d", botskill.GetGenericRep( CVAR_Int ).Int );
 				}
+				// [AK] Connection strengths are relevant to clients only.
+				else if ( players[ulPlayer].bIsBot == false )
+				{
+					int connectionStrength = players[ulPlayer].connectionStrength;
+
+					// [AK] A strength of zero means that the client's connection
+					// strength hasn't been updated yet (e.g. they just connected).
+					// When this happens, assume that it's good.
+					if (( connectionStrength == 0 ) || ( connectionStrength > 4 ))
+						connectionStrength = 4;
+
+					iconName.Format( "NETSTRN%u", connectionStrength );
+				}
+
+				if ( iconName.IsNotEmpty( ))
+					Result.SetValue<FTexture *>( TexMan.FindTexture( iconName.GetChars( )));
 
 				break;
 			}

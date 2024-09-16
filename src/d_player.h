@@ -765,6 +765,9 @@ public:
 	// [BB] Over how many measurements has ulPing been averaged?
 	ULONG		ulPingAverages;
 
+	// [AK] The strength of the player's connection, based on how many packets they missed since the last ping update.
+	unsigned int connectionStrength;
+
 	// [AK] The index of which country the player is connecting from (refer to GeoIP.c).
 	ULONG		ulCountryIndex;
 
