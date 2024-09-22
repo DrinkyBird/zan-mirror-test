@@ -197,15 +197,26 @@ CCMD (map)
 			}
 			else
 			{
-				if ( sv_maprotation )
-					MAPROTATION_SetPositionToMap( argv[1], true );
-
 				// Tell the clients about the map change.
 				if ( NETWORK_GetState( ) == NETSTATE_SERVER )
+				{
 					SERVER_ReconnectNewLevel( argv[1] );
+				}
 				// Tell the server we're leaving the game.
 				else if ( NETWORK_GetState( ) == NETSTATE_CLIENT )
+				{
+					// [AK] Don't let clients with RCON access start a new game.
+					if ( CLIENT_HasRCONAccess( ))
+					{
+						Printf( "You can't start a new game while you have RCON access. Use \"rcon_logout\" to log out first.\n" );
+						return;
+					}
+
 					CLIENT_QuitNetworkGame( NULL );
+				}
+
+				if ( sv_maprotation )
+					MAPROTATION_SetPositionToMap( argv[1], true );
 
 				// Turn campaign mode back on.
 				CAMPAIGN_EnableCampaign( );

@@ -276,7 +276,17 @@ static void M_StartSkirmishGame()
 
 	// Tell the server we're leaving the game.
 	if ( NETWORK_GetState( ) == NETSTATE_CLIENT )
+	{
+		// [AK] Don't let clients with RCON access start a new skirmish game.
+		if ( CLIENT_HasRCONAccess( ))
+		{
+			Printf( "You can't start a skirmish game while you have RCON access. Use \"rcon_logout\" to log out first.\n" );
+			M_ClearMenus( );
+			return;
+		}
+
 		CLIENT_QuitNetworkGame( NULL );
+	}
 
 	NETWORK_SetState( NETSTATE_SINGLE );
 	CAMPAIGN_DisableCampaign( );
