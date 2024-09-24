@@ -844,6 +844,10 @@ public:
 	virtual void Draw( const ULONG ulDisplayPlayer, const ULONG ulTeam, const LONG lYPos, const float fAlpha, const LONG lXOffsetBonus ) const
 	{
 		const PreprocessedString *pString = RetrieveString( ulTeam );
+
+		if ( pString->pLines == nullptr )
+			return;
+
 		const EColorRange TextColorToUse = bUsingTeamColor ? static_cast<EColorRange>( TEAM_GetTextColor( ulTeam )) : Color;
 		const HORIZALIGN_e AlignmentToUse = GetHorizontalAlignment( );
 		const fixed_t combinedAlpha = FLOAT2FIXED( fAlpha * fTranslucency );
@@ -1056,6 +1060,8 @@ protected:
 
 	struct PreprocessedString
 	{
+		PreprocessedString( void ) : pLines( nullptr ), ulMaxWidth( 0 ), ulTotalHeight( 0 ) { }
+
 		FBrokenLines *pLines;
 		ULONG ulMaxWidth;
 		ULONG ulTotalHeight;
@@ -1191,6 +1197,7 @@ protected:
 
 	void CreateString( const ULONG ulDisplayPlayer, const ULONG ulTeam )
 	{
+		bool onlyContainsSpaces = true;
 		PreprocessedString String;
 		FString text;
 
@@ -1548,21 +1555,33 @@ protected:
 			}
 		}
 
+		// [AK] Verify that the string doesn't only contain spaces (including line breaks). If it
+		// does, then the string will be treated as empty and not be drawn.
+		for ( unsigned int i = 0; i < text.Len( ); i++ )
+		{
+			if ( isspace( text[i] ) == 0 )
+			{
+				onlyContainsSpaces = false;
+				break;
+			}
+		}
+
 		// [AK] The x-offset must be accounted for when determining the largest possible line width.
 		// If the string is aligned to the center, then the x-offset must be doubled.
-		const ULONG ulMaxWidth = pParentMargin->GetWidth( ) - ( HorizontalAlignment == HORIZALIGN_CENTER ? 2 : 1 ) * abs( lXOffset );
-		String.pLines = V_BreakLines( pFont, ulMaxWidth, text.GetChars( ));
-		String.ulMaxWidth = 0;
-		String.ulTotalHeight = 0;
-
-		// [AK] Determine the total height of the string.
-		for ( unsigned int i = 0; String.pLines[i].Width >= 0; i++ )
+		if ( onlyContainsSpaces == false )
 		{
-			if ( i > 0 )
-				String.ulTotalHeight += ulGapSize;
+			const ULONG ulMaxWidth = pParentMargin->GetWidth( ) - ( HorizontalAlignment == HORIZALIGN_CENTER ? 2 : 1 ) * abs( lXOffset );
+			String.pLines = V_BreakLines( pFont, ulMaxWidth, text.GetChars( ));
 
-			String.ulMaxWidth = MAX<ULONG>( String.ulMaxWidth, String.pLines[i].Width );
-			String.ulTotalHeight += pFont->GetHeight( );
+			// [AK] Determine the total height of the string.
+			for ( unsigned int i = 0; String.pLines[i].Width >= 0; i++ )
+			{
+				if ( i > 0 )
+					String.ulTotalHeight += ulGapSize;
+
+				String.ulMaxWidth = MAX<ULONG>( String.ulMaxWidth, String.pLines[i].Width );
+				String.ulTotalHeight += pFont->GetHeight( );
+			}
 		}
 
 		PreprocessedStrings.Push( String );

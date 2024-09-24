@@ -287,38 +287,48 @@ Scoreboard
 			// [AK] Draw the damage factor in cooperative games when it isn't set to its default value.
 			IfIntermission( false ) && IfGameType( Cooperative ) && IfCVar( sv_coop_damagefactor != 1.0 )
 			{
-				DrawString( value = "Damage factor is " + cvar( sv_coop_damagefactor, 2 ), textcolor = "Grey", bottompadding = 1 )
+				DrawString( value = "\nDamage factor is " + cvar( sv_coop_damagefactor, 2 ), textcolor = "Grey", bottompadding = 1 )
 			}
 
 			IfEarnType( Frags, Points, Wins )
 			{
-				// [AK] Include the champion string in duel when there's a duel limit.
-				IfIntermission( false ) && IfGameMode( Duel ) && IfCVar( duellimit > 0 )
-				{
-					DrawString( value = championstring, textcolor = "Grey", bottompadding = 1 )
-				}
-
 				// Draw the team scores and their relation (tied, red leads, etc).
 				IfPlayersOnTeams( true )
 				{
-					DrawString( value = pointstring, textcolor = "Grey", bottompadding = 1 )
+					DrawString( value = "\n" + pointstring, textcolor = "Grey", bottompadding = 1 )
 				}
 				// [AK] Draw whoever's leading during intermissions or when we're a true spectator looking at ourselves.
 				Else IfIntermission( true ) || IfSpectator( true ) && IfDeadSpectator( false ) && IfSpying( false )
 				{
-					DrawString( value = playerleadstring, textcolor = "Grey", bottompadding = 1 )
+					// [AK] Include the champion string in duel when there's a duel limit.
+					IfIntermission( false ) && IfGameMode( Duel ) && IfCVar( duellimit > 0 )
+					{
+						DrawString( value = "\n" + championstring + "\n" + playerleadstring, textcolor = "Grey", bottompadding = 1 )
+					}
+					Else
+					{
+						DrawString( value = "\n" + playerleadstring, textcolor = "Grey", bottompadding = 1 )
+					}
 				}
 				// Draw my rank and my frags, points, etc. Don't draw it if we're in the intermission.
 				Else IfShouldShowRank( true )
 				{
-					DrawString( value = placestring, textcolor = "Grey", bottompadding = 1 )
+					// [AK] Include the champion string in duel when there's a duel limit.
+					IfIntermission( false ) && IfGameMode( Duel ) && IfCVar( duellimit > 0 )
+					{
+						DrawString( value = "\n" + championstring + "\n" + placestring, textcolor = "Grey", bottompadding = 1 )
+					}
+					Else
+					{
+						DrawString( value = "\n" + placestring, textcolor = "Grey", bottompadding = 1 )
+					}
 				}
 			}
 
 			// [JS] Intermission countdown display.
 			IfIntermission( true ) && IfOnlineGame( true ) && IfCVar( cl_intermissiontimer == true )
 			{
-				DrawString( value = "Entering " + nextlevellump + ": " + nextlevelname + pluralize( " in # second{s}", intermissiontimeleft ), textcolor = "Green" )
+				DrawString( value = "\nEntering " + nextlevellump + ": " + nextlevelname + pluralize( " in # second{s}", intermissiontimeleft ), textcolor = "Green" )
 			}
 		}
 	}
