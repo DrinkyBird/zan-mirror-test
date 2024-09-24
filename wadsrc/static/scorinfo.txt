@@ -284,8 +284,20 @@ Scoreboard
 			// Draw the time, frags, points, or kills we have left until the level ends.
 			DrawString( value = limitstrings, textcolor = "Grey", bottompadding = 1 )
 
+			// [AK] Draw the damage factor in cooperative games when it isn't set to its default value.
+			IfIntermission( false ) && IfGameType( Cooperative ) && IfCVar( sv_coop_damagefactor != 1.0 )
+			{
+				DrawString( value = "Damage factor is " + cvar( sv_coop_damagefactor, 2 ), textcolor = "Grey", bottompadding = 1 )
+			}
+
 			IfEarnType( Frags, Points, Wins )
 			{
+				// [AK] Include the champion string in duel when there's a duel limit.
+				IfIntermission( false ) && IfGameMode( Duel ) && IfCVar( duellimit > 0 )
+				{
+					DrawString( value = championstring, textcolor = "Grey", bottompadding = 1 )
+				}
+
 				// Draw the team scores and their relation (tied, red leads, etc).
 				IfPlayersOnTeams( true )
 				{

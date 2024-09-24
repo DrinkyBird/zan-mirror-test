@@ -577,7 +577,8 @@ void STACK_ARGS SCOREBOARD_DrawTexture( FTexture *texture, const int x, const in
 bool			SCOREBOARD_ShouldDrawBoard( void );
 bool			SCOREBOARD_AdjustVerticalClipRect( int &clipTop, int &clipHeight );
 void			SCOREBOARD_ConvertVirtualCoordsToReal( int &left, int &top, int &width, int &height );
-void			SCOREBOARD_BuildLimitStrings( std::list<FString> &lines, bool bAcceptColors );
+void			SCOREBOARD_BuildLimitStrings( std::list<FString> &lines );
+FString			SCOREBOARD_BuildChampionString( void );
 ScoreColumn		*SCOREBOARD_GetColumn( FName Name, const bool bMustBeUsable );
 LONG			SCOREBOARD_GetLeftToLimit( void );
 void			SCOREBOARD_SetNextLevel( const char *pszMapName );

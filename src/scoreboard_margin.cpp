@@ -945,6 +945,8 @@ protected:
 		DRAWSTRING_PLACESTRING,
 		// The name of the player who's in the lead, or how many players are tied.
 		DRAWSTRING_PLAYERLEADSTRING,
+		// The name of the current champion and how many duels they won.
+		DRAWSTRING_CHAMPIONSTRING,
 		// The amount of time that has passed since the level started.
 		DRAWSTRING_LEVELTIME,
 		// The amount of time left in the round (or level).
@@ -1083,6 +1085,7 @@ protected:
 			{ "pointstring",			{ DRAWSTRING_POINTSTRING,			MARGINTYPE_HEADER_OR_FOOTER }},
 			{ "placestring",			{ DRAWSTRING_PLACESTRING,			MARGINTYPE_HEADER_OR_FOOTER }},
 			{ "playerleadstring",		{ DRAWSTRING_PLAYERLEADSTRING,		MARGINTYPE_HEADER_OR_FOOTER }},
+			{ "championstring",			{ DRAWSTRING_CHAMPIONSTRING,		MARGINTYPE_HEADER_OR_FOOTER }},
 			{ "leveltime",				{ DRAWSTRING_LEVELTIME,				MARGINTYPE_HEADER_OR_FOOTER }},
 			{ "leveltimeleft",			{ DRAWSTRING_LEVELTIMELEFT,			MARGINTYPE_HEADER_OR_FOOTER }},
 			{ "intermissiontimeleft",	{ DRAWSTRING_INTERMISSIONTIMELEFT,	MARGINTYPE_HEADER_OR_FOOTER }},
@@ -1260,7 +1263,7 @@ protected:
 					case DRAWSTRING_LIMITSTRINGS:
 					{
 						std::list<FString> lines;
-						SCOREBOARD_BuildLimitStrings( lines, true );
+						SCOREBOARD_BuildLimitStrings( lines );
 
 						for ( std::list<FString>::iterator it = lines.begin( ); it != lines.end( ); it++ )
 						{
@@ -1362,6 +1365,10 @@ protected:
 
 						break;
 					}
+
+					case DRAWSTRING_CHAMPIONSTRING:
+						specialValueText = SCOREBOARD_BuildChampionString( );
+						break;
 
 					case DRAWSTRING_LEVELTIME:
 					case DRAWSTRING_LEVELTIMELEFT:
@@ -3010,7 +3017,7 @@ void scoreboard_AddTimeLimit( std::list<FString> &lines )
 //
 //*****************************************************************************
 
-void SCOREBOARD_BuildLimitStrings( std::list<FString> &lines, bool bAcceptColors )
+void SCOREBOARD_BuildLimitStrings( std::list<FString> &lines )
 {
 	if ( gamestate != GS_LEVEL )
 		return;
@@ -3028,11 +3035,6 @@ void SCOREBOARD_BuildLimitStrings( std::list<FString> &lines, bool bAcceptColors
 	// Build the duellimit and "wins" string.
 	if ( duel && duellimit )
 	{
-		ULONG ulWinner = MAXPLAYERS;
-		LONG lHighestFrags = LONG_MIN;
-		const bool bInResults = GAMEMODE_IsGameInResultSequence( );
-		bool bDraw = true;
-
 		// [AK] If there's a fraglimit and a duellimit string, the timelimit string should be put in-between them
 		// on the scoreboard to organize the info better (frags left on the left, duels left on the right).
 		if (( bTimeLimitActive ) && ( lines.empty( ) == false ) && ( NETWORK_GetState( ) != NETSTATE_SERVER ))
@@ -3050,49 +3052,6 @@ void SCOREBOARD_BuildLimitStrings( std::list<FString> &lines, bool bAcceptColors
 		{
 			scoreboard_AddTimeLimit( lines );
 			bTimeLimitAdded = true;
-		}
-
-		for ( ULONG ulIdx = 0; ulIdx < MAXPLAYERS; ulIdx++ )
-		{
-			if (( playeringame[ulIdx] ) && ( players[ulIdx].ulWins > 0 ))
-			{
-				// [AK] In case both duelers have at least one win during the results sequence the,
-				// champion should be the one with the higher frag count.
-				if ( bInResults )
-				{
-					if ( players[ulIdx].fragcount > lHighestFrags )
-					{
-						ulWinner = ulIdx;
-						lHighestFrags = players[ulIdx].fragcount;
-					}
-				}
-				else
-				{
-					ulWinner = ulIdx;
-					break;
-				}
-			}
-		}
-
-		if ( ulWinner == MAXPLAYERS )
-		{
-			if ( GAME_CountActivePlayers( ) == 2 )
-				text = "First match between the two";
-			else
-				bDraw = false;
-		}
-		else
-		{
-			text.Format( "Champion is %s", players[ulWinner].userinfo.GetName( ));
-			text.AppendFormat( " with %d win%s", static_cast<unsigned int>( players[ulWinner].ulWins ), players[ulWinner].ulWins == 1 ? "" : "s" );
-		}
-
-		if ( bDraw )
-		{
-			if ( !bAcceptColors )
-				V_RemoveColorCodes( text );
-
-			lines.push_back( text );
 		}
 	}
 
@@ -3149,25 +3108,65 @@ void SCOREBOARD_BuildLimitStrings( std::list<FString> &lines, bool bAcceptColors
 			bTimeLimitAdded = true;
 			ulNumLimits++;
  		}
-
-		// [WS] Show the damage factor.
-		if ( sv_coop_damagefactor != 1.0f )
-		{
-			text.Format( "Damage factor is %.2f", static_cast<float>( sv_coop_damagefactor ));
-
-			// [AK] If there aren't too many limits already, try to make the damage factor appear on the same
-			// line as a previous string.
-			if ( ulNumLimits == 1 )
-				scoreboard_TryToPrependLimit( lines, text );
-
-			lines.push_back( text );
-		}
 	}
 
 	// Render the timelimit string. - [BB] if the gamemode uses it.
 	// [AK] Don't add this if we've already done so.
 	if (( bTimeLimitActive ) && ( bTimeLimitAdded == false ))
 		scoreboard_AddTimeLimit( lines );
+}
+
+//*****************************************************************************
+//
+// [AK] SCOREBOARD_BuildChampionString
+//
+// Creates the time limit message to be shown on the scoreboard or server console.
+//
+//*****************************************************************************
+
+FString SCOREBOARD_BuildChampionString( void )
+{
+	const bool inResults = GAMEMODE_IsGameInResultSequence( );
+	unsigned int winner = MAXPLAYERS;
+	int highestFrags = LONG_MIN;
+	FString championString;
+
+	for ( unsigned int i = 0; i < MAXPLAYERS; i++ )
+	{
+		if (( playeringame[i] ) && ( players[i].ulWins > 0 ))
+		{
+			// [AK] In case both duelers have at least one win during the results sequence the,
+			// champion should be the one with the higher frag count.
+			if ( inResults )
+			{
+				if ( players[i].fragcount > highestFrags )
+				{
+					winner = i;
+					highestFrags = players[i].fragcount;
+				}
+			}
+			else
+			{
+				winner = i;
+				break;
+			}
+		}
+	}
+
+	if ( winner == MAXPLAYERS )
+	{
+		if ( GAME_CountActivePlayers( ) == 2 )
+			championString = "First match between the two";
+		else
+			championString = "No champion has been decided yet";
+	}
+	else
+	{
+		championString.Format( "Champion is %s", players[winner].userinfo.GetName( ));
+		championString.AppendFormat( " with %u win%s", static_cast<unsigned int>( players[winner].ulWins ), players[winner].ulWins == 1 ? "" : "s" );
+	}
+
+	return championString;
 }
 
 //*****************************************************************************

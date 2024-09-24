@@ -1657,7 +1657,6 @@ void SERVERCONSOLE_UpdateBroadcasting( void )
 
 //*****************************************************************************
 //
-void SCOREBOARD_BuildLimitStrings( std::list<FString> &lines, bool bAcceptColors );
 void SERVERCONSOLE_UpdateScoreboard( void )
 {
 	int labels[4] = { IDC_SCOREBOARD1, IDC_SCOREBOARD2, IDC_SCOREBOARD3, IDC_SCOREBOARD4, };	
@@ -1667,25 +1666,46 @@ void SERVERCONSOLE_UpdateScoreboard( void )
 		SetDlgItemText( g_hDlg, labels[i], "" );
 
 	// Build the strings.
-	std::list<FString> ScoreboardNotices;
-	SCOREBOARD_BuildLimitStrings( ScoreboardNotices, false );
-
-	// Put the strings on the labels.
-	int index = 0;
-	for ( std::list<FString>::iterator i = ScoreboardNotices.begin(); i != ScoreboardNotices.end(); ++i )
+	if ( gamestate == GS_LEVEL )
 	{
-		if ( index < 4 )
-			SetDlgItemText( g_hDlg, labels[index++], *i );
-	}
+		std::list<FString> ScoreboardNotices;
+		SCOREBOARD_BuildLimitStrings( ScoreboardNotices );
 
-	// If we just have one label, center it.
-	if ( index == 1 )
-	{
-		ShowWindow( GetDlgItem( g_hDlg, IDC_SCOREBOARDW ), SW_SHOW );
-		SetDlgItemText( g_hDlg, IDC_SCOREBOARDW, ScoreboardNotices.front().GetChars( ));
+		// [AK] Show the champion string in duel when there's a duel limit.
+		if (( duel ) && ( duellimit ))
+		{
+			FString championString = SCOREBOARD_BuildChampionString( );
+			V_RemoveColorCodes( championString );
+			ScoreboardNotices.push_back( championString );
+		}
+		// [WS] Show the damage factor.
+		else if (( GAMEMODE_GetCurrentFlags( ) & GMF_COOPERATIVE ) && ( sv_coop_damagefactor != 1.0f ))
+		{
+			FString damageFactorString;
+			damageFactorString.Format( "Damage factor is %.2f", static_cast<float>( sv_coop_damagefactor ));
+			ScoreboardNotices.push_back( damageFactorString );
+		}
+
+		int index = 0;
+
+		// Put the strings on the labels.
+		for ( std::list<FString>::iterator i = ScoreboardNotices.begin( ); i != ScoreboardNotices.end( ); ++i )
+		{
+			if ( index < 4 )
+				SetDlgItemText( g_hDlg, labels[index++], *i );
+		}
+
+		// If we just have one label, center it.
+		if ( index == 1 )
+		{
+			ShowWindow( GetDlgItem( g_hDlg, IDC_SCOREBOARDW ), SW_SHOW );
+			SetDlgItemText( g_hDlg, IDC_SCOREBOARDW, ScoreboardNotices.front( ).GetChars( ));
+		}
+		else
+		{
+			ShowWindow( GetDlgItem( g_hDlg, IDC_SCOREBOARDW ), SW_HIDE );
+		}
 	}
-	else
-		ShowWindow( GetDlgItem( g_hDlg, IDC_SCOREBOARDW ), SW_HIDE );
 }
 
 //*****************************************************************************
