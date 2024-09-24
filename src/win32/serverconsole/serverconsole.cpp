@@ -1659,7 +1659,7 @@ void SERVERCONSOLE_UpdateBroadcasting( void )
 //
 void SERVERCONSOLE_UpdateScoreboard( void )
 {
-	int labels[4] = { IDC_SCOREBOARD1, IDC_SCOREBOARD2, IDC_SCOREBOARD3, IDC_SCOREBOARD4, };	
+	int labels[4] = { IDC_SCOREBOARD1, IDC_SCOREBOARD2, IDC_SCOREBOARD3, IDC_SCOREBOARD4, };
 
 	// Clear the labels.
 	for ( int i = 0; i < 4; i++ )
