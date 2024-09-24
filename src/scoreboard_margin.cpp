@@ -979,7 +979,7 @@ protected:
 
 	struct StringChunk
 	{
-		StringChunk( const bool pluralize ) : pluralize( pluralize ), specialValue( DRAWSTRING_STATIC ), cvar( nullptr ) { }
+		StringChunk( const bool pluralize ) : pluralize( pluralize ), specialValue( DRAWSTRING_STATIC ), cvar( nullptr ), decimals( 0 ) { }
 
 		void ParseSpecialValue( DRAWSTRINGVALUE_e value, FScanner &sc )
 		{
@@ -1018,6 +1018,16 @@ protected:
 				if ( cvar == nullptr )
 					sc.ScriptError( "'%s' is not a CVar.", sc.String );
 
+				if ( sc.CheckToken( ',' ))
+				{
+					// [AK] Only float CVars can use this parameter.
+					if ( cvar->GetRealType( ) != CVAR_Float )
+						sc.ScriptError( "'%s' must be a float CVar to specify the number of decimal places.", cvar->GetName( ));
+
+					sc.MustGetToken( TK_IntConst );
+					decimals = MAX( sc.Number, 0 );
+				}
+
 				sc.MustGetToken( ')' );
 			}
 			else if ( specialValue == DRAWSTRING_STATIC )
@@ -1039,6 +1049,7 @@ protected:
 		DRAWSTRINGVALUE_e specialValue;
 		FBaseCVar *cvar;
 		FString string;
+		int decimals;
 	};
 
 	struct PreprocessedString
@@ -1193,10 +1204,15 @@ protected:
 					{
 						if ( StringChunks[i].cvar != nullptr )
 						{
-							FString CVarValue = StringChunks[i].cvar->GetGenericRep( CVAR_String ).String;
-							V_ColorizeString( CVarValue );
-
-							specialValueText = CVarValue;
+							if (( StringChunks[i].cvar->GetRealType( ) == CVAR_Float ) && ( StringChunks[i].decimals > 0 ))
+							{
+								specialValueText.Format( "%.*f", StringChunks[i].decimals, StringChunks[i].cvar->GetGenericRep( CVAR_Float ).Float );
+							}
+							else
+							{
+								specialValueText = StringChunks[i].cvar->GetGenericRep( CVAR_String ).String;
+								V_ColorizeString( specialValueText );
+							}
 						}
 
 						break;
