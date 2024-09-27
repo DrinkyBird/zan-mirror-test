@@ -2741,6 +2741,12 @@ void PLAYER_SpectatorJoinsGame( player_t *pPlayer )
 	pPlayer->bSpectating = false;
 	pPlayer->bDeadSpectator = false;
 
+	// [AK] Reset the client's last move tick to zero so that the server doesn't
+	// immediately assume they're missing packets because it doesn't receive their
+	// movement commands right away, depending on their ping.
+	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
+		SERVER_GetClient( pPlayer - players )->lLastMoveTick = 0;
+
 	// [BB] If the spectator used the chasecam or noclip cheat (which is always allowed for spectators)
 	// remove it now that he joins the game.
 	// [Leo] The fly cheat is set by default in PLAYER_SetDefaultSpectatorValues.

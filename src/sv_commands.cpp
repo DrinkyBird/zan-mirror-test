@@ -972,7 +972,13 @@ void SERVERCOMMANDS_UpdatePlayerPing( ULONG ulPlayer, ULONG ulPlayerExtra, Serve
 	// 7-9 = high (orange, two bars)
 	// 4-6 = moderate (yellow, three bars)
 	// 0-3 = low (green, four bars)
-	if ( client->numMissingPackets > 0 )
+	//
+	// If they're lagging, then always set their connection strength to lowest.
+	if ( players[ulPlayer].statuses & PLAYERSTATUS_LAGGING )
+	{
+		connectionStrength = 1;
+	}
+	else if ( client->numMissingPackets > 0 )
 	{
 		const unsigned int packetLossLevels[3] = { 10, 7, 4 };
 

@@ -1439,6 +1439,11 @@ void G_DoLoadLevel (int position, bool autosave)
 			// [BB] Since the map was changed, the players who are already spawned need to reauthenticate.
 			if ( SERVER_GetClient( i )->State == CLS_SPAWNED )
 				SERVER_GetClient( i )->State = CLS_SPAWNED_BUT_NEEDS_AUTHENTICATION;
+
+			// [AK] Reset the client's last move tick to zero. When the level finishes loading,
+			// the server will most likely not receive their movement commands right away, so
+			// it shouldn't assume they're missing packets.
+			SERVER_GetClient( i )->lLastMoveTick = 0;
 		}
 
 //		if (( NETWORK_GetState( ) != NETSTATE_CLIENT ) && ( PLAYER_ShouldSpawnAsSpectator( &players[i] )))

@@ -739,13 +739,20 @@ void SERVER_Tick( void )
 		// [AK] After receiving packets, check if we didn't receive a movement
 		// command from an in-game players during this gametic. If that's the
 		// case, increment the number of missing packets for the player.
-		for ( unsigned int i = 0; i < MAXPLAYERS; i++ )
+		if ( gamestate == GS_LEVEL )
 		{
-			if (( SERVER_IsValidClient( i ) == false ) || ( players[i].bSpectating ))
-				continue;
+			for ( unsigned int i = 0; i < MAXPLAYERS; i++ )
+			{
+				if (( SERVER_IsValidClient( i ) == false ) || ( players[i].bSpectating ))
+					continue;
 
-			if ( g_aClients[i].lLastMoveTick != gametic )
-				g_aClients[i].numMissingPackets++;
+				// [AK] If we didn't receive the command from them because they
+				// recently joined the game and it's still taking time for the
+				// commands to arrive (i.e. their last move tick is still zero),
+				// don't treat it as a missing packet.
+				if (( g_aClients[i].lLastMoveTick != 0 ) && ( g_aClients[i].lLastMoveTick != gametic ))
+					g_aClients[i].numMissingPackets++;
+			}
 		}
 
 		// We have to record player positions before their mobj moves.
@@ -6860,9 +6867,18 @@ static bool server_ChangeTeam( BYTESTREAM_s *pByteStream )
 	// [BB] If the player was a spectator, we have to set the state to
 	// PST_ENTERNOINVENTORY. Otherwise the enter scripts are not executed.
 	if ( players[g_lCurrentClient].bSpectating )
+	{
 		players[g_lCurrentClient].playerstate = PST_ENTERNOINVENTORY;
+
+		// [AK] Reset the player's last move tick to zero so that the server
+		// doesn't immediately assume they're missing packets because it doesn't
+		// receive their movement commands right away, depending on their ping.
+		g_aClients[g_lCurrentClient].lLastMoveTick = 0;
+	}
 	else
+	{
 		players[g_lCurrentClient].playerstate = PST_REBORNNOINVENTORY;
+	}
 
 	// Also, take away spectator status.
 	players[g_lCurrentClient].bSpectating = false;
