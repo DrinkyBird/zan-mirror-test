@@ -438,7 +438,7 @@ E8 PartyTime "Party Time"
 	#ED5519 #F9D300 180 256
 Console:
 	#330048 #9B0078 0 99
-	#BA0076 #ED3C19 100 179 
+	#BA0076 #ED3C19 100 179
 	#ED5519 #F9D300 180 256
 }
 
@@ -1032,7 +1032,7 @@ L0 SkulkingAbout "Skulking About"
 	#60202B #C9215C 146 256
 Console:
 	#111012 #C9215C 0 256
-} 
+}
 
 L1 Parma
 {
@@ -1073,7 +1073,7 @@ L5 FakeWater "Fake Water"
 	#005DD1 #2FCCFF 121 256
 Console:
 	#0045D1 #2FCCFF 0 256
-} 
+}
 
 L6 Bruiser
 {
@@ -1084,7 +1084,7 @@ Console:
 	#1A0000 #7C0A04 0 110
 	#8A1408 #EE6C28 111 221
 	#FD7F2D #FFCF2E 222 256
-} 
+}
 
 L7 Unidronum
 {
@@ -1095,7 +1095,7 @@ Console:
 	#000C18 #003050 0 80
 	#003C64 #408BB4 81 140
 	#549EC0 #B0F7F7 141 256
-} 
+}
 
 L8 Beetlejuice
 {
@@ -1103,7 +1103,7 @@ L8 Beetlejuice
 	#B2CCA3 #E3FFD4 121 256
 Console:
 	#292929 #E3FFD4 0 256
-} 
+}
 
 L9 GoldenNails "Golden Nails"
 {
@@ -1973,7 +1973,7 @@ V1 IvyRopes "Ivy Ropes"
 	#56792D #62B500 190 256
 Console:
 	#0D2D01 #62B500 0 256
-}  
+}
 
 V2 SleakHardware "Sleak Hardware"
 {
