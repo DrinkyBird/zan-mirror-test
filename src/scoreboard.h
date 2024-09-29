@@ -526,8 +526,8 @@ struct Scoreboard
 	Scoreboard( void );
 
 	void Parse( FScanner &sc );
-	void Refresh( const ULONG ulDisplayPlayer );
-	void Render( const ULONG ulDisplayPlayer, const float fAlpha );
+	void Refresh( const unsigned int displayPlayer, const int minYPos );
+	void Render( const unsigned int displayPlayer, const int minYPos, const float alpha );
 	void DrawBorder( const EColorRange Color, LONG &lYPos, const float fAlpha, const bool bReverse ) const;
 	void DrawRowBackground( const PalEntry color, int x, int y, int width, int height, const float fAlpha ) const;
 	void DrawRowBackground( const PalEntry color, const int y, const float fAlpha ) const;
@@ -558,7 +558,7 @@ private:
 	void AddColumnToList( FScanner &sc, const bool bAddToRankOrder );
 	void RemoveColumnFromList( FScanner &sc, const bool bRemoveFromRankOrder );
 	void UpdateWidth( void );
-	void UpdateHeight( const ULONG ulDisplayPlayer );
+	void UpdateHeight( const unsigned int displayPlayer, const int minYPos );
 	void DrawRow( const ULONG ulPlayer, const ULONG ulDisplayPlayer, LONG &lYPos, const float fAlpha, bool &bUseLightBackground ) const;
 };
 
@@ -570,7 +570,7 @@ void			SCOREBOARD_Destruct( void );
 void			SCOREBOARD_ParseFont( FScanner &sc, FFont *&font );
 void			SCOREBOARD_ParseTextColor( FScanner &sc, EColorRange &color );
 void			SCOREBOARD_Reset( void );
-void			SCOREBOARD_Render( ULONG ulDisplayPlayer );
+void			SCOREBOARD_Render( const unsigned int displayPlayer, const int minYPos = 0 );
 void STACK_ARGS SCOREBOARD_DrawString( FFont *font, const int color, const int x, const int y, const char *string, ... );
 void			SCOREBOARD_DrawColor( const PalEntry color, const float alpha, int left, int top, int width, int height );
 void STACK_ARGS SCOREBOARD_DrawTexture( FTexture *texture, const int x, const int y, const float scale, ... );

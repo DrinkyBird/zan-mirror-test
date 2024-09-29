@@ -1088,16 +1088,6 @@ drawfullconsole:
 			hw2d = screen->Begin2D(false);
 			WI_Drawer ();
 
-			// Allow people to see the full scoreboard in campaign mode.
-			if (( CAMPAIGN_InCampaign( )) && Button_ShowScores.bDown )
-			{
-				// Render the scoreboard.
-				if (( players[consoleplayer].camera != NULL ) && ( players[consoleplayer].camera->player != NULL ))
-					SCOREBOARD_Render( players[consoleplayer].camera->player - players );
-				else
-					SCOREBOARD_Render( consoleplayer );
-			}
-
 			// Render chat prompt.
 			CHAT_Render( );
 			break;

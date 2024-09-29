@@ -3019,8 +3019,9 @@ bool Scoreboard::PlayerComparator::operator( )( const int &arg1, const int &arg2
 //
 //*****************************************************************************
 
-void Scoreboard::Refresh( const ULONG ulDisplayPlayer )
+void Scoreboard::Refresh( const unsigned int displayPlayer, const int minYPos )
 {
+	int scaledMinYPos = minYPos;
 	ulRowHeightToUse = lRowHeight;
 
 	// [AK] Determine the size of the screen to draw the scoreboard.
@@ -3041,6 +3042,13 @@ void Scoreboard::Refresh( const ULONG ulDisplayPlayer )
 		g_ScreenWidth = HUD_GetWidth( );
 		g_ScreenHeight = HUD_GetHeight( );
 		g_KeepScreenRatio = g_bScale ? con_scaletext_usescreenratio : true;
+	}
+
+	// [AK] The minimum y-position needs to be scaled if the scoreboard is too.
+	if ( g_ScreenHeight != SCREENHEIGHT )
+	{
+		const float scale = static_cast<float>( g_ScreenHeight ) / SCREENHEIGHT;
+		scaledMinYPos = static_cast<int>( minYPos * scale );
 	}
 
 	// [AK] The scoreboard needs the player and spectator counts in "st_hud.cpp".
@@ -3069,7 +3077,7 @@ void Scoreboard::Refresh( const ULONG ulDisplayPlayer )
 	if ( ulWidth == 0 )
 		return;
 
-	UpdateHeight( ulDisplayPlayer );
+	UpdateHeight( displayPlayer, scaledMinYPos );
 
 	// [AK] Clamp the scroll offset (i.e. how far the user has scrolled down on
 	// the scoreboard), depending on how much bigger the total height of the
@@ -3186,7 +3194,7 @@ void Scoreboard::UpdateWidth( void )
 //
 //*****************************************************************************
 
-void Scoreboard::UpdateHeight( const ULONG ulDisplayPlayer )
+void Scoreboard::UpdateHeight( const unsigned int displayPlayer, const int minYPos )
 {
 	const ULONG ulRowYOffset = ulRowHeightToUse + ulGapBetweenRows;
 	const ULONG ulNumActivePlayers = HUD_GetNumPlayers( );
@@ -3197,7 +3205,7 @@ void Scoreboard::UpdateHeight( const ULONG ulDisplayPlayer )
 	ulHeight = 2 * ulBackgroundBorderSize + lHeaderHeight + ulGapBetweenHeaderAndRows;
 	totalScrollHeight = visibleScrollHeight = 0;
 
-	MainHeader.Refresh( ulDisplayPlayer, marginWidth, marginRelX );
+	MainHeader.Refresh( displayPlayer, marginWidth, marginRelX );
 	ulHeight += MainHeader.GetHeight( );
 
 	if (( ulFlags & SCOREBOARDFLAG_DONTDRAWBORDERS ) == false )
@@ -3226,7 +3234,7 @@ void Scoreboard::UpdateHeight( const ULONG ulDisplayPlayer )
 				// [AK] Refresh and add the heights of all team headers too, if allowed.
 				if (( ulFlags & SCOREBOARDFLAG_DONTSHOWTEAMHEADERS ) == false )
 				{
-					TeamHeader.Refresh( ulDisplayPlayer, marginWidth, marginRelX );
+					TeamHeader.Refresh( displayPlayer, marginWidth, marginRelX );
 					totalScrollHeight += TeamHeader.GetHeight( ) * ulNumTeamsWithPlayers;
 				}
 
@@ -3243,14 +3251,14 @@ void Scoreboard::UpdateHeight( const ULONG ulDisplayPlayer )
 		// [AK] Refresh and add the height of the spectator header too, if allowed.
 		if (( ulFlags & SCOREBOARDFLAG_DONTSHOWTEAMHEADERS ) == false )
 		{
-			SpectatorHeader.Refresh( ulDisplayPlayer, marginWidth, marginRelX );
+			SpectatorHeader.Refresh( displayPlayer, marginWidth, marginRelX );
 			totalScrollHeight += SpectatorHeader.GetHeight( );
 		}
 
 		totalScrollHeight += ulNumSpectators * ulRowYOffset;
 	}
 
-	Footer.Refresh( ulDisplayPlayer, marginWidth, marginRelX );
+	Footer.Refresh( displayPlayer, marginWidth, marginRelX );
 	ulHeight += Footer.GetHeight( );
 	visibleScrollHeight = totalScrollHeight;
 
@@ -3263,6 +3271,23 @@ void Scoreboard::UpdateHeight( const ULONG ulDisplayPlayer )
 	ulHeight += visibleScrollHeight;
 
 	scoreboard_DoAlignAndOffset( lRelY, cl_scoreboardvertalign, cl_scoreboardy, g_ScreenHeight, ulHeight );
+
+	// [AK] If the scoreboard is too high up, then it must be lowered.
+	if ( lRelY < minYPos )
+	{
+		lRelY = minYPos;
+		const unsigned int newBottomPosition = lRelY + ulHeight;
+
+		// [AK] Lowering the scoreboard might've made it go past the boundaries
+		// of the screen, so reduce its height if possible.
+		if (( visibleScrollHeight > 0 ) && ( newBottomPosition > g_ScreenHeight ))
+		{
+			const unsigned int amountToReduce = MIN<unsigned>( newBottomPosition - g_ScreenHeight, visibleScrollHeight );
+
+			ulHeight -= amountToReduce;
+			visibleScrollHeight -= amountToReduce;
+		}
+	}
 }
 
 //*****************************************************************************
@@ -3273,17 +3298,17 @@ void Scoreboard::UpdateHeight( const ULONG ulDisplayPlayer )
 //
 //*****************************************************************************
 
-void Scoreboard::Render( const ULONG ulDisplayPlayer, const float fAlpha )
+void Scoreboard::Render( const unsigned int displayPlayer, const int minYPos, const float alpha )
 {
 	// [AK] If we need to update the scoreboard, do so before rendering it.
 	if ( lLastRefreshTick != gametic )
 	{
-		Refresh( ulDisplayPlayer );
+		Refresh( displayPlayer, minYPos );
 		lLastRefreshTick = gametic;
 	}
 
 	// [AK] We can't draw anything if the width, height, or opacity are zero or less.
-	if (( ulWidth == 0 ) || ( ulHeight == 0 ) || ( fAlpha <= 0.0f ))
+	if (( ulWidth == 0 ) || ( ulHeight == 0 ) || ( alpha <= 0.0f ))
 		return;
 
 	int clipLeft = lRelX;
@@ -3294,16 +3319,16 @@ void Scoreboard::Render( const ULONG ulDisplayPlayer, const float fAlpha )
 	minClipRectY = lRelY;
 	maxClipRectY = lRelY + ulHeight;
 
-	SCOREBOARD_DrawColor( BackgroundColor, fBackgroundAmount * fAlpha, clipLeft, clipTop, clipWidth, clipHeight );
+	SCOREBOARD_DrawColor( BackgroundColor, fBackgroundAmount * alpha, clipLeft, clipTop, clipWidth, clipHeight );
 
 	const ULONG ulNumActivePlayers = HUD_GetNumPlayers( );
 	const ULONG ulNumTrueSpectators = HUD_GetNumSpectators( );
-	const float fCombinedAlpha = fContentAlpha * fAlpha;
+	const float fCombinedAlpha = fContentAlpha * alpha;
 	LONG lYPos = lRelY + ulBackgroundBorderSize;
 	bool bUseLightBackground = true;
 
 	// [AK] Draw the main header first.
-	MainHeader.Render( ulDisplayPlayer, ScoreMargin::NO_TEAM, lYPos, fCombinedAlpha );
+	MainHeader.Render( displayPlayer, ScoreMargin::NO_TEAM, lYPos, fCombinedAlpha );
 
 	// [AK] Draw a border above the column headers.
 	DrawBorder( HeaderColor, lYPos, fCombinedAlpha, false );
@@ -3355,10 +3380,10 @@ void Scoreboard::Render( const ULONG ulDisplayPlayer, const float fAlpha )
 
 			// [AK] Draw the header for this team, if allowed.
 			if (( ulFlags & SCOREBOARDFLAG_DONTSHOWTEAMHEADERS ) == false )
-				TeamHeader.Render( ulDisplayPlayer, ulTeam, lYPos, fCombinedAlpha );
+				TeamHeader.Render( displayPlayer, ulTeam, lYPos, fCombinedAlpha );
 		}
 
-		DrawRow( ulPlayer, ulDisplayPlayer, lYPos, fAlpha, bUseLightBackground );
+		DrawRow( ulPlayer, displayPlayer, lYPos, alpha, bUseLightBackground );
 	}
 
 	// [AK] Draw rows for any true spectators.
@@ -3374,12 +3399,12 @@ void Scoreboard::Render( const ULONG ulDisplayPlayer, const float fAlpha )
 
 		// [AK] Draw the header for spectators, if allowed.
 		if (( ulFlags & SCOREBOARDFLAG_DONTSHOWTEAMHEADERS ) == false )
-			SpectatorHeader.Render( ulDisplayPlayer, ScoreMargin::NO_TEAM, lYPos, fCombinedAlpha );
+			SpectatorHeader.Render( displayPlayer, ScoreMargin::NO_TEAM, lYPos, fCombinedAlpha );
 
 		// [AK] The index of the first true spectator should be the same as the number of active
 		// players. The list is organized such that all active players come before any true spectators.
 		for ( ULONG ulIdx = ulNumActivePlayers; ulIdx < ulTotalPlayers; ulIdx++ )
-			DrawRow( ulPlayerList[ulIdx], ulDisplayPlayer, lYPos, fAlpha, bUseLightBackground );
+			DrawRow( ulPlayerList[ulIdx], displayPlayer, lYPos, alpha, bUseLightBackground );
 	}
 
 	lYPos = maxClipRectY;
@@ -3392,7 +3417,7 @@ void Scoreboard::Render( const ULONG ulDisplayPlayer, const float fAlpha )
 	DrawBorder( HeaderColor, lYPos, fCombinedAlpha, false );
 
 	// [AK] Finally, draw the footer.
-	Footer.Render( ulDisplayPlayer, ScoreMargin::NO_TEAM, lYPos, fCombinedAlpha );
+	Footer.Render( displayPlayer, ScoreMargin::NO_TEAM, lYPos, fCombinedAlpha );
 }
 
 //*****************************************************************************
@@ -3861,17 +3886,20 @@ void SCOREBOARD_Reset( void )
 //
 // SCOREBOARD_Render
 //
-// Draws the scoreboard on the screen.
+// Draws the scoreboard on the screen. Note that minYPos is based on the actual
+// screen height and not the scaled screen height, particularly because it's
+// only used to prevent the scoreboard from overlapping with the "<levelname>
+// finished!" message that appears at the top of the intermission screen.
 //
 //*****************************************************************************
 
-void SCOREBOARD_Render( ULONG ulDisplayPlayer )
+void SCOREBOARD_Render( const unsigned int displayPlayer, const int minYPos )
 {
 	// Make sure the display player is valid.
-	if ( ulDisplayPlayer >= MAXPLAYERS )
+	if ( displayPlayer >= MAXPLAYERS )
 		return;
 
-	g_Scoreboard.Render( ulDisplayPlayer, cl_scoreboardalpha );
+	g_Scoreboard.Render( displayPlayer, minYPos, cl_scoreboardalpha );
 }
 
 //*****************************************************************************

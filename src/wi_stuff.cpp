@@ -1660,7 +1660,8 @@ void WI_DrawCampaignStats (void)
 	lh = (3*IntermissionFont->GetHeight())/2;
 
 	WI_drawBackground(); 
-	WI_drawLF();
+	// [AK] Save the y-position for the scoreboard.
+	const int y = WI_drawLF();
 
 	if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNWINS )
 	{
@@ -1733,6 +1734,10 @@ void WI_DrawCampaignStats (void)
 			DTA_Clean, true, DTA_Shadow, true, TAG_DONE);
 		WI_drawTime (160 - SP_TIMEX, 175, cnt_time);
 	}
+
+	// [AK] Allow people to see the full scoreboard in campaign mode.
+	if ( SCOREBOARD_ShouldDrawBoard())
+		SCOREBOARD_Render( me, y + WI_TITLEY * CleanYfac );
 }
 
 static int dm_state;
@@ -1871,12 +1876,13 @@ void WI_drawDeathmatchStats ()
 
 	// draw animated background
 	WI_drawBackground(); 
-	WI_drawLF();
+	// [AK] Save the y-position for the scoreboard.
+	const int y = WI_drawLF();
 
 	// [RH] Draw heads-up scores display
 //	HU_DrawScores (&players[me]);
 	// [BC] Use this display instead.
-	SCOREBOARD_Render( me );
+	SCOREBOARD_Render( me, y + WI_TITLEY * CleanYfac );
 
 /*
 	int 		i;
@@ -2170,10 +2176,12 @@ void WI_drawNetgameStats ()
 	// draw animated background
 	WI_drawBackground(); 
 
-	/*y =*/ WI_drawLF();
+	// [AK] We need y for the scoreboard, but it's been commented out above.
+	// It's cleaner if the variable is declared on this line instead.
+	const int y = WI_drawLF();
 
 	// [BC] In cooperative mode, just draw the scoreboard.
-	SCOREBOARD_Render( me );
+	SCOREBOARD_Render( me, y + WI_TITLEY * CleanYfac );
 /*
 	HU_GetPlayerWidths(maxnamewidth, maxscorewidth, maxiconheight);
 	height = SmallFont->GetHeight() * CleanYfac;
