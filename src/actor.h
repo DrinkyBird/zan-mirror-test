@@ -1182,6 +1182,22 @@ public:
 	// [BB] Last movedir that was sent to the client.
 	BYTE lastMovedir;
 
+	// [BOF] Save more MapThing values for map resets.
+	TMap<PSymbolVariable *, int> savedUserVars;
+
+	fixed_t				SavedPitch, SavedRoll;
+
+	fixed_t				SavedScaleX, SavedScaleY;
+	FRenderStyle		SavedRenderStyle;
+	fixed_t				SavedAlpha;
+	DWORD				SavedFillColor;
+
+	fixed_t				SavedGravity;
+	int					SavedScore;
+	int					SavedHealth;
+	FStrifeDialogueNode *SavedConversation;
+	BYTE				SavedFloatBobPhase;
+
 	// ThingIDs
 	static void ClearTIDHashes ();
 	void AddToHash ();

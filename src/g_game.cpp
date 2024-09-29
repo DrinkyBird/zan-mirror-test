@@ -3426,6 +3426,51 @@ void GAME_ResetScripts ( )
 	delete ( pMap );
 }
 
+static void GAME_ResetActorUDMFValues(AActor *oldActor, AActor *newActor)
+{
+	// [BOF] Sanity check to make sure the actors exist.
+	if (oldActor == nullptr || newActor == nullptr)
+		return;
+
+	// [BOF] Transfer the saved values from the old actor onto the new actor and then set those values for the new actor.
+	if (newActor != oldActor)
+	{
+		newActor->savedUserVars			= oldActor->savedUserVars;
+		newActor->SavedPitch			= oldActor->SavedPitch;
+		newActor->SavedRoll				= oldActor->SavedRoll;
+		newActor->SavedScaleX			= oldActor->SavedScaleX;
+		newActor->SavedScaleY			= oldActor->SavedScaleY;
+		newActor->SavedRenderStyle		= oldActor->SavedRenderStyle;
+		newActor->SavedAlpha			= oldActor->SavedAlpha;
+		newActor->SavedFillColor		= oldActor->SavedFillColor;
+		newActor->SavedGravity			= oldActor->SavedGravity;
+		newActor->SavedScore			= oldActor->SavedScore;
+		newActor->SavedHealth			= oldActor->SavedHealth;
+		newActor->SavedConversation		= oldActor->SavedConversation;
+		newActor->SavedFloatBobPhase	= oldActor->SavedFloatBobPhase;
+	}
+
+	newActor->ResetUserVars();
+
+	newActor->pitch				= oldActor->SavedPitch;
+	newActor->roll				= oldActor->SavedRoll;
+	newActor->scaleX			= oldActor->SavedScaleX;
+	newActor->scaleY			= oldActor->SavedScaleY;
+	newActor->RenderStyle		= oldActor->SavedRenderStyle;
+	newActor->alpha				= oldActor->SavedAlpha;
+	newActor->fillcolor			= oldActor->SavedFillColor;
+	newActor->gravity			= oldActor->SavedGravity;
+	newActor->Score				= oldActor->SavedScore;
+	newActor->health			= oldActor->SavedHealth;
+	newActor->Conversation		= oldActor->SavedConversation;
+	newActor->FloatBobPhase		= oldActor->SavedFloatBobPhase;
+}
+
+static void GAME_ResetActorUDMFValues(AActor *actor)
+{
+	GAME_ResetActorUDMFValues( actor, actor );
+}
+
 void DECAL_ClearDecals( void );
 FPolyObj *GetPolyobjByIndex( ULONG ulPoly );
 void GAME_ResetMap( bool bRunEnterScripts )
@@ -4024,6 +4069,9 @@ void GAME_ResetMap( bool bRunEnterScripts )
 
 				pNewActor->STFlags |= STFL_LEVELSPAWNED;
 
+				// [BOF] Restore UDMF Variables given on Map Spawn.
+				GAME_ResetActorUDMFValues(pActor, pNewActor);
+
 				// Handle the spawn flags of the item.
 				pNewActor->HandleSpawnFlags( );
 
@@ -4079,10 +4127,11 @@ void GAME_ResetMap( bool bRunEnterScripts )
 		pActorInfo = pActor->GetDefault( );
 
 		// This item appears to be untouched; no need to respawn it.
+		// [BOF] Check saved health instead.
 		if ((( pActor->STFlags & STFL_POSITIONCHANGED ) == false ) &&
 			( pActor->state == pActor->InitialState ) &&
 			( GAME_DormantStatusMatchesOriginal( pActor )) &&
-			( pActor->health == pActorInfo->health ))
+			( pActor->health == pActor->SavedHealth ))
 		{
 			if ( pActor->special != pActor->SavedSpecial )
 				pActor->special = pActor->SavedSpecial;
@@ -4092,8 +4141,8 @@ void GAME_ResetMap( bool bRunEnterScripts )
 				if ( pActor->args[i] != pActor->SavedArgs[i] )
 					pActor->args[i] = pActor->SavedArgs[i];
 
-			// [AK] User variables must be reset too.
-			pActor->ResetUserVars();
+			// [BOF] Restore UDMF Variables given on Map Spawn.
+			GAME_ResetActorUDMFValues(pActor);
 
 			// [BB] This is a valid monster on the map, count it.
 			if ( pActor->CountsAsKill( ) && !(pActor->flags & MF_FRIENDLY) )
@@ -4195,6 +4244,9 @@ void GAME_ResetMap( bool bRunEnterScripts )
 			// [BOF] If the default Skybox, then transfer to new the actor.
 			if (level.DefaultSkybox == pActor)
 				level.DefaultSkybox = static_cast<ASkyViewpoint *>( pNewActor );
+
+			// [BOF] Restore UDMF Variables given on Map Spawn.
+			GAME_ResetActorUDMFValues(pActor, pNewActor);
 
 			// Handle the spawn flags of the item.
 			pNewActor->HandleSpawnFlags( );

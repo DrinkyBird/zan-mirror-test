@@ -6348,7 +6348,21 @@ AActor *P_SpawnMapThing (FMapThing *mthing, int position)
 		mobj->Die(NULL, NULL);
 	else if (mthing->health != 1)
 		mobj->StartHealth = mobj->health;
-  
+
+	// [BOF] Save UDMF variables for map resets.
+	mobj->SavedPitch = mobj->pitch;
+	mobj->SavedRoll = mobj->roll;
+	mobj->SavedScaleX = mobj->scaleX;
+	mobj->SavedScaleY = mobj->scaleY;
+	mobj->SavedRenderStyle = mobj->RenderStyle;
+	mobj->SavedAlpha = mobj->alpha;
+	mobj->SavedFillColor = mobj->fillcolor;
+	mobj->SavedGravity = mobj->gravity;
+	mobj->SavedScore = mobj->Score;
+	mobj->SavedHealth = mobj->health;
+	mobj->SavedConversation = mobj->Conversation;
+	mobj->SavedFloatBobPhase = mobj->FloatBobPhase;
+
 	// [BB] Potentially adjust the default flags of this actor.
 	GAMEMODE_AdjustActorSpawnFlags ( mobj );
 
