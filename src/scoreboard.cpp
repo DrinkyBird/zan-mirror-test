@@ -708,7 +708,7 @@ LONG ScoreColumn::GetAlignmentPosition( ULONG ulContentWidth ) const
 	if ( Alignment == HORIZALIGN_LEFT )
 		return lRelX;
 	else if ( Alignment == HORIZALIGN_CENTER )
-		return lRelX + ( ulWidth - ulContentWidth ) / 2;
+		return lRelX + SCOREBOARD_CenterAlign( ulWidth, ulContentWidth );
 	else
 		return lRelX + ulWidth - ulContentWidth;
 }
@@ -1152,7 +1152,7 @@ void ScoreColumn::DrawString( const char *pszString, FFont *pFont, const ULONG u
 	int clipTop = lYPos;
 	int clipHeight = ulHeight;
 
-	LONG lNewYPos = lYPos + ( clipHeight - static_cast<LONG>( pFont->StringHeight( pszString ))) / 2;
+	LONG lNewYPos = lYPos + SCOREBOARD_CenterAlign( clipHeight, pFont->StringHeight( pszString ));
 
 	if ( SCOREBOARD_AdjustVerticalClipRect( clipTop, clipHeight ) == false )
 		return;
@@ -1186,7 +1186,7 @@ void ScoreColumn::DrawColor( const PalEntry color, const LONG lYPos, const ULONG
 	FixClipRectSize( clipWidth, clipHeight, ulHeight, clipWidthToUse, clipHeightToUse );
 
 	int clipLeft = GetAlignmentPosition( clipWidthToUse );
-	int clipTop = lYPos + ( static_cast<LONG>( ulHeight ) - clipHeightToUse ) / 2;
+	int clipTop = lYPos + SCOREBOARD_CenterAlign( ulHeight, clipHeightToUse );
 
 	if ( SCOREBOARD_AdjustVerticalClipRect( clipTop, clipHeightToUse ) == false )
 		return;
@@ -1215,9 +1215,9 @@ void ScoreColumn::DrawTexture( FTexture *texture, const LONG yPos, const ULONG h
 	FixClipRectSize( clipWidth, clipHeight, height, clipWidthToUse, clipHeightToUse );
 
 	int clipLeft = GetAlignmentPosition( clipWidthToUse );
-	int clipTop = yPos + ( height - clipHeightToUse ) / 2;
+	int clipTop = yPos + SCOREBOARD_CenterAlign( height, clipHeightToUse );
 
-	LONG lNewYPos = yPos + ( static_cast<LONG>( height ) - static_cast<LONG>( texture->GetScaledHeight( ) * scale )) / 2;
+	LONG lNewYPos = yPos + SCOREBOARD_CenterAlign( height, static_cast<int>( texture->GetScaledHeight( ) * scale ));
 
 	if ( SCOREBOARD_AdjustVerticalClipRect( clipTop, clipHeightToUse ) == false )
 		return;
@@ -2102,7 +2102,7 @@ void CountryFlagScoreColumn::DrawValue( const ULONG ulPlayer, const ULONG ulColo
 		const int topOffset = ( players[ulPlayer].ulCountryIndex / NUM_FLAGS_PER_SIDE ) * ulFlagHeight;
 
 		LONG lXPos = GetAlignmentPosition( ulFlagWidth );
-		LONG lNewYPos = lYPos + ( ulHeight - ulFlagHeight ) / 2;
+		LONG lNewYPos = lYPos + SCOREBOARD_CenterAlign( ulHeight, ulFlagHeight );
 
 		int clipLeft = lXPos;
 		int clipWidth = ulFlagWidth;
@@ -3982,6 +3982,29 @@ bool SCOREBOARD_AdjustVerticalClipRect( int &clipTop, int &clipHeight )
 		clipHeight = g_Scoreboard.maxClipRectY - clipTop;
 
 	return true;
+}
+
+//*****************************************************************************
+//
+// [AK] SCOREBOARD_CenterAlign
+//
+// This should be used when something needs to be aligned in the center of
+// something else that's bigger. Note that when the bigger size is non-even and
+// the smaller size is even, the position needs to be "flexed" by one pixel.
+//
+// By adding the flex, elements (e.g. multiple lines of text) won't wobble around
+// on the scoreboard when their sizes fluctuate between even and non-even.
+//
+//*****************************************************************************
+
+int SCOREBOARD_CenterAlign( const int biggerSize, const int smallerSize )
+{
+	int position = ( biggerSize - smallerSize ) / 2;
+
+	if (( biggerSize % 2 != 0 ) && ( smallerSize % 2 == 0 ))
+		position += 1;
+
+	return position;
 }
 
 //*****************************************************************************

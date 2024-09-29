@@ -385,7 +385,7 @@ protected:
 		if ( HorizontalAlignment == HORIZALIGN_LEFT )
 			result.X = pParentMargin->GetRelX( ) + lActualXOffset;
 		else if ( HorizontalAlignment == HORIZALIGN_CENTER )
-			result.X = pParentMargin->GetRelX( ) + ( pParentMargin->GetWidth( ) - ulWidth ) / 2 + lActualXOffset;
+			result.X = pParentMargin->GetRelX( ) + SCOREBOARD_CenterAlign( pParentMargin->GetWidth( ), ulWidth ) + lActualXOffset;
 		else
 			result.X = pParentMargin->GetRelX( ) + pParentMargin->GetWidth( ) - ulWidth - lActualXOffset;
 
@@ -393,7 +393,7 @@ protected:
 		if ( VerticalAlignment == VERTALIGN_TOP )
 			result.Y = lYOffset;
 		else if ( VerticalAlignment == VERTALIGN_CENTER )
-			result.Y = ( pParentMargin->GetHeight( ) - ulHeight ) / 2 + lYOffset;
+			result.Y = SCOREBOARD_CenterAlign( pParentMargin->GetHeight( ), ulHeight ) + lYOffset;
 		else
 			result.Y = pParentMargin->GetHeight( ) - ulHeight - lYOffset;
 
@@ -615,7 +615,7 @@ public:
 			LONG lActualXOffset = Pos.X;
 
 			if ( AlignmentToUse == HORIZALIGN_CENTER )
-				lActualXOffset += ( ulWidth - ulContentWidth ) / 2;
+				lActualXOffset += SCOREBOARD_CenterAlign( ulWidth, ulContentWidth );
 			else if ( AlignmentToUse == HORIZALIGN_RIGHT )
 				lActualXOffset += ulWidth - ulContentWidth;
 
@@ -691,7 +691,7 @@ public:
 			if ( ulContentWidth == 0 )
 				continue;
 
-			const LONG lYOffset = ( ulHeight - CommandsToDraw[i]->GetContentHeight( ulTeam )) / 2;
+			const LONG lYOffset = SCOREBOARD_CenterAlign( ulHeight, CommandsToDraw[i]->GetContentHeight( ulTeam ));
 			CommandsToDraw[i]->Draw( ulDisplayPlayer, ulTeam, Pos.Y + lYOffset, fCombinedAlpha, Pos.X );
 
 			// [AK] Shift the x-offset.
@@ -872,7 +872,7 @@ public:
 				Pos.Y += pFont->GetHeight( ) + ulGapSize;
 
 			if ( AlignmentToUse == HORIZALIGN_CENTER )
-				lActualXPos += ( pString->ulMaxWidth - pString->pLines[i].Width ) / 2;
+				lActualXPos += SCOREBOARD_CenterAlign( pString->ulMaxWidth, pString->pLines[i].Width );
 			else if ( AlignmentToUse == HORIZALIGN_RIGHT )
 				lActualXPos += pString->ulMaxWidth - pString->pLines[i].Width;
 
@@ -2020,8 +2020,8 @@ public:
 
 			if ( icon != nullptr )
 			{
-				const int iconX = currentPos.X + ( maxColumnWidth - icon->GetScaledWidth( )) / 2;
-				const int iconY = currentPos.Y + yPos + ( maxRowHeight - icon->GetScaledHeight( )) / 2;
+				const int iconX = currentPos.X + SCOREBOARD_CenterAlign( maxColumnWidth, icon->GetScaledWidth( ));
+				const int iconY = currentPos.Y + yPos + SCOREBOARD_CenterAlign( maxRowHeight, icon->GetScaledHeight( ));
 
 				SCOREBOARD_DrawTexture( icon, iconX, iconY, 1.0f,
 					DTA_LeftOffset, 0,
@@ -2031,7 +2031,7 @@ public:
 			}
 
 			quantityText.Format( "%u", medalList[i]->awardedCount[displayPlayer] );
-			const int textX = currentPos.X + ( maxColumnWidth - font->StringWidth( quantityText.GetChars( ))) / 2;
+			const int textX = currentPos.X + SCOREBOARD_CenterAlign( maxColumnWidth, font->StringWidth( quantityText.GetChars( )));
 			const int textY = currentPos.Y + yPos + maxRowHeight + textSpacing;
 
 			SCOREBOARD_DrawString( font, color, textX, textY, quantityText.GetChars( ), DTA_Alpha, combinedAlpha, TAG_DONE );
@@ -2051,7 +2051,7 @@ public:
 					const unsigned int rowWidth = maxColumnWidth * numColumnsInNextRow + columnGap * ( numColumnsInNextRow - 1 );
 
 					if ( alignmentToUse == HORIZALIGN_CENTER )
-						currentPos.X += ( currentWidth - rowWidth ) / 2;
+						currentPos.X += SCOREBOARD_CenterAlign( currentWidth, rowWidth );
 					else
 						currentPos.X += currentWidth - rowWidth;
 				}
