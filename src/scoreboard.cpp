@@ -2501,20 +2501,6 @@ Scoreboard::Scoreboard( void ) :
 //
 //*****************************************************************************
 
-int scoreboard_GetLuminance( const int r, const int g, const int b )
-{
-	return static_cast<int>( 0.3f * r + 0.59f * g + 0.11f * b );
-}
-
-//*****************************************************************************
-//
-int scoreboard_GetLuminance( const PalEntry color )
-{
-	return scoreboard_GetLuminance( color.r, color.g, color.b );
-}
-
-//*****************************************************************************
-//
 void Scoreboard::Parse( FScanner &sc )
 {
 	sc.MustGetToken( '{' );
@@ -2759,39 +2745,6 @@ void Scoreboard::Parse( FScanner &sc )
 
 	if ( lRowHeight <= 0 )
 		lRowHeight = pRowFont->GetHeight( ) - lRowHeight;
-
-	// [AK] Generate row background colors for each team through color blending.
-	// This uses the color blend mode explained in section 7.2.4, "Blend Mode", in
-	// "PDF Reference" fifth edition, version 1.6.
-	for ( ULONG ulTeam = 0; ulTeam < teams.Size( ); ulTeam++ )
-	{
-		const PalEntry TeamColor = teams[ulTeam].lPlayerColor;
-
-		for ( unsigned int i = 0; i < NUM_ROWBACKGROUND_COLORS; i++ )
-		{
-			const int delta = scoreboard_GetLuminance( RowBackgroundColors[i] ) - scoreboard_GetLuminance( TeamColor );
-
-			int rgb[3] = { TeamColor.r + delta, TeamColor.g + delta, TeamColor.b + delta };
-
-			const int luminosity = scoreboard_GetLuminance( rgb[0], rgb[1], rgb[2] );
-			const int minColor = MIN( MIN( rgb[0], rgb[1] ), rgb[2] );
-			const int maxColor = MAX( MAX( rgb[0], rgb[1] ), rgb[2] );
-
-			if ( minColor < 0 )
-			{
-				for ( unsigned int i = 0; i < 3; i++ )
-					rgb[i] = luminosity + ((( rgb[i] - luminosity ) * luminosity ) / ( luminosity - minColor ));
-			}
-
-			if ( maxColor > UCHAR_MAX )
-			{
-				for ( unsigned int i = 0; i < 3; i++ )
-					rgb[i] = luminosity + ((( rgb[i] - luminosity ) * ( UCHAR_MAX - luminosity )) / ( maxColor - luminosity ));
-			}
-
-			TeamRowBackgroundColors[ulTeam][i] = MAKERGB( rgb[0], rgb[1], rgb[2] );
-		}
-	}
 }
 
 //*****************************************************************************
@@ -3607,6 +3560,63 @@ void Scoreboard::DrawRowBackground( const PalEntry color, const int y, const flo
 
 //*****************************************************************************
 //
+// [AK] Scoreboard::UpdateTeamRowBackgroundColors
+//
+// Generates row background colors for each team through color blending. This
+// uses the color blend mode explained in section 7.2.4, "Blend Mode", in "PDF
+// Reference" fifth edition, version 1.6.
+//
+//*****************************************************************************
+
+int scoreboard_GetLuminance( const int r, const int g, const int b )
+{
+	return static_cast<int>( 0.3f * r + 0.59f * g + 0.11f * b );
+}
+
+//*****************************************************************************
+//
+int scoreboard_GetLuminance( const PalEntry color )
+{
+	return scoreboard_GetLuminance( color.r, color.g, color.b );
+}
+
+//*****************************************************************************
+//
+void Scoreboard::UpdateTeamRowBackgroundColors( void )
+{
+	for ( unsigned int team = 0; team < teams.Size( ); team++ )
+	{
+		const PalEntry teamColor = teams[team].lPlayerColor;
+
+		for ( unsigned int i = 0; i < NUM_ROWBACKGROUND_COLORS; i++ )
+		{
+			const int delta = scoreboard_GetLuminance( RowBackgroundColors[i] ) - scoreboard_GetLuminance( teamColor );
+
+			int rgb[3] = { teamColor.r + delta, teamColor.g + delta, teamColor.b + delta };
+
+			const int luminosity = scoreboard_GetLuminance( rgb[0], rgb[1], rgb[2] );
+			const int minColor = MIN( MIN( rgb[0], rgb[1] ), rgb[2] );
+			const int maxColor = MAX( MAX( rgb[0], rgb[1] ), rgb[2] );
+
+			if ( minColor < 0 )
+			{
+				for ( unsigned int i = 0; i < 3; i++ )
+					rgb[i] = luminosity + ((( rgb[i] - luminosity ) * luminosity ) / ( luminosity - minColor ));
+			}
+
+			if ( maxColor > UCHAR_MAX )
+			{
+				for ( unsigned int i = 0; i < 3; i++ )
+					rgb[i] = luminosity + ((( rgb[i] - luminosity ) * ( UCHAR_MAX - luminosity )) / ( maxColor - luminosity ));
+			}
+
+			TeamRowBackgroundColors[team][i] = MAKERGB( rgb[0], rgb[1], rgb[2] );
+		}
+	}
+}
+
+//*****************************************************************************
+//
 // [AK] Scoreboard::RemoveInvalidColumnsInRankOrder
 //
 // Checks if there are any columns in the scoreboard's rank order that aren't
@@ -3761,6 +3771,9 @@ void SCOREBOARD_Construct( void )
 			}
 		}
 	}
+
+	// [AK] This will initialize the team row background colors.
+	g_Scoreboard.UpdateTeamRowBackgroundColors( );
 }
 
 //*****************************************************************************

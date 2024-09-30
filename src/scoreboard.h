@@ -531,6 +531,7 @@ struct Scoreboard
 	void DrawBorder( const EColorRange Color, LONG &lYPos, const float fAlpha, const bool bReverse ) const;
 	void DrawRowBackground( const PalEntry color, int x, int y, int width, int height, const float fAlpha ) const;
 	void DrawRowBackground( const PalEntry color, const int y, const float fAlpha ) const;
+	void UpdateTeamRowBackgroundColors( void );
 	void RemoveInvalidColumnsInRankOrder( void );
 	void ClearColumnsAndMargins( void );
 	bool ShouldSeparateTeams( void ) const;
