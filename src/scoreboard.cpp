@@ -198,6 +198,7 @@ CUSTOM_CVAR( Int, sb_customizeflags, 0, CVAR_ARCHIVE | CVAR_NOINITCALL | CVAR_NO
 
 // [AK] CVars for the text colors.
 CVAR( Flag, sb_customizetextcolors, sb_customizeflags, CUSTOMIZE_TEXTCOLORS )
+CVAR( Bool, sb_useteamtextcolors, false, CVAR_ARCHIVE | CVAR_NOSETBYACS )
 
 CUSTOM_CVAR( Int, sb_headertextcolor, CR_GREY, CVAR_ARCHIVE | CVAR_NOSETBYACS )
 {
@@ -221,6 +222,7 @@ CUSTOM_CVAR( Int, sb_localrowdemotextcolor, CR_GOLD, CVAR_ARCHIVE | CVAR_NOSETBY
 
 // [AK] CVars for the border colors.
 CVAR( Flag, sb_customizebordercolors, sb_customizeflags, CUSTOMIZE_BORDERCOLORS )
+CVAR( Bool, sb_useheadertextcolorforborders, true, CVAR_ARCHIVE | CVAR_NOSETBYACS )
 CVAR( Color, sb_lightbordercolor, 0x9B9B9B, CVAR_ARCHIVE | CVAR_NOSETBYACS )
 CVAR( Color, sb_darkbordercolor, 0x282828, CVAR_ARCHIVE | CVAR_NOSETBYACS )
 
@@ -235,6 +237,9 @@ CUSTOM_CVAR( Float, sb_backgroundalpha, 0.5f, CVAR_ARCHIVE | CVAR_NOSETBYACS )
 
 // [AK] CVars for the row backgrounds.
 CVAR( Flag, sb_customizerowbackgrounds, sb_customizeflags, CUSTOMIZE_ROWBACKGROUNDS )
+CVAR( Bool, sb_showgapsinrowbackground, false, CVAR_ARCHIVE | CVAR_NOSETBYACS )
+CVAR( Bool, sb_nolocalrowbackgroundcolor, false, CVAR_ARCHIVE | CVAR_NOSETBYACS )
+CVAR( Bool, sb_onlylocalrowbackground, false, CVAR_ARCHIVE | CVAR_NOSETBYACS )
 
 CUSTOM_CVAR( Color, sb_lightrowbackgroundcolor, 0x404040, CVAR_ARCHIVE | CVAR_NOINITCALL | CVAR_NOSETBYACS )
 {
@@ -270,16 +275,21 @@ CCMD( restorescoreboardproperties )
 	sb_customizeflags.ResetToDefault( );
 
 	sb_headertextcolor.ResetToDefault( );
+	sb_useteamtextcolors.ResetToDefault( );
 	sb_rowtextcolor.ResetToDefault( );
 	sb_localrowtextcolor.ResetToDefault( );
 	sb_localrowdemotextcolor.ResetToDefault( );
 
+	sb_useheadertextcolorforborders.ResetToDefault( );
 	sb_lightbordercolor.ResetToDefault( );
 	sb_darkbordercolor.ResetToDefault( );
 
 	sb_backgroundcolor.ResetToDefault( );
 	sb_backgroundalpha.ResetToDefault( );
 
+	sb_showgapsinrowbackground.ResetToDefault( );
+	sb_nolocalrowbackgroundcolor.ResetToDefault( );
+	sb_onlylocalrowbackground.ResetToDefault( );
 	sb_lightrowbackgroundcolor.ResetToDefault( );
 	sb_darkrowbackgroundcolor.ResetToDefault( );
 	sb_localrowbackgroundcolor.ResetToDefault( );
@@ -3494,7 +3504,7 @@ void Scoreboard::DrawRow( const ULONG ulPlayer, const ULONG ulDisplayPlayer, LON
 		ulColor = CR_RED;
 	}
 	// [AK] Change the text color to match the player's team if we should.
-	else if (( GAMEMODE_GetCurrentFlags( ) & GMF_PLAYERSONTEAMS ) && ( ulFlags & SCOREBOARDFLAG_USETEAMTEXTCOLORS ))
+	else if (( GAMEMODE_GetCurrentFlags( ) & GMF_PLAYERSONTEAMS ) && ( CheckFlag( SCOREBOARDFLAG_USETEAMTEXTCOLORS, CUSTOMIZE_TEXTCOLORS, sb_useteamtextcolors )))
 	{
 		if ( PLAYER_IsTrueSpectator( &players[ulPlayer] ))
 			ulColor = CR_GREY;
@@ -3510,8 +3520,10 @@ void Scoreboard::DrawRow( const ULONG ulPlayer, const ULONG ulDisplayPlayer, LON
 			ulColor = localRowColors[LOCALROW_COLOR_INGAME];
 	}
 
+	const bool onlyShowLocalBackground = CheckFlag( SCOREBOARDFLAG_ONLYSHOWLOCALROWBACKGROUND, CUSTOMIZE_ROWBACKGROUNDS, sb_onlylocalrowbackground );
+
 	// [AK] Draw all row backgrounds, or only that of the player we're spying.
-	if ((( ulFlags & SCOREBOARDFLAG_ONLYSHOWLOCALROWBACKGROUND ) == false ) || ( bIsDisplayPlayer ))
+	if (( onlyShowLocalBackground == false ) || ( bIsDisplayPlayer ))
 	{
 		const float fBackgroundAlpha = ( bPlayerIsDead ? deadRowBackgroundAmount : rowBackgroundAmount ) * fAlpha;
 
@@ -3519,9 +3531,10 @@ void Scoreboard::DrawRow( const ULONG ulPlayer, const ULONG ulDisplayPlayer, LON
 		// the color of the background is to be the team's own color.
 		if ( fBackgroundAlpha > 0.0f )
 		{
+			const bool dontUseLocalColor = CheckFlag( SCOREBOARDFLAG_DONTUSELOCALROWBACKGROUNDCOLOR, CUSTOMIZE_ROWBACKGROUNDS, sb_nolocalrowbackgroundcolor );
 			ROWBACKGROUND_COLOR_e RowBackground;
 
-			if (( ulPlayer == ulDisplayPlayer ) && (( ulFlags & SCOREBOARDFLAG_DONTUSELOCALROWBACKGROUNDCOLOR ) == false ))
+			if (( ulPlayer == ulDisplayPlayer ) && ( dontUseLocalColor == false ))
 				RowBackground = ROWBACKGROUND_COLOR_LOCAL;
 			else
 				RowBackground = bUseLightBackground ? ROWBACKGROUND_COLOR_LIGHT : ROWBACKGROUND_COLOR_DARK;
@@ -3548,7 +3561,7 @@ void Scoreboard::DrawRow( const ULONG ulPlayer, const ULONG ulDisplayPlayer, LON
 
 	// [AK] Only switch between the "light" and "dark" row backgrounds if more
 	// than one row's background can be drawn.
-	if (( ulFlags & SCOREBOARDFLAG_ONLYSHOWLOCALROWBACKGROUND ) == false )
+	if ( onlyShowLocalBackground == false )
 		bUseLightBackground = !bUseLightBackground;
 }
 
@@ -3603,7 +3616,7 @@ void Scoreboard::DrawBorder( const EColorRange Color, LONG &lYPos, const float f
 
 		// [AK] Do we want to use the font's translation table and text color to colorize the border,
 		// or the predetermined hexadecimal colors for the border?
-		if ( ulFlags & SCOREBOARDFLAG_USEHEADERTEXTCOLORFORBORDERS )
+		if ( CheckFlag( SCOREBOARDFLAG_USEHEADERTEXTCOLORFORBORDERS, CUSTOMIZE_BORDERCOLORS, sb_useheadertextcolorforborders ))
 		{
 			// [AK] Get the translation table of the (team) header font with its corresponding color.
 			const FRemapTable *trans = pHeaderFont->GetColorTranslation( Color );
@@ -3658,7 +3671,7 @@ void Scoreboard::DrawRowBackground( const PalEntry color, const int y, const flo
 
 	// [AK] If gaps must be shown in the row's background, then only draw the background where
 	// the active columns are. Otherwise, draw a single background across the scoreboard.
-	if ( ulFlags & SCOREBOARDFLAG_SHOWGAPSINROWBACKGROUND )
+	if ( CheckFlag( SCOREBOARDFLAG_SHOWGAPSINROWBACKGROUND, CUSTOMIZE_ROWBACKGROUNDS, sb_showgapsinrowbackground ))
 	{
 		for ( unsigned int i = 0; i < ColumnOrder.Size( ); i++ )
 		{
@@ -3778,6 +3791,20 @@ void Scoreboard::ClearColumnsAndMargins( void )
 bool Scoreboard::ShouldSeparateTeams( void ) const
 {
 	return (( GAMEMODE_GetCurrentFlags( ) & GMF_PLAYERSONTEAMS ) && (( ulFlags & SCOREBOARDFLAG_DONTSEPARATETEAMS ) == false ));
+}
+
+//*****************************************************************************
+//
+// [AK] Scoreboard::CheckFlag
+//
+// Checks if one of the scoreboard's flags set in SCORINFO should be used or
+// the user's own custom settings.
+//
+//*****************************************************************************
+
+bool Scoreboard::CheckFlag( const SCOREBOARDFLAG_e flag, const CustomizeScoreboardFlag customizeFlag, const bool customizeValue ) const
+{
+	return ( sb_customizeflags & customizeFlag ) ? customizeValue : !!( ulFlags & flag );
 }
 
 //*****************************************************************************

@@ -572,6 +572,7 @@ struct Scoreboard
 	void RemoveInvalidColumnsInRankOrder( void );
 	void ClearColumnsAndMargins( void );
 	bool ShouldSeparateTeams( void ) const;
+	bool CheckFlag( const SCOREBOARDFLAG_e flag, const CustomizeScoreboardFlag customizeFlag, const bool customizeValue ) const;
 
 private:
 	struct PlayerComparator
