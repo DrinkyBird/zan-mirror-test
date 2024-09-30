@@ -223,7 +223,7 @@ END_ENUM( COLUMNFLAG_e )
 BEGIN_ENUM( SCOREBOARDFLAG_e )
 {
 	// Row text will be printed in the same color as the player's team.
-	ENUM_ELEMENT2( SCOREBOARDFLAG_USETEAMTEXTCOLOR, 0x01 ),
+	ENUM_ELEMENT2( SCOREBOARDFLAG_USETEAMTEXTCOLORS, 0x01 ),
 	// The text color of the headers is automatically used to color the border lines.
 	ENUM_ELEMENT2( SCOREBOARDFLAG_USEHEADERTEXTCOLORFORBORDERS, 0x02 ),
 	// The borders are drawn using textures instead of lines.

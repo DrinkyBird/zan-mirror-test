@@ -3494,7 +3494,7 @@ void Scoreboard::DrawRow( const ULONG ulPlayer, const ULONG ulDisplayPlayer, LON
 		ulColor = CR_RED;
 	}
 	// [AK] Change the text color to match the player's team if we should.
-	else if ( ulFlags & SCOREBOARDFLAG_USETEAMTEXTCOLOR )
+	else if (( GAMEMODE_GetCurrentFlags( ) & GMF_PLAYERSONTEAMS ) && ( ulFlags & SCOREBOARDFLAG_USETEAMTEXTCOLORS ))
 	{
 		if ( PLAYER_IsTrueSpectator( &players[ulPlayer] ))
 			ulColor = CR_GREY;
