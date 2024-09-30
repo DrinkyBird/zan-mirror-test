@@ -102,6 +102,18 @@ enum MARGINTYPE_e
 };
 
 //*****************************************************************************
+//
+// [AK] What kind of stuff on the scoreboard the user wants to customize.
+//
+enum CustomizeScoreboardFlag
+{
+	CUSTOMIZE_TEXTCOLORS =		1 << 0,
+	CUSTOMIZE_BORDERCOLORS =	1 << 1,
+	CUSTOMIZE_BACKGROUND =		1 << 2,
+	CUSTOMIZE_ROWBACKGROUNDS =	1 << 3,
+};
+
+//*****************************************************************************
 //	CLASSES
 
 //*****************************************************************************
@@ -463,8 +475,33 @@ private:
 //
 //*****************************************************************************
 
+EXTERN_CVAR( Int, sb_customizeflags )
+
 struct Scoreboard
 {
+	// [AK] Template class for properties that can be customized in-game.
+	template <typename Type, typename CVar> struct CustomizableProperty
+	{
+		CustomizableProperty( const CVar &cvar, const CustomizeScoreboardFlag flag, const Type initial ) :
+			cvar( cvar ), flag( flag ), value( initial ) { }
+
+		void operator= ( const Type other ) { value = other; }
+		operator Type( ) const { return ( sb_customizeflags & flag ) ? static_cast<Type>( cvar ) : value; }
+
+		const CVar &cvar;
+		const CustomizeScoreboardFlag flag;
+		Type value;
+	};
+
+	// [AK] Specialized template class for text color properties.
+	struct CustomizableTextColor : public CustomizableProperty<EColorRange, FIntCVar>
+	{
+		CustomizableTextColor( const FIntCVar &cvar, const CustomizeScoreboardFlag flag, const EColorRange initial ) :
+			CustomizableProperty( cvar, flag, initial ) { }
+
+		operator EColorRange( ) const { return ( sb_customizeflags & flag ) ? static_cast<EColorRange>( cvar.GetGenericRep( CVAR_Int ).Int ) : value; }
+	};
+
 	enum LOCALROW_COLOR_e
 	{
 		LOCALROW_COLOR_INGAME,
@@ -497,17 +534,17 @@ struct Scoreboard
 	ULONG ulFlags;
 	FFont *pHeaderFont;
 	FFont *pRowFont;
-	EColorRange HeaderColor;
-	EColorRange RowColor;
-	EColorRange LocalRowColors[NUM_LOCALROW_COLORS];
+	CustomizableTextColor headerColor;
+	CustomizableTextColor rowColor;
+	CustomizableTextColor localRowColors[NUM_LOCALROW_COLORS];
 	FTexture *pBorderTexture;
-	PalEntry BorderColors[NUM_BORDER_COLORS];
-	PalEntry BackgroundColor;
-	PalEntry RowBackgroundColors[NUM_ROWBACKGROUND_COLORS];
+	CustomizableProperty<PalEntry, FColorCVar> borderColors[NUM_BORDER_COLORS];
+	CustomizableProperty<PalEntry, FColorCVar> backgroundColor;
+	CustomizableProperty<PalEntry, FColorCVar> rowBackgroundColors[NUM_ROWBACKGROUND_COLORS];
 	PalEntry TeamRowBackgroundColors[MAX_TEAMS][NUM_ROWBACKGROUND_COLORS];
-	float fBackgroundAmount;
-	float fRowBackgroundAmount;
-	float fDeadRowBackgroundAmount;
+	CustomizableProperty<float, FFloatCVar> backgroundAmount;
+	CustomizableProperty<float, FFloatCVar> rowBackgroundAmount;
+	CustomizableProperty<float, FFloatCVar> deadRowBackgroundAmount;
 	float fContentAlpha;
 	float fDeadTextAlpha;
 	ULONG ulBackgroundBorderSize;

@@ -1242,11 +1242,42 @@ OptionValue ZA_VerticalAlignment
 	2, "Bottom"
 }
 
+// [AK] A separate menu for custom scoreboard properties.
+OptionMenu CustomizeScoreboardMenu
+{
+	Title "CUSTOMIZE SCOREBOARD"
+
+	SafeCommand "Restore to default",	"restorescoreboardproperties"
+	StaticText " "
+	Option "Customize text colors",		"sb_customizetextcolors", "YesNo"
+	Option "Header color",			"sb_headertextcolor", "TextColors"
+	Option "Row color",			"sb_rowtextcolor", "TextColors"
+	Option "Local row color",		"sb_localrowtextcolor", "TextColors"
+	Option "Local row demo color",		"sb_localrowdemotextcolor", "TextColors"
+	StaticText " "
+	Option "Customize border colors",	"sb_customizebordercolors", "YesNo"
+	ColorPicker "Light color",		"sb_lightbordercolor"
+	ColorPicker "Dark color",		"sb_darkbordercolor"
+	StaticText " "
+	Option "Customize background",		"sb_customizebackground", "YesNo"
+	ColorPicker "Background color",		"sb_backgroundcolor"
+	Slider "Background alpha",		"sb_backgroundalpha", 0.0, 1.0, 0.05
+	StaticText " "
+	Option "Customize row backgrounds",	"sb_customizerowbackgrounds", "YesNo"
+	ColorPicker "Light color",		"sb_lightrowbackgroundcolor"
+	ColorPicker "Dark color",		"sb_darkrowbackgroundcolor"
+	ColorPicker "Local color",		"sb_localrowbackgroundcolor"
+	Slider "Background alpha",		"sb_rowbackgroundalpha", 0.0, 1.0, 0.05
+	Slider "Dead Background alpha",		"sb_deadrowbackgroundalpha", 0.0, 1.0, 0.05
+}
+
 OptionMenu ScoreboardOptions
 {
 	Title "SCOREBOARD OPTIONS"
 
 	// [AK] Zandronum has its own options for the scoreboard.
+	Submenu "Customize scoreboard",		"CustomizeScoreboardMenu"
+	StaticText " "
 	Option "Colorize pings",		"cl_colorizepings", "YesNo"
 	Option "Use short column names",	"cl_useshortcolumnnames", "YesNo"
 	Option "Show intermission timer",	"cl_intermissiontimer", "YesNo"
