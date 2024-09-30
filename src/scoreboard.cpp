@@ -4212,7 +4212,7 @@ static unsigned int scoreboard_GetMaxSize( const float percentage, const int ali
 //
 //*****************************************************************************
 
-void scoreboard_DoAlignAndOffset( LONG &position, const int alignment, const int offset, const int screenSize, const int scoreboardSize )
+static void scoreboard_DoAlignAndOffset( LONG &position, const int alignment, const int offset, const int screenSize, const int scoreboardSize )
 {
 	const int sizeDiff = screenSize - scoreboardSize;
 
