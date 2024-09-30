@@ -106,6 +106,9 @@ static	unsigned int	scoreboard_GetMaxSize( const float percentage, const int ali
 
 static	void	scoreboard_DoAlignAndOffset( LONG &position, const int alignment, const int offset, const int screenSize, const int scoreboardSize );
 
+template <typename Type, typename CVar>
+static	void	scoreboard_ClampCVar( CVar &cvar, const Type minValue, const Type maxValue );
+
 //*****************************************************************************
 //	CONSOLE VARIABLES
 
@@ -136,67 +139,49 @@ CVAR( Int, cl_scoreboardy, 0, CVAR_ARCHIVE );
 // [AK] Controls the opacity of the entire scoreboard.
 CUSTOM_CVAR( Float, cl_scoreboardalpha, 1.0f, CVAR_ARCHIVE )
 {
-	float fClampedValue = clamp<float>( self, 0.0f, 1.0f );
-
-	if ( self != fClampedValue )
-		self = fClampedValue;
+	scoreboard_ClampCVar<float, FFloatCVar>( self, 0.0f, 1.0f );
 }
 
 // [AK] How fast the scoreboard can scroll up or down when it's too big.
 CUSTOM_CVAR( Int, cl_scoreboardscrollspeed, 32, CVAR_ARCHIVE )
 {
-	if ( self < 1 )
-		self = 1;
+	scoreboard_ClampCVar<int, FIntCVar>( self, 1, INT_MAX );
 }
 
 // [AK] The width of the screen to draw the scoreboard if cl_usescoreboardscale is enabled.
 CUSTOM_CVAR( Int, cl_scoreboardscreenwidth, 640, CVAR_ARCHIVE )
 {
-	if ( self < 320 )
-		self = 320;
+	scoreboard_ClampCVar<int, FIntCVar>( self, 320, INT_MAX );
 }
 
 // [AK] The maximum width of the scoreboard, as a percentage of the screen's width.
 CUSTOM_CVAR( Float, cl_maxscoreboardwidth, 1.0f, CVAR_ARCHIVE )
 {
-	float clampedValue = clamp<float>( self, 0.0f, 1.0f );
-
-	if ( self != clampedValue )
-		self = clampedValue;
+	scoreboard_ClampCVar<float, FFloatCVar>( self, 0.0f, 1.0f );
 }
 
 // [AK] The height of the screen to draw the scoreboard if cl_usescoreboardscale is enabled.
 CUSTOM_CVAR( Int, cl_scoreboardscreenheight, 480, CVAR_ARCHIVE )
 {
-	if ( self < 200 )
-		self = 200;
+	scoreboard_ClampCVar<int, FIntCVar>( self, 200, INT_MAX );
 }
 
 // [AK] The maximum height of the scoreboard, as a percentage of the screen's height.
 CUSTOM_CVAR( Float, cl_maxscoreboardheight, 1.0f, CVAR_ARCHIVE )
 {
-	float clampedValue = clamp<float>( self, 0.0f, 1.0f );
-
-	if ( self != clampedValue )
-		self = clampedValue;
+	scoreboard_ClampCVar<float, FFloatCVar>( self, 0.0f, 1.0f );
 }
 
 // [AK] Controls whether the scoreboard is aligned to the left, center, or right of the screen.
 CUSTOM_CVAR( Int, cl_scoreboardhorizalign, HORIZALIGN_CENTER, CVAR_ARCHIVE )
 {
-	const int clampedValue = clamp<int>( self, HORIZALIGN_LEFT, HORIZALIGN_RIGHT );
-
-	if ( self != clampedValue )
-		self = clampedValue;
+	scoreboard_ClampCVar<int, FIntCVar>( self, HORIZALIGN_LEFT, HORIZALIGN_RIGHT );
 }
 
 // [AK] Controls whether the scoreboard is aligned to the top, center, or bottom of the screen.
 CUSTOM_CVAR( Int, cl_scoreboardvertalign, VERTALIGN_CENTER, CVAR_ARCHIVE )
 {
-	const int clampedValue = clamp<int>( self, VERTALIGN_TOP, VERTALIGN_BOTTOM );
-
-	if ( self != clampedValue )
-		self = clampedValue;
+	scoreboard_ClampCVar<int, FIntCVar>( self, VERTALIGN_TOP, VERTALIGN_BOTTOM );
 }
 
 //*****************************************************************************
@@ -4255,4 +4240,21 @@ static void scoreboard_DoAlignAndOffset( LONG &position, const int alignment, co
 				position = MAX<LONG>( position - clampedOffset, 0 );
 		}
 	}
+}
+
+//*****************************************************************************
+//
+// [AK] scoreboard_ClampCVar
+//
+// A helper function to clamp the values of CVars to within a certain range.
+//
+//*****************************************************************************
+
+template <typename Type, typename CVar>
+static void scoreboard_ClampCVar( CVar &cvar, const Type minValue, const Type maxValue )
+{
+	const Type clampedValue = clamp<Type>( cvar, minValue, maxValue );
+
+	if ( cvar != clampedValue )
+		cvar = clampedValue;
 }
