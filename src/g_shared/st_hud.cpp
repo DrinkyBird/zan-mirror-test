@@ -1171,14 +1171,17 @@ static void HUD_RenderCountdown( ULONG ulTimeLeft )
 		ulYPos += 24;
 	}
 
-	// [AK] Draw the actual countdown message.
-	if ( invasion )
-		text = INVASION_GetState( ) == IS_FIRSTCOUNTDOWN ? "First wave begins" : "Begins";
-	else
-		text = "Match begins";
+	// [AK] Draw the actual countdown message in grey, but use the same color
+	// as the title for the counter itself to make it stand out more.
+	text = TEXTCOLOR_GREY;
 
-	text.AppendFormat( " in: %d", static_cast<unsigned int>( ulTimeLeft / TICRATE ));
-	HUD_DrawTextCleanCentered( SmallFont, CR_UNTRANSLATED, ulYPos, text );
+	if ( invasion )
+		text += INVASION_GetState( ) == IS_FIRSTCOUNTDOWN ? "First wave begins" : "Begins";
+	else
+		text += "Match begins";
+
+	text.AppendFormat( " in: " TEXTCOLOR_NORMAL "%u", static_cast<unsigned int>( ulTimeLeft / TICRATE ));
+	HUD_DrawTextCleanCentered( SmallFont, ulTitleColor, ulYPos, text );
 }
 
 //*****************************************************************************
