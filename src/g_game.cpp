@@ -1819,150 +1819,107 @@ void G_Ticker ()
 		}
 
 		// Apply end level delay.
-		if (( g_ulEndLevelDelay ) &&
-			( NETWORK_InClientMode() == false ))
+		if (( NETWORK_InClientMode( ) == false ) && ( g_ulEndLevelDelay ) && ( --g_ulEndLevelDelay == 0 ))
 		{
-			if ( --g_ulEndLevelDelay == 0 )
+			// Tell the clients about the expired end level delay.
+			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
+				SERVERCOMMANDS_SetGameEndLevelDelay( g_ulEndLevelDelay );
+
+			// If we're in a duel, set up the next duel.
+			if ( duel )
 			{
-				// Tell the clients about the expired end level delay.
-				if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-					SERVERCOMMANDS_SetGameEndLevelDelay( g_ulEndLevelDelay );
-
-				// If we're in a duel, set up the next duel.
-				if ( duel )
+				// If the player must win all duels, and lost this one, then he's DONE!
+				if (( DUEL_GetLoser( ) == static_cast<unsigned>( consoleplayer )) && ( CAMPAIGN_InCampaign( )) && ( CAMPAIGN_GetCampaignInfo( level.mapname )->bMustWinAllDuels ))
 				{
-					// If the player must win all duels, and lost this one, then he's DONE!
-					if (( DUEL_GetLoser( ) == static_cast<unsigned> (consoleplayer) ) && ( CAMPAIGN_InCampaign( )) && ( CAMPAIGN_GetCampaignInfo( level.mapname )->bMustWinAllDuels ))
-					{
-						// Tell the player he loses!
-						Printf( "You lose!\n" );
+					// Tell the player he loses!
+					Printf( "You lose!\n" );
 
-						// End the level.
-						G_ExitLevel( 0, false );
+					// End the level.
+					G_ExitLevel( 0, false );
 
-						// When the level loads, start the next duel.
-						DUEL_SetStartNextDuelOnLevelLoad( true );
-					}
-					// If we've reached the duel limit, exit the level.
-					else if (( duellimit > 0 ) && ( static_cast<signed> (DUEL_GetNumDuels( )) >= duellimit ))
-					{
-						NETWORK_Printf( "Duellimit hit.\n" );
-						G_ExitLevel( 0, false );
-
-						// When the level loads, start the next duel.
-						DUEL_SetStartNextDuelOnLevelLoad( true );
-					}
-					else
-					{
-						// Send the loser back to the spectators! Doing so will automatically set up
-						// the next duel.
-						DUEL_SendLoserToSpectators( );
-					}
+					// When the level loads, start the next duel.
+					DUEL_SetStartNextDuelOnLevelLoad( true );
 				}
-				else if ( lastmanstanding || teamlms )
+				// If we've reached the duel limit, exit the level.
+				else if (( duellimit > 0 ) && ( static_cast<signed>( DUEL_GetNumDuels( )) >= duellimit ))
 				{
-					bool	bLimitHit = false;
+					NETWORK_Printf( "Duellimit hit.\n" );
+					G_ExitLevel( 0, false );
 
-					if ( winlimit > 0 )
-					{
-						if ( lastmanstanding )
-						{
-							ULONG	ulIdx;
-							
-							for ( ulIdx = 0; ulIdx < MAXPLAYERS; ulIdx++ )
-							{
-								if (( playeringame[ulIdx] == false ) || ( PLAYER_IsTrueSpectator( &players[ulIdx] )))
-									continue;
-
-								if ( static_cast<signed> (players[ulIdx].ulWins) >= winlimit )
-								{
-									bLimitHit = true;
-									break;
-								}
-							}
-						}
-						else
-						{
-							if ( TEAM_GetHighestWinCount( ) >= winlimit)
-								bLimitHit = true;
-						}
-
-						if ( bLimitHit )
-						{
-							NETWORK_Printf( "Winlimit hit.\n" );
-							G_ExitLevel( 0, false );
-
-							// When the level loads, start the next match.
-//							LASTMANSTANDING_SetStartNextMatchOnLevelLoad( true );
-						}
-						else
-						{
-							LASTMANSTANDING_SetState( LMSS_PRENEXTROUNDCOUNTDOWN );
-							LASTMANSTANDING_Tick( );
-						}
-					}
-					else
-					{
-						LASTMANSTANDING_SetState( LMSS_PRENEXTROUNDCOUNTDOWN );
-						LASTMANSTANDING_Tick( );
-					}
-				}
-				else if ( possession || teampossession )
-				{
-					bool	bLimitHit = false;
-
-					if ( pointlimit > 0 )
-					{
-						if ( possession )
-						{
-							ULONG	ulIdx;
-							
-							for ( ulIdx = 0; ulIdx < MAXPLAYERS; ulIdx++ )
-							{
-								if (( playeringame[ulIdx] == false ) || ( PLAYER_IsTrueSpectator( &players[ulIdx] )))
-									continue;
-
-								if ( players[ulIdx].lPointCount >= pointlimit )
-								{
-									bLimitHit = true;
-									break;
-								}
-							}
-						}
-						else
-						{
-							if ( TEAM_GetHighestPointCount( ) >= pointlimit)
-								bLimitHit = true;
-						}
-
-						if ( bLimitHit )
-						{
-							G_ExitLevel( 0, false );
-						}
-						else
-						{
-							POSSESSION_SetState( PSNS_PRENEXTROUNDCOUNTDOWN );
-							POSSESSION_Tick( );
-						}
-					}
-					else
-					{
-						POSSESSION_SetState( PSNS_PRENEXTROUNDCOUNTDOWN );
-						POSSESSION_Tick( );
-					}
-				}
-				else if ( survival )
-				{
-					SURVIVAL_RestartMission( );
-					SURVIVAL_Tick( );
-				}
-				else if ( invasion )
-				{
-					INVASION_SetState( IS_WAITINGFORPLAYERS );
-					INVASION_Tick( );
+					// When the level loads, start the next duel.
+					DUEL_SetStartNextDuelOnLevelLoad( true );
 				}
 				else
+				{
+					// Send the loser back to the spectators! Doing so will automatically set up
+					// the next duel.
+					DUEL_SendLoserToSpectators( );
+				}
+			}
+			else if (( lastmanstanding || teamlms ) || ( possession || teampossession ))
+			{
+				const bool isLastManStanding = ( lastmanstanding || teamlms );
+				const FIntCVar &cvar = isLastManStanding ? winlimit : pointlimit;
+				bool limitHit = false;
+
+				if ( cvar > 0 )
+				{
+					if (( lastmanstanding ) || ( possession ))
+					{
+						for ( unsigned int i = 0; i < MAXPLAYERS; i++ )
+						{
+							if (( playeringame[i] == false ) || ( PLAYER_IsTrueSpectator( &players[i] )))
+								continue;
+
+							const LONG playerScore = isLastManStanding ? static_cast<LONG>( players[i].ulWins ) : players[i].lPointCount;
+
+							if ( playerScore >= cvar )
+							{
+								limitHit = true;
+								break;
+							}
+						}
+					}
+					else
+					{
+						const LONG teamScore = isLastManStanding ? TEAM_GetHighestWinCount( ) : TEAM_GetHighestPointCount( );
+
+						if ( teamScore >= cvar )
+							limitHit = true;
+					}
+				}
+
+				if ( limitHit )
+				{
+					if ( isLastManStanding )
+						NETWORK_Printf( "Winlimit hit.\n" );
+
 					G_ExitLevel( 0, false );
+				}
+				else if ( isLastManStanding )
+				{
+					LASTMANSTANDING_SetState( LMSS_PRENEXTROUNDCOUNTDOWN );
+					LASTMANSTANDING_Tick( );
+				}
+				else
+				{
+					POSSESSION_SetState( PSNS_PRENEXTROUNDCOUNTDOWN );
+					POSSESSION_Tick( );
+				}
+			}
+			else if ( survival )
+			{
+				SURVIVAL_RestartMission( );
+				SURVIVAL_Tick( );
+			}
+			else if ( invasion )
+			{
+				INVASION_SetState( IS_WAITINGFORPLAYERS );
+				INVASION_Tick( );
+			}
+			else
+			{
+				G_ExitLevel( 0, false );
 			}
 		}
 
