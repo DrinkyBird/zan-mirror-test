@@ -8644,17 +8644,21 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 				PLAYERCOUNTRY_NAME,
 			};
 
-			if (( PLAYER_IsValidPlayer( args[0] )) && (( NETWORK_GetState( ) != NETSTATE_SERVER ) || ( SERVER_GetClient( args[0] )->bWantHideCountry == false )))
+			if ( PLAYER_IsValidPlayer( args[0] ))
 			{
 				player_t *const player = &players[args[0]];
-				const int type = args[1];
 
-				// [AK] Return the alpha-2 or alpha-3 code of the player's country.
-				if (( type == PLAYERCOUNTRY_ALPHA2 ) || ( type == PLAYERCOUNTRY_ALPHA3 ))
-					return GlobalACSStrings.AddString( NETWORK_GetCountryCodeFromIndex( player->ulCountryIndex, type == PLAYERCOUNTRY_ALPHA3 ));
-				// [AK] ...or the full name of their country.
-				else if ( type == PLAYERCOUNTRY_NAME )
-					return GlobalACSStrings.AddString( NETWORK_GetCountryNameFromIndex( player->ulCountryIndex ));
+				if (( player->ulCountryIndex > 0 ) && (( NETWORK_GetState( ) != NETSTATE_SERVER ) || ( SERVER_GetClient( args[0] )->bWantHideCountry == false )))
+				{
+					const int type = args[1];
+
+					// [AK] Return the alpha-2 or alpha-3 code of the player's country.
+					if (( type == PLAYERCOUNTRY_ALPHA2 ) || ( type == PLAYERCOUNTRY_ALPHA3 ))
+						return GlobalACSStrings.AddString( NETWORK_GetCountryCodeFromIndex( player->ulCountryIndex, type == PLAYERCOUNTRY_ALPHA3 ));
+					// [AK] ...or the full name of their country.
+					else if ( type == PLAYERCOUNTRY_NAME )
+						return GlobalACSStrings.AddString( NETWORK_GetCountryNameFromIndex( player->ulCountryIndex ));
+				}
 			}
 
 			// [AK] Return "N/A" if the arguments are invalid or they're hiding their country.
