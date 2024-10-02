@@ -255,6 +255,7 @@
 !	- The "next round in..." message is now used in (team) LMS during countdown sequences. [Kaminsky]
 !	- Map rotations are no longer exclusive to online games and can now be used in offline games. [Kaminsky]
 !	- Clients with RCON access can no longer start a new (skirmish) game unless they log out with "rcon_logout" first. [Kaminsky]
+!	- The end level delay no longer ticks while the game's paused. [Kaminsky]
 
 
 3.1
