@@ -62,6 +62,7 @@
 #include "gl/utility/gl_templates.h"
 #include "gl/shaders/gl_shader.h"
 
+CVAR(Bool, gl_forcetransparenttotranslucent, false, 0)
 
 //==========================================================================
 //
@@ -128,6 +129,11 @@ void GLWall::PutWall(bool translucent)
 		translucent = true;
 	}
 
+	// [SB] Force all transparent textures to the translucent list.
+	// This causes them to be distance-sorted and blend tested,
+	// hopefully working around an AMD driver bug with alpha masking.
+	const bool forceAsTranslucent = gl_forcetransparenttotranslucent && gltexture && gltexture->GetTransparent();
+
 	if (gl_fixedcolormap) 
 	{
 		// light planes don't get drawn with fullbright rendering
@@ -138,7 +144,7 @@ void GLWall::PutWall(bool translucent)
 
 	CheckGlowing();
 
-	if (translucent) // translucent walls
+	if (translucent || forceAsTranslucent) // translucent walls
 	{
 		viewdistance = P_AproxDistance( ((seg->linedef->v1->x+seg->linedef->v2->x)>>1) - viewx,
 											((seg->linedef->v1->y+seg->linedef->v2->y)>>1) - viewy);
