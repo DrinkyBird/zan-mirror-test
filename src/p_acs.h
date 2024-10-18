@@ -1176,6 +1176,7 @@ FArchive &operator<< (FArchive &arc, acsdefered_t *&defer);
 //*****************************************************************************
 //	PROTOTYPES
 
+void	ACS_ClearLumpHandles( void ); // [AK]
 bool	ACS_IsCalledFromConsoleCommand( void );
 bool	ACS_IsEventScript( int script ); // [AK]
 bool	ACS_IsCalledFromScript( void ); // [AK]
