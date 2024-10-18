@@ -2331,6 +2331,12 @@ void PLAYER_SetTeam( player_t *pPlayer, ULONG ulTeam, bool bNoBroadcast )
 
 		GAMEMODE_SpawnPlayer ( pPlayer - players );
 	}
+	// [AK] If the player isn't respawned, the HUD should still be refreshed in
+	// case the ally or enemy counters need to be updated.
+	else if ( GAMEMODE_GetCurrentFlags( ) & GMF_DEADSPECTATORS )
+	{
+		HUD_ShouldRefreshBeforeRendering( );
+	}
 
 	// If we're the server, tell clients about this team change.
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
