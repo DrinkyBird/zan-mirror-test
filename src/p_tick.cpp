@@ -157,12 +157,9 @@ void P_Ticker (void)
 		// while the demo is paused.
 		if ( ( ( i == MAXPLAYERS ) || ( S_IsMusicPaused () == false ) ) && ( CLIENTDEMO_IsSkipping() == false ) )
 			S_ResumeSound (false);
+
 		P_ResetSightCounters (false);
-
-		// Since things will be moving, it's okay to interpolate them in the renderer.
-		r_NoInterpolate = false;
-
-		P_ResetSpawnCounters( );
+		P_ResetSpawnCounters (); // [BC]
 
 		// Since things will be moving, it's okay to interpolate them in the renderer.
 		r_NoInterpolate = false;
