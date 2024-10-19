@@ -80,7 +80,6 @@ bool P_CheckTickerPaused ()
 //
 // P_Ticker
 //
-void SERVERCONSOLE_UpdatePlayerInfo( LONG lPlayer, ULONG ulUpdateFlags );
 void P_Ticker (void)
 {
 	int i;
