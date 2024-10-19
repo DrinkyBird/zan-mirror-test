@@ -41,6 +41,17 @@ Command SyncMapRotation
 	Short currentPosition
 EndCommand
 
+Struct Medal
+	Byte index
+	UShort count
+EndStruct
+
+Command SyncPlayerMedalCounts
+	ExtendedCommand
+	Byte player
+	Struct<Medal>[] medals
+EndCommand
+
 Command ReplaceTextures
 	String fromTexture
 	String toTexture

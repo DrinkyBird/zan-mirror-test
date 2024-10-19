@@ -171,6 +171,7 @@ void		MEDAL_Render( void );
 
 bool		MEDAL_GiveMedal( const ULONG player, const ULONG medalIndex, const bool silent = false );
 bool		MEDAL_GiveMedal( const ULONG player, const FName medalName, const bool silent = false );
+void		MEDAL_SetMedalAwardedCount( const unsigned int player, const unsigned int medalIndex, const unsigned int count );
 void		MEDAL_RenderAllMedals( LONG lYOffset );
 int			MEDAL_GetMedalIndex( const FName medalName );
 MEDAL_t		*MEDAL_GetMedal( const FName medalName );

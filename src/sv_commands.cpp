@@ -1135,6 +1135,50 @@ void SERVERCOMMANDS_GivePlayerMedal( const unsigned int player, const unsigned i
 
 //*****************************************************************************
 //
+void SERVERCOMMANDS_SyncPlayerMedalCounts( const unsigned int playerExtra, ServerCommandFlags flags )
+{
+	for ( unsigned int i = 0; i < MAXPLAYERS; i++ )
+	{
+		// [AK] Ignore players that don't exist.
+		if ( PLAYER_IsValidPlayer( i ) == false )
+			continue;
+
+		TArray<MEDAL_t *> medalList;
+		MEDAL_RetrieveAwardedMedals( i, medalList );
+
+		// [AK] Don't send a command if this player hasn't earned any medals yet.
+		if ( medalList.Size( ) == 0 )
+			continue;
+
+		ServerCommands::SyncPlayerMedalCounts command;
+		command.SetPlayer( i );
+
+		for ( unsigned int j = 0; j < medalList.Size( ); j++ )
+		{
+			ServerCommands::Medal medal;
+			medal.index = MEDAL_GetMedalIndex( medalList[j]->name );
+			medal.count = medalList[j]->awardedCount[i];
+
+			command.PushToMedals( medal );
+
+			// [AK] If this entry won't fit into a single packet, send out what we
+			// already have and then send another packet containing this entry and more.
+			if ( static_cast<unsigned>( command.BuildNetCommand( ).calcSize( ) + PACKET_HEADER_SIZE ) >= SERVER_GetMaxPacketSize( ))
+			{
+				command.PopFromMedals( medal );
+				command.sendCommandToClients( playerExtra, flags );
+				command.ClearMedals( );
+				command.PushToMedals( medal );
+			}
+		}
+
+		command.sendCommandToClients( playerExtra, flags );
+	}
+}
+
+
+//*****************************************************************************
+//
 void SERVERCOMMANDS_ResetAllPlayersFragcount( ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
 	ServerCommands::ResetAllPlayersFragcount().sendCommandToClients( ulPlayerExtra, flags );

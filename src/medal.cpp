@@ -478,6 +478,16 @@ bool MEDAL_GiveMedal( const ULONG player, const FName medalName, const bool sile
 
 //*****************************************************************************
 //
+void MEDAL_SetMedalAwardedCount( const unsigned int player, const unsigned int medalIndex, const unsigned int count )
+{
+	if (( PLAYER_IsValidPlayer( player ) == false ) || ( medalIndex >= medalList.Size( )))
+		return;
+
+	medalList[medalIndex]->awardedCount[player] = count;
+}
+
+//*****************************************************************************
+//
 void MEDAL_RenderAllMedals( LONG lYOffset )
 {
 	ULONG ulCurXPos;

@@ -4781,6 +4781,14 @@ void ServerCommands::GivePlayerMedal::Execute()
 
 //*****************************************************************************
 //
+void ServerCommands::SyncPlayerMedalCounts::Execute()
+{
+	for ( unsigned int i = 0; i < medals.Size( ); i++ )
+		MEDAL_SetMedalAwardedCount( player, medals[i].index, medals[i].count );
+}
+
+//*****************************************************************************
+//
 void ServerCommands::ResetAllPlayersFragcount::Execute()
 {
 	// This function pretty much takes care of everything we need to do!
