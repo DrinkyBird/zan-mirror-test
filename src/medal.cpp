@@ -346,7 +346,7 @@ void MEDAL_Render( void )
 	const LONG lAlpha = medalQueue[ulPlayer].ticks > TICRATE ? OPAQUE : static_cast<LONG>( OPAQUE * ( static_cast<float>( medalQueue[ulPlayer].ticks ) / TICRATE ));
 
 	// Get the graphic and text name from the global array.
-	FTexture *icon = TexMan[medal->icon];
+	FTexture *icon = TexMan( medal->icon );
 	FString string = medal->text.GetChars( );
 
 	ULONG ulCurXPos = SCREENWIDTH / 2;
@@ -496,7 +496,7 @@ void MEDAL_RenderAllMedals( LONG lYOffset )
 	for ( ULONG ulMedal = 0; ulMedal < medalList.Size( ); ulMedal++ )
 	{
 		if ( medalList[ulMedal]->awardedCount[player] > 0 )
-			ulLength += TexMan[medalList[ulMedal]->icon]->GetWidth( ) * medalList[ulMedal]->awardedCount[player];
+			ulLength += TexMan( medalList[ulMedal]->icon )->GetWidth( ) * medalList[ulMedal]->awardedCount[player];
 	}
 
 	// Can't fit all the medals on the screen.
@@ -509,7 +509,7 @@ void MEDAL_RenderAllMedals( LONG lYOffset )
 		for ( ULONG ulMedal = 0; ulMedal < medalList.Size( ); ulMedal++ )
 		{
 			if ( medalList[ulMedal]->awardedCount[player] > 0 )
-				ulLength += TexMan[medalList[ulMedal]->icon]->GetWidth( );
+				ulLength += TexMan( medalList[ulMedal]->icon )->GetWidth( );
 		}
 
 		// If the length of all our medals goes beyond 320, we cannot scale them.
@@ -524,7 +524,7 @@ void MEDAL_RenderAllMedals( LONG lYOffset )
 			if ( medalList[ulMedal]->awardedCount[player] == 0 )
 				continue;
 
-			icon = TexMan[medalList[ulMedal]->icon];
+			icon = TexMan( medalList[ulMedal]->icon );
 			screen->DrawTexture( icon, ulCurXPos + icon->GetWidth( ) / 2, ulCurYPos, DTA_Clean, bScale, TAG_DONE );
 
 			ULONG ulXOffset = ( SmallFont->StringWidth( string ) + icon->GetWidth( )) / 2;
@@ -539,7 +539,7 @@ void MEDAL_RenderAllMedals( LONG lYOffset )
 		ulCurXPos = 160 - ulLength / 2;
 		for ( ULONG ulMedal = 0; ulMedal < medalList.Size( ); ulMedal++ )
 		{
-			icon = TexMan[medalList[ulMedal]->icon];
+			icon = TexMan( medalList[ulMedal]->icon );
 
 			for ( ULONG ulMedalIdx = 0; ulMedalIdx < medalList[ulMedal]->awardedCount[player]; ulMedalIdx++ )
 			{
