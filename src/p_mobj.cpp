@@ -5414,9 +5414,8 @@ APlayerPawn *P_SpawnPlayer (FPlayerStart *mthing, int playernum, int flags)
 	if ( !(flags & SPF_TEMPPLAYER) )
 		TEAM_EnsurePlayerHasValidClass ( p );
 
-	// [AK] Remember the actor that this player was spying on before respawning them.
-	// The server doesn't do anything with this.
-	AActor *oldCamera = ( NETWORK_GetState( ) != NETSTATE_SERVER ) ? p->camera : nullptr;
+	// [AK] Remember the actor that the local player was spying on before respawning them.
+	AActor *oldCamera = (( NETWORK_GetState( ) != NETSTATE_SERVER ) && ( p == &players[consoleplayer] )) ? p->camera : nullptr;
 
 	// [BB] We may not filter coop inventory if the player changed the player class.
 	// Thus we need to keep track of the old class.
