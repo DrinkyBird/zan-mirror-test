@@ -1725,8 +1725,6 @@ void WI_DrawCampaignStats (void)
 				160 - ( BigFont->StringWidth( szString ) / 2 ),
 				50 + 3 * lh,
 				szString, DTA_Clean, true, TAG_DONE );
-
-			MEDAL_RenderAllMedals( -20 );
 		}
 	}
 	if (cp_state >= 8)
