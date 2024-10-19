@@ -257,6 +257,7 @@
 !	- Map rotations are no longer exclusive to online games and can now be used in offline games. [Kaminsky]
 !	- Clients with RCON access can no longer start a new (skirmish) game unless they log out with "rcon_logout" first. [Kaminsky]
 !	- The end level delay no longer ticks while the game's paused. [Kaminsky]
+!	- Players now earn medals while cl_medals is disabled, but the medals themselves still remain unseen. [Kaminsky]
 
 
 3.1

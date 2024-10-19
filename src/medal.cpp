@@ -403,7 +403,7 @@ bool MEDAL_GiveMedal( const ULONG player, const ULONG medalIndex, const bool sil
 		return false;
 
 	// [AK] Make sure that medals are allowed.
-	if ((( NETWORK_GetState( ) != NETSTATE_SERVER ) && ( cl_medals == false )) || ( zadmflags & ZADF_NO_MEDALS ))
+	if ( zadmflags & ZADF_NO_MEDALS )
 		return false;
 
 	MEDAL_t *const medal = medalList[medalIndex];
@@ -416,7 +416,7 @@ bool MEDAL_GiveMedal( const ULONG player, const ULONG medalIndex, const bool sil
 	// Increase the player's count of this type of medal.
 	medal->awardedCount[player]++;
 
-	if ( silent == false )
+	if (( NETWORK_GetState( ) != NETSTATE_SERVER ) && ( cl_medals ) && ( silent == false ))
 	{
 		// [AK] Check if the medal being give is already in this player's queue.
 		std::vector<MEDAL_t *> &queue = medalQueue[player].medals;
