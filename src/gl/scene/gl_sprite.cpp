@@ -62,6 +62,7 @@
 #include "gl/utility/gl_clock.h"
 // [BB] New #includes.
 #include "gamemode.h"
+#include "c_console.h"
 
 CVAR(Bool, gl_usecolorblending, true, CVAR_ARCHIVE|CVAR_GLOBALCONFIG)
 CVAR(Bool, gl_spritebrightfog, false, CVAR_ARCHIVE|CVAR_GLOBALCONFIG);
@@ -532,9 +533,12 @@ void GLSprite::Process(AActor* thing,sector_t * sector)
 		return;
 
 	// [RH] Interpolate the sprite's position to make it look smooth
-	fixed_t thingx = thing->PrevX + FixedMul (r_TicFrac, thing->x - thing->PrevX);
-	fixed_t thingy = thing->PrevY + FixedMul (r_TicFrac, thing->y - thing->PrevY);
-	fixed_t thingz = thing->PrevZ + FixedMul (r_TicFrac, thing->z - thing->PrevZ);
+	// [AK] Don't do this if the game is supposed to be paused but the console
+	// is still interpolated. Otherwise, any moving sprites will appear jittery.
+	const fixed_t ticFracToUse = C_ShouldInterpolateWhilePaused() ? FRACUNIT : r_TicFrac;
+	fixed_t thingx = thing->PrevX + FixedMul (ticFracToUse, thing->x - thing->PrevX);
+	fixed_t thingy = thing->PrevY + FixedMul (ticFracToUse, thing->y - thing->PrevY);
+	fixed_t thingz = thing->PrevZ + FixedMul (ticFracToUse, thing->z - thing->PrevZ);
 
 	// Too close to the camera. This doesn't look good if it is a sprite.
 	if (P_AproxDistance(thingx-viewx, thingy-viewy)<2*FRACUNIT)

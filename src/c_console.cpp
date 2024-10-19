@@ -78,6 +78,7 @@
 #include "sv_rcon.h"
 #include "st_hud.h"
 #include "r_utility.h"
+#include "p_tick.h"
 
 #define CONSOLESIZE	16384	// Number of characters to store in console
 #define CONSOLELINES 256	// Max number of lines of console text
@@ -2659,6 +2660,20 @@ bool C_IsCapturing()
 unsigned int C_GetMessageLevel()
 {
 	return msglevel;
+}
+
+//
+// [AK] Checks if the console should still be interpolated, even when the game's paused.
+//
+bool C_ShouldInterpolateWhilePaused()
+{
+	if (paused || P_CheckTickerPaused())
+	{
+		if (con_interpolate && (ConsoleState == c_falling || ConsoleState == c_rising))
+			return true;
+	}
+
+	return false;
 }
 
 //

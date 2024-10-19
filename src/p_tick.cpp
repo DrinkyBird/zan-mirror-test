@@ -116,7 +116,14 @@ void P_Ticker (void)
 
 		// run the tic
 		if (paused || P_CheckTickerPaused())
+		{
+			// [AK] We don't want to disable interpolation in offline games if the
+			// console is being lowered and is supposed to be interpolated.
+			if (C_ShouldInterpolateWhilePaused())
+				r_NoInterpolate = false;
+
 			return;
+		}
 	}
 
 	P_NewPspriteTick();
