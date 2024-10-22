@@ -61,6 +61,7 @@
 #include "sv_main.h"
 #include "network.h"
 #include "m_misc.h"
+#include "d_event.h"
 
 // States for the intermission
 typedef enum
@@ -2544,7 +2545,11 @@ void WI_checkForAccelerate(void)
 				((players[i].cmd.ucmd.buttons & players[i].oldbuttons)
 					== players[i].oldbuttons) && !player->bIsBot)
 			{
-				acceleratestage = 1;
+				// [AK] Don't skip delays if the player is only trying to
+				// see the scoreboard while the campaign stats screen is
+				// shown and didn't press any other buttons.
+				if ((WI_ShouldShowCampaignStats() == false) || ((player->cmd.ucmd.buttons ^ player->oldbuttons) != BT_SHOWSCORES))
+					acceleratestage = 1;
 			}
 			player->oldbuttons = player->cmd.ucmd.buttons;
 		}
