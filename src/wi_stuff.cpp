@@ -2608,8 +2608,8 @@ void WI_Ticker(void)
 	{
     case StatCount:
 		// [BC] In campaign mode, update campaign stats.
-		if (( CAMPAIGN_InCampaign( )) && ( invasion == false ))
-			WI_UpdateCampaignStats( );
+		if (WI_ShouldShowCampaignStats())
+			WI_UpdateCampaignStats();
 		// [BC] Use "deathmatch" stats in teamgame, too.
 		else if (deathmatch || teamgame) WI_updateDeathmatchStats();
 		else if ( NETWORK_GetState( ) != NETSTATE_SINGLE ) WI_updateNetgameStats();
@@ -2701,8 +2701,8 @@ void WI_Drawer (void)
 	{
 	case StatCount:
 		// [BC] In campaign mode, draw campaign stats.
-		if (( CAMPAIGN_InCampaign( )) && ( invasion == false ))
-			WI_DrawCampaignStats( );
+		if (WI_ShouldShowCampaignStats())
+			WI_DrawCampaignStats();
 		// [BC] Use "deathmatch" stats in teamgame, too.
 		else if (deathmatch || teamgame)
 			WI_drawDeathmatchStats();
@@ -2759,8 +2759,8 @@ void WI_Start (wbstartstruct_t *wbstartstruct)
 	WI_initVariables (wbstartstruct);
 	WI_loadData ();
 	// [BC] In campaign mode, draw campaign stats.
-	if (( CAMPAIGN_InCampaign( )) && ( invasion == false ))
-		WI_InitCampaignStats( );
+	if (WI_ShouldShowCampaignStats())
+		WI_InitCampaignStats();
 	// [BC] Use "deathmatch" stats in teamgame, too.
 	else if (deathmatch || teamgame)
 		WI_initDeathmatchStats();
@@ -2798,4 +2798,13 @@ LONG WI_GetStopWatch( void )
 void WI_ResetStopWatch( void )
 {
 	g_lStopWatch = SERVERSTOPWATCHDELAY * TICRATE;
+}
+
+// [AK]
+bool WI_ShouldShowCampaignStats( void )
+{
+	// [AK] The campaign stats screen is designed for game modes where
+	// players earn frags, points, or wins. Thus, it shouldn't appear
+	// in game modes where players earn kills (e.g. invasion).
+	return (( CAMPAIGN_InCampaign( )) && (( GAMEMODE_GetCurrentFlags( ) & GMF_PLAYERSEARNKILLS ) == false ));
 }

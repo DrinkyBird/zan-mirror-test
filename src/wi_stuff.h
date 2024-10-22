@@ -92,4 +92,7 @@ void WI_Start (wbstartstruct_t *wbstartstruct);
 LONG WI_GetStopWatch( void );
 void WI_ResetStopWatch( void );
 
+// [AK] Checks if the campaign stats screen should be shown.
+bool WI_ShouldShowCampaignStats( void );
+
 #endif
