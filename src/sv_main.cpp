@@ -7972,7 +7972,7 @@ void CLIENT_s::UpdateCommRules( void )
 			i->SetIgnore( true, false, 0 );
 
 		if ( i->IsObsolete( ))
-			commRules.erase( i );
+			i = commRules.erase( i );
 		else
 			i++;
 	}
