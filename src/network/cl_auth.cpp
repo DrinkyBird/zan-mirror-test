@@ -60,6 +60,7 @@
 #include "network_enums.h"
 #include "gameconfigfile.h"
 #include "version.h"
+#include "cl_demo.h"
 
 //*****************************************************************************
 //	VARIABLES
@@ -230,12 +231,17 @@ void CLIENT_ProcessSRPServerCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 			for ( int i = 0; i < lenHAMK; ++i )
 				bytesHAMK[i] = pByteStream->ReadByte();
 
-			srp_user_verify_session( g_usr, &(bytesHAMK[0]) );
+			// [AK] Don't try to verify the session while playing a demo. The
+			// authentication will always fail in this state.
+			if ( CLIENTDEMO_IsPlaying() == false )
+			{
+				srp_user_verify_session( g_usr, &(bytesHAMK[0]) );
 
-			if ( !srp_user_is_authenticated ( g_usr ) )
-				Printf( "Server authentication failed!\n" );
-			else
-				Printf( "Login successful.\n" );
+				if ( !srp_user_is_authenticated ( g_usr ) )
+					Printf( "Server authentication failed!\n" );
+				else
+					Printf( "Login successful.\n" );
+			}
 		}
 		break;
 

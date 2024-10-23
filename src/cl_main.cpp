@@ -3456,7 +3456,7 @@ void ServerCommands::EndSnapshot::Execute()
 
 #ifdef WIN32
 	// [AK] Allow the client to log into their default account automatically.
-	if ( cl_autologin )
+	if (( CLIENTDEMO_IsPlaying( ) == false ) && ( cl_autologin ))
 		CLIENT_RetrieveUserAndLogIn( login_default_user.GetGenericRep( CVAR_String ).String );
 #endif
 
