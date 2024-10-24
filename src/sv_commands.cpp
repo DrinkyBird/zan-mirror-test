@@ -524,7 +524,7 @@ void SERVERCOMMANDS_SetPlayerHealthAndMaxHealthBonus( ULONG ulPlayer, ULONG ulPl
 		{
 			pInventory->Amount = players[ulPlayer].MaxHealthBonus;
 			pInventory->MaxAmount = pInventory->Amount + players[ulPlayer].mo->StartHealth; // [RK] Set the current max health.
-			SERVERCOMMANDS_GiveInventory( ulPlayer, pInventory, ulPlayerExtra, 0, true ); // [RK] Send extra value
+			SERVERCOMMANDS_GiveInventory( ulPlayer, pInventory, ulPlayerExtra, flags, true ); // [RK] Send extra value
 			pInventory->Destroy ();
 			pInventory = NULL;
 		}
@@ -549,7 +549,7 @@ void SERVERCOMMANDS_SetPlayerArmorAndMaxArmorBonus( ULONG ulPlayer, ULONG ulPlay
 		{
 			pInventory->Amount = pArmor->BonusCount;
 			pInventory->MaxAmount = pArmor->MaxAmount; // [RK] Set the current BonusMax ammount.
-			SERVERCOMMANDS_GiveInventory( ulPlayer, pInventory, ulPlayerExtra, 0, true ); // [RK] Send extra value
+			SERVERCOMMANDS_GiveInventory( ulPlayer, pInventory, ulPlayerExtra, flags, true ); // [RK] Send extra value
 			pInventory->Destroy ();
 			pInventory = NULL;
 		}
