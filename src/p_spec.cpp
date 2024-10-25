@@ -180,8 +180,6 @@ CUSTOM_CVAR ( Int, sv_killallmonsters_percentage, 100, CVAR_SERVERINFO )
 		self = 0;
 }
 
-FPlayerStart *SelectRandomCooperativeSpot( ULONG ulPlayer );
-
 // [RH] Check dmflags for noexit and respond accordingly
 bool CheckIfExitIsGood (AActor *self, level_info_t *info)
 {

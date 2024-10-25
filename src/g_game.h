@@ -35,7 +35,7 @@ struct line_t;
 void G_DeathMatchSpawnPlayer( int playernum, bool bClientUpdate );
 void G_TemporaryTeamSpawnPlayer( ULONG ulPlayer, bool bClientUpdate );
 void G_TeamgameSpawnPlayer( ULONG ulPlayer, ULONG ulTeam, bool bClientUpdate );
-FPlayerStart *SelectRandomCooperativeSpot( ULONG ulPlayer );
+FPlayerStart *SelectRandomCooperativeSpot (int playernum);
 void G_CooperativeSpawnPlayer( ULONG ulPlayer, bool bClientUpdate, bool bTempPlayer = false );
 
 // [BB] Added bGiveInventory and moved the declaration to g_game.h.

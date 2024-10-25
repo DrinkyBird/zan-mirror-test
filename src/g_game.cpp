@@ -2392,8 +2392,8 @@ static fixed_t TeamLMSPlayersRangeFromSpot( ULONG ulPlayer, FPlayerStart *spot )
 		return ( distance );
 }
 
-// [RH] Select the deathmatch spawn spot farthest from everyone.
-static FPlayerStart *SelectFarthestDeathmatchSpot( ULONG ulPlayer, size_t selections )
+// [AK] Added a helper function to reduce duplicated code.
+static FPlayerStart *SelectFarthestSpotHelper (int playernum, size_t selections, TArray<FPlayerStart> &starts)
 {
 	fixed_t bestdistance = 0;
 	FPlayerStart *bestspot = NULL;
@@ -2401,25 +2401,34 @@ static FPlayerStart *SelectFarthestDeathmatchSpot( ULONG ulPlayer, size_t select
 
 	for (i = 0; i < selections; i++)
 	{
-		fixed_t distance = PlayersRangeFromSpot (&deathmatchstarts[i]);
+		fixed_t distance = PlayersRangeFromSpot (&starts[i]);
 
-		// Did not find a spot.
-		if ( distance == INT_MAX )
-			continue;
-
-		if ( G_CheckSpot( ulPlayer, &deathmatchstarts[i] ) == false )
+		// [AK] Did not find a valid spot.
+		if ((distance == INT_MAX) || (G_CheckSpot (playernum, &starts[i]) == false))
 			continue;
 
 		if (distance > bestdistance)
 		{
 			bestdistance = distance;
-			bestspot = &deathmatchstarts[i];
+			bestspot = &starts[i];
 		}
 	}
 
 	return bestspot;
 }
 
+// [RH] Select the deathmatch spawn spot farthest from everyone.
+static FPlayerStart *SelectFarthestDeathmatchSpot (int playernum, size_t selections)
+{
+	// [AK] Moved the code into a helper function.
+	return SelectFarthestSpotHelper (playernum, selections, deathmatchstarts);
+}
+
+// [AK] Select the team spawn spot farthest from everyone.
+static FPlayerStart *SelectFarthestTeamSpot (int playernum, int teamnum, size_t selections)
+{
+	return SelectFarthestSpotHelper (playernum, selections, teams[teamnum].TeamStarts);
+}
 
 // Try to find a deathmatch spawn spot farthest from our enemies.
 static FPlayerStart *SelectBestTeamLMSSpot( ULONG ulPlayer, size_t selections )
@@ -2452,105 +2461,61 @@ static FPlayerStart *SelectBestTeamLMSSpot( ULONG ulPlayer, size_t selections )
 	return ( pBestSpot );
 }
 
-// [RH] Select a deathmatch spawn spot at random (original mechanism)
-static FPlayerStart *SelectRandomDeathmatchSpot (int playernum, unsigned int selections)
+// [AK] Added a helper function to reduce duplicated code.
+static FPlayerStart *SelectRandomSpotHelper (int playernum, unsigned int selections, TArray<FPlayerStart> &starts)
 {
 	unsigned int i, j;
 
 	for (j = 0; j < 20; j++)
 	{
 		i = pr_dmspawn() % selections;
-		if (G_CheckSpot (playernum, &deathmatchstarts[i]) )
+		if (G_CheckSpot (playernum, &starts[i]) )
 		{
-			return &deathmatchstarts[i];
+			return &starts[i];
 		}
 	}
 
 	// [RH] return a spot anyway, since we allow telefragging when a player spawns
-	return &deathmatchstarts[i];
+	return &starts[i];
 }
 
-// Select a temporary team spawn spot at random.
-static FPlayerStart *SelectTemporaryTeamSpot( USHORT usPlayer, ULONG ulNumSelections )
+// [RH] Select a deathmatch spawn spot at random (original mechanism)
+static FPlayerStart *SelectRandomDeathmatchSpot (int playernum, unsigned int selections)
 {
-	ULONG	ulNumAttempts;
-	ULONG	ulSelection;
-
-	// Try up to 20 times to find a valid spot.
-	for ( ulNumAttempts = 0; ulNumAttempts < 20; ulNumAttempts++ )
-	{
-		ulSelection = ( pr_dmspawn( ) % ulNumSelections );
-		if ( G_CheckSpot( usPlayer, &TemporaryTeamStarts[ulSelection] ))
-			return ( &TemporaryTeamStarts[ulSelection] );
-	}
-
-	// Return a spot anyway, since we allow telefragging when a player spawns.
-	return ( &TemporaryTeamStarts[ulSelection] );
+	// [AK] Moved the code into a helper function.
+	return SelectRandomSpotHelper (playernum, selections, deathmatchstarts);
 }
 
-// Select a team spawn spot at random.
-static FPlayerStart *SelectRandomTeamSpot( USHORT usPlayer, ULONG ulTeam, ULONG ulNumSelections )
+// [AK] Select a temporary team spawn spot at random.
+static FPlayerStart *SelectTemporaryTeamSpot (int playernum, unsigned int selections)
 {
-	ULONG	ulNumAttempts;
-	ULONG	ulSelection;
-
-	// Try up to 20 times to find a valid spot.
-	for ( ulNumAttempts = 0; ulNumAttempts < 20; ulNumAttempts++ )
-	{
-		ulSelection = ( pr_dmspawn( ) % ulNumSelections );
-		if ( G_CheckSpot( usPlayer, &teams[ulTeam].TeamStarts[ulSelection] ))
-			return ( &teams[ulTeam].TeamStarts[ulSelection] );
-	}
-
-	// Return a spot anyway, since we allow telefragging when a player spawns.
-	return ( &teams[ulTeam].TeamStarts[ulSelection] );
+	return SelectRandomSpotHelper (playernum, selections, TemporaryTeamStarts);
 }
 
-// Select a cooperative spawn spot at random.
-FPlayerStart *SelectRandomCooperativeSpot( ULONG ulPlayer )
+// [AK] Select a team spawn spot at random.
+static FPlayerStart *SelectRandomTeamSpot (int playernum, int teamnum, unsigned int selections)
 {
-	ULONG		ulNumAttempts;
-	ULONG		ulSelection;
-	ULONG		ulIdx;
+	return SelectRandomSpotHelper (playernum, selections, teams[teamnum].TeamStarts);
+}
 
-	// [BB] Count the number of available player starts.
-	ULONG ulNumSelections = 0;
-	for ( ulIdx = 0; ulIdx < MAXPLAYERS; ulIdx++ )
+// [AK] Select a cooperative spawn spot at random.
+FPlayerStart *SelectRandomCooperativeSpot (int playernum)
+{
+	TArray<FPlayerStart> availableCooperativeStarts;
+
+	// [BB/AK] Get the number of available player starts.
+	for (unsigned int i = 0; i < MAXPLAYERS; i++)
 	{
-		if ( playerstarts[ulIdx].type != 0 )
-			ulNumSelections++;
+		if (playerstarts[i].type != 0)
+			availableCooperativeStarts.Push (playerstarts[i]);
 	}
 
-	if ( ulNumSelections < 1 )
-		I_Error( "No cooperative starts!" );
+	const unsigned int selections = availableCooperativeStarts.Size ();
 
-	// Try up to 20 times to find a valid spot.
-	for ( ulNumAttempts = 0; ulNumAttempts < 20; ulNumAttempts++ )
-	{
-		// Find the first valid playerstart.
-		ulIdx = 0;
-		while (( ulIdx < MAXPLAYERS ) && ( playerstarts[ulIdx].type == 0 ))
-			ulIdx++;
+	if (selections < 1)
+		I_Error ("No cooperative starts!");
 
-		ulSelection = ( pr_dmspawn( ) % ulNumSelections );
-		while ( ulSelection > 0 )
-		{
-			ulSelection--;
-			// [BB] Find the next valid playerstart (assuming that ulNumSelections gives us the number of available starts).
-			ulIdx++;
-			while (( ulIdx < MAXPLAYERS ) && ( playerstarts[ulIdx].type == 0 ))
-				ulIdx++;
-		}
-
-		if ( ( ulIdx < MAXPLAYERS ) && G_CheckSpot( ulPlayer, &playerstarts[ulIdx] ))
-			return ( &playerstarts[ulIdx] );
-	}
-
-	// Return a spot anyway, since we allow telefragging when a player spawns.
-	if ( ulIdx < MAXPLAYERS )
-		return ( &playerstarts[ulIdx] );
-	else
-		return NULL;
+	return SelectRandomSpotHelper (playernum, selections, availableCooperativeStarts);
 }
 
 void G_DeathMatchSpawnPlayer( int playernum, bool bClientUpdate )
@@ -2682,19 +2647,26 @@ void G_TemporaryTeamSpawnPlayer( ULONG ulPlayer, bool bClientUpdate )
 
 void G_TeamgameSpawnPlayer( ULONG ulPlayer, ULONG ulTeam, bool bClientUpdate )
 {
-	ULONG		ulNumSelections;
-	FPlayerStart	*pSpot;
+	ULONG ulNumSelections;
+	FPlayerStart *pSpot = NULL;
 
 	ulNumSelections = teams[ulTeam].TeamStarts.Size( );
 	if ( ulNumSelections < 1 )
 		I_Error( "No %s team starts!", TEAM_GetName( ulTeam ));
 
-	// SelectRandomTeamSpot should always return a valid spot. If not, we have a problem.
-	pSpot = SelectRandomTeamSpot( static_cast<USHORT> ( ulPlayer ), ulTeam, ulNumSelections );
+	// [AK] Spawn the player as far away from everyone else if sv_spawnfarthest is enabled.
+	if ( dmflags & DF_SPAWN_FARTHEST )
+		pSpot = SelectFarthestTeamSpot( ulPlayer, ulTeam, ulNumSelections );
 
-	// ANAMOLOUS HAPPENING!!!
+	// SelectRandomTeamSpot should always return a valid spot. If not, we have a problem.
 	if ( pSpot == NULL )
-		I_Error( "Could not find a valid temporary spot! (this should not happen)" );
+	{
+		pSpot = SelectRandomTeamSpot( ulPlayer, ulTeam, ulNumSelections );
+
+		// ANAMOLOUS HAPPENING!!!
+		if ( pSpot == NULL )
+			I_Error( "Could not find a valid temporary spot! (this should not happen)" );
+	}
 
 	AActor *mo = P_SpawnPlayer( pSpot, ulPlayer, bClientUpdate ? SPF_CLIENTUPDATE : 0 );
 	if (mo != NULL) P_PlayerStartStomp(mo);
