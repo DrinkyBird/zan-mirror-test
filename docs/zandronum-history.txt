@@ -259,6 +259,7 @@
 !	- Clients with RCON access can no longer start a new (skirmish) game unless they log out with "rcon_logout" first. [Kaminsky]
 !	- The end level delay no longer ticks while the game's paused. [Kaminsky]
 !	- Players now earn medals while cl_medals is disabled, but the medals themselves still remain unseen. [Kaminsky]
+!	- Removed the hardcoded spawning behaviour that was used specifically for Team LMS, in favour of using sv_spawnfarthest. [Kaminsky]
 
 
 3.1

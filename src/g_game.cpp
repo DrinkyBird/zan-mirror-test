@@ -2363,35 +2363,6 @@ static fixed_t PlayersRangeFromSpot (FPlayerStart *spot)
 	return closest;
 }
 
-// Returns the average distance this spot is from all the enemies of ulPlayer.
-static fixed_t TeamLMSPlayersRangeFromSpot( ULONG ulPlayer, FPlayerStart *spot )
-{
-	ULONG	ulNumSpots;
-	fixed_t	distance = INT_MAX;
-	int i;
-
-	ulNumSpots = 0;
-	for (i = 0; i < MAXPLAYERS; i++)
-	{
-		// [Proteh] Skip spectators too
-		if (!playeringame[i] || players[i].bSpectating || !players[i].mo || players[i].health <= 0)
-			continue;
-
-		// Ignore players on our team.
-		if (( players[ulPlayer].bOnTeam ) && ( players[i].bOnTeam ) && ( players[ulPlayer].Team == players[i].Team ))
-			continue;
-
-		ulNumSpots++;
-		distance += P_AproxDistance (players[i].mo->x - spot->x,
-									players[i].mo->y - spot->y);
-	}
-
-	if ( ulNumSpots )
-		return ( distance / ulNumSpots );
-	else
-		return ( distance );
-}
-
 // [AK] Added a helper function to reduce duplicated code.
 static FPlayerStart *SelectFarthestSpotHelper (int playernum, size_t selections, TArray<FPlayerStart> &starts)
 {
@@ -2428,37 +2399,6 @@ static FPlayerStart *SelectFarthestDeathmatchSpot (int playernum, size_t selecti
 static FPlayerStart *SelectFarthestTeamSpot (int playernum, int teamnum, size_t selections)
 {
 	return SelectFarthestSpotHelper (playernum, selections, teams[teamnum].TeamStarts);
-}
-
-// Try to find a deathmatch spawn spot farthest from our enemies.
-static FPlayerStart *SelectBestTeamLMSSpot( ULONG ulPlayer, size_t selections )
-{
-	ULONG		ulIdx;
-	fixed_t		Distance;
-	fixed_t		BestDistance;
-	FPlayerStart	*pBestSpot;
-
-	pBestSpot = NULL;
-	BestDistance = 0;
-	for ( ulIdx = 0; ulIdx < selections; ulIdx++ )
-	{
-		Distance = TeamLMSPlayersRangeFromSpot( ulPlayer, &deathmatchstarts[ulIdx] );
-
-		// Did not find a spot.
-		if ( Distance == INT_MAX )
-			continue;
-
-		if ( G_CheckSpot( ulPlayer, &deathmatchstarts[ulIdx] ) == false )
-			continue;
-
-		if ( Distance > BestDistance )
-		{
-			BestDistance = Distance;
-			pBestSpot = &deathmatchstarts[ulIdx];
-		}
-	}
-
-	return ( pBestSpot );
 }
 
 // [AK] Added a helper function to reduce duplicated code.
@@ -2550,13 +2490,7 @@ void G_DeathMatchSpawnPlayer( int playernum, bool bClientUpdate )
 			I_Error("No deathmatch starts!");
 	}
 
-	if ( teamlms && ( players[playernum].bOnTeam ))
-	{
-		// If we didn't find a valid spot, just pick one at random.
-		if (( spot = SelectBestTeamLMSSpot( playernum, selections )) == NULL )
-			spot = SelectRandomDeathmatchSpot( playernum, selections );
-	}
-	else if ( dmflags & DF_SPAWN_FARTHEST )
+	if (dmflags & DF_SPAWN_FARTHEST)
 	{
 		// If we didn't find a valid spot, just pick one at random.
 		if (( spot = SelectFarthestDeathmatchSpot( playernum, selections )) == NULL )
