@@ -2458,20 +2458,20 @@ FPlayerStart *SelectRandomCooperativeSpot (int playernum)
 	return SelectRandomSpotHelper (playernum, selections, availableCooperativeStarts);
 }
 
-void G_DeathMatchSpawnPlayer( int playernum, bool bClientUpdate )
+void G_DeathMatchSpawnPlayer (int playernum, bool clientUpdate)
 {
 	unsigned int selections;
 	FPlayerStart *spot;
 
 	// [BB] If sv_useteamstartsindm is true, we want to use team starts in deathmatch
 	// game modes with teams, e.g. TDM, TLMS.
-	if ( ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSONTEAMS )
-		&& players[playernum].bOnTeam
-		&& TEAM_CheckIfValid ( players[playernum].Team )
-		&& ( teams[players[playernum].Team].TeamStarts.Size( ) >= 1 )
-		&& sv_useteamstartsindm )
+	if ((GAMEMODE_GetCurrentFlags () & GMF_PLAYERSONTEAMS) &&
+		(players[playernum].bOnTeam) &&
+		(TEAM_CheckIfValid (players[playernum].Team)) &&
+		(teams[players[playernum].Team].TeamStarts.Size () >= 1) &&
+		(sv_useteamstartsindm))
 	{
-		G_TeamgameSpawnPlayer( playernum, players[playernum].Team, bClientUpdate );
+		G_TeamgameSpawnPlayer (playernum, players[playernum].Team, clientUpdate);
 		return;
 	}
 
@@ -2481,13 +2481,13 @@ void G_DeathMatchSpawnPlayer( int playernum, bool bClientUpdate )
 	{
 		// [RK] If the mode is something like TDM or TLMS, try to use the team spawns
 		// in the map and without limiting a player to using only their team color.
-		if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSONTEAMS )
+		if (GAMEMODE_GetCurrentFlags () & GMF_PLAYERSONTEAMS)
 		{
-			G_TemporaryTeamSpawnPlayer( playernum, bClientUpdate );
+			G_TemporaryTeamSpawnPlayer (playernum, clientUpdate);
 			return;
 		}
-		else
-			I_Error("No deathmatch starts!");
+
+		I_Error ("No deathmatch starts!");
 	}
 
 	// At level start, none of the players have mobjs attached to them,
@@ -2498,133 +2498,113 @@ void G_DeathMatchSpawnPlayer( int playernum, bool bClientUpdate )
 	else
 		spot = SelectRandomDeathmatchSpot (playernum, selections);
 
-	if ( spot == NULL )
-		I_Error( "Could not find a valid deathmatch spot! (this should not happen)" );
+	if (spot == NULL)
+		I_Error ("Could not find a valid deathmatch spot! (this should not happen)");
 
-	AActor *mo = P_SpawnPlayer( spot, playernum, bClientUpdate ? SPF_CLIENTUPDATE : 0 );
+	AActor *mo = P_SpawnPlayer(spot, playernum, clientUpdate ? SPF_CLIENTUPDATE : 0);
 	if (mo != NULL) P_PlayerStartStomp(mo);
 }
 
-void G_TemporaryTeamSpawnPlayer( ULONG ulPlayer, bool bClientUpdate )
+void G_TemporaryTeamSpawnPlayer (int playernum, bool clientUpdate)
 {
-	ULONG		ulNumSelections;
-	FPlayerStart	*pSpot;
-
-	ulNumSelections = TemporaryTeamStarts.Size( );
+	const unsigned int selections = TemporaryTeamStarts.Size ();
 
 	// If there aren't any temporary starts, just spawn them at a random team location.
-	if ( ulNumSelections < 1 )
+	if (selections < 1)
 	{
-		bool	bCanUseStarts[MAX_TEAMS];
-		LONG	lAllowedTeamCount = 0;
-		ULONG	ulTeam = 0;
-		ULONG	ulOnTeamNum = 0;
+		TArray<unsigned int> availableTeamStarts;
+		bool teamStartFound = false;
+		int teamnum = 0;
 
-		// Set each of these to specific values.
-		for ( ULONG i = 0; i < MAX_TEAMS; i++ )
-			bCanUseStarts[i] = false;
-
-		for ( ULONG i = 0; i < TEAM_GetNumAvailableTeams( ); i++ )
+		for (unsigned int i = 0; i < TEAM_GetNumAvailableTeams (); i++)
 		{
-			if ( teams[i].TeamStarts.Size( ) == 0 )
-				continue;
+			availableTeamStarts.Push (teams[i].TeamStarts.Size ());
 
-			bCanUseStarts[i] = true;
-			lAllowedTeamCount++;
+			if (teams[i].TeamStarts.Size () > 0)
+				teamStartFound = true;
 		}
 
-		if ( lAllowedTeamCount > 0 )
+		if (teamStartFound)
 		{
-			ulTeam = M_Random( ) % lAllowedTeamCount;
+			do
+			{
+				teamnum = M_Random () % availableTeamStarts.Size ();
+			} while (availableTeamStarts[teamnum] < 1);
 		}
 		else
 		{
-			I_Error( "No teamgame starts!" );
+			I_Error ("No teamgame starts!");
 		}
 
-		for ( ULONG i = 0; i < TEAM_GetNumAvailableTeams( ); i++ )
-		{
-			if ( bCanUseStarts[i] == false )
-				continue;
-
-			if ( ulOnTeamNum == ulTeam )
-				ulTeam = i;
-
-			ulOnTeamNum++;
-		}
-
-		G_TeamgameSpawnPlayer( ulPlayer, ulTeam, bClientUpdate );
+		G_TeamgameSpawnPlayer (playernum, teamnum, clientUpdate);
 		return;
 	}
 
 	// SelectTemporaryTeamSpot should always return a valid spot. If not, we have a problem.
-	pSpot = SelectTemporaryTeamSpot( static_cast<USHORT> ( ulPlayer ), ulNumSelections );
+	FPlayerStart *spot = SelectTemporaryTeamSpot (playernum, selections);
 
 	// ANAMOLOUS HAPPENING!!!
-	if ( pSpot == NULL )
-		I_Error( "Could not find a valid temporary spot! (this should not happen)" );
+	if (spot == nullptr)
+		I_Error ("Could not find a valid temporary spot! (this should not happen)");
 
-	AActor *mo = P_SpawnPlayer( pSpot, ulPlayer, bClientUpdate ? SPF_CLIENTUPDATE : 0 );
-	if (mo != NULL)
+	AActor *mo = P_SpawnPlayer(spot, playernum, clientUpdate ? SPF_CLIENTUPDATE : 0);
+	if (mo != nullptr)
 	{
 		P_PlayerStartStomp(mo);
 		// [BL] Say goodbye to selection room pistol-fights! I'm fed up with them!
 		// [BB] Spectators have to be excluded from this (they don't have any inventory anyway).
-		if ( players[ulPlayer].bSpectating == false )
+		if (players[playernum].bSpectating == false)
 		{
-			players[ulPlayer].bUnarmed = true;
-			players[ulPlayer].mo->ClearInventory();
+			players[playernum].bUnarmed = true;
+			players[playernum].mo->ClearInventory ();
 		}
 	}
 }
 
-void G_TeamgameSpawnPlayer( ULONG ulPlayer, ULONG ulTeam, bool bClientUpdate )
+void G_TeamgameSpawnPlayer (int playernum, int teamnum, bool clientUpdate)
 {
-	ULONG ulNumSelections;
-	FPlayerStart *pSpot = NULL;
+	const unsigned int selections = teams[teamnum].TeamStarts.Size ();
+	FPlayerStart *spot = nullptr;
 
-	ulNumSelections = teams[ulTeam].TeamStarts.Size( );
-	if ( ulNumSelections < 1 )
-		I_Error( "No %s team starts!", TEAM_GetName( ulTeam ));
+	if (selections < 1)
+		I_Error ("No %s team starts!", TEAM_GetName (teamnum));
 
 	// [AK] Spawn the player as far away from everyone else if sv_spawnfarthest is enabled.
-	if ( dmflags & DF_SPAWN_FARTHEST )
-		pSpot = SelectFarthestTeamSpot( ulPlayer, ulTeam, ulNumSelections );
+	if (dmflags & DF_SPAWN_FARTHEST)
+		spot = SelectFarthestTeamSpot (playernum, teamnum, selections);
 
 	// SelectRandomTeamSpot should always return a valid spot. If not, we have a problem.
-	if ( pSpot == NULL )
+	if (spot == nullptr)
 	{
-		pSpot = SelectRandomTeamSpot( ulPlayer, ulTeam, ulNumSelections );
+		spot = SelectRandomTeamSpot (playernum, teamnum, selections);
 
 		// ANAMOLOUS HAPPENING!!!
-		if ( pSpot == NULL )
-			I_Error( "Could not find a valid temporary spot! (this should not happen)" );
+		if (spot == nullptr)
+			I_Error ("Could not find a valid team spot! (this should not happen)");
 	}
 
-	AActor *mo = P_SpawnPlayer( pSpot, ulPlayer, bClientUpdate ? SPF_CLIENTUPDATE : 0 );
-	if (mo != NULL) P_PlayerStartStomp(mo);
+	AActor *mo = P_SpawnPlayer(spot, playernum, clientUpdate ? SPF_CLIENTUPDATE : 0);
+	if (mo != nullptr) P_PlayerStartStomp(mo);
 }
 
-void G_CooperativeSpawnPlayer( ULONG ulPlayer, bool bClientUpdate, bool bTempPlayer )
+void G_CooperativeSpawnPlayer (int playernum, bool clientUpdate, bool tempPlayer)
 {
+	FPlayerStart *spot = nullptr;
+
 	// If there's a valid start for this player, spawn him there.
 	// [BB] Don't do this, if we want to randomize starts.
-	if (( sv_randomcoopstarts == false ) && ( playerstarts[ulPlayer].type != 0 ) && ( G_CheckSpot( ulPlayer, &playerstarts[ulPlayer] )))
-	{
-		AActor *mo = P_SpawnPlayer( &playerstarts[ulPlayer], ulPlayer, ( bTempPlayer ? SPF_TEMPPLAYER : 0 ) | ( bClientUpdate ? SPF_CLIENTUPDATE : 0 ) );
-		if (mo != NULL) P_PlayerStartStomp(mo);
-		return;
-	}
-
-	// Now, try to find a valid cooperative start.
-	FPlayerStart *pSpot = SelectRandomCooperativeSpot( ulPlayer );
+	if ((sv_randomcoopstarts == false) && (playerstarts[playernum].type != 0) && (G_CheckSpot (playernum, &playerstarts[playernum])))
+		spot = &playerstarts[playernum];
+	// Otherwise, try to find a valid cooperative start.
+	else
+		spot = SelectRandomCooperativeSpot (playernum);
 
 	// ANAMOLOUS HAPPENING!!!
-	if ( pSpot == NULL )
-		I_Error( "Could not find a valid deathmatch spot! (this should not happen)" );
+	if (spot == nullptr)
+		I_Error ("Could not find a valid cooperative spot! (this should not happen)");
 
-	AActor *mo = P_SpawnPlayer( pSpot, ulPlayer, ( bTempPlayer ? SPF_TEMPPLAYER : 0 ) | ( bClientUpdate ? SPF_CLIENTUPDATE : 0 ) );
-	if (mo != NULL) P_PlayerStartStomp(mo);
+	AActor *mo = P_SpawnPlayer(spot, playernum, (tempPlayer ? SPF_TEMPPLAYER : 0) | (clientUpdate ? SPF_CLIENTUPDATE : 0));
+	if (mo != nullptr) P_PlayerStartStomp(mo);
 }
 
 //

@@ -32,11 +32,14 @@ struct line_t;
 //
 // GAME
 //
-void G_DeathMatchSpawnPlayer( int playernum, bool bClientUpdate );
-void G_TemporaryTeamSpawnPlayer( ULONG ulPlayer, bool bClientUpdate );
-void G_TeamgameSpawnPlayer( ULONG ulPlayer, ULONG ulTeam, bool bClientUpdate );
+// [AK] The clientUpdate parameter was added specifically for Zandronum.
+void G_DeathMatchSpawnPlayer (int playernum, bool clientUpdate);
+
+// [AK] Zandronum-exclusive player spawn functions.
+void G_TemporaryTeamSpawnPlayer (int playernum, bool clientUpdate);
+void G_TeamgameSpawnPlayer (int playernum, int teamnum, bool clientUpdate);
 FPlayerStart *SelectRandomCooperativeSpot (int playernum);
-void G_CooperativeSpawnPlayer( ULONG ulPlayer, bool bClientUpdate, bool bTempPlayer = false );
+void G_CooperativeSpawnPlayer (int playernum, bool clientUpdate, bool tempPlayer = false);
 
 // [BB] Added bGiveInventory and moved the declaration to g_game.h.
 void G_PlayerReborn (int player, bool bGiveInventory = true);
