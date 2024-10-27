@@ -3177,7 +3177,7 @@ FString SCOREBOARD_BuildChampionString( void )
 		if ( GAME_CountActivePlayers( ) == 2 )
 			championString = "First match between the two";
 		else
-			championString = "No champion has been decided yet";
+			championString = "No champion declared yet";
 	}
 	else
 	{
