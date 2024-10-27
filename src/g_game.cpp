@@ -2490,12 +2490,11 @@ void G_DeathMatchSpawnPlayer( int playernum, bool bClientUpdate )
 			I_Error("No deathmatch starts!");
 	}
 
-	if (dmflags & DF_SPAWN_FARTHEST)
-	{
-		// If we didn't find a valid spot, just pick one at random.
-		if (( spot = SelectFarthestDeathmatchSpot( playernum, selections )) == NULL )
-			spot = SelectRandomDeathmatchSpot( playernum, selections );
-	}
+	// At level start, none of the players have mobjs attached to them,
+	// so we always use the random deathmatch spawn. During the game,
+	// though, we use whatever dmflags specifies.
+	if ((dmflags & DF_SPAWN_FARTHEST) && players[playernum].mo)
+		spot = SelectFarthestDeathmatchSpot (playernum, selections);
 	else
 		spot = SelectRandomDeathmatchSpot (playernum, selections);
 
