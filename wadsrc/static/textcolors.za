@@ -2763,22 +2763,22 @@ Console:
 	#7CED75 #DBFF98 160 256
 }
 
-45 JustVibing "Just Vibing"
+45 AgedSystem "Aged System"
+{
+	#433513 #E3B443 0 170
+	#EEBE4B #F9DA8F 171 256
+Console:
+	#433513 #E3B443 0 170
+	#EEBE4B #F9DA8F 171 256
+}
+
+46 JustVibing "Just Vibing"
 {
 	#03011F #290651 0 79
 	#300756 #322966 80 159
 	#2C3B68 #0E9473 160 256
 Console:
 	#34075A #159E7C 0 256
-}
-
-46 AgedSystem "Aged System"
-{
-	#433513 #E3B443 0 170
-	#EEBE4B #F9DA8F 171 256
-Console:
-	#433513 #E3B443 0 170
-	#EEBE4B #F9DA8F 171 256
 }
 
 47 Ordertune
@@ -2854,7 +2854,15 @@ Console:
 	#113420 #B095E8 0 256
 }
 
-55 OnlyKeepsake "Only Keepsake"
+55 Unsettlement
+{
+	#FF57E9 #FF57E9 0 10
+	#FF0072 #20022F 11 256
+Console:
+	#20022F #FF0072 0 256
+}
+
+56 OnlyKeepsake "Only Keepsake"
 {
 	#AD7CCC #AD7CCC 0 10
 	#FFAF51 #FFCB67 11 134
@@ -2862,14 +2870,6 @@ Console:
 	#FFF8C1 #FFFFFF 180 256
 Console:
 	#AD7CCC #FDF3A3 0 256
-}
-
-56 Unsettlement
-{
-	#FF57E9 #FF57E9 0 10
-	#FF0072 #20022F 11 256
-Console:
-	#20022F #FF0072 0 256
 }
 
 57 SolemnCairn "Solemn Cairn"
@@ -3182,22 +3182,22 @@ Console:
 	#9DB0D0 #DAE5F7 161 256
 }
 
-90 UltimateGreen "Ultimate Green"
+90 SimplyBlue "Simply Blue"
 {
-	#1B1F0F #526637 0 127
-	#5E743D #B4E688 128 256
+	#121C33 #324E8D 0 127
+	#39599F #B6BDCC 128 256
 Console:
-	#1B1F0F #526637 0 127
-	#5E743D #B4E688 128 256
+	#121C33 #324E8D 0 127
+	#39599F #B6BDCC 128 256
 }
 
-91 SimplyBlue "Simply Blue"
+91 UltimateGreen "Ultimate Green"
 {
-	#121C33 #324E8D 0 127
-	#39599F #B6BDCC 128 256
+	#1B1F0F #526637 0 127
+	#5E743D #B4E688 128 256
 Console:
-	#121C33 #324E8D 0 127
-	#39599F #B6BDCC 128 256
+	#1B1F0F #526637 0 127
+	#5E743D #B4E688 128 256
 }
 
 92 RoseusTenebrae "Roseus Tenebrae"
@@ -3358,17 +3358,7 @@ Console:
 	#FFD40E #FFF7D7 178 256
 }
 
-08 GravityAirport "Gravity Airport"
-{
-	#0D0D0D #1C1129 0 67
-	#251631 #42366F 68 166
-	#503D80 #7653AC 167 256
-Console:
-	#131313 #3A3063 0 177
-	#42366F #7653AC 178 256
-}
-
-09 GalacticBusPass "Galactic Bus Pass"
+08 GalacticBusPass "Galactic Bus Pass"
 {
 	#0B0B0F #232323 0 88
 	#373737 #6F7357 89 154
@@ -3379,6 +3369,16 @@ Console:
 	#373737 #6F7357 104 155
 	#479246 #6EBC56 156 199
 	#7ECA5B #ACF86C 200 256
+}
+
+09 GravityAirport "Gravity Airport"
+{
+	#0D0D0D #1C1129 0 67
+	#251631 #42366F 68 166
+	#503D80 #7653AC 167 256
+Console:
+	#131313 #3A3063 0 177
+	#42366F #7653AC 178 256
 }
 
 // =================================================================================================
