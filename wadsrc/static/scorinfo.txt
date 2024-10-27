@@ -281,13 +281,24 @@ Scoreboard
 			// [AK] Draw the name of the current game mode and level.
 			DrawString( value = gamemode + " - " + levellump + ": " + levelname, textcolor = "Gold", bottompadding = 1 )
 
-			// Draw the time, frags, points, or kills we have left until the level ends.
-			DrawString( value = limitstrings, textcolor = "Grey", bottompadding = 1 )
-
-			// [AK] Draw the damage factor in cooperative games when it isn't set to its default value.
-			IfIntermission( false ) && IfGameType( Cooperative ) && IfCVar( sv_coop_damagefactor != 1.0 )
+			// [JS] Intermission countdown display.
+			IfIntermission( true )
 			{
-				DrawString( value = "\nDamage factor is " + cvar( sv_coop_damagefactor, 2 ), textcolor = "Grey", bottompadding = 1 )
+				IfOnlineGame( true ) && IfCVar( cl_intermissiontimer == true )
+				{
+					DrawString( value = "Entering " + nextlevellump + ": " + nextlevelname + pluralize( " in # second{s}", intermissiontimeleft ), textcolor = "Green" )
+				}
+			}
+			Else
+			{
+				// Draw the time, frags, points, or kills we have left until the level ends.
+				DrawString( value = limitstrings, textcolor = "Grey", bottompadding = 1 )
+
+				// [AK] Draw the damage factor in cooperative games when it isn't set to its default value.
+				IfGameType( Cooperative ) && IfCVar( sv_coop_damagefactor != 1.0 )
+				{
+					DrawString( value = "\nDamage factor is " + cvar( sv_coop_damagefactor, 2 ), textcolor = "Grey", bottompadding = 1 )
+				}
 			}
 
 			IfEarnType( Frags, Points, Wins )
@@ -323,12 +334,6 @@ Scoreboard
 						DrawString( value = "\n" + placestring, textcolor = "Grey", bottompadding = 1 )
 					}
 				}
-			}
-
-			// [JS] Intermission countdown display.
-			IfIntermission( true ) && IfOnlineGame( true ) && IfCVar( cl_intermissiontimer == true )
-			{
-				DrawString( value = "\nEntering " + nextlevellump + ": " + nextlevelname + pluralize( " in # second{s}", intermissiontimeleft ), textcolor = "Green" )
 			}
 		}
 	}
