@@ -197,7 +197,7 @@ CUSTOM_CVAR( Int, sb_customizeflags, 0, CVAR_ARCHIVE | CVAR_NOINITCALL | CVAR_NO
 }
 
 // [AK] CVars for the text colors.
-CVAR( Flag, sb_customizetextcolors, sb_customizeflags, CUSTOMIZE_TEXTCOLORS )
+CVAR( Flag, sb_customizetext, sb_customizeflags, CUSTOMIZE_TEXT )
 CVAR( Bool, sb_useteamtextcolors, false, CVAR_ARCHIVE | CVAR_NOSETBYACS )
 
 CUSTOM_CVAR( Int, sb_headertextcolor, CR_GREY, CVAR_ARCHIVE | CVAR_NOSETBYACS )
@@ -221,7 +221,8 @@ CUSTOM_CVAR( Int, sb_localrowdemotextcolor, CR_GOLD, CVAR_ARCHIVE | CVAR_NOSETBY
 }
 
 // [AK] CVars for the border colors.
-CVAR( Flag, sb_customizebordercolors, sb_customizeflags, CUSTOMIZE_BORDERCOLORS )
+CVAR( Flag, sb_customizeborders, sb_customizeflags, CUSTOMIZE_BORDERS )
+CVAR( Bool, sb_noborders, false, CVAR_ARCHIVE | CVAR_NOSETBYACS )
 CVAR( Bool, sb_useheadertextcolorforborders, true, CVAR_ARCHIVE | CVAR_NOSETBYACS )
 CVAR( Color, sb_lightbordercolor, 0x9B9B9B, CVAR_ARCHIVE | CVAR_NOSETBYACS )
 CVAR( Color, sb_darkbordercolor, 0x282828, CVAR_ARCHIVE | CVAR_NOSETBYACS )
@@ -2573,18 +2574,18 @@ Scoreboard::Scoreboard( void ) :
 	ulFlags( 0 ),
 	pHeaderFont( NULL ),
 	pRowFont( NULL ),
-	headerColor( sb_headertextcolor, CUSTOMIZE_TEXTCOLORS, CR_UNTRANSLATED ),
-	rowColor( sb_rowtextcolor, CUSTOMIZE_TEXTCOLORS, CR_UNTRANSLATED ),
+	headerColor( sb_headertextcolor, CUSTOMIZE_TEXT, CR_UNTRANSLATED ),
+	rowColor( sb_rowtextcolor, CUSTOMIZE_TEXT, CR_UNTRANSLATED ),
 	localRowColors
 	{
-		CustomizableTextColor( sb_localrowtextcolor, CUSTOMIZE_TEXTCOLORS, CR_UNTRANSLATED ),
-		CustomizableTextColor( sb_localrowdemotextcolor, CUSTOMIZE_TEXTCOLORS, CR_UNTRANSLATED )
+		CustomizableTextColor( sb_localrowtextcolor, CUSTOMIZE_TEXT, CR_UNTRANSLATED ),
+		CustomizableTextColor( sb_localrowdemotextcolor, CUSTOMIZE_TEXT, CR_UNTRANSLATED )
 	},
 	pBorderTexture( NULL ),
 	borderColors
 	{
-		CustomizableProperty<PalEntry, FColorCVar>( sb_lightbordercolor, CUSTOMIZE_BORDERCOLORS, 0 ),
-		CustomizableProperty<PalEntry, FColorCVar>( sb_darkbordercolor, CUSTOMIZE_BORDERCOLORS, 0 ),
+		CustomizableProperty<PalEntry, FColorCVar>( sb_lightbordercolor, CUSTOMIZE_BORDERS, 0 ),
+		CustomizableProperty<PalEntry, FColorCVar>( sb_darkbordercolor, CUSTOMIZE_BORDERS, 0 ),
 	},
 	backgroundColor( sb_backgroundcolor, CUSTOMIZE_BACKGROUND, 0 ),
 	rowBackgroundColors
@@ -3272,7 +3273,7 @@ void Scoreboard::UpdateHeight( const unsigned int displayPlayer, const int minYP
 	MainHeader.Refresh( displayPlayer, marginWidth, marginRelX );
 	ulHeight += MainHeader.GetHeight( );
 
-	if (( ulFlags & SCOREBOARDFLAG_DONTDRAWBORDERS ) == false )
+	if ( CheckFlag( SCOREBOARDFLAG_DONTDRAWBORDERS, CUSTOMIZE_BORDERS, sb_noborders ) == false )
 	{
 		// [AK] The borders are drawn in three places: above and below the column headers, and
 		// underneath all player rows. If using textures for the borders, then we must add
@@ -3504,7 +3505,7 @@ void Scoreboard::DrawRow( const ULONG ulPlayer, const ULONG ulDisplayPlayer, LON
 		ulColor = CR_RED;
 	}
 	// [AK] Change the text color to match the player's team if we should.
-	else if (( GAMEMODE_GetCurrentFlags( ) & GMF_PLAYERSONTEAMS ) && ( CheckFlag( SCOREBOARDFLAG_USETEAMTEXTCOLORS, CUSTOMIZE_TEXTCOLORS, sb_useteamtextcolors )))
+	else if (( GAMEMODE_GetCurrentFlags( ) & GMF_PLAYERSONTEAMS ) && ( CheckFlag( SCOREBOARDFLAG_USETEAMTEXTCOLORS, CUSTOMIZE_TEXT, sb_useteamtextcolors )))
 	{
 		if ( PLAYER_IsTrueSpectator( &players[ulPlayer] ))
 			ulColor = CR_GREY;
@@ -3575,7 +3576,7 @@ void Scoreboard::DrawRow( const ULONG ulPlayer, const ULONG ulDisplayPlayer, LON
 
 void Scoreboard::DrawBorder( const EColorRange Color, LONG &lYPos, const float fAlpha, const bool bReverse ) const
 {
-	if (( ulFlags & SCOREBOARDFLAG_DONTDRAWBORDERS ) || ( fAlpha <= 0.0f ))
+	if (( CheckFlag( SCOREBOARDFLAG_DONTDRAWBORDERS, CUSTOMIZE_BORDERS, sb_noborders )) || ( fAlpha <= 0.0f ))
 		return;
 
 	int x = lRelX + ulBackgroundBorderSize;
@@ -3616,7 +3617,7 @@ void Scoreboard::DrawBorder( const EColorRange Color, LONG &lYPos, const float f
 
 		// [AK] Do we want to use the font's translation table and text color to colorize the border,
 		// or the predetermined hexadecimal colors for the border?
-		if ( CheckFlag( SCOREBOARDFLAG_USEHEADERTEXTCOLORFORBORDERS, CUSTOMIZE_BORDERCOLORS, sb_useheadertextcolorforborders ))
+		if ( CheckFlag( SCOREBOARDFLAG_USEHEADERTEXTCOLORFORBORDERS, CUSTOMIZE_BORDERS, sb_useheadertextcolorforborders ))
 		{
 			// [AK] Get the translation table of the (team) header font with its corresponding color.
 			const FRemapTable *trans = pHeaderFont->GetColorTranslation( Color );
