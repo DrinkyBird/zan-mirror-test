@@ -3930,6 +3930,10 @@ void GAME_ResetMap( bool bRunEnterScripts )
 					// Check and see if it's important that the client know the angle of the object.
 					if ( pNewActor->angle != 0 )
 						SERVERCOMMANDS_SetThingAngle( pNewActor );
+
+					// [AK] Send the actor's pitch too if it's important for the client to know it.
+					if ( pNewActor->pitch != 0 )
+						SERVERCOMMANDS_MoveThing( pNewActor, CM_PITCH );
 				}
 			}
 
@@ -4136,6 +4140,10 @@ void GAME_ResetMap( bool bRunEnterScripts )
 				// Check and see if it's important that the client know the angle of the object.
 				if ( pNewActor->angle != 0 )
 					SERVERCOMMANDS_SetThingAngle( pNewActor );
+
+				// [AK] Send the actor's pitch too if it's important for the client to know it.
+				if ( pNewActor->pitch != 0 )
+					SERVERCOMMANDS_MoveThing( pNewActor, CM_PITCH );
 
 				// [BB] The server reset the args of the old actor, inform the clients about this.
 				if ( ( pNewActor->args[0] != 0 )

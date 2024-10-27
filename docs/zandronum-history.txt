@@ -208,6 +208,7 @@
 -	- Fixed: UDMF values and user variables of map things are now properly reset on map reset. [Barrels O' Fun]
 -	- Fixed: the ally and enemy counters on the bottom of the HUD didn't update when a player changed their team without respawning. [Kaminsky]
 -	- Fixed: sv_spawnfarthest didn't work at all in team-based game modes (excluding Team DM and Team LMS). [Kaminsky]
+-	- Fixed: an actor's pitch wasn't synced to clients when they received a full update or when the map resetted in online games. [Kaminsky]
 !	- The result value of GAMEEVENT_MEDALS event scripts can now be used to determine whether or not the player receives the medal. [Kaminsky]
 !	- GAMEMODE flags are now validated after all GAMEMODE lumps have been parsed instead of after each one. The internal game mode name (e.g. "TeamLMS") is now printed with the error message instead of the actual name. [Kaminsky]
 !	- Added an extra check to ensure that game modes have a (short) name. [Kaminsky]

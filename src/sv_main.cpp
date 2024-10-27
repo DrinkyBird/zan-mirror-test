@@ -2794,6 +2794,9 @@ void SERVER_SendFullUpdate( ULONG ulClient )
 				if ( pActor->velz != 0 )
 					ulBits |= CM_VELZ;
 
+				if ( pActor->pitch != 0 )
+					ulBits |= CM_PITCH;
+
 				if ( pActor->movedir != 0 )
 					ulBits |= CM_MOVEDIR;
 
