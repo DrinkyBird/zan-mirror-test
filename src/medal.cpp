@@ -325,40 +325,37 @@ void MEDAL_Tick( void )
 //
 void MEDAL_Render( void )
 {
-	if ( players[consoleplayer].camera == NULL )
+	if (( players[consoleplayer].camera == nullptr ) || ( players[consoleplayer].camera->player == nullptr ))
 		return;
 
-	player_t *pPlayer = players[consoleplayer].camera->player;
-	if ( pPlayer == NULL )
-		return;
-
-	ULONG ulPlayer = pPlayer - players;
+	const unsigned int player = static_cast<unsigned>( players[consoleplayer].camera->player - players );
 
 	// [TP] Sanity check
-	if ( PLAYER_IsValidPlayer( ulPlayer ) == false )
+	if ( PLAYER_IsValidPlayer( player ) == false )
 		return;
 
 	// If the player doesn't have a medal to be drawn, don't do anything.
-	if ( medalQueue[ulPlayer].medals.empty( ))
+	if ( medalQueue[player].medals.empty( ))
 		return;
 
-	const MEDAL_t *medal = medalQueue[ulPlayer].medals[0];
-	const LONG lAlpha = medalQueue[ulPlayer].ticks > TICRATE ? OPAQUE : static_cast<LONG>( OPAQUE * ( static_cast<float>( medalQueue[ulPlayer].ticks ) / TICRATE ));
+	const MEDAL_t *medal = medalQueue[player].medals[0];
+	const fixed_t alpha = medalQueue[player].ticks > TICRATE ? OPAQUE : static_cast<fixed_t>( OPAQUE * ( static_cast<float>( medalQueue[player].ticks ) / TICRATE ));
 
 	// Get the graphic and text name from the global array.
 	FTexture *icon = TexMan( medal->icon );
 	FString string = medal->text.GetChars( );
 
-	ULONG ulCurXPos = SCREENWIDTH / 2;
-	ULONG ulCurYPos = ( viewheight <= ST_Y ? ST_Y : SCREENHEIGHT ) - 11 * CleanYfac;
-
 	// Determine how much actual screen space it will take to render the amount of
 	// medals the player has received up until this point.
-	ULONG ulLength = medal->awardedCount[ulPlayer] * icon->GetWidth( );
+	// [AK] Add at least one pixel worth of space between each medal.
+	const int length = medal->awardedCount[player] * icon->GetScaledWidth( ) + ( medal->awardedCount[player] - 1 );
 
-	// If that length is greater then the screen width, display the medals as "<icon> <name> X <num>"
+	// If that length is greater then the screen width, display the medals as "<icon> <name> X <num>".
+	// Otherwise, the medal icon is displayed <num> times centered on the screen.
 	// [AK] Also do this if the medal has the ALWAYSSHOWQUANTITY flag enabled.
-	if (( ulLength >= 320 ) || ( medal->flags & MEDALFLAG_ALWAYSSHOWQUANTITY ))
+	const bool showQuantity = (( length >= 320 ) || ( medal->flags & MEDALFLAG_ALWAYSSHOWQUANTITY ));
+
+	if ( showQuantity )
 	{
 		if ( medal->quantityColor.IsNotEmpty( ))
 		{
@@ -366,25 +363,45 @@ void MEDAL_Render( void )
 			string.AppendFormat( "[%s]", medal->quantityColor.GetChars( ));
 		}
 
-		string.AppendFormat( " X %u", medal->awardedCount[ulPlayer] );
-		screen->DrawTexture( icon, ulCurXPos, ulCurYPos, DTA_CleanNoMove, true, DTA_Alpha, lAlpha, TAG_DONE );
-
-		ulCurXPos -= CleanXfac * ( SmallFont->StringWidth( string ) / 2 );
-		screen->DrawText( SmallFont, medal->textColor, ulCurXPos, ulCurYPos, string, DTA_CleanNoMove, true, DTA_Alpha, lAlpha, TAG_DONE );
+		string.AppendFormat( " X %u", medal->awardedCount[player] );
 	}
-	// Display the medal icon <usNumMedals> times centered on the screen.
+
+	int xPos = ( SCREENWIDTH - CleanXfac * SmallFont->StringWidth( string.GetChars( ))) / 2;
+	int yPos = ( viewheight <= ST_Y ? ST_Y : SCREENHEIGHT ) - ( 4 + SmallFont->StringHeight( string.GetChars( ))) * CleanYfac;
+
+	screen->DrawText( SmallFont, medal->textColor, xPos, yPos, string, DTA_CleanNoMove, true, DTA_Alpha, alpha, TAG_DONE );
+
+	// [AK] For some reason, if the medal's icon is a sprite instead of a graphic,
+	// it appears one pixel higher than it should. So, if it's a sprite, move it up
+	// by three pixels. Otherwise, move it up by four pixels.
+	yPos -= (( icon->UseType == FTexture::TEX_Sprite ? 3 : 4 ) + icon->GetScaledHeight( )) * CleanYfac;
+
+	if ( showQuantity )
+	{
+		xPos = ( SCREENWIDTH - CleanXfac * icon->GetScaledWidth( )) / 2;
+
+		screen->DrawTexture( icon, xPos, yPos,
+			DTA_CleanNoMove, true,
+			DTA_LeftOffset, 0,
+			DTA_TopOffset, 0,
+			DTA_Alpha, alpha,
+			TAG_DONE );
+	}
 	else
 	{
-		ulCurXPos -= ( CleanXfac * ulLength ) / 2;
+		xPos = ( SCREENWIDTH - CleanXfac * length ) / 2;
 
-		for ( ULONG ulMedal = 0; ulMedal < medal->awardedCount[ulPlayer]; ulMedal++ )
+		for ( unsigned int i = 0; i < medal->awardedCount[player]; i++ )
 		{
-			screen->DrawTexture( icon, ulCurXPos + CleanXfac * ( icon->GetWidth( ) / 2 ), ulCurYPos, DTA_CleanNoMove, true, DTA_Alpha, lAlpha, TAG_DONE );
-			ulCurXPos += CleanXfac * icon->GetWidth( );
-		}
+			screen->DrawTexture( icon, xPos, yPos,
+				DTA_CleanNoMove, true,
+				DTA_LeftOffset, 0,
+				DTA_TopOffset, 0,
+				DTA_Alpha, alpha,
+				TAG_DONE );
 
-		ulCurXPos = ( SCREENWIDTH - CleanXfac * SmallFont->StringWidth( string )) / 2;
-		screen->DrawText( SmallFont, medal->textColor, ulCurXPos, ulCurYPos, string, DTA_CleanNoMove, true, DTA_Alpha, lAlpha, TAG_DONE );
+			xPos += CleanXfac * ( icon->GetScaledWidth( ) + 1 );
+		}
 	}
 }
 
