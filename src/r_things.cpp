@@ -539,9 +539,12 @@ void R_ProjectSprite (AActor *thing, int fakeside, F3DFloor *fakefloor, F3DFloor
 	}
 
 	// [RH] Interpolate the sprite's position to make it look smooth
-	fx = thing->PrevX + FixedMul (r_TicFrac, thing->x - thing->PrevX);
-	fy = thing->PrevY + FixedMul (r_TicFrac, thing->y - thing->PrevY);
-	fz = thing->PrevZ + FixedMul (r_TicFrac, thing->z - thing->PrevZ) + thing->GetBobOffset(r_TicFrac);
+	// [AK] Don't do this if the game is supposed to be paused but the console
+	// is still interpolated. Otherwise, any moving sprites will appear jittery.
+	const fixed_t ticFracToUse = C_ShouldInterpolateWhilePaused() ? FRACUNIT : r_TicFrac;
+	fx = thing->PrevX + FixedMul (ticFracToUse, thing->x - thing->PrevX);
+	fy = thing->PrevY + FixedMul (ticFracToUse, thing->y - thing->PrevY);
+	fz = thing->PrevZ + FixedMul (ticFracToUse, thing->z - thing->PrevZ) + thing->GetBobOffset(ticFracToUse);
 
 	// transform the origin point
 	tr_x = fx - viewx;
