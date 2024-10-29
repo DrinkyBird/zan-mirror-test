@@ -981,12 +981,14 @@ static void HUD_RenderHolders( void )
 			// [AK] Get the player carrying this team's flag or skull.
 			player_t *carrier = TEAM_GetCarrier( lTeam );
 			patchName = TEAM_GetSmallHUDIcon( lTeam );
-			color = TEAM_GetTextColor( lTeam );
+
+			// [SB] Use the carrier's team colour instead of the flag's.
+			color = carrier ? TEAM_GetTextColor( carrier->Team ) : static_cast<ULONG>( CR_GRAY );
 
 			if ( carrier )
 				text.Format( "%s", carrier->userinfo.GetName( ));
 			else
-				text.Format( TEXTCOLOR_GRAY "%s", TEAM_GetReturnTicks( lTeam ) ? "?" : "-" );
+				text.Format( "%s", TEAM_GetReturnTicks( lTeam ) ? "?" : "-" );
 
 			text += TEXTCOLOR_NORMAL ": ";
 
