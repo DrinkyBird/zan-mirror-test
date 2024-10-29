@@ -50,6 +50,7 @@
 #ifndef __SECTINFO_H__
 #define __SECTINFO_H__
 
+#include <memory>
 #include "doomtype.h"
 
 void SECTINFO_Load();
@@ -63,12 +64,12 @@ struct SectInfo
 
 	void Clear();
 
-	TArray<FString *> Names;
+	TArray<std::shared_ptr<FString>> Names;
 	TArray<bool> Base[2];
 
 	//Domination Points
-	TArray< TArray<unsigned int> *> Points;
-	TArray<FString *> PointNames;
+	TArray<std::shared_ptr<TArray<unsigned int>>> Points;
+	TArray<std::shared_ptr<FString>> PointNames;
 };
 
 #endif //__SECTINFO_H__

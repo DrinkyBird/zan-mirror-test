@@ -60,7 +60,7 @@
 
 SectInfo::SectInfo()
 {
-	Names = TArray<FString *>();
+	Names = TArray<std::shared_ptr<FString>>();
 	Base[0] = TArray<bool>();
 	Base[1] = TArray<bool>();
 }
@@ -75,8 +75,6 @@ void SectInfo::Clear()
 	Names.Clear();
 	Base[0].Clear();
 	Base[1].Clear();
-	for(unsigned int i = 0;i < Points.Size();i++)
-		Points[i]->Clear();
 	Points.Clear();
 	PointNames.Clear();
 }
@@ -94,9 +92,9 @@ void SECTINFO_Load()
 }
 
 //The next few functions do not need to be public so lets define them here:
-void SECTINFO_ParseNames(FScanner &sc, TArray<FString *> &SectorNames);
+void SECTINFO_ParseNames(FScanner &sc, TArray<std::shared_ptr<FString>> &SectorNames);
 void SECTINFO_ParseSectors(FScanner &sc, TArray<bool> &Sectors);
-void SECTINFO_ParsePoints(FScanner &sc, TArray< TArray<unsigned int> *> &Points, TArray<FString *> &PointNames);
+void SECTINFO_ParsePoints(FScanner &sc, TArray<std::shared_ptr<TArray<unsigned int>>> &Points, TArray<std::shared_ptr<FString>> &PointNames);
 
 // Valid properties
 static const char *SectInfoProperties[] =
@@ -170,18 +168,18 @@ void SECTINFO_Parse(int lump)
 	}
 }
 
-void SECTINFO_ParseNames(FScanner &sc, TArray<FString *> &SectorNames)
+void SECTINFO_ParseNames(FScanner &sc, TArray<std::shared_ptr<FString>> &SectorNames)
 {
 	sc.MustGetToken('=');
 	sc.MustGetToken('{');
 	while(!sc.CheckToken('}'))
 	{
 		sc.MustGetToken(TK_StringConst);
-		FString *name;
+		std::shared_ptr<FString> name;
 		if(sc.String[0] == '$') //Allow language lump lookup in SECTINFO
-			name = new FString(GStrings(sc.String+1));
+			name = std::make_shared<FString>(GStrings(sc.String+1));
 		else
-			name = new FString(sc.String);
+			name = std::make_shared<FString>(sc.String);
 		sc.MustGetToken('=');
 		sc.MustGetToken('{');
 		while(!sc.CheckToken('}'))
@@ -252,20 +250,19 @@ void SECTINFO_ParseSectors(FScanner &sc, TArray<bool> &Sectors)
 	}
 }
 
-void SECTINFO_ParsePoints(FScanner &sc, TArray< TArray<unsigned int> *> &Points, TArray<FString *> &PointNames)
+void SECTINFO_ParsePoints(FScanner &sc, TArray<std::shared_ptr<TArray<unsigned int>>> &Points, TArray<std::shared_ptr<FString>> &PointNames)
 {
-	TArray<unsigned int> *Point;
 	sc.MustGetToken('=');
 	sc.MustGetToken('{');
 	while(!sc.CheckToken('}'))
 	{
-		Point = new TArray<unsigned int>();
+		auto Point = std::make_shared<TArray<unsigned int>>();
 		sc.MustGetToken(TK_StringConst);
-		FString *name;
+		std::shared_ptr<FString> name;
 		if(sc.String[0] == '$') //Allow language lump lookup in SECTINFO
-			name = new FString(GStrings(sc.String+1));
+			name = std::make_shared<FString>(GStrings(sc.String+1));
 		else
-			name = new FString(sc.String);
+			name = std::make_shared<FString>(sc.String);
 		sc.MustGetToken('=');
 		sc.MustGetToken('{');
 		while(!sc.CheckToken('}'))

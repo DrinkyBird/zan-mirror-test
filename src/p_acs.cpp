@@ -7861,7 +7861,7 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 		case ACSF_GetActorSectorLocation:
 			{
 				const bool bCheckPointSectors = !!args[1];
-				const TArray<FString *> *sectorInfoNames = bCheckPointSectors ? &level.info->SectorInfo.PointNames : &level.info->SectorInfo.Names;
+				const TArray<std::shared_ptr<FString>> *sectorInfoNames = bCheckPointSectors ? &level.info->SectorInfo.PointNames : &level.info->SectorInfo.Names;
 				const AActor *pActor = SingleActorFromTID( args[0], activator );
 
 				// [AK] Make sure that the actor is valid.
@@ -7874,12 +7874,11 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 					// we find a match.
 					if ( bCheckPointSectors )
 					{
-						const TArray<TArray<unsigned int> *> *pointSectorNumbers = &level.info->SectorInfo.Points;
-						TArray<unsigned int> *pointNumberArray;
+						const TArray<std::shared_ptr<TArray<unsigned int>>> *pointSectorNumbers = &level.info->SectorInfo.Points;
 
 						for ( unsigned int i = 0; i < pointSectorNumbers->Size( ); i++ )
 						{
-							pointNumberArray = ( *pointSectorNumbers )[i];
+							const auto &pointNumberArray = ( *pointSectorNumbers )[i];
 
 							for ( unsigned int j = 0; j < pointNumberArray->Size( ); j++ )
 							{
