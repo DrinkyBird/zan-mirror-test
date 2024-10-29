@@ -223,6 +223,8 @@ TArray<FPlayerStart> TerminatorStarts(16);
 // [BB] All player starts, including those for voodoo dolls.
 TArray<FPlayerStart> AllStartsOfPlayer[MAXPLAYERS];
 
+// [AK] All available player starts, excluding those for voodoo dolls.
+TArray<FPlayerStart> AvailableCooperativeStarts;
 
 static void P_AllocateSideDefs (int count);
 
@@ -4379,6 +4381,7 @@ void P_SetupLevel (char *lumpname, int position)
 	GenericInvasionStarts.Clear( );
 	PossessionStarts.Clear();
 	TerminatorStarts.Clear();
+	AvailableCooperativeStarts.Clear();
 	for (i = 0; i < MAXPLAYERS; ++i)
 		AllStartsOfPlayer[i].Clear();
 
@@ -4512,6 +4515,10 @@ void P_SetupLevel (char *lumpname, int position)
 	*/
 	for ( i = 0; i < MAXPLAYERS; i++ )
 	{
+		// [AK] If there's an available start point for this player, add it to the list.
+		if ( playerstarts[i].type != 0 )
+			AvailableCooperativeStarts.Push( playerstarts[i] );
+
 		if ( playeringame[i] == false )
 			continue;
 

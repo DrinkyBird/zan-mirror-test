@@ -2441,21 +2441,12 @@ static FPlayerStart *SelectRandomTeamSpot (int playernum, int teamnum, unsigned 
 // [AK] Select a cooperative spawn spot at random.
 FPlayerStart *SelectRandomCooperativeSpot (int playernum)
 {
-	TArray<FPlayerStart> availableCooperativeStarts;
-
-	// [BB/AK] Get the number of available player starts.
-	for (unsigned int i = 0; i < MAXPLAYERS; i++)
-	{
-		if (playerstarts[i].type != 0)
-			availableCooperativeStarts.Push (playerstarts[i]);
-	}
-
-	const unsigned int selections = availableCooperativeStarts.Size ();
+	const unsigned int selections = AvailableCooperativeStarts.Size ();
 
 	if (selections < 1)
 		I_Error ("No cooperative starts!");
 
-	return SelectRandomSpotHelper (playernum, selections, availableCooperativeStarts);
+	return SelectRandomSpotHelper (playernum, selections, AvailableCooperativeStarts);
 }
 
 void G_DeathMatchSpawnPlayer (int playernum, bool clientUpdate)
