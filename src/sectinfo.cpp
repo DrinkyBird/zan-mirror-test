@@ -67,6 +67,11 @@ SectInfo::SectInfo()
 
 SectInfo::~SectInfo()
 {
+	Clear();
+}
+
+void SectInfo::Clear()
+{
 	Names.Clear();
 	Base[0].Clear();
 	Base[1].Clear();
@@ -127,6 +132,12 @@ void SECTINFO_Parse(int lump)
 			//This is because it will set the sectinfo for the defaultmap.
 			mapinfo = FindLevelInfo(sc.String, false);
 			sc.MustGetToken(']');
+
+			// [SB] Clear the map's sector info so patch WADs can override it.
+			if (mapinfo != nullptr)
+			{
+				mapinfo->SectorInfo.Clear();
+			}
 		}
 		else if(mapinfo != NULL)
 		{

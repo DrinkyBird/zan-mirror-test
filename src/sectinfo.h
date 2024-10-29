@@ -61,6 +61,8 @@ struct SectInfo
 	SectInfo();
 	~SectInfo();
 
+	void Clear();
+
 	TArray<FString *> Names;
 	TArray<bool> Base[2];
 
