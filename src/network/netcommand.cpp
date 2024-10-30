@@ -301,7 +301,12 @@ BYTESTREAM_s& NetCommand::getBytestreamForClient( ULONG i ) const
 //
 void NetCommand::sendCommandToClients ( ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
-	if ( ( flags == 0 ) && ( ulPlayerExtra == MAXPLAYERS ) && ( static_cast<SVC>( _buffer.pbData[0] ) != SVC_MAPAUTHENTICATE ) )
+	const SVC command = static_cast<SVC>( _buffer.pbData[0] );
+
+	// [AK] It's probably a good idea to still let clients that haven't received
+	// the full update yet know when a player has left the game. This way, they
+	// won't think they're still in the game when they aren't.
+	if ( ( flags == 0 ) && ( ulPlayerExtra == MAXPLAYERS ) && ( command != SVC_MAPAUTHENTICATE ) && ( command != SVC_DISCONNECTPLAYER ) )
 		flags |= SVCF_SKIP_CLIENTS_WITHOUT_FULLUPDATE;
 
 	for ( ClientIterator it ( ulPlayerExtra, flags ); it.notAtEnd(); ++it )
