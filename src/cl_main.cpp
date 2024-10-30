@@ -4671,28 +4671,28 @@ void ServerCommands::DisconnectPlayer::Execute()
 {
 	const unsigned int playerIndex = static_cast<unsigned>( player - players );
 
-	// If we were a spectator and looking through this player's eyes, revert them.
-	if ( player->mo->CheckLocalView( consoleplayer ))
+	if ( player->mo != nullptr )
 	{
-		CLIENT_ResetConsolePlayerCamera( );
-	}
+		// If we were a spectator and looking through this player's eyes, revert them.
+		if ( player->mo->CheckLocalView( consoleplayer ))
+		{
+			CLIENT_ResetConsolePlayerCamera( );
+		}
 
-	// Create a little disconnect particle effect thingamabobber!
-	// [BB] Only do this if a non-spectator disconnects.
-	if ( player->bSpectating == false )
-	{
-		P_DisconnectEffect( player->mo );
+		// Create a little disconnect particle effect thingamabobber!
+		// [BB] Only do this if a non-spectator disconnects.
+		if ( player->bSpectating == false )
+		{
+			P_DisconnectEffect( player->mo );
 
-		// [BB] Stop all CLIENTSIDE scripts of the player that are still running.
-		if ( !( zacompatflags & ZACOMPATF_DONT_STOP_PLAYER_SCRIPTS_ON_DISCONNECT ) )
-			FBehavior::StaticStopMyScripts ( player->mo );
-	}
+			// [BB] Stop all CLIENTSIDE scripts of the player that are still running.
+			if ( !( zacompatflags & ZACOMPATF_DONT_STOP_PLAYER_SCRIPTS_ON_DISCONNECT ) )
+				FBehavior::StaticStopMyScripts( player->mo );
+		}
 
-	// Destroy the actor associated with the player.
-	if ( player->mo )
-	{
+		// Destroy the actor associated with the player.
 		player->mo->Destroy( );
-		player->mo = NULL;
+		player->mo = nullptr;
 	}
 
 	playeringame[playerIndex] = false;
