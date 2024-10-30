@@ -2490,8 +2490,33 @@ void G_DeathMatchSpawnPlayer (int playernum, bool clientUpdate)
 		spot = SelectRandomDeathmatchSpot (playernum, selections);
 
 	if (spot == NULL)
-		I_Error ("Could not find a valid deathmatch spot! (this should not happen)");
+	{ // No good spot, so the player will probably get stuck.
+	  // We were probably using select farthest above, and all
+	  // the spots were taken.
+	  /* [AK] Zandronum doesn't use this at the moment.
+		spot = G_PickPlayerStart(playernum, PPS_FORCERANDOM);
+		if (!G_CheckSpot(playernum, spot))
+		{ // This map doesn't have enough coop spots for this player
+		  // to use one.
+			spot = SelectRandomDeathmatchSpot(playernum, selections);
+			if (spot == NULL)
+			{ // We have a player 1 start, right?
+				spot = &playerstarts[0];
+				if (spot == NULL)
+				{ // Fine, whatever.
+					spot = &deathmatchstarts[0];
+				}
+			}
+		}
+	  */
 
+		// [AK] SelectRandomDeathmatchSpot should always return a valid spot.
+		spot = SelectRandomDeathmatchSpot (playernum, selections);
+
+		// ANOMALOUS HAPPENING!!!
+		if (spot == NULL)
+			I_Error ("Could not find a valid deathmatch spot! (this should not happen)");
+	}
 	AActor *mo = P_SpawnPlayer(spot, playernum, clientUpdate ? SPF_CLIENTUPDATE : 0);
 	if (mo != NULL) P_PlayerStartStomp(mo);
 }
