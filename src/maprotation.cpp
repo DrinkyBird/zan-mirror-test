@@ -102,6 +102,11 @@ void MAPROTATION_StartNewGame( void )
 	char levelname[10];
 	sprintf( levelname, "%s", MAPROTATION_GetMap( position )->mapname );
 
+	// [AK] Reset the weights of all map entries to zero. Loading the first level
+	// will increment everything back to one, except for the current map entry.
+	for ( unsigned int i = 0; i < g_MapRotationEntries.size( ); i++ )
+		g_MapRotationEntries[i].weight = 0;
+
 	MAPROTATION_SetPositionToMap( levelname, true );
 	G_InitNew( levelname, false );
 }
@@ -150,7 +155,9 @@ void MAPROTATION_SetCurrentPosition( unsigned int position )
 	if ( position >= g_MapRotationEntries.size( ))
 		return;
 
+	// [AK] Setting the current map entry means that its weight must be reset.
 	g_CurMapInList = position;
+	g_MapRotationEntries[g_CurMapInList].weight = 0;
 }
 
 //*****************************************************************************
@@ -273,6 +280,7 @@ void MAPROTATION_CalcNextMap( const bool updateClients )
 	{
 		// Select a new map.
 		std::vector<unsigned int> unusedEntries;
+		unsigned int totalWeight = 0;
 
 		for ( unsigned int i = 0; i < g_MapRotationEntries.size( ); i++ )
 		{
@@ -294,7 +302,41 @@ void MAPROTATION_CalcNextMap( const bool updateClients )
 			}
 		}
 
-		g_NextMapInList = unusedEntries[M_Random( unusedEntries.size( ))];
+		// [AK] Determine the total weight of all unused entries.
+		for ( unsigned int i = 0; i < unusedEntries.size( ); i++ )
+			totalWeight += g_MapRotationEntries[unusedEntries[i]].weight;
+
+		// [AK] Pick a random map, such that entries that haven't been played in
+		// a while (i.e. more weight) have a higher chance at getting picked than
+		// those that were recently played (i.e. less weight).
+		if ( totalWeight > 0 )
+		{
+			const unsigned int randomNumber = M_Random( totalWeight ) + 1;
+			unsigned int cursor = 0;
+
+			for ( unsigned int j = 0; j < unusedEntries.size( ); j++ )
+			{
+				const unsigned int position = unusedEntries[j];
+
+				// [AK] Ignore entries that have no weight. This is typically only
+				// the map that was just entered.
+				if ( g_MapRotationEntries[position].weight == 0 )
+					continue;
+
+				cursor += g_MapRotationEntries[position].weight;
+
+				if ( cursor >= randomNumber )
+				{
+					g_NextMapInList = position;
+					break;
+				}
+			}
+		}
+		// [AK] In case none of the unused entries had weight, just pick any random one.
+		else
+		{
+			g_NextMapInList = unusedEntries[M_Random( unusedEntries.size( ))];
+		}
 	}
 	else
 	{
@@ -375,14 +417,26 @@ unsigned int MAPROTATION_GetPlayerLimits( unsigned int position, bool getMaxPlay
 
 //*****************************************************************************
 //
+void MAPROTATION_UpdateWeights( void )
+{
+	for ( unsigned int i = 0; i < g_MapRotationEntries.size( ); i++ )
+	{
+		// [AK] Always ignore the current entry. It should remain at zero.
+		if ( i != g_CurMapInList )
+			g_MapRotationEntries[i].weight++;
+	}
+}
+
+//*****************************************************************************
+//
 void MAPROTATION_SetPositionToMap( const char *mapName, const bool setNextMap )
 {
 	for ( unsigned int i = 0; i < g_MapRotationEntries.size( ); i++ )
 	{
 		if ( stricmp( g_MapRotationEntries[i].map->mapname, mapName ) == 0 )
 		{
-			g_CurMapInList = i;
-			g_MapRotationEntries[g_CurMapInList].isUsed = true;
+			MAPROTATION_SetCurrentPosition( i );
+			MAPROTATION_SetUsed( i, true );
 			break;
 		}
 	}
@@ -458,6 +512,7 @@ void MAPROTATION_AddMap( const char *mapName, int position, unsigned int minPlay
 	MapRotationEntry newEntry;
 	newEntry.map = map;
 	newEntry.isUsed = false;
+	newEntry.weight = 1;
 
 	// [AK] Add the minimum and maximum player limits the map will use.
 	newEntry.minPlayers = clamp<unsigned>( minPlayers, 0, MAXPLAYERS );

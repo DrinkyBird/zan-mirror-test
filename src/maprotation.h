@@ -69,6 +69,11 @@ struct MapRotationEntry
 
 	// [AK] The maximum number of players allowed to enter this map.
 	unsigned int	maxPlayers;
+
+	// [AK] How much weight this map has, which affects the probability that
+	// it will get picked next when the map rotation is randomized. The greater
+	// the weight, the higher the chances are.
+	unsigned int	weight;
 };
 
 //*****************************************************************************
@@ -88,6 +93,7 @@ void			MAPROTATION_CalcNextMap( const bool updateClients );
 level_info_t	*MAPROTATION_GetNextMap( void );
 level_info_t	*MAPROTATION_GetMap( unsigned int position );
 unsigned int	MAPROTATION_GetPlayerLimits( unsigned int position, bool getMaxPlayers );
+void			MAPROTATION_UpdateWeights( void );
 void			MAPROTATION_SetPositionToMap( const char *mapName, const bool setNextMap );
 bool			MAPROTATION_IsMapInRotation( const char *mapName );
 bool			MAPROTATION_IsUsed( unsigned int position );

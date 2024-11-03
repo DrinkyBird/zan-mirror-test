@@ -1120,7 +1120,18 @@ void G_DoLoadLevel (int position, bool autosave)
 			MAPROTATION_SetCurrentPosition( MAPROTATION_GetNextPosition( ));
 			MAPROTATION_SetUsed( MAPROTATION_GetCurrentPosition( ), true );
 
+			MAPROTATION_UpdateWeights( );
 			MAPROTATION_CalcNextMap( true );
+		}
+		// [AK] On the other hand, if the entered map now coincides with the current
+		// map in the rotation (as a result of MAPROTATION_SetPositionToMap above),
+		// we must still update the weights of all other entries.
+		else
+		{
+			level_info_t *currentMapInRotation = MAPROTATION_GetMap( MAPROTATION_GetCurrentPosition( ));
+
+			if (( currentMapInRotation != nullptr ) && ( stricmp( currentMapInRotation->mapname, level.mapname ) == 0 ))
+				MAPROTATION_UpdateWeights( );
 		}
 	}
 
