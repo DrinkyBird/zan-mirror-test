@@ -8912,12 +8912,13 @@ int DLevelScript::RunScript ()
 
 	while (state == SCRIPT_Running)
 	{
-		if (++runaway > 2000000)
+		// [TDRR] Remove runaway script termination.
+		/*if (++runaway > 2000000)
 		{
 			Printf ("Runaway %s terminated\n", ScriptPresentation(script).GetChars());
 			state = SCRIPT_PleaseRemove;
 			break;
-		}
+		}*/
 
 		if (fmt == ACS_LittleEnhanced)
 		{
