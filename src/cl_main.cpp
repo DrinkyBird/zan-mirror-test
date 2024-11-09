@@ -2405,21 +2405,7 @@ void CLIENT_PrintCommand( LONG lCommand )
 
 	if ( lCommand < NUM_SERVERCONNECT_COMMANDS )
 	{
-		switch ( lCommand )
-		{
-		case SVCC_AUTHENTICATE:
-
-			pszString = "SVCC_AUTHENTICATE";
-			break;
-		case SVCC_MAPLOAD:
-
-			pszString = "SVCC_MAPLOAD";
-			break;
-		case SVCC_ERROR:
-
-			pszString = "SVCC_ERROR";
-			break;
-		}
+		pszString = GetStringServerConnectionCommand( static_cast<ServerConnectionCommand>( lCommand ));
 	}
 	else
 	{
