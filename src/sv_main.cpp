@@ -1419,7 +1419,6 @@ bool SERVER_PerformAuthenticationChecksum( BYTESTREAM_s *pByteStream )
 
 //*****************************************************************************
 //
-void SERVERCONSOLE_ReListPlayers( void );
 void SERVER_ConnectNewPlayer( BYTESTREAM_s *pByteStream )
 {
 	LONG								lCommand;
