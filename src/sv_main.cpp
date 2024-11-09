@@ -4870,13 +4870,23 @@ void SERVER_ParsePacket( BYTESTREAM_s *pByteStream )
 			// this could be abused to keep non finished connections alive.
 			if ( g_aClients[g_lCurrentClient].State < CLS_AUTHENTICATED )
 			{
-				// [BB] Under these special, rare circumstances valid clients can send illegal commands.
-				if ( g_aClients[g_lCurrentClient].State != CLS_AUTHENTICATED_BUT_OUTDATED_MAP )
-					Printf( "Illegal command (%d) from non-authenticated client (%s).\n", static_cast<int> (lCommand), NETWORK_GetFromAddress().ToString() );
+				// [AK] Allow non-authenticated clients to still send CLC_QUIT commands,
+				// in case they left while connecting to the server. This way, their slot
+				// can be freed so that another client may use it.
+				if (( g_aClients[g_lCurrentClient].State > CLS_CHALLENGE ) && ( lCommand == CLC_QUIT ))
+				{
+					Printf( "Non-authenticated client (%s) disconnected.\n", NETWORK_GetFromAddress().ToString() );
+				}
+				else
+				{
+					// [BB] Under these special, rare circumstances valid clients can send illegal commands.
+					if ( g_aClients[g_lCurrentClient].State != CLS_AUTHENTICATED_BUT_OUTDATED_MAP )
+						Printf( "Illegal command (%ld) from non-authenticated client (%s).\n", lCommand, NETWORK_GetFromAddress().ToString() );
 
-				// [BB] Ignore the rest of the packet, it can't be valid.
-				while ( pByteStream->ReadByte() != -1 );
-				break;
+					// [BB] Ignore the rest of the packet, it can't be valid.
+					while ( pByteStream->ReadByte() != -1 );
+					break;
+				}
 			}
 
 
@@ -4922,7 +4932,12 @@ bool SERVER_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 	case CLC_QUIT:
 
 		// Client has left the game.
-		SERVER_DisconnectClient( g_lCurrentClient, true, true, LEAVEREASON_LEFT );
+		// [AK] Don't broadcast or save info for non-authenticated clients.
+		if ( g_aClients[g_lCurrentClient].State < CLS_AUTHENTICATED )
+			SERVER_DisconnectClient( g_lCurrentClient, false, false, LEAVEREASON_LEFT );
+		else
+			SERVER_DisconnectClient( g_lCurrentClient, true, true, LEAVEREASON_LEFT );
+
 		break;
 	case CLC_SETSTATUS:
 		{
