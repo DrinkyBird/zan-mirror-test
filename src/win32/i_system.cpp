@@ -284,7 +284,8 @@ static void I_SelectTimer()
 		TimerEventID = timeSetEvent(delay, 0, TimerTicked, 0, TIME_PERIODIC);
 	}
 	// Get the current time as the basetime.
-	basetime = timeGetTime();
+	// [AK] Account for the client's clock offset as well.
+	basetime = timeGetTime() + CLIENT_GetClockOffset();
 	// Set timer functions.
 	/* [Leo] Zandronum needs a consistent ticrate across clients/servers
 	if (TimerEventID != 0)
@@ -314,7 +315,8 @@ static void I_SelectTimer()
 unsigned int I_MSTime()
 {
 	assert(basetime != 0);
-	return timeGetTime() - basetime;
+	// [AK] Account for the client's clock offset as well.
+	return timeGetTime() - basetime + CLIENT_GetClockOffset();
 }
 
 //==========================================================================
@@ -330,7 +332,8 @@ unsigned int I_MSTime()
 
 unsigned int I_FPSTime()
 {
-	return timeGetTime();
+	// [AK] Account for the client's clock offset as well.
+	return timeGetTime() + CLIENT_GetClockOffset();
 }
 
 //==========================================================================
@@ -351,7 +354,8 @@ static int I_GetTimePolled(bool saveMS)
 		return TicFrozen;
 	}
 
-	tm = timeGetTime();
+	// [AK] Account for the client's clock offset as well.
+	tm = timeGetTime() + CLIENT_GetClockOffset();
 	if (basetime == 0)
 	{
 		basetime = tm;
@@ -375,7 +379,8 @@ float I_GetTimeFloat( void )
 {
 	DWORD tm;
 
-	tm = timeGetTime();
+	// [AK] Account for the client's clock offset as well.
+	tm = timeGetTime() + CLIENT_GetClockOffset();
 	if (!basetime)
 		basetime = tm;
 
@@ -516,7 +521,8 @@ static void CALLBACK TimerTicked(UINT id, UINT msg, DWORD_PTR user, DWORD_PTR dw
 	{
 		tics++;
 	}
-	ted_start = timeGetTime ();
+	// [AK] Account for the client's clock offset as well.
+	ted_start = timeGetTime () + CLIENT_GetClockOffset();
 	ted_next = ted_start + MillisecondsPerTic;
 	SetEvent(NewTicArrived);
 }
@@ -532,7 +538,8 @@ static void CALLBACK TimerTicked(UINT id, UINT msg, DWORD_PTR user, DWORD_PTR dw
 
 fixed_t I_GetTimeFrac(uint32 *ms)
 {
-	DWORD now = timeGetTime();
+	// [AK] Account for the client's clock offset as well.
+	DWORD now = timeGetTime() + CLIENT_GetClockOffset();
 	if (ms != NULL)
 	{
 		*ms = TicNext;
@@ -830,8 +837,9 @@ void I_Init()
 		SetPriorityClass(GetCurrentProcess(), ABOVE_NORMAL_PRIORITY_CLASS);
 
 		// [BB] The server doesn't call I_SelectTimer, so we have to set basetime manually.
+		// [AK] Account for the client's clock offset as well.
 		if (!basetime)
-			basetime = timeGetTime();
+			basetime = timeGetTime() + CLIENT_GetClockOffset();
 	}
 
 	I_GetTime = I_GetTimeSelect;

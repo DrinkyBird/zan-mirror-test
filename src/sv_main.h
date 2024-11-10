@@ -60,6 +60,7 @@
 #include "network/packetarchive.h"
 #include <list>
 #include <queue>
+#include <utility>
 
 //*****************************************************************************
 //	DEFINES
@@ -167,7 +168,12 @@ enum CLIENTSTATE_e
 	// Client slot has just received a connection signal.
 	CLS_CHALLENGE,
 
-	// [BB] Connection has been received, but the player hasn't authenticated or been spawned in the game yet.
+	// [AK] Connection has been received, but the client still needs to adjust
+	// their clock, if necessary.
+	CLS_CONNECTED_BUT_ADJUSTING_CLOCK,
+
+	// [BB/AK] Connection has been received and the client has adjusted their
+	// clock, but they haven't authenticated or been spawned in the game yet.
 	CLS_CONNECTED,
 
 	// [BB] The map has changed after the client authenticated his level, but
@@ -547,6 +553,20 @@ struct CLIENT_s
 	// if the client fires too early after respawning.
 	unsigned int	lastRespawnTick;
 
+	// [AK] A list of CLCC_SENDCLOCKUPDATE commands received from the client while they're adjusting
+	// their clock, and how soon they arrived, in milliseconds, after the previous G_Ticker call
+	// (the first value of the pair), and before the current G_Ticker call (the second value).
+	TArray<std::pair<unsigned int, unsigned int>>	clockMeasureTimes;
+
+	// [AK] The last time we received a CLCC_SENDCLOCKUPDATE from the client.
+	unsigned int	lastClockUpdateTime;
+
+	// [AK] The number of times we told the client to adjust their clock.
+	unsigned int	numTimesClockAdjusted;
+
+	// [AK] Whether the client should raise (1) or lower (-1) their clock.
+	int				clockAdjustDirection;
+
 	// [BB] Variables for the account system
 	FString username;
 	unsigned int clientSessionID;
@@ -637,6 +657,7 @@ void		SERVER_GetPackets( void );
 void		SERVER_SendChatMessage( ULONG ulPlayer, ULONG ulMode, const char *pszString, ULONG ulReceiver = MAXPLAYERS );
 void		SERVER_DetermineConnectionType( BYTESTREAM_s *pByteStream );
 void		SERVER_SetupNewConnection( BYTESTREAM_s *pByteStream, bool bNewPlayer );
+void		SERVER_ReceivedClockUpdate( BYTESTREAM_s *byteStream );
 void		SERVER_RequestClientToAuthenticate( ULONG ulClient );
 void		SERVER_AuthenticateClientLevel( BYTESTREAM_s *pByteStream );
 bool		SERVER_PerformAuthenticationChecksum( BYTESTREAM_s *pByteStream );

@@ -432,6 +432,12 @@ static	bool				g_HasRCONAccess = false;
 // [AK] We are in the process of gaining RCON access to the server.
 static  bool				g_GainingRCONAccess = false;
 
+// [AK] How many milliseconds our clock has been offset by.
+static	unsigned int		g_ClockOffset = 0;
+
+// [AK] How many times the server told us to adjust our clock.
+static	unsigned int		g_NumTimesClockAdjusted = 0;
+
 //*****************************************************************************
 //	FUNCTIONS
 
@@ -585,6 +591,11 @@ void CLIENT_Tick( void )
 		// If we're not connected to a server, and have an IP specified, try to connect.
 		if ( g_AddressServer.IsSet() )
 			CLIENT_AttemptConnection( );
+		break;
+	// We're adjusting our clock, send an update once every tick.
+	case CTS_ADJUSTINGCLOCK:
+
+		CLIENT_SendClockUpdate( );
 		break;
 	// A connection has been established with the server; now authenticate the level.
 	case CTS_ATTEMPTINGAUTHENTICATION:
@@ -854,6 +865,13 @@ unsigned int CLIENT_GetEndFullUpdateTic( void )
 
 //*****************************************************************************
 //
+unsigned int CLIENT_GetClockOffset( void )
+{
+	return g_ClockOffset;
+}
+
+//*****************************************************************************
+//
 const FString &CLIENT_GetPlayerAccountName( int player )
 {
 	static FString empty;
@@ -923,6 +941,14 @@ void CLIENT_AttemptConnection( void )
 	g_LocalBuffer.ByteStream.WriteByte( cl_hideaccount );
 	g_LocalBuffer.ByteStream.WriteByte( NETGAMEVERSION );
 	g_LocalBuffer.ByteStream.WriteString( g_lumpsAuthenticationChecksum.GetChars() );
+}
+
+//*****************************************************************************
+//
+void CLIENT_SendClockUpdate( void )
+{
+	g_LocalBuffer.ByteStream.WriteByte( CLCC_SENDCLOCKUPDATE );
+	g_LocalBuffer.ByteStream.WriteByte( g_NumTimesClockAdjusted );
 }
 
 //*****************************************************************************
@@ -1381,6 +1407,21 @@ void CLIENT_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 
 	switch ( lCommand )
 	{
+	case SVCC_BEGINCLOCKADJUSTMENT:
+
+		// Print a status message.
+		Printf( "Adjusting clock (may take a few seconds).\n" );
+
+		if ( CLIENTDEMO_IsPlaying( ) == false )
+			CLIENT_SetConnectionState( CTS_ADJUSTINGCLOCK );
+
+		break;
+	case SVCC_ADJUSTCLOCK:
+
+		g_NumTimesClockAdjusted = pByteStream->ReadByte();
+		g_ClockOffset += pByteStream->ReadByte();
+
+		break;
 	case SVCC_AUTHENTICATE:
 
 		// Print a status message.
@@ -2520,6 +2561,9 @@ void CLIENT_QuitNetworkGame( const char *pszString )
 
 	// [AK] Since we disconnected, we don't have RCON access anymore.
 	g_HasRCONAccess = false;
+
+	// [AK] Reset how many times the client adjusted their clock.
+	g_NumTimesClockAdjusted = 0;
 
 	// [AK] Log the client out of their account now so that they can log in again.
 	CLIENT_LogOut( );
@@ -7274,6 +7318,9 @@ void ServerCommands::MapNew::Execute()
 
 	// Clear out our local buffer.
 	g_LocalBuffer.Clear();
+
+	// [AK] Reset how many times the client adjusted their clock.
+	g_NumTimesClockAdjusted = 0;
 
 	// Back to the full console.
 	gameaction = ga_fullconsole;

@@ -201,6 +201,10 @@ static	unsigned int	g_GameTime = 0;
 // second if overflows occur when getting "new" and "previous" ticks in SERVER_Tick.
 static	double			g_GameTicShift = 0.0;
 
+// [AK] The times when the current G_Ticker call, and the one before it, were made.
+static	unsigned int	g_CurrentTickerCallTime = 0;
+static	unsigned int	g_PrevTickerCallTime = 0;
+
 #ifndef NO_SERVER_GUI
 // Storage for commands issued through various menu options to be executed all at once.
 static	TArray<FString>	g_ServerCommandQueue;
@@ -759,6 +763,84 @@ void SERVER_Tick( void )
 		// [BB] Tick the unlagged module.
 		UNLAGGED_Tick( );
 
+		// [AK] We're about to call G_Ticker, record the current time before it.
+		g_CurrentTickerCallTime = I_MSTime( );
+
+		for ( unsigned int i = 0; i < MAXPLAYERS; i++ )
+		{
+			// [AK] Ignore clients who aren't adjusting their clocks, or if their
+			// last message wasn't received anywhere after the previous G_Ticker
+			// call, or before the current G_Ticker call.
+			if (( g_aClients[i].State != CLS_CONNECTED_BUT_ADJUSTING_CLOCK ) ||
+				( g_aClients[i].lastClockUpdateTime < g_PrevTickerCallTime ) ||
+				( g_aClients[i].lastClockUpdateTime > g_CurrentTickerCallTime ))
+			{
+				continue;
+			}
+
+			// [AK] Get the number of milliseconds when the client's last message
+			// arrived after the previous G_Ticker call, and before the current one.
+			const unsigned int timeAfter = g_aClients[i].lastClockUpdateTime - g_PrevTickerCallTime;
+			const unsigned int timeBefore = g_CurrentTickerCallTime - g_aClients[i].lastClockUpdateTime;
+
+			g_aClients[i].clockMeasureTimes.Push( { timeAfter, timeBefore } );
+			const unsigned numSamples = g_aClients[i].clockMeasureTimes.Size( );
+
+			// [AK] When enough samples have been received (ten should be sufficent
+			// to get an accurate result), see if their clock still needs to be
+			// adjusted, or if they're ready for authentication.
+			if ( numSamples == 10 )
+			{
+				unsigned int numArrivedTooSoon = 0;
+				unsigned int numArrivedTooLate = 0;
+
+				// [AK] Check for any outliers. These are instances where messages
+				// arrived too soon after the previous G_Ticker call, or too soon
+				// before the current G_Ticker call (7 ms either way).
+				for ( unsigned int j = 0; j < numSamples; j++ )
+				{
+					if ( g_aClients[i].clockMeasureTimes[j].first < 7 )
+						numArrivedTooSoon++;
+					else if ( g_aClients[i].clockMeasureTimes[j].second < 7 )
+						numArrivedTooLate++;
+				}
+
+				const unsigned int numOutliers = numArrivedTooSoon + numArrivedTooLate;
+
+				// [AK] No outliers! They're ready for authentication. We also don't
+				// want to keep the client waiting for too long, so even if after 20
+				// attempts to adjust the client's clock, if there's still outliers,
+				// just abort and go straight to authentication.
+				if (( numOutliers == 0 ) || ( g_aClients[i].numTimesClockAdjusted >= 20 ))
+				{
+					Printf( "Clock adjustment %s: %s\n", numOutliers == 0 ? "completed" : "aborted", g_aClients[i].Address.ToString( ));
+
+					g_aClients[i].State = CLS_CONNECTED;
+					SERVER_RequestClientToAuthenticate( i );
+				}
+				else
+				{
+					// [AK] Determine what direction the client should offset their
+					// clock. Ideally, if there's more messages that arrived too soon
+					// (after the previous G_Ticker call), they should move the offset
+					// down so that commands arrive later. Likewise, if more messages
+					// arrived too late (before the current G_Ticker call), they shoud
+					// move the offset up so that commands arrive sooner.
+					if (( g_aClients[i].clockAdjustDirection == 0 ) || ( numOutliers > 1 ))
+						g_aClients[i].clockAdjustDirection = numArrivedTooSoon >= numArrivedTooLate ? -1 : 1;
+
+					g_aClients[i].PacketBuffer.Clear( );
+					g_aClients[i].PacketBuffer.ByteStream.WriteByte( SVCC_ADJUSTCLOCK );
+					g_aClients[i].PacketBuffer.ByteStream.WriteByte( ++g_aClients[i].numTimesClockAdjusted );
+					g_aClients[i].PacketBuffer.ByteStream.WriteByte( g_aClients[i].clockAdjustDirection );
+					SERVER_SendClientPacket( i, true );
+				}
+
+				// [AK] Clear all samples now.
+				g_aClients[i].clockMeasureTimes.Clear( );
+			}
+		}
+
 		G_Ticker ();
 
 		// However we need to spawn the unlagged debug actors here i.e. after having processed their
@@ -766,6 +848,9 @@ void SERVER_Tick( void )
 		// [BB] Spawn debug actors if the server runner wants them.
 		if ( sv_unlagged_debugactors )
 			UNLAGGED_SpawnDebugActors( );
+
+		// [AK] We're done with G_Ticker, record the current time after it.
+		g_PrevTickerCallTime = I_MSTime( );
 
 		gametic++;
 		maketic++;
@@ -2090,8 +2175,8 @@ void SERVER_SetupNewConnection( BYTESTREAM_s *pByteStream, bool bNewPlayer )
 		return;
 	}
 
-	// Client is now connected to the server.
-	g_aClients[lClient].State = CLS_CONNECTED;
+	// Client is now connected to the server, but needs to adjust their clock.
+	g_aClients[lClient].State = CLS_CONNECTED_BUT_ADJUSTING_CLOCK;
 
 	// Reset stats, and a couple other things.
 	players[lClient].fragcount = 0;
@@ -2134,6 +2219,10 @@ void SERVER_SetupNewConnection( BYTESTREAM_s *pByteStream, bool bNewPlayer )
 	g_aClients[lClient].ScreenHeight = 0;
 	g_aClients[lClient].ulClientGameTic = 0;
 	g_aClients[lClient].lastRespawnTick = 0;
+	g_aClients[lClient].clockMeasureTimes.Clear( );
+	g_aClients[lClient].lastClockUpdateTime = 0;
+	g_aClients[lClient].numTimesClockAdjusted = 0;
+	g_aClients[lClient].clockAdjustDirection = 0;
 	// [CK] Since the client is not up to date at all, the farthest the client
 	// should be able to go back is the gametic they connected with.
 	g_aClients[lClient].lLastServerGametic = gametic;
@@ -2147,8 +2236,32 @@ void SERVER_SetupNewConnection( BYTESTREAM_s *pByteStream, bool bNewPlayer )
 
 	SERVER_InitClientSRPData ( lClient );
 
-	// [BB] Inform the client that he is connected and needs to authenticate the map.
-	SERVER_RequestClientToAuthenticate( lClient );
+	// [AK] Inform the client that they're connected and to start the process of
+	// adjusting their clock, if necessary.
+	g_aClients[lClient].PacketBuffer.Clear( );
+	g_aClients[lClient].PacketBuffer.ByteStream.WriteByte( SVCC_BEGINCLOCKADJUSTMENT );
+	SERVER_SendClientPacket( lClient, true );
+}
+
+//*****************************************************************************
+//
+void SERVER_ReceivedClockUpdate( BYTESTREAM_s *byteStream )
+{
+	unsigned int numTimesClockAdjusted = byteStream->ReadByte( );
+
+	// [AK] This should only be executed by clients who are in the process of
+	// adjusting their clock.
+	if ( g_aClients[g_lCurrentClient].State != CLS_CONNECTED_BUT_ADJUSTING_CLOCK )
+		return;
+
+	// [AK] If this is a message that's now outdated (i.e. the client sent it
+	// before they were told by us to adjust their clock), ignore it.
+	if ( g_aClients[g_lCurrentClient].numTimesClockAdjusted != numTimesClockAdjusted )
+		return;
+
+	// [AK] Don't timeout.
+	g_aClients[g_lCurrentClient].ulLastCommandTic = gametic;
+	g_aClients[g_lCurrentClient].lastClockUpdateTime = I_MSTime( );
 }
 
 //*****************************************************************************
@@ -3244,6 +3357,9 @@ void SERVER_DisconnectClient( ULONG ulClient, bool bBroadcast, bool bSaveInfo, L
 	g_aClients[ulClient].PacketBuffer.Clear();
 	g_aClients[ulClient].UnreliablePacketBuffer.Clear();
 	g_aClients[ulClient].SavedPackets.Clear();
+
+	// [AK] Clear any remaining clock measurement times too.
+	g_aClients[ulClient].clockMeasureTimes.Clear();
 
 	// Tell the join queue module that a player has left the game.
 	JOINQUEUE_PlayerLeftGame( ulClient, true );
@@ -4852,6 +4968,12 @@ void SERVER_ParsePacket( BYTESTREAM_s *pByteStream )
 
 			// Client is trying to connect to the server, but is disconnected on his end.
 			SERVER_SetupNewConnection( pByteStream, false );
+			break;
+		case CLCC_SENDCLOCKUPDATE:
+
+			// Client sent an update to the server that will be used to determine if they
+			// will need to adjust their clock.
+			SERVER_ReceivedClockUpdate( pByteStream );
 			break;
 		case CLCC_ATTEMPTAUTHENTICATION:
 

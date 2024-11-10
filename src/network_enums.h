@@ -60,7 +60,15 @@
 BEGIN_ENUM( ServerConnectionCommand )
 {
 	// The server has properly received the client's challenge, and is telling
-	// the client to authenticate his map.
+	// them to start adjusting their clock, if necessary, so that their commands
+	// arrive as consistently as possible.
+	ENUM_ELEMENT( SVCC_BEGINCLOCKADJUSTMENT ),
+
+	// The server noticed that a client's commands are arriving too soon or too
+	// late within a tick, and is now instructing them to adjust their clock.
+	ENUM_ELEMENT( SVCC_ADJUSTCLOCK ),
+
+	// The server is telling the client to authenticate their map.
 	ENUM_ELEMENT( SVCC_AUTHENTICATE ),
 
 	// The server received the client's checksum, and it's valid. Now the server
@@ -402,6 +410,12 @@ BEGIN_ENUM( CLCC )
 {
 	// Client is telling the server he wishes to connect.
 	ENUM_ELEMENT( CLCC_ATTEMPTCONNECTION ),
+
+	// Client is in the process of adjusting their clock, and is sending an
+	// update to the server so that it can determine roughly when the client's
+	// commands are arriving each tick. If they're arriving too early or too
+	// late on the server, the client needs to adjust their clock accordingly.
+	ENUM_ELEMENT( CLCC_SENDCLOCKUPDATE ),
 
 	// Client is attempting to authenticate the map.
 	ENUM_ELEMENT( CLCC_ATTEMPTAUTHENTICATION ),

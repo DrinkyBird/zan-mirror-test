@@ -73,6 +73,10 @@ enum CONNECTIONSTATE_e
 	// We are currently attempting to connect to the server.
 	CTS_ATTEMPTINGCONNECTION,
 
+	// We're in the process of adjusting our clock, so that our commands can
+	// arrive as consistently on the server's end as possible.
+	CTS_ADJUSTINGCLOCK,
+
 	// We've gotten a response from the server, and are now attempting to authenticate
 	// the level.
 	CTS_ATTEMPTINGAUTHENTICATION,
@@ -151,11 +155,13 @@ void				CLIENT_SetLatestServerGametic( int latestServerGametic );
 int					CLIENT_GetServerGameticOffset( void );
 bool				CLIENT_GetFullUpdateIncomplete ( void );
 unsigned int		CLIENT_GetEndFullUpdateTic( void );
+unsigned int		CLIENT_GetClockOffset( void );
 const FString		&CLIENT_GetPlayerAccountName( int player );
 
 // Functions necessary to carry out client-side operations.
 void				CLIENT_SendServerPacket( void );
 void				CLIENT_AttemptConnection( void );
+void				CLIENT_SendClockUpdate( void );
 void				CLIENT_AttemptAuthentication( char *pszMapName );
 void				CLIENT_RequestSnapshot( void );
 bool				CLIENT_GetNextPacket( void );

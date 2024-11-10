@@ -155,14 +155,16 @@ void I_SelectTimer();
 // [RH] Returns time in milliseconds
 unsigned int I_MSTime (void)
 {
-	unsigned int time = SDL_GetTicks ();
+	// [AK] Account for the client's clock offset as well.
+	unsigned int time = SDL_GetTicks () + CLIENT_GetClockOffset ();
 	return time - BaseTime;
 }
 
 // Exactly the same thing, but based does no modification to the time.
 unsigned int I_FPSTime()
 {
-	return SDL_GetTicks();
+	// [AK] Account for the client's clock offset as well.
+	return SDL_GetTicks() + CLIENT_GetClockOffset();
 }
 
 //
@@ -182,7 +184,8 @@ int I_GetTimePolled (bool saveMS)
 		return TicFrozen;
 	}
 
-	DWORD tm = SDL_GetTicks();
+	// [AK] Account for the client's clock offset as well.
+	DWORD tm = SDL_GetTicks() + CLIENT_GetClockOffset();
 
 	if (saveMS)
 	{
@@ -270,7 +273,8 @@ void I_HandleAlarm (int sig)
 {
 	if(!TicFrozen)
 		tics++;
-	sig_start = SDL_GetTicks();
+	// [AK] Account for the client's clock offset as well.
+	sig_start = SDL_GetTicks() + CLIENT_GetClockOffset();
 	SEMAPHORE_SIGNAL(timerWait)
 }
 
@@ -312,7 +316,8 @@ void I_SelectTimer()
 // Returns the fractional amount of a tic passed since the most recent tic
 fixed_t I_GetTimeFrac (uint32 *ms)
 {
-	DWORD now = SDL_GetTicks ();
+	// [AK] Account for the client's clock offset as well.
+	DWORD now = SDL_GetTicks () + CLIENT_GetClockOffset ();
 	if (ms) *ms = TicStart + (1000 / TICRATE);
 	if (TicStart == 0)
 	{
