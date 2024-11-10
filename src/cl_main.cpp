@@ -57,6 +57,7 @@
 #undef OPAQUE
 #endif // _WIN32 && OPAQUE
 
+#include <memory>
 #include "a_action.h"
 #include "a_sharedglobal.h"
 #include "a_doomglobal.h"
@@ -185,6 +186,15 @@ CVAR( Bool, cl_keepserversettings, false, CVAR_ARCHIVE | CVAR_DEBUGONLY )
 // [JS] Always makes us ready when we are in intermission.
 CVAR( Bool, cl_autoready, false, CVAR_ARCHIVE )
 
+// [AK] Buffers incoming MoveLocalPlayer and MovePlayer commands so that they're
+// executed usually only once per tick, thereby making everyone move smoothly.
+CUSTOM_CVAR( Bool, cl_usemovebuffer, true, CVAR_ARCHIVE | CVAR_NOSETBYACS | CVAR_DEBUGONLY )
+{
+	// [AK] Reset everything if this is disabled.
+	if ( self == false )
+		CLIENT_ResetMoveCommandBuffers( );
+}
+
 #ifdef WIN32
 // [AK] Automatically logs us into our default account (i.e. login_default_user).
 CUSTOM_CVAR( Bool, cl_autologin, false, CVAR_ARCHIVE | CVAR_NOINITCALL )
@@ -209,6 +219,32 @@ CUSTOM_CVAR( Int, cl_backupcommands, 0, CVAR_ARCHIVE )
 
 	CLIENT_ClearBackupCommands( );
 }
+
+//*****************************************************************************
+//	STRUCTURES
+
+struct MoveCmdBuffer
+{
+	TArray<std::shared_ptr<ServerCommands::BaseServerCommand>> moveCmds;
+	unsigned int lastArrivalTick;
+	unsigned int numConsistentArrivals;
+
+	MoveCmdBuffer( void ) { Reset( ); }
+
+	template <class Command>
+	void Push( Command &command )
+	{
+		moveCmds.Push( std::make_shared<Command>( command ));
+		lastArrivalTick = gametic;
+	}
+
+	void Reset( void )
+	{
+		moveCmds.Clear( );
+		lastArrivalTick = 0;
+		numConsistentArrivals = 0;
+	}
+};
 
 //*****************************************************************************
 //	PROTOTYPES
@@ -438,6 +474,12 @@ static	unsigned int		g_ClockOffset = 0;
 // [AK] How many times the server told us to adjust our clock.
 static	unsigned int		g_NumTimesClockAdjusted = 0;
 
+// [AK] A toggle for when buffered movement commands need to be executed.
+static	bool				g_ExecuteBufferedMoveCmds = false;
+
+// [AK] A collection of all buffered MoveLocalPlayer and MovePlayer commands.
+static	MoveCmdBuffer		g_BufferedMoveCmds[MAXPLAYERS];
+
 //*****************************************************************************
 //	FUNCTIONS
 
@@ -459,8 +501,19 @@ void CLIENT_ClearAllPlayers( void )
 		VOIPController::GetInstance( ).RemoveVoIPChannel( ulIdx );
 	}
 
+	// [AK] Reset all movement command buffers.
+	CLIENT_ResetMoveCommandBuffers( );
+
 	// [AK] Also clear out saved chat messages from the server.
 	CHAT_ClearChatMessages( MAXPLAYERS );
+}
+
+//*****************************************************************************
+//
+void CLIENT_ResetMoveCommandBuffers( void )
+{
+	for ( unsigned int i = 0; i < MAXPLAYERS; i++ )
+		g_BufferedMoveCmds[i].Reset( );
 }
 
 //*****************************************************************************
@@ -625,6 +678,55 @@ void CLIENT_Tick( void )
 		// This way, we notice whether we are missing the latest packets
 		// from the server.
 		CLIENTCOMMANDS_SetStatus( );
+
+		break;
+
+	case CTS_ACTIVE:
+
+		// [AK] While in a level, execute any buffered movement commands.
+		if (( cl_usemovebuffer ) && ( gamestate == GS_LEVEL ))
+		{
+			bool alreadyExecutedCmd[MAXPLAYERS] = { false };
+			g_ExecuteBufferedMoveCmds = true;
+
+			// [AK] First, check if we received each player's command during
+			// this tick to see if they're arriving consistently on our end.
+			for ( unsigned int i = 0; i < MAXPLAYERS; i++ )
+			{
+				if (( playeringame[i] == false ) || ( players[i].bSpectating ))
+					continue;
+
+				if ( g_BufferedMoveCmds[i].lastArrivalTick != gametic )
+					g_BufferedMoveCmds[i].numConsistentArrivals = 0;
+				else
+					g_BufferedMoveCmds[i].numConsistentArrivals++;
+			}
+
+			// [AK] We may execute up to two commands per player, per tick.
+			for ( unsigned int i = 0; i < 2; i++ )
+			{
+				for ( unsigned int j = 0; j < MAXPLAYERS; j++ )
+				{
+					const unsigned int numMoveCmds = g_BufferedMoveCmds[j].moveCmds.Size( );
+
+					if (( playeringame[j] == false ) || ( players[j].bSpectating ) || ( numMoveCmds == 0 ))
+						continue;
+
+					// [AK] If we already executed a command for this player,
+					// then only execute a second command if there's still more
+					// than one command left, or if we've received their commands
+					// consistently enough that it's safe to empty their buffer.
+					if (( alreadyExecutedCmd[j] ) && ( numMoveCmds == 1 ) && ( g_BufferedMoveCmds[j].numConsistentArrivals < TICRATE ))
+						continue;
+
+					g_BufferedMoveCmds[j].moveCmds[0]->Execute( );
+					g_BufferedMoveCmds[j].moveCmds.Delete( 0 );
+					alreadyExecutedCmd[j] = true;
+				}
+			}
+
+			g_ExecuteBufferedMoveCmds = false;
+		}
 
 		break;
 
@@ -3928,6 +4030,14 @@ void ServerCommands::SpawnPlayer::Execute()
 //
 void ServerCommands::MovePlayer::Execute()
 {
+	// [AK] If the movement command buffer is being used, save this command into
+	// the player's buffer to be executed later.
+	if (( cl_usemovebuffer ) && ( g_ExecuteBufferedMoveCmds == false ))
+	{
+		g_BufferedMoveCmds[player - players].Push<ServerCommands::MovePlayer>( *this );
+		return;
+	}
+
 	// Check to make sure everything is valid. If not, break out.
 	if ( gamestate != GS_LEVEL )
 	{
@@ -4622,6 +4732,14 @@ void ServerCommands::UpdatePlayerTime::Execute()
 //
 void ServerCommands::MoveLocalPlayer::Execute()
 {
+	// [AK] If the movement command buffer is being used, save this command into
+	// the local player's buffer to be executed later.
+	if (( cl_usemovebuffer ) && ( g_ExecuteBufferedMoveCmds == false ))
+	{
+		g_BufferedMoveCmds[consoleplayer].Push<ServerCommands::MoveLocalPlayer>( *this );
+		return;
+	}
+
 	player_t *pPlayer = &players[consoleplayer];
 
 	// No player object to update.
@@ -4739,6 +4857,9 @@ void ServerCommands::DisconnectPlayer::Execute()
 	// [AK] Delete this player's VoIP channel if it exists.
 	VOIPController::GetInstance( ).RemoveVoIPChannel( playerIndex );
 
+	// [AK] Reset this player's movement command buffer.
+	g_BufferedMoveCmds[playerIndex].Reset( );
+
 	// Refresh the HUD because this affects the number of players in the game.
 	HUD_ShouldRefreshBeforeRendering( );
 }
@@ -4847,6 +4968,9 @@ void ServerCommands::PlayerIsSpectator::Execute()
 	// Don't lag anymore if we're a spectator.
 	if ( player == &players[consoleplayer] )
 		g_bClientLagging = false;
+
+	// [AK] Reset this player's movement command buffer.
+	g_BufferedMoveCmds[player - players].Reset( );
 
 	// [EP] Refresh the HUD, since this could affect the number of players left in a dead spectators game.
 	HUD_ShouldRefreshBeforeRendering( );
@@ -7322,6 +7446,9 @@ void ServerCommands::MapNew::Execute()
 	// [AK] Reset how many times the client adjusted their clock.
 	g_NumTimesClockAdjusted = 0;
 
+	// [AK] Reset all movement command buffers.
+	CLIENT_ResetMoveCommandBuffers( );
+
 	// Back to the full console.
 	gameaction = ga_fullconsole;
 
@@ -7354,6 +7481,9 @@ void ServerCommands::MapExit::Execute()
 
 		return;
 	}
+
+	// [AK] Reset all movement command buffers.
+	CLIENT_ResetMoveCommandBuffers( );
 
 	G_ChangeLevel( nextMap, position, changeFlags );
 }
