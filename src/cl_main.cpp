@@ -10040,6 +10040,28 @@ CCMD( motd )
 }
 
 //*****************************************************************************
+//
+CCMD( incrementclockoffset )
+{
+	if ( NETWORK_GetState( ) == NETSTATE_CLIENT )
+	{
+		g_ClockOffset++;
+		Printf( "Incremented clock offset to %d.\n", static_cast<int>( g_ClockOffset ));
+	}
+}
+
+//*****************************************************************************
+//
+CCMD( decrementclockoffset )
+{
+	if ( NETWORK_GetState( ) == NETSTATE_CLIENT )
+	{
+		g_ClockOffset--;
+		Printf( "Decremented clock offset to %d.\n", static_cast<int>( g_ClockOffset ));
+	}
+}
+
+//*****************************************************************************
 //	CONSOLE VARIABLES
 
 CVAR( Bool, cl_predict_players, true, CVAR_ARCHIVE )
