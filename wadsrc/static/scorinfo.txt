@@ -362,7 +362,10 @@ Scoreboard
 			}
 
 			// [AK] Use a width of INT_MAX to ensure this color box stretches across the entire margin.
-			DrawColor( value = teamcolor, width = 2147483648, height = 1, bottompadding = 2 )
+			IfCVar( sb_customizeborders == false ) || IfCVar( sb_noborders == false )
+			{
+				DrawColor( value = teamcolor, width = 2147483648, height = 1, bottompadding = 2 )
+			}
 		}
 
 		MultiLineBlock( horizontalalign = right, verticalalign = center, bottompadding = 4 )
@@ -397,7 +400,10 @@ Scoreboard
 			DrawString( value = "Spectators (" + spectatorcount + ")", textcolor = "Grey", bottompadding = 1 )
 
 			// [AK] Use a width of INT_MAX to ensure this color box stretches across the entire margin.
-			DrawColor( value = "DD DD DD", width = 2147483648, height = 1, bottompadding = 2 )
+			IfCVar( sb_customizeborders == false ) || IfCVar( sb_noborders == false )
+			{
+				DrawColor( value = "DD DD DD", width = 2147483648, height = 1, bottompadding = 2 )
+			}
 		}
 	}
 
