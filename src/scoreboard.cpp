@@ -277,14 +277,15 @@ CCMD( restorescoreboardproperties )
 {
 	sb_customizeflags.ResetToDefault( );
 
-	sb_headertextcolor.ResetToDefault( );
 	sb_useteamtextcolors.ResetToDefault( );
 	sb_headerfont.ResetToDefault( );
 	sb_rowfont.ResetToDefault( );
+	sb_headertextcolor.ResetToDefault( );
 	sb_rowtextcolor.ResetToDefault( );
 	sb_localrowtextcolor.ResetToDefault( );
 	sb_localrowdemotextcolor.ResetToDefault( );
 
+	sb_noborders.ResetToDefault( );
 	sb_useheadertextcolorforborders.ResetToDefault( );
 	sb_lightbordercolor.ResetToDefault( );
 	sb_darkbordercolor.ResetToDefault( );
