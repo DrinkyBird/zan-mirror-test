@@ -482,7 +482,7 @@ struct Scoreboard
 	// [AK] Template class for properties that can be customized in-game.
 	template <typename Type, typename CVar> struct CustomizableProperty
 	{
-		CustomizableProperty( const CVar &cvar, const CustomizeScoreboardFlag flag, const Type initial ) :
+		CustomizableProperty( const CVar &cvar, CustomizeScoreboardFlag flag, Type initial ) :
 			cvar( cvar ), flag( flag ), value( initial ) { }
 
 		void operator= ( const Type other ) { value = other; }
@@ -493,10 +493,31 @@ struct Scoreboard
 		Type value;
 	};
 
+	// [AK] Specialized template class for font properties.
+	struct CustomizableFont : public CustomizableProperty<FFont *, FStringCVar>
+	{
+		CustomizableFont( const FStringCVar &cvar, CustomizeScoreboardFlag flag, FFont *initial ) :
+			CustomizableProperty( cvar, flag, initial ) { }
+
+		operator FFont *( ) const
+		{
+			if ( sb_customizeflags & flag )
+			{
+				FFont *customFont = V_GetFont( cvar );
+
+				// [AK] If the CVar value is invalid, use the SCORINFO value.
+				if ( customFont != nullptr )
+					return customFont;
+			}
+
+			return value;
+		}
+	};
+
 	// [AK] Specialized template class for text color properties.
 	struct CustomizableTextColor : public CustomizableProperty<EColorRange, FIntCVar>
 	{
-		CustomizableTextColor( const FIntCVar &cvar, const CustomizeScoreboardFlag flag, const EColorRange initial ) :
+		CustomizableTextColor( const FIntCVar &cvar, CustomizeScoreboardFlag flag, EColorRange initial ) :
 			CustomizableProperty( cvar, flag, initial ) { }
 
 		operator EColorRange( ) const { return ( sb_customizeflags & flag ) ? static_cast<EColorRange>( cvar.GetGenericRep( CVAR_Int ).Int ) : value; }
@@ -532,8 +553,8 @@ struct Scoreboard
 	ULONG ulWidth;
 	ULONG ulHeight;
 	ULONG ulFlags;
-	FFont *pHeaderFont;
-	FFont *pRowFont;
+	CustomizableFont headerFont;
+	CustomizableFont rowFont;
 	CustomizableTextColor headerColor;
 	CustomizableTextColor rowColor;
 	CustomizableTextColor localRowColors[NUM_LOCALROW_COLORS];
@@ -554,7 +575,8 @@ struct Scoreboard
 	ULONG ulColumnPadding;
 	LONG lHeaderHeight;
 	LONG lRowHeight;
-	ULONG ulRowHeightToUse;
+	unsigned int headerHeightToUse;
+	unsigned int rowHeightToUse;
 	unsigned int totalScrollHeight;
 	unsigned int visibleScrollHeight;
 	int minClipRectY;
