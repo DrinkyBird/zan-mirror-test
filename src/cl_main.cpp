@@ -3516,7 +3516,7 @@ void ServerCommands::SpawnPlayer::Execute()
 	{
 		// [BB] Possibly play a connect sound.
 		if (( cl_connectsound ) && ( playeringame[ulPlayer] == false ) && ( isSpectating ) && ( CLIENT_GetConnectionState( ) != CTS_RECEIVINGSNAPSHOT ))
-			S_Sound( CHAN_AUTO, "zandronum/connect", 1.f, ATTN_NONE );
+			S_Sound( CHAN_AUTO | CHAN_UI, "zandronum/connect", 1.f, ATTN_NONE );
 	}
 
 	// This player is now in the game!
