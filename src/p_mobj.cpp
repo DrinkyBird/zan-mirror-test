@@ -4007,7 +4007,10 @@ void AActor::Tick ()
 				{
 					special2++;
 				}
-				return;
+
+				// [AK] Don't freeze spectators using source-engine noclipping.
+				if (P_IsUsingSourceEngineNoClip(this) == false)
+					return;
 			}
 		}
 
