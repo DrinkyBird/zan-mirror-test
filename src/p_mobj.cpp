@@ -4020,9 +4020,21 @@ void AActor::Tick ()
 		// [AK] Spectators using source-engine noclipping still need a way to slow down.
 		if (P_IsUsingSourceEngineNoClip(this))
 		{
-			velx = FixedMul(velx, FRICTION_FLY);
-			vely = FixedMul(vely, FRICTION_FLY);
-			velz = FixedMul(velz, FRICTION_FLY);
+			fixed_t *const velocity[3] = {&velx, &vely, &velz};
+
+			for (unsigned int i = 0; i < 3; i++)
+			{
+				*velocity[i] = FixedMul(*velocity[i], FRICTION_FLY);
+
+				if (abs(*velocity[i]) < STOPSPEED)
+				{
+					// [AK] Use forward/backward and side movement for the x and y velocities.
+					const short movement = (i < 2) ? (player->cmd.ucmd.forwardmove | player->cmd.ucmd.sidemove) : player->cmd.ucmd.upmove;
+
+					if (movement == 0)
+						*velocity[i] = 0;
+				}
+			}
 		}
 
 		x += velx;
