@@ -4035,6 +4035,8 @@ void AActor::Tick ()
 						*velocity[i] = 0;
 				}
 			}
+
+			UpdateWaterLevel(z, false);
 		}
 
 		x += velx;
