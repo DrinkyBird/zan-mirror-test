@@ -532,6 +532,18 @@ void GLSprite::Process(AActor* thing,sector_t * sector)
 	if ( !thing->IsVisibleToPlayer() )
 		return;
 
+	// [AK] Unless the sprite's in a horizontal mirror or the local player's using
+	// the chasecam, don't render icons above the heads of players being spied on.
+	// TODO: Use the ONLYVISIBLEINMIRRORS actor flag from GZDoom when we support it.
+	if ((GLRenderer->mCurrentPortal == nullptr) || ((GLRenderer->mCurrentPortal->MirrorFlag == 0) && (GLRenderer->mCurrentPortal->PlaneMirrorFlag == 0)))
+	{
+		if (((players[consoleplayer].cheats & CF_CHASECAM) == false) && (players[consoleplayer].camera != nullptr))
+		{
+			if ((players[consoleplayer].camera->player != nullptr) && (thing == players[consoleplayer].camera->player->pIcon))
+				return;
+		}
+	}
+
 	// [RH] Interpolate the sprite's position to make it look smooth
 	// [AK] Don't do this if the game is supposed to be paused but the console
 	// is still interpolated. Otherwise, any moving sprites will appear jittery.
