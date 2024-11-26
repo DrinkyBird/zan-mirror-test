@@ -528,10 +528,6 @@ void GLSprite::Process(AActor* thing,sector_t * sector)
 	// If this thing is in a map section that's not in view it can't possibly be visible
 	if (!(currentmapsection[thing->subsector->mapsection>>3] & (1 << (thing->subsector->mapsection & 7)))) return;
 
-	// [BB] If the actor is supposed to be invisible to the player, skip it here.
-	if ( !thing->IsVisibleToPlayer() )
-		return;
-
 	// [AK] Unless the sprite's in a horizontal mirror or the local player's using
 	// the chasecam, don't render icons above the heads of players being spied on.
 	// TODO: Use the ONLYVISIBLEINMIRRORS actor flag from GZDoom when we support it.
