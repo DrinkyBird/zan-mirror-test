@@ -885,7 +885,8 @@ void R_SetupFrame (AActor *actor)
 		}
 	}
 
-	if (!paused)
+	// [AK] Don't apply earthquake effects to free-roaming spectators.
+	if (!paused && ((camera->player == nullptr) || (camera->player->bSpectating == false)))
 	{
 		int intensity = DEarthquake::StaticGetQuakeIntensity (camera);
 		if (intensity != 0)
