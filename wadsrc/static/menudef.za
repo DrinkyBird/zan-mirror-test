@@ -685,6 +685,15 @@ OptionMenu ZA_LoginMenu
 	NetGameOnly
 	Title "LOG IN"
 
+	StaticText	"If you need to create an account, visit:", 1
+	StaticText	"https://auth.zandronum.com/register"
+	StaticText	" "
+	StaticText	"--- NOTICE ---"
+	StaticText	"If a server uses their own authentication", 1
+	StaticText	"host, you must register there instead.", 1
+	StaticText	" "
+	StaticText	"Contact the server host for more info.", 1
+	StaticText	" "
 	TextField	"Username",				"menu_authusername"
 	TextField	"Password",				"menu_authpassword"
 	StaticText	" "
