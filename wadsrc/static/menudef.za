@@ -150,10 +150,10 @@ OptionMenu ZA_NetworkOptions
 	// to enable this, they should be made aware of this too.
 	StaticText	" "
 	StaticText	"--- WARNING ---"
-	StaticText	"Sending backup commands helps mitigate packet loss", 1
-	StaticText	"but increases outbound net traffic!", 1
+	StaticText	"Sending backup commands helps mitigate", 1
+	StaticText	"packet loss, but increases net traffic!", 1
 	StaticText	" "
-	StaticText	"You should only enable them if you're actually", 1
+	StaticText	"Only use this feature if you're actually", 1
 	StaticText	"suffering from severe packet loss!", 1
 	StaticText	" "
 
