@@ -514,6 +514,7 @@ OptionMenu ZA_PlayerListMenu
 {
 	Title "PLAYER LIST"
 	Class "PlayerListMenu"
+	Indent 150
 	NetGameOnly
 
 	PlayerField	"Player",			"menu_playerindex",		NoBots, NotSelf
@@ -527,6 +528,7 @@ OptionMenu ZA_PlayerListMenu
 	// attribute which is displayed instead of the value when the value is at the minimum.
 	// Maybe something similar could be done here? This needs to be coordinated with ZDoom though.
 	Option		"Duration",			"menu_ignoreduration",		"ZA_IgnoreDuration",	"menu_ignoreaction"
+	StaticText	" "
 	Command		"Execute!",			"menu_ignore"
 	StaticText	" "
 	StaticText	"Adjust their VoIP channel volume", 1
@@ -684,6 +686,7 @@ OptionMenu ZA_LoginMenu
 {
 	NetGameOnly
 	Title "LOG IN"
+	Indent 150
 
 	StaticText	"If you need to create an account, visit:", 1
 	StaticText	"https://auth.zandronum.com/register"
@@ -820,9 +823,11 @@ OptionMenu ZA_RconLoginMenu
 {
 	NetGameOnly
 	Title "LOG IN TO RCON"
+	Indent 150
 
 	StaticText	"You must provide the RCON password", 1
 	StaticText	"to administer this server.", 1
+	StaticText	" "
 	TextField	"RCON Password",		"menu_rconpassword"
 	StaticText	" "
 	Command		"Log in",				"menu_rconlogin"
