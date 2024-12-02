@@ -146,35 +146,41 @@ void SERVERBAN_Tick( void )
 
 //*****************************************************************************
 //
-bool SERVERBAN_IsIPBanned( const IPStringArray &szAddress )
+bool SERVERBAN_IsIPBanned( const IPStringArray &Address )
 {
-	// Is this address is banned on the master server?
-	if ( sv_enforcemasterbanlist && g_MasterServerBans.isIPInList( szAddress ) && !g_MasterServerBanExemptions.isIPInList( szAddress ))
+	// Is this address banned on the master server?
+	if ( SERVERBAN_IsIPMasterBanned( Address ))
 		return true;
 
 	// If not, let the server decide.
-	return ( sv_enforcebans && g_ServerBans.isIPInList( szAddress ) && !g_ServerBanExemptions.isIPInList( szAddress ));
-}
-
-//*****************************************************************************
-//
-bool SERVERBAN_IsIPMasterBanned( const NETADDRESS_s &Address )
-{
-	return sv_enforcemasterbanlist
-		&& g_MasterServerBans.isIPInList( Address )
-		&& g_MasterServerBanExemptions.isIPInList( Address ) == false;
+	return ( sv_enforcebans && g_ServerBans.isIPInList( Address ) && !g_ServerBanExemptions.isIPInList( Address ));
 }
 
 //*****************************************************************************
 //
 bool SERVERBAN_IsIPBanned( const NETADDRESS_s &Address )
 {
-	// Is this address is banned on the master server?
-	if ( SERVERBAN_IsIPMasterBanned( Address ))
-		return true;
+	IPStringArray convertedAddress;
+	convertedAddress.SetFrom( Address );
 
-	// If not, let the server decide.
-	return ( sv_enforcebans && g_ServerBans.isIPInList( Address ) && !g_ServerBanExemptions.isIPInList( Address ));
+	return SERVERBAN_IsIPBanned( convertedAddress );
+}
+
+//*****************************************************************************
+//
+bool SERVERBAN_IsIPMasterBanned( const IPStringArray &Address )
+{
+	return ( sv_enforcemasterbanlist && g_MasterServerBans.isIPInList( Address ) && !g_MasterServerBanExemptions.isIPInList( Address ));
+}
+
+//*****************************************************************************
+//
+bool SERVERBAN_IsIPMasterBanned( const NETADDRESS_s &Address )
+{
+	IPStringArray convertedAddress;
+	convertedAddress.SetFrom( Address );
+
+	return SERVERBAN_IsIPMasterBanned( convertedAddress );
 }
 
 //*****************************************************************************
