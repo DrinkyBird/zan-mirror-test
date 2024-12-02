@@ -413,25 +413,59 @@ void SERVERBAN_BanPlayer( ULONG ulPlayer, const char *pszBanLength, const char *
 		return;
 	}
 
+	SERVERBAN_BanAddress( SERVER_GetClient( ulPlayer )->Address.ToString( ), pszBanLength, pszBanReason );
+}
+
+//*****************************************************************************
+//
+void SERVERBAN_BanAddress( const char *address, const char *length, const char *reason )
+{
+	// [AK] Added sanity checks to ensure the address and ban length are valid.
+	if (( address == nullptr ) || ( length == nullptr ))
+		return;
+
 	// [RC] Read the ban length.
-	time_t tExpiration = SERVERBAN_ParseBanLength( pszBanLength );
-	if ( tExpiration == -1 )
+	const time_t expiration = SERVERBAN_ParseBanLength( length );
+	NETADDRESS_s convertedAddress;
+	std::string message;
+
+	if ( convertedAddress.LoadFromString( address ) == false )
 	{
-		Printf("Error: couldn't read that length. Try something like " TEXTCOLOR_RED "6day" TEXTCOLOR_NORMAL " or " TEXTCOLOR_RED "\"5 hours\"" TEXTCOLOR_NORMAL ".\n");
+		Printf( "Error: couldn't read that address. Make sure it's formatted correctly.\n" );
+		return;
+	}
+	else if ( expiration == -1 )
+	{
+		Printf( "Error: couldn't read that length. Try something like " TEXTCOLOR_RED "6day" TEXTCOLOR_NORMAL " or " TEXTCOLOR_RED "\"5 hours\"" TEXTCOLOR_NORMAL ".\n" );
 		return;
 	}
 
-	// Removes the color codes from the player name, for the ban record.
-	FString playerName = players[ulPlayer].userinfo.GetName();
-	V_RemoveColorCodes( playerName );
+	// [AK] Get the index of the player who has this address.
+	const int player = SERVER_FindClientByAddress( convertedAddress );
 
-	// Add the ban and kick the player.
-	std::string message;
-	g_ServerBans.addEntry( SERVER_GetClient( ulPlayer )->Address.ToString(), playerName, pszBanReason, message, tExpiration );
-	Printf( "addban: %s", message.c_str() );
-	SERVER_KickPlayer( ulPlayer, pszBanReason ? pszBanReason : "" );  // [RC] serverban_KickBannedPlayers would cover this, but we want the messages to be distinct so there's no confusion.
+	// Add the ban.
+	if ( player != -1 )
+	{
+		// Removes the color codes from the player name, for the ban record.
+		FString playerName = players[player].userinfo.GetName( );
+		V_RemoveColorCodes( playerName );
 
-	// Kick any other players using the newly-banned address.
+		g_ServerBans.addEntry( address, playerName.GetChars( ), reason, message, expiration );
+	}
+	else
+	{
+		g_ServerBans.addEntry( address, nullptr, reason, message, expiration );
+	}
+
+	Printf( "addban: %s", message.c_str( ));
+
+	// Kick the player.
+	// [RC] serverban_KickBannedPlayers would cover this, but we want the
+	// messages to be distinct so there's no confusion.
+	if ( player != -1 )
+		SERVER_KickPlayer( player, reason != nullptr ? reason : "" );
+
+	// Kick any players using the newly-banned address.
 	serverban_KickBannedPlayers( );
 }
 
@@ -630,19 +664,7 @@ CCMD( addban )
 		return;
 	}
 
-	time_t tExpiration = SERVERBAN_ParseBanLength( argv[2] );
-	if ( tExpiration == -1 )
-	{
-		Printf("Error: couldn't read that length. Try something like " TEXTCOLOR_RED "6day" TEXTCOLOR_NORMAL " or " TEXTCOLOR_RED "\"5 hours\"" TEXTCOLOR_NORMAL ".\n");
-		return;
-	}
-
-	std::string message;
-	g_ServerBans.addEntry( argv[1], NULL, (argv.argc( ) >= 4) ? argv[3] : NULL, message, tExpiration );
-	Printf( "addban: %s", message.c_str() );
-
-	// Kick any players using the newly-banned address.
-	serverban_KickBannedPlayers( );
+	SERVERBAN_BanAddress( argv[1], argv[2], ( argv.argc( ) >= 4 ) ? argv[3] : nullptr );
 }
 
 //*****************************************************************************
