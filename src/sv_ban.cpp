@@ -79,6 +79,7 @@ static	void	serverban_KickBannedPlayers( void );
 static	LONG	serverban_ExtractBanLength( FString fSearchString, const char *pszPattern );
 static	time_t	serverban_CreateBanDate( LONG lAmount, ULONG ulUnitSize, time_t tNow );
 static	void	serverban_ExecuteGetIPCmd( FCommandLine &argv, bool isIndexCmd );
+static	void	serverban_ExecuteBanCmd( FCommandLine &argv, bool isIndexCmd );
 static	void	serverban_ListAddresses( const IPList &list );
 
 //--------------------------------------------------------------------------------------------------------------------------------------------------
@@ -539,6 +540,44 @@ static void serverban_ExecuteGetIPCmd( FCommandLine &argv, bool isIndexCmd )
 
 //*****************************************************************************
 //
+// [AK] Helper function for executing the "ban" and "ban_idx" CCMDs.
+//
+static void serverban_ExecuteBanCmd( FCommandLine &argv, bool isIndexCmd )
+{
+	int playerIndex = MAXPLAYERS;
+
+	// [AK] This function may not be used by ConsoleCommand.
+	if ( ACS_IsCalledFromConsoleCommand( ))
+		return;
+
+	// Only the server can ban players!
+	if ( NETWORK_GetState( ) != NETSTATE_SERVER )
+		return;
+
+	if ( argv.argc( ) < 3 )
+	{
+		FString message;
+		message.Format( "Usage: %s <player %s> <duration> [reason]\nDescription: Bans the player", argv[0], isIndexCmd ? "index" : "name" );
+
+		if ( isIndexCmd )
+			message += ", via their index,";
+
+		message += " for the given duration (\"perm\" for a permanent ban).";
+
+		if ( isIndexCmd )
+			message += " To see the list of players' indexes, try the \"playerinfo\" CCMD.";
+
+		Printf( "%s\n", message.GetChars( ));
+		return;
+	}
+
+	// Look up the player, and make sure they're valid.
+	if ( argv.GetPlayerFromArg( playerIndex, 1, isIndexCmd, true ))
+		SERVERBAN_BanPlayer( playerIndex, argv[2], ( argv.argc( ) >= 4 ) ? argv[3] : nullptr );
+}
+
+//*****************************************************************************
+//
 // [AK] Helper function for listing addresses via CCMDs (e.g. "viewbanlist").
 //
 static void serverban_ListAddresses( const IPList &list )
@@ -565,69 +604,16 @@ CCMD( getIP_idx )
 
 //*****************************************************************************
 //
-CCMD( ban_idx )
+CCMD( ban )
 {
-	// [AK] This function may not be used by ConsoleCommand.
-	if ( ACS_IsCalledFromConsoleCommand( ))
-		return;
-
-	// Only the server can ban players!
-	if ( NETWORK_GetState( ) != NETSTATE_SERVER )
-		return;
-
-	if ( argv.argc( ) < 3 )
-	{
-		Printf( "Usage: ban_idx <player index> <duration> [reason]\nDescriptions: Bans the player, via his index, for the given duration (\"perm\" for a permanent ban).\n To see the list of players' indexes, try the ccmd playerinfo.\n" );
-		return;
-	}
-
-	int playerIndex;
-	if ( argv.SafeGetNumber( 1, playerIndex ) == false )
-		return;
-
-	SERVERBAN_BanPlayer( playerIndex, argv[2], (argv.argc( ) >= 4) ? argv[3] : NULL );
-
+	serverban_ExecuteBanCmd( argv, false );
 }
 
 //*****************************************************************************
 //
-CCMD( ban )
+CCMD( ban_idx )
 {
-	ULONG	ulIdx;
-
-	// [AK] This function may not be used by ConsoleCommand.
-	if ( ACS_IsCalledFromConsoleCommand( ))
-		return;
-
-	// Only the server can ban players!
-	if ( NETWORK_GetState( ) != NETSTATE_SERVER )
-		return;
-
-	if ( argv.argc( ) < 3 )
-	{
-		Printf( "Usage: ban <playername> <duration> [reason]\nDescription: Bans the player for the given duration  (\"perm\" for a permanent ban).\n" );
-		return;
-	}
-
-	// Get the index.
-	ulIdx = SERVER_GetPlayerIndexFromName( argv[1], true, false );
-
-	// Found him?
-	if ( ulIdx != MAXPLAYERS )
-	{
-		char	szString[256];
-
-		// Ban via the index.
-		sprintf( szString, "ban_idx %lu \"%s\" \"%s\"", ulIdx, argv[2], (argv.argc( ) >= 4) ? argv[3] : "" );
-		SERVER_AddCommand( szString );
-	}
-	else
-	{
-		if ( SERVER_GetPlayerIndexFromName( argv[1], true, true ) != MAXPLAYERS )
-			Printf( "%s" TEXTCOLOR_NORMAL " is a bot.\n", argv[1] );
-		else
-			Printf( "Unknown player: %s" TEXTCOLOR_NORMAL "\n",argv[1] );
-	}
+	serverban_ExecuteBanCmd( argv, true );
 }
 
 //*****************************************************************************
