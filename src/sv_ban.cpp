@@ -78,6 +78,7 @@ static	void	serverban_LoadBansAndBanExemptions( void );
 static	void	serverban_KickBannedPlayers( void );
 static	LONG	serverban_ExtractBanLength( FString fSearchString, const char *pszPattern );
 static	time_t	serverban_CreateBanDate( LONG lAmount, ULONG ulUnitSize, time_t tNow );
+static	void	serverban_ExecuteGetIPCmd( FCommandLine &argv, bool isIndexCmd );
 static	void	serverban_ListAddresses( const IPList &list );
 
 //--------------------------------------------------------------------------------------------------------------------------------------------------
@@ -504,6 +505,36 @@ static time_t serverban_CreateBanDate( LONG lAmount, ULONG ulUnitSize, time_t tN
 
 //*****************************************************************************
 //
+// [AK] Helper function for executing the "getIP" and "getIP_idx" CCMDs.
+//
+static void serverban_ExecuteGetIPCmd( FCommandLine &argv, bool isIndexCmd )
+{
+	int playerIndex = MAXPLAYERS;
+
+	// Only the server can look this up.
+	if ( NETWORK_GetState( ) != NETSTATE_SERVER )
+		return;
+
+	if ( argv.argc( ) < 2 )
+	{
+		FString message;
+		message.Format( "Usage: %s <player %s>\nDescription: Returns the player's IP address", argv[0], isIndexCmd ? "index" : "name" );
+
+		// [AK] Add extra information for the index version of the command.
+		if ( isIndexCmd )
+			message.AppendFormat( ", via their index. You can get the list of players' indexes via the \"playerinfo\" CCMD" );
+
+		Printf( "%s.\n", message.GetChars( ));
+		return;
+	}
+
+	// Look up the player, and make sure they're valid.
+	if ( argv.GetPlayerFromArg( playerIndex, 1, isIndexCmd, true ))
+		Printf( "%s's IP is: %s\n", players[playerIndex].userinfo.GetName( ), SERVER_GetClient( playerIndex )->Address.ToString( ));
+}
+
+//*****************************************************************************
+//
 // [AK] Helper function for listing addresses via CCMDs (e.g. "viewbanlist").
 //
 static void serverban_ListAddresses( const IPList &list )
@@ -518,55 +549,14 @@ static void serverban_ListAddresses( const IPList &list )
 
 CCMD( getIP )
 {
-	// Only the server can look this up.
-	if ( NETWORK_GetState( ) != NETSTATE_SERVER )
-		return;
-
-	if ( argv.argc( ) < 2 )
-	{
-		Printf( "Usage: getIP <playername> \nDescription: Returns the player's IP address.\n" );
-		return;
-	}
-
-	// Look up the player.
-	ULONG ulIdx = SERVER_GetPlayerIndexFromName( argv[1], true, false );
-	if ( SERVER_IsValidClient( ulIdx ))
-		Printf( "%s's IP is: %s\n", players[ulIdx].userinfo.GetName(), SERVER_GetClient( ulIdx )->Address.ToString() );
-	else
-	{
-		if ( SERVER_GetPlayerIndexFromName( argv[1], true, true ) != MAXPLAYERS )
-			Printf( "%s" TEXTCOLOR_NORMAL " is a bot.\n", argv[1] );
-		else
-			Printf( "Unknown player: %s" TEXTCOLOR_NORMAL "\n",argv[1] );
-	}
+	serverban_ExecuteGetIPCmd( argv, false );
 }
 
 //*****************************************************************************
 //
 CCMD( getIP_idx )
 {
-	// Only the server can look this up.
-	if ( NETWORK_GetState( ) != NETSTATE_SERVER )
-		return;
-
-	if ( argv.argc( ) < 2 )
-	{
-		Printf( "Usage: getIP_idx <player index>\nDescription: Returns the player's IP, via his index. You can get the list of players' indexes via the ccmd playerinfo.\n" );
-		return;
-	}
-
-	int playerIndex;
-	if ( argv.SafeGetNumber( 1, playerIndex ) == false )
-		return;
-
-	// Make sure the target is valid.
-	if (( playerIndex >= MAXPLAYERS ) || ( !playeringame[playerIndex] ))
-		return;
-
-	if ( players[playerIndex].bIsBot )
-		Printf( "%s is a bot.\n", players[playerIndex].userinfo.GetName() );
-	else
-		Printf( "%s's IP is: %s\n", players[playerIndex].userinfo.GetName(), SERVER_GetClient( playerIndex )->Address.ToString() );
+	serverban_ExecuteGetIPCmd( argv, true );
 }
 
 //*****************************************************************************
