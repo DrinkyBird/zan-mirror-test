@@ -511,6 +511,10 @@ static void serverban_ExecuteGetIPCmd( FCommandLine &argv, bool isIndexCmd )
 {
 	int playerIndex = MAXPLAYERS;
 
+	// [AK] This function may not be used by ConsoleCommand.
+	if ( ACS_IsCalledFromConsoleCommand( ))
+		return;
+
 	// Only the server can look this up.
 	if ( NETWORK_GetState( ) != NETSTATE_SERVER )
 		return;
