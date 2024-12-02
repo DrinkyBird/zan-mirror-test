@@ -78,6 +78,7 @@ static	void	serverban_LoadBansAndBanExemptions( void );
 static	void	serverban_KickBannedPlayers( void );
 static	LONG	serverban_ExtractBanLength( FString fSearchString, const char *pszPattern );
 static	time_t	serverban_CreateBanDate( LONG lAmount, ULONG ulUnitSize, time_t tNow );
+static	void	serverban_ListAddresses( const IPList &list );
 
 //--------------------------------------------------------------------------------------------------------------------------------------------------
 //-- CVARS -----------------------------------------------------------------------------------------------------------------------------------------
@@ -501,6 +502,16 @@ static time_t serverban_CreateBanDate( LONG lAmount, ULONG ulUnitSize, time_t tN
 		return 0;
 }
 
+//*****************************************************************************
+//
+// [AK] Helper function for listing addresses via CCMDs (e.g. "viewbanlist").
+//
+static void serverban_ListAddresses( const IPList &list )
+{
+	for ( unsigned int i = 0; i < list.size( ); i++ )
+		Printf( "%s", list.getEntryAsString( i ).c_str( ));
+}
+
 //--------------------------------------------------------------------------------------------------------------------------------------------------
 //-- CCMDS -----------------------------------------------------------------------------------------------------------------------------------------
 //--------------------------------------------------------------------------------------------------------------------------------------------------
@@ -715,32 +726,28 @@ CCMD( delbanexemption )
 //
 CCMD( viewbanlist )
 {
-	for ( ULONG ulIdx = 0; ulIdx < g_ServerBans.size(); ulIdx++ )
-		Printf( "%s", g_ServerBans.getEntryAsString(ulIdx).c_str( ));
+	serverban_ListAddresses( g_ServerBans );
 }
 
 //*****************************************************************************
 //
 CCMD( viewbanexemptionlist )
 {
-	for ( ULONG ulIdx = 0; ulIdx < g_ServerBanExemptions.size(); ulIdx++ )
-		Printf( "%s", g_ServerBanExemptions.getEntryAsString(ulIdx).c_str( ));
+	serverban_ListAddresses( g_ServerBanExemptions );
 }
 
 //*****************************************************************************
 //
 CCMD( viewmasterbanlist )
 {
-	for ( ULONG ulIdx = 0; ulIdx < g_MasterServerBans.size(); ulIdx++ )
-		Printf( "%s", g_MasterServerBans.getEntryAsString(ulIdx).c_str( ));
+	serverban_ListAddresses( g_MasterServerBans );
 }
 
 //*****************************************************************************
 //
 CCMD( viewmasterexemptionbanlist )
 {
-	for ( ULONG ulIdx = 0; ulIdx < g_MasterServerBanExemptions.size(); ulIdx++ )
-		Printf( "%s", g_MasterServerBanExemptions.getEntryAsString(ulIdx).c_str( ));
+	serverban_ListAddresses( g_MasterServerBanExemptions );
 }
 
 //*****************************************************************************
