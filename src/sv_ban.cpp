@@ -80,6 +80,7 @@ static	LONG	serverban_ExtractBanLength( FString fSearchString, const char *pszPa
 static	time_t	serverban_CreateBanDate( LONG lAmount, ULONG ulUnitSize, time_t tNow );
 static	void	serverban_ExecuteGetIPCmd( FCommandLine &argv, bool isIndexCmd );
 static	void	serverban_ExecuteBanCmd( FCommandLine &argv, bool isIndexCmd );
+static	void	serverban_ExecuteAddOrDelBanCmd( IPList &list, FCommandLine &argv, bool isDelCmd );
 static	void	serverban_ListAddresses( const IPList &list );
 
 //--------------------------------------------------------------------------------------------------------------------------------------------------
@@ -612,6 +613,33 @@ static void serverban_ExecuteBanCmd( FCommandLine &argv, bool isIndexCmd )
 
 //*****************************************************************************
 //
+// [AK] Helper function for executing the "delban", "addbanexemption" and "delbanexemption" CCMDs.
+// Note that the "addban" CCMD works differently, so this can't be used for it.
+//
+static void serverban_ExecuteAddOrDelBanCmd( IPList &list, FCommandLine &argv, bool isDelCmd )
+{
+	std::string message;
+
+	// [AK] This function may not be used by ConsoleCommand.
+	if ( ACS_IsCalledFromConsoleCommand( ))
+		return;
+
+	if ( argv.argc( ) < 2 )
+	{
+		Printf( "Usage: %s <IP address>%s\n", argv[0], isDelCmd ? "" : " [comment]" );
+		return;
+	}
+
+	if ( isDelCmd )
+		list.removeEntry( argv[1], message );
+	else
+		list.addEntry( argv[1], nullptr, ( argv.argc( ) >= 3 ) ? argv[2] : nullptr, message, 0 );
+
+	Printf( "%s: %s", argv[0], message.c_str( ));
+}
+
+//*****************************************************************************
+//
 // [AK] Helper function for listing addresses via CCMDs (e.g. "viewbanlist").
 //
 static void serverban_ListAddresses( const IPList &list )
@@ -671,57 +699,21 @@ CCMD( addban )
 //
 CCMD( delban )
 {
-	// [AK] This function may not be used by ConsoleCommand.
-	if ( ACS_IsCalledFromConsoleCommand( ))
-		return;
-
-	if ( argv.argc( ) < 2 )
-	{
-		Printf( "Usage: delban <IP address>\n" );
-		return;
-	}
-
-	std::string message;
-	g_ServerBans.removeEntry( argv[1], message );
-	Printf( "delban: %s", message.c_str() );
+	serverban_ExecuteAddOrDelBanCmd( g_ServerBans, argv, true );
 }
 
 //*****************************************************************************
 //
 CCMD( addbanexemption )
 {
-	// [AK] This function may not be used by ConsoleCommand.
-	if ( ACS_IsCalledFromConsoleCommand( ))
-		return;
-
-	if ( argv.argc( ) < 2 )
-	{
-		Printf( "Usage: addbanexemption <IP address> [comment]\n" );
-		return;
-	}
-
-	std::string message;
-	g_ServerBanExemptions.addEntry( argv[1], NULL, (argv.argc( ) >= 3) ? argv[2] : NULL, message, 0 );
-	Printf( "addbanexemption: %s", message.c_str() );
+	serverban_ExecuteAddOrDelBanCmd( g_ServerBanExemptions, argv, false );
 }
 
 //*****************************************************************************
 //
 CCMD( delbanexemption )
 {
-	// [AK] This function may not be used by ConsoleCommand.
-	if ( ACS_IsCalledFromConsoleCommand( ))
-		return;
-
-	if ( argv.argc( ) < 2 )
-	{
-		Printf( "Usage: delbanexemption <IP address>\n" );
-		return;
-	}
-
-	std::string message;
-	g_ServerBanExemptions.removeEntry( argv[1], message );
-	Printf( "delbanexemption: %s", message.c_str() );
+	serverban_ExecuteAddOrDelBanCmd( g_ServerBanExemptions, argv, true );
 }
 
 //*****************************************************************************
