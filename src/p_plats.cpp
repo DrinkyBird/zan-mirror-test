@@ -762,27 +762,5 @@ DPlat *P_GetPlatByID( LONG lID )
 //
 LONG P_GetFirstFreePlatID( void )
 {
-	LONG		lIdx;
-	DPlat		*pPlat;
-	bool		bIDIsAvailable;
-
-	for ( lIdx = 0; lIdx < 8192; lIdx++ )
-	{
-		TThinkerIterator<DPlat>		Iterator;
-
-		bIDIsAvailable = true;
-		while (( pPlat = Iterator.Next( )))
-		{
-			if ( pPlat->GetID( ) == lIdx )
-			{
-				bIDIsAvailable = false;
-				break;
-			}
-		}
-
-		if ( bIDIsAvailable )
-			return ( lIdx );
-	}
-
-	return ( -1 );
+	return NETWORK_GetFirstFreeID<DPlat>();
 }

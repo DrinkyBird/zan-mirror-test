@@ -1970,85 +1970,19 @@ DWaggleBase *P_GetWaggleByID( LONG lID )
 //
 LONG P_GetFirstFreeFloorID( void )
 {
-	LONG		lIdx;
-	DFloor		*pFloor;
-	bool		bIDIsAvailable;
-
-	for ( lIdx = 0; lIdx < 8192; lIdx++ )
-	{
-		TThinkerIterator<DFloor>		Iterator;
-
-		bIDIsAvailable = true;
-		while (( pFloor = Iterator.Next( )))
-		{
-			if ( pFloor->GetID( ) == lIdx )
-			{
-				bIDIsAvailable = false;
-				break;
-			}
-		}
-
-		if ( bIDIsAvailable )
-			return ( lIdx );
-	}
-
-	return ( -1 );
+	return NETWORK_GetFirstFreeID<DFloor>();
 }
 
 //*****************************************************************************
 //
 LONG P_GetFirstFreeElevatorID( void )
 {
-	LONG		lIdx;
-	DElevator	*pElevator;
-	bool		bIDIsAvailable;
-
-	for ( lIdx = 0; lIdx < 8192; lIdx++ )
-	{
-		TThinkerIterator<DElevator>		Iterator;
-
-		bIDIsAvailable = true;
-		while (( pElevator = Iterator.Next( )))
-		{
-			if ( pElevator->GetID( ) == lIdx )
-			{
-				bIDIsAvailable = false;
-				break;
-			}
-		}
-
-		if ( bIDIsAvailable )
-			return ( lIdx );
-	}
-
-	return ( -1 );
+	return NETWORK_GetFirstFreeID<DElevator>();
 }
 
 //*****************************************************************************
 //
 LONG P_GetFirstFreeWaggleID( void )
 {
-	LONG		lIdx;
-	DWaggleBase	*pWaggle;
-	bool		bIDIsAvailable;
-
-	for ( lIdx = 0; lIdx < 8192; lIdx++ )
-	{
-		TThinkerIterator<DWaggleBase>		Iterator;
-
-		bIDIsAvailable = true;
-		while (( pWaggle = Iterator.Next( )))
-		{
-			if ( pWaggle->GetID( ) == lIdx )
-			{
-				bIDIsAvailable = false;
-				break;
-			}
-		}
-
-		if ( bIDIsAvailable )
-			return ( lIdx );
-	}
-
-	return ( -1 );
+	return NETWORK_GetFirstFreeID<DWaggleBase>();
 }

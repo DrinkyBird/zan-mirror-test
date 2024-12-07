@@ -754,29 +754,7 @@ DDoor *P_GetDoorByID( LONG lID )
 //
 LONG P_GetFirstFreeDoorID( void )
 {
-	LONG		lIdx;
-	DDoor		*pDoor;
-	bool		bIDIsAvailable;
-
-	for ( lIdx = 0; lIdx < 8192; lIdx++ )
-	{
-		TThinkerIterator<DDoor>		Iterator;
-
-		bIDIsAvailable = true;
-		while (( pDoor = Iterator.Next( )))
-		{
-			if ( pDoor->GetID( ) == lIdx )
-			{
-				bIDIsAvailable = false;
-				break;
-			}
-		}
-
-		if ( bIDIsAvailable )
-			return ( lIdx );
-	}
-
-	return ( -1 );
+	return NETWORK_GetFirstFreeID<DDoor>();
 }
 
 //*****************************************************************************

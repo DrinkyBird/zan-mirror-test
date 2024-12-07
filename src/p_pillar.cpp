@@ -411,27 +411,5 @@ DPillar *P_GetPillarByID( LONG lID )
 //
 LONG P_GetFirstFreePillarID( void )
 {
-	LONG		lIdx;
-	DPillar		*pPillar;
-	bool		bIDIsAvailable;
-
-	for ( lIdx = 0; lIdx < 8192; lIdx++ )
-	{
-		TThinkerIterator<DPillar>		Iterator;
-
-		bIDIsAvailable = true;
-		while (( pPillar = Iterator.Next( )))
-		{
-			if ( pPillar->GetID( ) == lIdx )
-			{
-				bIDIsAvailable = false;
-				break;
-			}
-		}
-
-		if ( bIDIsAvailable )
-			return ( lIdx );
-	}
-
-	return ( -1 );
+	return NETWORK_GetFirstFreeID<DPillar>();
 }
