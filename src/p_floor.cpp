@@ -567,7 +567,7 @@ manual_floor:
 		floor->m_OrgDist = sec->floorplane.d;	// [RH]
 
 		// [BC] Assign the floor's network ID. However, don't do this on the client end.
-		if ( NETWORK_InClientMode() == false )
+		if ( NETWORK_GetState() == NETSTATE_SERVER )
 			floor->m_FloorID = P_GetFirstFreeFloorID( );
 
 		floor->StartFloorSound ();
@@ -968,7 +968,7 @@ manual_stair:
 		osecnum = secnum;				//jff 3/4/98 preserve loop index
 
 		// [BC] Assign the floor's network ID. However, don't do this on the client end.
-		if ( NETWORK_InClientMode() == false )
+		if ( NETWORK_GetState() == NETSTATE_SERVER )
 			floor->m_FloorID = P_GetFirstFreeFloorID( );
 
 		// [BC] If we're the server, tell clients to create the floor.
@@ -1084,7 +1084,7 @@ manual_stair:
 				floor->m_OrgDist = sec->floorplane.d;	// [RH] Height to reset to
 
 				// [BC] Assign the floor's network ID. However, don't do this on the client end.
-				if ( NETWORK_InClientMode() == false )
+				if ( NETWORK_GetState() == NETSTATE_SERVER )
 					floor->m_FloorID = P_GetFirstFreeFloorID( );
 
 				// [BC] If we're the server, tell clients to create the floor.
@@ -1177,7 +1177,7 @@ manual_donut:
 			floor->StartFloorSound ();
 			
 			// [BC] Assign the floor's network ID. However, don't do this on the client end.
-			if ( NETWORK_InClientMode() == false )
+			if ( NETWORK_GetState() == NETSTATE_SERVER )
 				floor->m_FloorID = P_GetFirstFreeFloorID( );
 
 			// [BC] If we're the server, tell clients to create the floor.
@@ -1200,7 +1200,7 @@ manual_donut:
 			floor->StartFloorSound ();
 
 			// [BC] Assign the floor's network ID. However, don't do this on the client end.
-			if ( NETWORK_InClientMode() == false )
+			if ( NETWORK_GetState() == NETSTATE_SERVER )
 				floor->m_FloorID = P_GetFirstFreeFloorID( );
 
 			// [BC] If we're the server, tell clients to create the floor.

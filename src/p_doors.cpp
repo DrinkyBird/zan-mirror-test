@@ -525,7 +525,7 @@ DDoor::DDoor (sector_t *sec, EVlDoor type, fixed_t speed, int delay, int lightTa
 	// [BB] We need to initialize the ID, because P_GetFirstFreeDoorID relies on this.
 	m_DoorID = -1;
 	// [BC] Assign the door's network ID.
-	if ( NETWORK_InClientMode() == false )
+	if ( NETWORK_GetState() == NETSTATE_SERVER )
 		m_DoorID = P_GetFirstFreeDoorID( );
 }
 

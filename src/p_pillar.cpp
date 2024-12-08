@@ -379,7 +379,7 @@ bool EV_DoPillar (DPillar::EPillar type, int tag, fixed_t speed, fixed_t height,
 		if ( pPillar )
 		{
 			// [BC] Assign the mover's network ID. However, don't do this on the client end.
-			if ( NETWORK_InClientMode() == false )
+			if ( NETWORK_GetState() == NETSTATE_SERVER )
 				pPillar->SetID ( P_GetFirstFreePillarID( ) );
 
 			// [BC] If we're the server, tell clients to create the pillar.
