@@ -2159,14 +2159,8 @@ void PLAYER_SetFragcount( player_t *pPlayer, LONG lFragCount, bool bAnnounce, bo
 {
 	// Don't bother with fragcount during warm-ups.
 	// [AK] Clients shouldn't need to check this.
-	if ( NETWORK_InClientMode( ) == false )
-	{
-		if ((( duel ) && ( DUEL_GetState( ) == DS_COUNTDOWN )) ||
-			(( lastmanstanding || teamlms ) && ( LASTMANSTANDING_GetState( ) == LMSS_COUNTDOWN )))
-		{
-			return;
-		}
-	}
+	if (( NETWORK_InClientMode( ) == false ) && ( duel || lastmanstanding || teamlms ) && ( GAMEMODE_IsGameInCountdown( )))
+		return;
 
 	// Don't announce events related to frag changes during teamplay, LMS,
 	// or possession games.
