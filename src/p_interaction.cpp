@@ -738,7 +738,9 @@ void AActor::Die (AActor *source, AActor *inflictor, int dmgflags)
 			float fRespawnDelayTime = 1.0f;
 
 			// [AK] The respawn delay can be adjusted if the player wasn't spawn telefragged and still has lives left.
-			if (( player->bSpawnTelefragged == false ) && ( bNoMoreLivesLeft == false ))
+			// Don't use this in singleplayer games, or during countdown sequences.
+			if (( NETWORK_GetState( ) != NETSTATE_SINGLE ) && ( GAMEMODE_IsGameInCountdown( ) == false ) &&
+				( player->bSpawnTelefragged == false ) && ( bNoMoreLivesLeft == false ))
 			{
 				player->respawn_time = level.time + static_cast<int>( sv_respawndelaytime * TICRATE );
 				fRespawnDelayTime = sv_respawndelaytime;
