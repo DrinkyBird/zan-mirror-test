@@ -4082,20 +4082,6 @@ void ServerCommands::KillPlayer::Execute()
 		ClientObituary( players[ulPlayer].mo, pInflictor, NULL, MOD );
 */
 
-	// [AK] If we died and can respawn, show how long we must wait before we can respawn.
-	if (( CLIENTDEMO_IsPlaying( ) == false ) && (( zacompatflags & ZACOMPATF_INSTANTRESPAWN ) == false ) && ( player - players == consoleplayer ))
-	{
-		bool bNoMoreLivesLeft = ( GAMEMODE_AreLivesLimited( ) && GAMEMODE_IsGameInProgress( ) && ( player->ulLivesLeft == 0 ));
-		float fRespawnDelayTime = 1.0f;
-
-		if (( player->mo->DamageType != NAME_SpawnTelefrag ) && ( bNoMoreLivesLeft == false ))
-			fRespawnDelayTime = sv_respawndelaytime;
-
-		// [AK] The timer is precise to only one decimal place, so it's not worth showing
-		// the message if it's below 0.1 seconds.
-		HUD_SetRespawnTimeLeft(( bNoMoreLivesLeft == false && fRespawnDelayTime > 0.1f ) ? fRespawnDelayTime : -1.0f );
-	}
-
 	// Refresh the HUD, since this could affect the number of players left in an LMS game.
 	HUD_ShouldRefreshBeforeRendering( );
 }
@@ -4649,6 +4635,14 @@ void ServerCommands::SetLocalPlayerJumpTics::Execute()
 
 	// Now that everything's check out, update stuff.
 	CLIENT_PREDICT_SetJumpTics( jumpTics );
+}
+
+//*****************************************************************************
+//
+void ServerCommands::SetLocalPlayerRespawnDelayTime::Execute()
+{
+	const float respawnDelayTime = static_cast<float>( respawnDelayTics ) / TICRATE;
+	HUD_SetRespawnTimeLeft(( respawnDelayTime > 0.1f ) ? respawnDelayTime : -1.0f );
 }
 
 //*****************************************************************************

@@ -254,6 +254,11 @@ Command SetLocalPlayerJumpTics
 	SByte jumpTics
 EndCommand
 
+Command SetLocalPlayerRespawnDelayTime
+	ExtendedCommand
+	ULong respawnDelayTics
+EndCommand
+
 Command DisconnectPlayer
 	Player player
 EndCommand

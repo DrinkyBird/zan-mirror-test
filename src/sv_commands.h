@@ -126,6 +126,7 @@ void	SERVERCOMMANDS_UpdatePlayerExtraData( ULONG ulPlayer, ULONG ulDisplayPlayer
 void	SERVERCOMMANDS_UpdatePlayerTime( ULONG ulPlayer, ULONG ulPlayerExtra = MAXPLAYERS, ServerCommandFlags flags = 0 );
 void	SERVERCOMMANDS_MoveLocalPlayer( ULONG ulPlayer );
 void	SERVERCOMMANDS_SetLocalPlayerJumpTics( ULONG ulPlayer );
+void	SERVERCOMMANDS_SetLocalPlayerRespawnDelayTime( unsigned int player );
 void	SERVERCOMMANDS_DisconnectPlayer( ULONG ulPlayer, ULONG ulPlayerExtra = MAXPLAYERS, ServerCommandFlags flags = 0 );
 void	SERVERCOMMANDS_SetConsolePlayer( ULONG ulPlayer );
 void	SERVERCOMMANDS_ConsolePlayerKicked( ULONG ulPlayer );

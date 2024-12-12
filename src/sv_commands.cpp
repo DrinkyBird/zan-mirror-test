@@ -1086,6 +1086,18 @@ void SERVERCOMMANDS_SetLocalPlayerJumpTics( ULONG ulPlayer )
 
 //*****************************************************************************
 //
+void SERVERCOMMANDS_SetLocalPlayerRespawnDelayTime( unsigned int player )
+{
+	if ( PLAYER_IsValidPlayer( player ) == false )
+		return;
+
+	ServerCommands::SetLocalPlayerRespawnDelayTime command;
+	command.SetRespawnDelayTics( players[player].respawn_time - level.time );
+	command.sendCommandToClients( player, SVCF_ONLYTHISCLIENT );
+}
+
+//*****************************************************************************
+//
 void SERVERCOMMANDS_DisconnectPlayer( ULONG ulPlayer, ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
 	if ( PLAYER_IsValidPlayer( ulPlayer ) == false )

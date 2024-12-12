@@ -751,7 +751,9 @@ void AActor::Die (AActor *source, AActor *inflictor, int dmgflags)
 			// [AK] Show how long we must wait until we can respawn on the screen. The timer is precise to
 			// only one decimal place, so it's not worth showing if it's below 0.1 seconds.
 			// Don't display the timer at all in singleplayer games.
-			if (( NETWORK_GetState( ) != NETSTATE_SINGLE ) && ( player - players == consoleplayer ))
+			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
+				SERVERCOMMANDS_SetLocalPlayerRespawnDelayTime( player - players );
+			else if (( NETWORK_GetState( ) != NETSTATE_SINGLE ) && ( player - players == consoleplayer ))
 				HUD_SetRespawnTimeLeft(( bNoMoreLivesLeft == false && fRespawnDelayTime > 0.1f ) ? fRespawnDelayTime : -1.0f );
 
 			// [BC] Don't respawn quite so fast on forced respawn. It sounds weird when your

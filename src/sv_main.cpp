@@ -2653,6 +2653,11 @@ void SERVER_SendFullUpdate( ULONG ulClient )
 	if (( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSONTEAMS ) && players[ulClient].bOnTeam )
 		SERVERCOMMANDS_SetPlayerTeam( ulClient, ulClient, SVCF_ONLYTHISCLIENT );
 
+	// [AK] In case this player's already dead, let them know how much time they
+	// have left until they can respawn again.
+	if ( players[ulClient].playerstate == PST_DEAD )
+		SERVERCOMMANDS_SetLocalPlayerRespawnDelayTime( ulClient );
+
 	// [BB] This game mode uses teams, so inform the incoming player about the scores/wins/frags of the teams.
 	if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSONTEAMS )
 	{
