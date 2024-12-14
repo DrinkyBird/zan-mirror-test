@@ -113,7 +113,7 @@ enum
 };
 
 // [AK] Determines which mode to use while spectating.
-CUSTOM_CVAR (Int, cl_spectatormode, SPECMODE_WITH_RESTRICTIONS, CVAR_ARCHIVE|CVAR_GLOBALCONFIG)
+CUSTOM_CVAR (Int, cl_spectatormode, SPECMODE_NO_RESTRICTIONS, CVAR_ARCHIVE|CVAR_GLOBALCONFIG)
 {
 	const int clampedValue = clamp<int>(self, SPECMODE_WITH_RESTRICTIONS, SPECMODE_NO_RESTRICTIONS);
 
