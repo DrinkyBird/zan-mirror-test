@@ -921,7 +921,7 @@ inline bool AActor::IsNoClip2() const
 #define CROUCHSPEED (FRACUNIT/12)
 
 bool P_IsPlayerTotallyFrozen(const player_t *player);
-bool P_IsUsingSourceEngineNoClip(const AActor *viewActor); // [AK]
+bool P_IsSpectatorUnrestricted(const AActor *viewActor); // [AK]
 void P_ResetPlayerPitchLimits(void); // [AK]
 
 #endif // __D_PLAYER_H__

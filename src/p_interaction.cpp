@@ -2661,8 +2661,8 @@ void PLAYER_SetDefaultSpectatorValues( player_t *pPlayer )
 	// [RK] Clear the frozen flags so the spectator can move.
 	pPlayer->cheats &= ~(CF_FROZEN | CF_TOTALLYFROZEN);
 
-	// [AK] Enable the NOINTERACTION flag if using source-engine noclipping.
-	if ( P_IsUsingSourceEngineNoClip( pPlayer->mo ))
+	// [AK] Enable the NOINTERACTION flag if there should be no physical restrictions.
+	if ( P_IsSpectatorUnrestricted( pPlayer->mo ))
 		pPlayer->mo->flags5 |= MF5_NOINTERACTION;
 
 	// [BB] Speed and viewheight of spectators should be independent of the player class.

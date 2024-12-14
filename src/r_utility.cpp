@@ -869,8 +869,8 @@ void R_SetupFrame (AActor *actor)
 	interpolator.DoInterpolations (r_TicFrac);
 
 	// Keep the view within the sector's floor and ceiling
-	// [AK] Allow spectators using source-engine noclipping to pass through floors/ceilings.
-	if (P_IsUsingSourceEngineNoClip(actor) == false)
+	// [AK] Allow spectators without physical restrictions to pass through floors/ceilings.
+	if (P_IsSpectatorUnrestricted(actor) == false)
 	{
 		fixed_t theZ = viewsector->ceilingplane.ZatPoint (viewx, viewy) - 4*FRACUNIT;
 		if (viewz > theZ)

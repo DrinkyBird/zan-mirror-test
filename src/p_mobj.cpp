@@ -4008,8 +4008,8 @@ void AActor::Tick ()
 					special2++;
 				}
 
-				// [AK] Don't freeze spectators using source-engine noclipping.
-				if (P_IsUsingSourceEngineNoClip(this) == false)
+				// [AK] Don't freeze spectators who have no physical restrictions.
+				if (P_IsSpectatorUnrestricted(this) == false)
 					return;
 			}
 		}
@@ -4017,8 +4017,8 @@ void AActor::Tick ()
 		UnlinkFromWorld ();
 		flags |= MF_NOBLOCKMAP;
 
-		// [AK] Spectators using source-engine noclipping still need a way to slow down.
-		if (P_IsUsingSourceEngineNoClip(this))
+		// [AK] Spectators without physical restrictions still need a way to slow down.
+		if (P_IsSpectatorUnrestricted(this))
 		{
 			fixed_t *const velocity[3] = {&velx, &vely, &velz};
 

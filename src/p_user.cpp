@@ -103,12 +103,29 @@ CUSTOM_CVAR (Float, cl_spectatormove, 1.0, CVAR_ARCHIVE|CVAR_GLOBALCONFIG) {
 		self = -100.0;
 }
 
-// [AK] Enables source-engine like noclipping, allowing spectators to pass through floors and ceilings.
-CUSTOM_CVAR (Bool, cl_spectatorsource, false, CVAR_ARCHIVE|CVAR_GLOBALCONFIG)
+// [AK] Enums for the different options used by cl_spectatormode.
+enum
 {
+	// With physical restrictions (can't pass through walls, floors, or ceilings).
+	SPECMODE_WITH_RESTRICTIONS,
+	// No physical restrictions (can pass through everything freely).
+	SPECMODE_NO_RESTRICTIONS
+};
+
+// [AK] Determines which mode to use while spectating.
+CUSTOM_CVAR (Int, cl_spectatormode, SPECMODE_WITH_RESTRICTIONS, CVAR_ARCHIVE|CVAR_GLOBALCONFIG)
+{
+	const int clampedValue = clamp<int>(self, SPECMODE_WITH_RESTRICTIONS, SPECMODE_NO_RESTRICTIONS);
+
+	if (self != clampedValue)
+	{
+		self = clampedValue;
+		return;
+	}
+
 	if (players[consoleplayer].bSpectating)
 	{
-		if (self)
+		if (self == SPECMODE_NO_RESTRICTIONS)
 			players[consoleplayer].mo->flags5 |= MF5_NOINTERACTION;
 		else
 			players[consoleplayer].mo->flags5 &= ~MF5_NOINTERACTION;
@@ -2731,8 +2748,8 @@ void P_CalcHeight (player_t *player)
 	if ( CLIENT_PREDICT_IsPredicting( ))
 		return;
 
-	// [AK] Check if source-engine noclipping is being used by the spectator.
-	const bool usingSourceEngineNoClip = P_IsUsingSourceEngineNoClip(player->mo);
+	// [AK] Check if the spectator has no physical restrictions.
+	const bool noPhysicalRestrictions = P_IsSpectatorUnrestricted(player->mo);
 
 	// Regular movement bobbing
 	// (needs to be calculated for gun swing even if not on ground)
@@ -2743,8 +2760,8 @@ void P_CalcHeight (player_t *player)
 	// it causes bobbing jerkiness when the player moves from ice to non-ice,
 	// and vice-versa.
 
-	// [AK] Don't calculate bobbing while using source-engine noclipping.
-	if ((player->cheats & CF_NOCLIP2) || (usingSourceEngineNoClip))
+	// [AK] Don't calculate bobbing without physical restrictions.
+	if ((player->cheats & CF_NOCLIP2) || (noPhysicalRestrictions))
 	{
 		player->bob = 0;
 	}
@@ -2842,8 +2859,8 @@ void P_CalcHeight (player_t *player)
 	// [AK] Don't bob the screen if cl_viewbob is disabled.
 	player->viewz = player->mo->z + player->viewheight + (cl_viewbob ? bob : 0);
 
-	// [AK] Don't clip the view to the floor/ceiling while using source-engine noclipping.
-	if (usingSourceEngineNoClip)
+	// [AK] Don't clip the view to the floor/ceiling without physical restrictions.
+	if (noPhysicalRestrictions)
 		return;
 
 	if (player->mo->floorclip && player->playerstate != PST_DEAD
@@ -4579,10 +4596,10 @@ bool P_IsPlayerTotallyFrozen(const player_t *player)
 		((level.flags2 & LEVEL2_FROZEN) && player->timefreezer == 0 && (player->bSpectating == false));
 }
 
-// [AK] Checks if source-engine noclipping is being used by the local player.
-bool P_IsUsingSourceEngineNoClip(const AActor *viewActor)
+// [AK] Checks if the local player is physically unrestricted while spectating.
+bool P_IsSpectatorUnrestricted(const AActor *viewActor)
 {
-	if ((cl_spectatorsource == false) || (viewActor == nullptr))
+	if ((cl_spectatormode != SPECMODE_NO_RESTRICTIONS) || (viewActor == nullptr))
 		return false;
 
 	return ((players[consoleplayer].bSpectating) && (viewActor == players[consoleplayer].mo));

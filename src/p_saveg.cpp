@@ -129,10 +129,10 @@ void P_SerializePlayers (FArchive &arc, bool skipload)
 				PLAYER_SetSpectator( &players[consoleplayer], false, false );
 
 			// [AK] Set the NOINTERACTION flag depending on whether or not
-			// they're using source-engine noclipping.
+			// there should be no physical restrictions.
 			if ( players[consoleplayer].mo != nullptr )
 			{
-				if ( P_IsUsingSourceEngineNoClip( players[consoleplayer].mo ))
+				if ( P_IsSpectatorUnrestricted( players[consoleplayer].mo ))
 					players[consoleplayer].mo->flags5 |= MF5_NOINTERACTION;
 				else
 					players[consoleplayer].mo->flags5 &= ~MF5_NOINTERACTION;

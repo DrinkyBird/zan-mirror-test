@@ -140,8 +140,8 @@ void FGLRenderer::SetViewArea()
 	viewsector = R_PointInSubsector(viewx, viewy)->render_sector;
 
 	// keep the view within the render sector's floor and ceiling
-	// [AK] Allow spectators using source-engine noclipping to pass through floors/ceilings.
-	if (P_IsUsingSourceEngineNoClip(mViewActor) == false)
+	// [AK] Allow spectators without physical restrictions to pass through floors/ceilings.
+	if (P_IsSpectatorUnrestricted(mViewActor) == false)
 	{
 		fixed_t theZ = viewsector->ceilingplane.ZatPoint (viewx, viewy) - 4*FRACUNIT;
 		if (viewz > theZ)
