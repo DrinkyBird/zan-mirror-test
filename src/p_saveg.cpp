@@ -122,17 +122,17 @@ void P_SerializePlayers (FArchive &arc, bool skipload)
 		players[consoleplayer].SendPitchLimits();
 
 		// [AK] Stuff to do if the local player was spectating.
-		if ( players[consoleplayer].bSpectating )
+		if (players[consoleplayer].bSpectating)
 		{
 			// [AK] If they're a dead spectator, make them a true spectator.
-			if ( players[consoleplayer].bDeadSpectator )
-				PLAYER_SetSpectator( &players[consoleplayer], false, false );
+			if (players[consoleplayer].bDeadSpectator)
+				PLAYER_SetSpectator (&players[consoleplayer], false, false);
 
 			// [AK] Set the NOINTERACTION flag depending on whether or not
 			// there should be no physical restrictions.
-			if ( players[consoleplayer].mo != nullptr )
+			if (players[consoleplayer].mo != nullptr)
 			{
-				if ( P_IsSpectatorUnrestricted( players[consoleplayer].mo ))
+				if (P_IsSpectatorUnrestricted (players[consoleplayer].mo))
 					players[consoleplayer].mo->flags5 |= MF5_NOINTERACTION;
 				else
 					players[consoleplayer].mo->flags5 &= ~MF5_NOINTERACTION;
