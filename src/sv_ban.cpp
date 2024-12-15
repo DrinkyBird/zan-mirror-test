@@ -398,13 +398,6 @@ IPList *SERVERBAN_GetBanList( void )
 
 //*****************************************************************************
 //
-IPList *SERVERBAN_GetBanExemptionList( void )
-{
-	return &g_ServerBanExemptions;
-}
-
-//*****************************************************************************
-//
 void SERVERBAN_BanPlayer( ULONG ulPlayer, const char *pszBanLength, const char *pszBanReason )
 {
 	// Make sure the target is valid and applicable.
