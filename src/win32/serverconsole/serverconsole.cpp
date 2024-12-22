@@ -1419,100 +1419,85 @@ BOOL CALLBACK SERVERCONSOLE_BanListCallback( HWND hDlg, UINT Message, WPARAM wPa
 					// Clear out the ban list, and then add all the bans in the ban list.
 					SERVERBAN_ClearBans( );
 
-					// Now, add the maps in the listbox to the map rotation list.
+					// Now, add the bans in the listbox to the ban list.
 					lCount = SendDlgItemMessage( hDlg, IDC_BANLIST, LB_GETCOUNT, 0, 0 );
 					if ( lCount != LB_ERR )
 					{
-						char	*pszIP;
-						char	szIP[32];
-						char	*pszComment;
-						char	szComment[224];
-						char	szDate[128];
-						char	*pszBuffer;
-
 						for ( lIdx = 0; lIdx < lCount; lIdx++ )
 						{
-							SendDlgItemMessage( hDlg, IDC_BANLIST, LB_GETTEXT, lIdx, (LPARAM) (LPCTSTR)szBuffer );
+							char banString[256];
+							SendDlgItemMessage( hDlg, IDC_BANLIST, LB_GETTEXT, lIdx, (LPARAM) (LPCTSTR)banString );
 
-							pszIP = szIP;
-							*pszIP = 0;
-							szDate[0] = 0;
-							pszComment = szComment;
-							*pszComment = 0;
-							pszBuffer = szBuffer;
-							while ( *pszBuffer != 0 && *pszBuffer != ':' && *pszBuffer != '/' && *pszBuffer != '<' )
-							{
-								*pszIP = *pszBuffer;
-								pszBuffer++;
-								pszIP++;
-								*pszIP = 0;
-							}
+							unsigned int index = 0;
+							time_t expiration = 0;
+							FString ipAddress;
+							FString comment;
 
-							//======================================================================================================
+							// [AK] Read the IP address first.
+							while (( banString[index] != 0 ) && ( banString[index] != ':' ) && ( banString[index] != '/' ) && ( banString[index] != '<' ))
+								ipAddress += banString[index++];
+
 							// [RC] Read the expiration date.
 							// This is a very klunky temporary solution that I've already fixed it in my redo of the server dialogs.
-							//======================================================================================================
+							if ( banString[index] == '<' )
+							{
+								index++;
 
-							time_t tExpiration = NULL;
-							if ( *pszBuffer == '<' )
-							{							
-								int	iMonth = 0, iDay = 0, iYear = 0, iHour = 0, iMinute = 0;
+								const long month = strtol( banString + index, nullptr, 10 );
+								index += 3;
 
-								pszBuffer++;
-								iMonth = strtol( pszBuffer, NULL, 10 );
-								pszBuffer += 3;
-								iDay = strtol( pszBuffer, NULL, 10 );
-								pszBuffer += 3;
-								iYear = strtol( pszBuffer, NULL, 10 );
-								pszBuffer += 5;
-								iHour = strtol( pszBuffer, NULL, 10 );
-								pszBuffer += 3;
-								iMinute = strtol( pszBuffer, NULL, 10 );
-								pszBuffer += 2;
-																
+								const long day = strtol( banString + index, nullptr, 10 );
+								index += 3;
+
+								const long year = strtol( banString + index, nullptr, 10 );
+								index += 5;
+
+								const long hour = strtol( banString + index, nullptr, 10 );
+								index += 3;
+
+								const long minute = strtol( banString + index, nullptr, 10 );
+								index += 2;
+
 								// If fewer than 5 elements (the %ds) were read, the user probably edited the file incorrectly.
-								if ( *pszBuffer != '>' )
+								if ( banString[index] != '>' )
 								{
-									Printf("parseNextLine: WARNING! Failure to read the ban expiration date!" );
-									return NULL;
+									Printf( "WARNING: failure to read the ban expiration date for entry \"%s\"!\n", banString );
+									continue;
 								}
-								pszBuffer++;
-								
+
+								index++;
+
 								// Create the time structure, based on the current time.
-								time_t		tNow;
-								time( &tNow );
-								struct tm	*pTimeInfo = localtime( &tNow );
+								time_t now;
+								time( &now );
+
+								struct tm *timeInfo = localtime( &now );
 
 								// Edit the values, and stitch them into a new time.
-								pTimeInfo->tm_mon = iMonth - 1;
-								pTimeInfo->tm_mday = iDay;
+								timeInfo->tm_mon = month - 1;
+								timeInfo->tm_mday = day;
 
-								if ( iYear < 100 )
-									pTimeInfo->tm_year = iYear + 2000;
+								if ( year < 100 )
+									timeInfo->tm_year = year + 2000;
 								else
-									pTimeInfo->tm_year = iYear - 1900;
+									timeInfo->tm_year = year - 1900;
 
-								pTimeInfo->tm_hour = iHour;
-								pTimeInfo->tm_min = iMinute;
-								pTimeInfo->tm_sec = 0;
-								
-								tExpiration = mktime( pTimeInfo );							
+								timeInfo->tm_hour = hour;
+								timeInfo->tm_min = minute;
+								timeInfo->tm_sec = 0;
+
+								expiration = mktime( timeInfo );
 							}
 
 							// Don't include the comment denotion character in the comment string.
-							while ( *pszBuffer == ':' || *pszBuffer == '/' )
-								pszBuffer++;
+							while (( banString[index] == ':' ) || ( banString[index] == '/' ))
+								index++;
 
-							while ( *pszBuffer != 0 )
-							{
-								*pszComment = *pszBuffer;
-								pszBuffer++;
-								pszComment++;
-								*pszComment = 0;
-							}
+							while ( banString[index] != 0 )
+								comment += banString[index++];
 
-							std::string Message;
-							SERVERBAN_GetBanList( )->addEntry( szIP, "", szComment, Message, tExpiration );
+							std::string message;
+							SERVERBAN_GetBanList( )->addEntry( ipAddress.GetChars( ), "", comment.GetChars( ), message, expiration );
 						}
 					}
 				}
