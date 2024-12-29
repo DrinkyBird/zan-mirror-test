@@ -487,8 +487,9 @@ public:
 	unsigned int	size() const { return static_cast<unsigned int>( _ipVector.size( )); }
 	void			clear() { _ipVector.clear(); }
 	void			push_back ( IPADDRESSBAN_s &IP ) { _ipVector.push_back(IP); }
-	const char*		getErrorMessage() const { return _error.c_str(); }
-	
+	const char		*getErrorMessage() const { return _error.c_str(); }
+	const char		*getFilename() const { return _filename.c_str(); } // [AK]
+
 	std::vector<IPADDRESSBAN_s>&	getVector() { return _ipVector; }
 
 //*************************************************************************

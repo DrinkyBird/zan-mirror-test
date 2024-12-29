@@ -71,6 +71,18 @@ enum SERVERCONSOLE_COLUMNS
 };
 
 //*****************************************************************************
+//	STRUCTURES
+
+struct BanList
+{
+	// The name of the file associated with this list.
+	FString filename;
+
+	// The list of banned entries in this list.
+	TArray<FString> list;
+};
+
+//*****************************************************************************
 //	PROTOTYPES
 
 BOOL CALLBACK	SERVERCONSOLE_ServerDialogBoxCallback( HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam );

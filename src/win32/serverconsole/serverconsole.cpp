@@ -114,6 +114,10 @@ static	NETADDRESS_s		g_LocalAddress;
 // [RC] Commands that the server admin sent recently.
 static	std::vector<FString>	g_RecentConsoleMessages;
 
+// [AK] All ban lists being shown in the "manage bans" window.
+static	TArray<BanList>		g_BanLists;
+static	unsigned int		g_CurrentBanList;
+
 //--------------------------------------------------------------------------------------------------------------------------------------------------
 //-- GLOBAL VARIABLES ------------------------------------------------------------------------------------------------------------------------------
 //--------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1322,36 +1326,79 @@ BOOL CALLBACK SERVERCONSOLE_BanIPCallback( HWND hDlg, UINT Message, WPARAM wPara
 
 //*****************************************************************************
 //
+static void serverconsole_BanList_SaveCurrentList( HWND dlg )
+{
+	const int count = SendDlgItemMessage( dlg, IDC_BANLIST, LB_GETCOUNT, 0, 0 );
+	char buffer[256];
+
+	if ( count != LB_ERR )
+	{
+		g_BanLists[g_CurrentBanList].list.Clear( );
+
+		for ( int i = 0; i < count; i++ )
+		{
+			SendDlgItemMessage( dlg, IDC_BANLIST, LB_GETTEXT, i, (LPARAM)(LPCTSTR)buffer );
+			g_BanLists[g_CurrentBanList].list.Push( buffer );
+		}
+	}
+}
+
+//*****************************************************************************
+//
+static void serverconsole_BanList_PopulateList( HWND dlg )
+{
+	for ( unsigned int i = 0; i < g_BanLists[g_CurrentBanList].list.Size( ); i++ )
+		SendDlgItemMessage( dlg, IDC_BANLIST, LB_INSERTSTRING, -1, (LPARAM)g_BanLists[g_CurrentBanList].list[i].GetChars( ));
+}
+
+//*****************************************************************************
+//
 BOOL CALLBACK SERVERCONSOLE_BanListCallback( HWND hDlg, UINT Message, WPARAM wParam, LPARAM lParam )
 {
-	ULONG		ulIdx;
-	UCVarValue	Val;
-
-	Val = sv_banfile.GetGenericRep( CVAR_String );
-
 	switch ( Message )
 	{
 	case WM_CLOSE:
 
+		g_BanLists.Clear( );
 		EndDialog( hDlg, -1 );
 		break;
 	case WM_INITDIALOG:
 
 		{
-			// Set the text limit for the IP box.
-			SendDlgItemMessage( hDlg, IDC_BANFILE, EM_SETLIMITTEXT, 256, 0 );
-
-			// Set the text limit for the IP box.
-			SetDlgItemText( hDlg, IDC_BANFILE, Val.String );
+			const TArray<IPList> &lists = SERVERBAN_GetBanList( );
 
 			if ( sv_enforcebans )
 				SendDlgItemMessage( hDlg, IDC_ENFORCEBANS, BM_SETCHECK, BST_CHECKED, 0 );
 			else
 				SendDlgItemMessage( hDlg, IDC_ENFORCEBANS, BM_SETCHECK, BST_UNCHECKED, 0 );
 
-			// Populate the box with the current ban list.
-			for ( ulIdx = 0; ulIdx < SERVERBAN_GetBanList( )->size( ); ulIdx++ )
-				SendDlgItemMessage( hDlg, IDC_BANLIST, LB_INSERTSTRING, -1, (LPARAM)SERVERBAN_GetBanList( )->getEntryAsString( ulIdx, true, true, false ).c_str( ));
+			// [AK] Ensure there's at least one ban list exists (this should
+			// always be the case, though).
+			if ( lists.Size( ) > 0 )
+			{
+				g_BanLists.Resize( lists.Size( ));
+				g_CurrentBanList = 0;
+
+				for ( unsigned int i = 0; i < lists.Size( ); i++ )
+				{
+					g_BanLists[i].filename = lists[i].getFilename( );
+					SendDlgItemMessage( hDlg, IDC_BANFILE, CB_INSERTSTRING, -1, (WPARAM)(LPSTR)g_BanLists[i].filename.GetChars( ));
+
+					for ( unsigned int j = 0; j < lists[i].size( ); j++ )
+						g_BanLists[i].list.Push( lists[i].getEntryAsString( j, true, true, false ).c_str( ));
+				}
+
+				// [AK] Always select the primary ban list by default.
+				SendDlgItemMessage( hDlg, IDC_BANFILE, CB_SETCURSEL, 0, 0 );
+
+				// Populate the box with the current ban list.
+				serverconsole_BanList_PopulateList( hDlg );
+			}
+			else
+			{
+				MessageBox( hDlg, "There are no banlists loaded", SERVERCONSOLE_TITLESTRING, MB_OK );
+				EndDialog( hDlg, -1 );
+			}
 		}
 
 		break;
@@ -1360,6 +1407,21 @@ BOOL CALLBACK SERVERCONSOLE_BanListCallback( HWND hDlg, UINT Message, WPARAM wPa
 		{
 			switch ( LOWORD( wParam ))
 			{
+			case IDC_BANFILE:
+
+				{
+					// [AK] If the selected ban file is changed, save the old
+					// list, then repopulate the listbox with the new list.
+					if ( HIWORD( wParam ) == LBN_SELCHANGE )
+					{
+						serverconsole_BanList_SaveCurrentList( hDlg );
+						g_CurrentBanList = SendDlgItemMessage( hDlg, IDC_BANFILE, CB_GETCURSEL, 0, 0 );
+
+						SendDlgItemMessage( hDlg, IDC_BANLIST, LB_RESETCONTENT, 0, 0 );
+						serverconsole_BanList_PopulateList( hDlg );
+					}
+				}
+				break;
 			case IDC_EDIT:
 
 				{
@@ -1400,34 +1462,37 @@ BOOL CALLBACK SERVERCONSOLE_BanListCallback( HWND hDlg, UINT Message, WPARAM wPa
 			case IDOK:
 
 				{
-					LONG	lIdx;
-					LONG	lCount;
-					char	szBuffer[256];
-					char	szString[256+32];
+					FString commandString = "sv_banfile \"";
+					serverconsole_BanList_SaveCurrentList( hDlg );
 
-					// Get the text from the input box.
-					GetDlgItemText( hDlg, IDC_BANFILE, szBuffer, 256 );
+					for ( unsigned int i = 0; i < g_BanLists.Size( ); i++ )
+					{
+						if ( i > 0 )
+							commandString += ';';
 
-					sprintf( szString, "sv_banfile \"%s\"", szBuffer );
-					SERVER_AddCommand( szString );
+						commandString += g_BanLists[i].filename;
+					}
+
+					commandString += '\"';
+
+					// [AK] Update sv_banfile so that the ban files are loaded.
+					SERVER_AddCommand( commandString.GetChars( ));
 
 					if ( SendDlgItemMessage( hDlg, IDC_ENFORCEBANS, BM_GETCHECK, BST_CHECKED, 0 ))
 						sv_enforcebans = true;
 					else
 						sv_enforcebans = false;
 
-					// Clear out the ban list, and then add all the bans in the ban list.
-					SERVERBAN_ClearBans( );
-
-					// Now, add the bans in the listbox to the ban list.
-					lCount = SendDlgItemMessage( hDlg, IDC_BANLIST, LB_GETCOUNT, 0, 0 );
-					if ( lCount != LB_ERR )
+					// [AK] Refresh all of the ban lists that are loaded now.
+					for ( unsigned int i = 0; i < g_BanLists.Size( ); i++ )
 					{
-						for ( lIdx = 0; lIdx < lCount; lIdx++ )
-						{
-							char banString[256];
-							SendDlgItemMessage( hDlg, IDC_BANLIST, LB_GETTEXT, lIdx, (LPARAM) (LPCTSTR)banString );
+						// Clear out the ban list, and then add all the bans in the ban list.
+						SERVERBAN_ClearBans( i );
 
+						// Now, add the bans in the listbox to the ban list.
+						for ( unsigned int j = 0; j < g_BanLists[i].list.Size( ); j++ )
+						{
+							const char *banString = g_BanLists[i].list[j].GetChars( );
 							unsigned int index = 0;
 							time_t expiration = 0;
 							FString ipAddress;
@@ -1497,14 +1562,14 @@ BOOL CALLBACK SERVERCONSOLE_BanListCallback( HWND hDlg, UINT Message, WPARAM wPa
 								comment += banString[index++];
 
 							std::string message;
-							SERVERBAN_GetBanList( )->addEntry( ipAddress.GetChars( ), "", comment.GetChars( ), message, expiration );
+							SERVERBAN_GetBanList( )[i].addEntry( ipAddress.GetChars( ), "", comment.GetChars( ), message, expiration );
 						}
 					}
 				}
-				EndDialog( hDlg, -1 );
-				break;
+
 			case IDCANCEL:
 
+				g_BanLists.Clear( );
 				EndDialog( hDlg, -1 );
 				break;
 			}

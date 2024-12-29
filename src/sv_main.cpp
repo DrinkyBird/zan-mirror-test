@@ -2463,7 +2463,9 @@ void SERVER_ClientError( ULONG ulClient, ULONG ulErrorCode )
 		break;
 	case NETWORK_ERRORCODE_BANNED:
 		{
-			FString banReason = SERVERBAN_GetBanList( )->getEntryComment( g_aClients[ulClient].Address );
+			IPADDRESSBAN_s *entry = SERVERBAN_GetBanInformation( g_aClients[ulClient].Address );
+			FString banReason = (( entry != nullptr ) && ( strlen( entry->szComment ) > 0 )) ? entry->szComment : "";
+
 			if ( banReason.IsNotEmpty() )
 				Printf( "Client banned (reason: %s)\n", banReason.GetChars() );
 			else
@@ -2476,7 +2478,7 @@ void SERVER_ClientError( ULONG ulClient, ULONG ulErrorCode )
 			{
 				// Tell the client why he was banned, and when his ban expires.
 				g_aClients[ulClient].PacketBuffer.ByteStream.WriteString( banReason );
-				g_aClients[ulClient].PacketBuffer.ByteStream.WriteLong( (LONG) SERVERBAN_GetBanList( )->getEntryExpiration( g_aClients[ulClient].Address ));
+				g_aClients[ulClient].PacketBuffer.ByteStream.WriteLong(( entry != nullptr ) ? static_cast<int>( entry->tExpirationDate ) : 0 );
 				g_aClients[ulClient].PacketBuffer.ByteStream.WriteString( sv_hostemail );
 			}
 		}
@@ -5904,7 +5906,7 @@ static bool server_CheckForClientCommandFlood( ULONG ulClient )
 	{
 		if ( ( gametic - g_aClients[ulClient].commandInstances.getOldestEntry() ) <= floodWindowLength * TICRATE )
 		{
-			SERVERBAN_BanPlayer( ulClient, "10min", "Client command flood." );
+			SERVERBAN_BanPlayer( ulClient, "10min", "Client command flood.", 0 );
 			return ( true );
 		}
 	}
@@ -5935,7 +5937,7 @@ static bool server_CheckForClientMinorCommandFlood( ULONG ulClient )
 	{
 		if ( ( gametic - g_aClients[ulClient].minorCommandInstances.getOldestEntry() ) <= floodWindowLength * TICRATE )
 		{
-			SERVERBAN_BanPlayer( ulClient, "10min", "Client command flood." );
+			SERVERBAN_BanPlayer( ulClient, "10min", "Client command flood.", 0 );
 			return ( true );
 		}
 	}

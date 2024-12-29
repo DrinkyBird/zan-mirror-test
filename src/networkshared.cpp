@@ -1301,7 +1301,7 @@ void IPList::addEntry( const IPStringArray &szAddress, const char *pszPlayerName
 	ulIdx = doesEntryExist( szAddress );
 	if ( ulIdx != _ipVector.size() )
 	{
-		messageStream << szAddress << " already exists in list";
+		messageStream << szAddress << " already exists in \"" << _filename << "\"";
 		if ( ( getEntry ( ulIdx ).tExpirationDate != tExpiration ) || ( strnicmp ( getEntry ( ulIdx ).szComment, PlayerNameAndComment.c_str(), 127 ) ) )
 		{
 			messageStream << ". Just updating the expiration date and reason.\n";
@@ -1348,7 +1348,7 @@ void IPList::addEntry( const IPStringArray &szAddress, const char *pszPlayerName
 		fputs( OutString.c_str(), pFile );
 		fclose( pFile );
 
-		messageStream << szAddress << " added to list.";
+		messageStream << szAddress << " added to \"" << _filename << "\".";
 		if ( tExpiration )
 			messageStream << " It expires on " << szDate << ".";
 		
@@ -1410,12 +1410,12 @@ void IPList::removeEntry( const IPStringArray &szAddress, std::string &Message )
 	{
 		removeEntry( entryIdx );
 
-		messageStream << " removed from list.\n";
+		messageStream << " removed from \"" << _filename << "\".\n";
 		Message = messageStream.str();
 	}
 	else
 	{
-		messageStream << " not found in list.\n";
+		messageStream << " not found in \"" << _filename << "\".\n";
 		Message = messageStream.str();
 	}
 }

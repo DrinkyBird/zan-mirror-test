@@ -8508,7 +8508,7 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 					int duration = clamp<int>( args[1], 1, sv_maxacsbanduration );
 					FString Output;
 					Output.Format("%dmin", duration);
-					SERVERBAN_BanPlayer( playerIndex, Output.GetChars( ), (argCount >= 3) ? FBehavior::StaticLookupString( args[2] ) : NULL);
+					SERVERBAN_BanPlayer( playerIndex, Output.GetChars( ), (argCount >= 3) ? FBehavior::StaticLookupString( args[2] ) : NULL, 0 );
 					return 1;
 				}
 			}

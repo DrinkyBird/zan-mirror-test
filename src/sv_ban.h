@@ -62,13 +62,15 @@ bool			SERVERBAN_IsIPBanned( const IPStringArray &Address );
 bool			SERVERBAN_IsIPBanned( const NETADDRESS_s &Address );
 bool			SERVERBAN_IsIPMasterBanned( const IPStringArray &Address );
 bool			SERVERBAN_IsIPMasterBanned( const NETADDRESS_s &Address );
-void			SERVERBAN_ClearBans( void );
+IPADDRESSBAN_s	*SERVERBAN_GetBanInformation( const IPStringArray &Address );
+IPADDRESSBAN_s	*SERVERBAN_GetBanInformation( const NETADDRESS_s &Address );
+void			SERVERBAN_ClearBans( unsigned int fileIndex );
 void			SERVERBAN_ReadMasterServerBans( BYTESTREAM_s *pByteStream );
 void			SERVERBAN_ReadMasterServerBanlistPart( BYTESTREAM_s *pByteStream );
 time_t			SERVERBAN_ParseBanLength( const char *szLengthString );
-IPList			*SERVERBAN_GetBanList( void );
-void			SERVERBAN_BanPlayer( ULONG ulPlayer, const char *pszBanLength, const char *pszBanReason );
-void			SERVERBAN_BanAddress( const char *address, const char *length, const char *reason );
+TArray<IPList>	&SERVERBAN_GetBanList( void );
+void			SERVERBAN_BanPlayer( unsigned int player, const char *length, const char *reason, unsigned int fileIndex );
+void			SERVERBAN_BanAddress( const char *address, const char *length, const char *reason, unsigned int fileIndex );
 
 //--------------------------------------------------------------------------------------------------------------------------------------------------
 //-- EXTERNAL CONSOLE VARIABLES --------------------------------------------------------------------------------------------------------------------
