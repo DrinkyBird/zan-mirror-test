@@ -474,15 +474,9 @@ void SERVERBAN_BanAddress( const char *address, const char *length, const char *
 
 	// [RC] Read the ban length.
 	const time_t expiration = SERVERBAN_ParseBanLength( length );
-	NETADDRESS_s convertedAddress;
 	std::string message;
 
-	if ( convertedAddress.LoadFromString( address ) == false )
-	{
-		Printf( "Error: couldn't read that address. Make sure it's formatted correctly.\n" );
-		return;
-	}
-	else if ( expiration == -1 )
+	if ( expiration == -1 )
 	{
 		Printf( "Error: couldn't read that length. Try something like " TEXTCOLOR_RED "6day" TEXTCOLOR_NORMAL " or " TEXTCOLOR_RED "\"5 hours\"" TEXTCOLOR_NORMAL ".\n" );
 		return;
@@ -494,7 +488,8 @@ void SERVERBAN_BanAddress( const char *address, const char *length, const char *
 	}
 
 	// [AK] Get the index of the player who has this address.
-	const int player = SERVER_FindClientByAddress( convertedAddress );
+	NETADDRESS_s convertedAddress;
+	const int player = convertedAddress.LoadFromString( address ) ? SERVER_FindClientByAddress( convertedAddress ) : -1;
 
 	// Add the ban.
 	if ( player != -1 )
