@@ -688,12 +688,12 @@ OptionMenu ZA_LoginMenu
 	Title "LOG IN"
 	Indent 150
 
-	StaticText	"If you need to create an account, visit:", 1
+	StaticText	"To create an account, visit:", 1
 	StaticText	"https://auth.zandronum.com/register"
 	StaticText	" "
 	StaticText	"--- NOTICE ---"
-	StaticText	"If a server uses their own authentication", 1
-	StaticText	"host, you must register there instead.", 1
+	StaticText	"If the server is using their own auth host,", 1
+	StaticText	"you must register there instead.", 1
 	StaticText	" "
 	StaticText	"Contact the server host for more info.", 1
 	StaticText	" "
