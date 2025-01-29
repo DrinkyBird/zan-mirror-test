@@ -339,9 +339,9 @@ void P_Ticker (void)
 				{
 					unsigned int numMoveCmds = 0;
 
-					for ( unsigned int k = 0; k < client->MoveCMDs.Size( ); k++ )
+					for ( unsigned int k = 0; k < client->cmdBuffer.Size( ); k++ )
 					{
-						if ( client->MoveCMDs[k]->isMoveCmd( ))
+						if ( client->cmdBuffer[k]->isMoveCmd( ))
 							numMoveCmds++;
 					}
 
@@ -349,14 +349,12 @@ void P_Ticker (void)
 						continue;
 				}
 
-				while ( client->MoveCMDs.Size( ) != 0 )
+				while ( client->cmdBuffer.Size( ) != 0 )
 				{
 					// Process only one movement command.
-					const bool isMoveCmd = client->MoveCMDs[0]->isMoveCmd( );
-					client->MoveCMDs[0]->process( j );
-
-					delete client->MoveCMDs[0];
-					client->MoveCMDs.Delete( 0 );
+					const bool isMoveCmd = client->cmdBuffer[0]->isMoveCmd( );
+					client->cmdBuffer[0]->process( j );
+					client->cmdBuffer.Delete( 0 );
 
 					if ( isMoveCmd )
 					{
