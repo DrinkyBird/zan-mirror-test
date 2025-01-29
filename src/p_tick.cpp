@@ -331,9 +331,6 @@ void P_Ticker (void)
 
 				CLIENT_s *client = SERVER_GetClient( j );
 
-				// [AK] Handle the skip correction.
-				SERVER_HandleSkipCorrection( j );
-
 				// [AK] If one movement command has been executed for this player, then only
 				// execute a second command if there's still more than one command left, or
 				// if the server has received their commands consistently enough that it's
@@ -357,15 +354,6 @@ void P_Ticker (void)
 					// Process only one movement command.
 					const bool isMoveCmd = client->MoveCMDs[0]->isMoveCmd( );
 					client->MoveCMDs[0]->process( j );
-
-					if ( isMoveCmd )
-					{
-						if ( client->LastMoveCMD != nullptr )
-							delete client->LastMoveCMD;
-
-						// [AK] This becomes the last movement command we received from the client.
-						client->LastMoveCMD = new ClientMoveCommand( *static_cast<ClientMoveCommand *>( client->MoveCMDs[0] ));
-					}
 
 					delete client->MoveCMDs[0];
 					client->MoveCMDs.Delete( 0 );
