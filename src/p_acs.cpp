@@ -3352,7 +3352,9 @@ void FBehavior::StartTypedScripts (WORD type, AActor *activator, bool always, in
 			if (( NETWORK_GetState( ) == NETSTATE_SERVER ) &&
 				ACS_IsScriptClientSide( ptr ))
 			{
-				SERVERCOMMANDS_ACSScriptExecute( ptr->Number, activator, 0, 0, 0, arg, 3, always );
+				// [RK] If it's an unloading script, don't waste traffic since the clients will run it on their own in G_ChangeLevel
+				if( ptr->Type != SCRIPT_Unloading )
+					SERVERCOMMANDS_ACSScriptExecute( ptr->Number, activator, 0, 0, 0, arg, 3, always );
 				continue;
 			}
 			DLevelScript *runningScript = P_GetScriptGoing (activator, NULL, ptr->Number,
@@ -12632,11 +12634,7 @@ static DLevelScript *P_GetScriptGoing (AActor *who, line_t *where, int num, cons
 			(*running)->SetState(DLevelScript::SCRIPT_Running);
 			return *running;
 		}
-		// [RK] Clientside unloading scripts can't return null here or it'll crash.
-		if ( code->Type == SCRIPT_Unloading )
-			return *running;
-		else
-			return NULL;
+		return NULL;
 	}
 
 	return new DLevelScript (who, where, num, code, module, args, argcount, flags);

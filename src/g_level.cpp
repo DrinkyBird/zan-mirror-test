@@ -707,7 +707,12 @@ void G_ChangeLevel(const char *levelname, int position, int flags, int nextSkill
 
 	// [RH] Give scripts a chance to do something
 	unloading = true;
-	FBehavior::StaticStartTypedScripts (SCRIPT_Unloading, NULL, false, 0, true);
+
+	// [RK] The clients will only run client side Unloading scripts.
+	if( NETWORK_InClientMode() == false )
+		FBehavior::StaticStartTypedScripts (SCRIPT_Unloading, NULL, false, 0, true);
+	else
+		FBehavior::StaticStartTypedScripts( SCRIPT_Unloading, NULL, false, 0, true, true);
 	unloading = false;
 
 	// [BC] If we're the server, tell clients that the map has finished.
