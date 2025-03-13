@@ -1513,10 +1513,12 @@ int copy_zip_file(FILE *zip, file_entry_t *file, FILE *ozip, CentralDirectoryEnt
 		return 0;
 	}
 	// Check to make sure the local header matches the central directory.
+	// [SB] And that the datetime in the local file header uses the fixed values.
 	if (lfh.Flags != ent->Flags || lfh.Method != ent->Method ||
 		lfh.CRC32 != ent->CRC32 || lfh.CompressedSize != ent->CompressedSize ||
 		lfh.UncompressedSize != ent->UncompressedSize ||
-		lfh.NameLength != ent->NameLength || lfh.ExtraLength != ent->ExtraLength)
+		lfh.NameLength != ent->NameLength || lfh.ExtraLength != ent->ExtraLength ||
+		lfh.ModDate != FIXED_DATE_VALUE || lfh.ModTime != FIXED_TIME_VALUE)
 	{
 		return 0;
 	}
