@@ -4532,8 +4532,7 @@ void P_SetupLevel (char *lumpname, int position)
 		if ( playeringame[i] == false )
 			continue;
 
-		if (( NETWORK_GetState( ) != NETSTATE_SINGLE ) ||
-			( deathmatch ) ||
+		if (( deathmatch ) ||
 			( teamgame ))
 		{
 			players[i].mo = NULL;
