@@ -5413,9 +5413,13 @@ APlayerPawn *P_SpawnPlayer (FPlayerStart *mthing, int playernum, int flags)
 	// [BC]
 	LONG		lSkin;
 
+	bool isDummyPlayer = playernum == COOP_GetVoodooDollDummyPlayer() - players;
+
 	// not playing?
-	if ((unsigned)playernum >= (unsigned)MAXPLAYERS || !playeringame[playernum])
-		return NULL;
+	// [SB] Allow spawning a player pawn belonging to the coop dummy player.
+	if ( !isDummyPlayer )
+		if ((unsigned)playernum >= (unsigned)MAXPLAYERS || !playeringame[playernum])
+			return NULL;
 
 	p = &players[playernum];
 
@@ -5785,7 +5789,8 @@ APlayerPawn *P_SpawnPlayer (FPlayerStart *mthing, int playernum, int flags)
 		SERVER_AdjustPlayersReactiontime (playernum);
 
 	// [BC] Do script stuff
-	if (!(flags & SPF_TEMPPLAYER))
+	// [SB] Except for the dummy player.
+	if (!(flags & SPF_TEMPPLAYER) && !isDummyPlayer)
 	{
 		if (state == PST_ENTER || state == PST_ENTERNOINVENTORY || (state == PST_LIVE && !savegamerestore))
 		{

@@ -187,7 +187,8 @@ void COOP_SpawnVoodooDollsForPlayerIfNecessary ( const ULONG ulPlayer, const boo
 	// [BB] Every start except for the last, has to spawn a voodoo doll.
 	for ( ULONG ulIdx = 0; ulIdx < AllStartsOfPlayer[ulPlayer].Size() - 1; ulIdx++ )
 	{
-		APlayerPawn *pDoll = P_SpawnPlayer ( &(AllStartsOfPlayer[ulPlayer][ulIdx]), ulPlayer );
+		ULONG playernum = sv_coopunassignedvoodoodolls ? dummyplayer : ulPlayer;
+		APlayerPawn *pDoll = P_SpawnPlayer ( &(AllStartsOfPlayer[ulPlayer][ulIdx]), static_cast<int>(playernum) );
 		// [BB] Mark the voodoo doll as spawned by the map.
 		// P_SpawnPlayer won't spawn anything for a player not in game, therefore we need to check if pDoll is NULL.
 		if ( pDoll )
@@ -198,15 +199,12 @@ void COOP_SpawnVoodooDollsForPlayerIfNecessary ( const ULONG ulPlayer, const boo
 			pDoll->NetworkFlags |= NETFL_SERVERSIDEONLY;
 			g_ActorNetIDList.freeID ( pDoll->NetID );
 			pDoll->NetID = 0;
-
-			// [BB] If we would just set the player pointer to NULL, a lot of things wouldn't work
-			// at all for the voodoo dolls (e.g. floor scrollers), so we set it do a pointer to a
-			// dummy player to get past all the ( player != NULL ) checks. This will require special
-			// handling wherever the code assumes that non-NULL player pointers have a valid mo.
-			if ( sv_coopunassignedvoodoodolls )
-				pDoll->player = &players[dummyplayer];
 		}
 	}
+
+	// [SB] Set the mobj of the dummy player to null, allowing us to skip some cases
+	// where the dummy player is expected to have an associated client.
+	players[dummyplayer].mo = nullptr;
 
 	// [BB] Now that the spawning is done, we have to restore the proper playeringame value.
 	playeringame[ulPlayer] = bPlayerInGame;
