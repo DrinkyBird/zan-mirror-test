@@ -5731,14 +5731,20 @@ APlayerPawn *P_SpawnPlayer (FPlayerStart *mthing, int playernum, int flags)
 	// [BC] Handle temporary invulnerability when respawned
 	// [BB] Added PST_REBORNNOINVENTORY, PST_ENTERNOINVENTORY.
 	// [AK] multiplayer -> deathmatch || teamgame, and added NETWORK_InClientMode and spectator checks.
-	if ((state == PST_REBORN || state == PST_ENTER || state == PST_REBORNNOINVENTORY || state == PST_ENTERNOINVENTORY) &&
+	// [SB] Also allow giving respawn invul when we're inheriting from a voodoo doll.
+	if ((state == PST_REBORN || state == PST_ENTER || state == PST_REBORNNOINVENTORY || state == PST_ENTERNOINVENTORY || oldactor) &&
 		((dmflags2 & DF2_NO_RESPAWN_INVUL) == false) &&
 		(deathmatch || teamgame || alwaysapplydmflags) &&
 		(NETWORK_InClientMode() == false) &&
 		(p->bSpectating == false))
 	{
 		// [AK] Use APowerRespawnInvulnerable instead.
-		APowerup *invul = static_cast<APowerup*>(p->mo->GiveInventoryType (RUNTIME_CLASS(APowerRespawnInvulnerable)));
+		// [SB] But remove it if they have it already, which happens if the player has voodoo dolls.
+		APowerup *invul = static_cast<APowerup*>(p->mo->FindInventory(RUNTIME_CLASS(APowerRespawnInvulnerable)));
+		if (invul != nullptr)
+			p->mo->RemoveInventory(invul);
+
+		invul = static_cast<APowerup*>(p->mo->GiveInventoryType (RUNTIME_CLASS(APowerRespawnInvulnerable)));
 		/* [AK] Zandronum handles this in APowerRespawnInvulnerable::InitEffect.
 		invul->EffectTics = 3*TICRATE;
 		invul->BlendColor = 0;			// don't mess with the view
