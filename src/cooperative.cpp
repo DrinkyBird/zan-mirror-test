@@ -184,6 +184,9 @@ void COOP_SpawnVoodooDollsForPlayerIfNecessary ( const ULONG ulPlayer, const boo
 	if ( bSpawnEvenIfPlayerIsNotIngame )
 		playeringame[ulPlayer] = true;
 
+	// [SB] Set the dummy player's state to PST_ENTER so unassigned voodoo dolls are given an inventory.
+	players[dummyplayer].playerstate = PST_ENTER;
+
 	// [BB] Every start except for the last, has to spawn a voodoo doll.
 	for ( ULONG ulIdx = 0; ulIdx < AllStartsOfPlayer[ulPlayer].Size() - 1; ulIdx++ )
 	{
