@@ -5817,8 +5817,7 @@ APlayerPawn *P_SpawnPlayer (FPlayerStart *mthing, int playernum, int flags)
 
 				// [BB] If there is any stored inventory picked up by unassigned voodoo dolls
 				// give it to the entering player.
-				if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-					COOP_GiveStoredUVDPickupsToPlayer ( static_cast<ULONG> ( p - players ) );
+				COOP_GiveStoredUVDPickupsToPlayer ( static_cast<ULONG> ( p - players ) );
 			}
 		}
 		// [BC] Added PST_REBORNNOINVENTORY.
