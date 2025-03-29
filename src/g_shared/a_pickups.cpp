@@ -1105,7 +1105,7 @@ void AInventory::Touch (AActor *toucher)
 	}
 
 	// [BB] When an unassigned voodoo doll touches something, pretend all players are touching it.
-	if ( ( NETWORK_GetState( ) == NETSTATE_SERVER ) && ( toucher->player == COOP_GetVoodooDollDummyPlayer() ) )
+	if ( toucher->player == COOP_GetVoodooDollDummyPlayer() )
 	{
 		bool bPlayerTouchedItem = false;
 		for ( ULONG ulIdx = 0; ulIdx < MAXPLAYERS; ulIdx++ )
