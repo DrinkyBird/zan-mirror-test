@@ -1117,7 +1117,7 @@ void AInventory::Touch (AActor *toucher)
 				// "alwaysapplydmflags 1" and "sv_weaponstay 0".
 				const bool bSuccess = DoGiveInv ( players[ulIdx].mo, this->GetClass(), Amount );
 				// [BB] Since we don't call Touch, we have to initiate the pickup message manually.
-				if ( bSuccess && !(ItemFlags & IF_QUIET) && ( this->GetClass( )->IsDescendantOf( PClass::FindClass( "DehackedPickup" )) == false ) )
+				if ( bSuccess && ( NETWORK_GetState() == NETSTATE_SERVER ) && !(ItemFlags & IF_QUIET) && ( this->GetClass( )->IsDescendantOf( PClass::FindClass( "DehackedPickup" )) == false ) )
 					SERVERCOMMANDS_DoInventoryPickup( ulIdx, this->GetClass( )->TypeName.GetChars( ), this->PickupMessage( ));
 
 				bPlayerTouchedItem = true;
@@ -1132,7 +1132,8 @@ void AInventory::Touch (AActor *toucher)
 			COOP_PotentiallyStoreUVDPickup ( this->GetClass() );
 
 			// [BB] Notify the clients that the item is gone.
-			SERVERCOMMANDS_DestroyThing( this );
+			if ( NETWORK_GetState() == NETSTATE_SERVER )
+				SERVERCOMMANDS_DestroyThing( this );
 
 			HideOrDestroyIfSafe();
 		}

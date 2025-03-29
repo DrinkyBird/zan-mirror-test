@@ -1716,7 +1716,7 @@ void APlayerPawn::GiveDefaultInventory ()
 				static_cast<AWeapon*>(item)->CheckAmmo(AWeapon::EitherFire, false))
 			{
 				// [BB] The server waits for the client to select the weapon (but has to handle bots and clients that are still loading the level).
-				if ( ( NETWORK_GetState( ) == NETSTATE_SERVER ) && ( player->bIsBot == false ) && ( SERVER_GetClient( player - players )->State != CLS_SPAWNED_BUT_NEEDS_AUTHENTICATION ) ) {
+				if ( ( NETWORK_GetState( ) == NETSTATE_SERVER ) && ( player->bIsBot == false ) && ( player != COOP_GetVoodooDollDummyPlayer( ) ) && ( SERVER_GetClient( player - players )->State != CLS_SPAWNED_BUT_NEEDS_AUTHENTICATION ) ) {
 					PLAYER_ClearWeapon ( player );
 					player->StartingWeaponName = item ? item->GetClass()->TypeName : NAME_None;
 				}

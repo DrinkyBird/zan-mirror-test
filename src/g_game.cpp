@@ -2198,7 +2198,7 @@ void G_PlayerReborn (int player, bool bGiveInventory)
 		if ( p->ReadyWeapon != NULL )
 			LastWeaponSelected = p->ReadyWeapon->GetClass();
 	}
-	else if ( p->bSpectating == false )
+	else if ( p->bSpectating == false && p != COOP_GetVoodooDollDummyPlayer() )
 	{
 		// [AK] The client respawned on this gametic, so mark it.
 		SERVER_GetClient( player )->lastRespawnTick = gametic;
