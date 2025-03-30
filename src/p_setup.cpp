@@ -1945,6 +1945,11 @@ void P_SpawnThings (int position)
 			SetMapThingUserData(actor, *udi);
 		}
 	}
+	
+	// [BB] When initially spawning the voodoo dolls, we also need to clear the stored pickups
+	// of the unassigned dolls.
+	COOP_ClearStoredUVDPickups();
+
 	for(int i=0; i<MAXPLAYERS; i++)
 	{
 		// [BB] If the map has voodoo dolls and we want to use them online, we need to spawn them now.
@@ -1961,9 +1966,6 @@ void P_SpawnThings (int position)
 			if (playeringame[i] && players[i].mo != NULL)
 				P_PlayerStartStomp(players[i].mo);
 	}
-	// [BB] When initially spawning the voodoo dolls, we also need to clear the stored pickups
-	// of the unassigned dolls.
-	COOP_ClearStoredUVDPickups();
 }
 
 
