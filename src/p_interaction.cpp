@@ -2216,7 +2216,9 @@ void PLAYER_ResetAllScoreCounters( player_t *pPlayer )
 	if ( pPlayer->fragcount > 0 )
 		PLAYER_SetFragcount( pPlayer, 0, false, false );
 
-	if ( pPlayer->ulWins > 0 )
+	// [AK] So far, this function's only called when a player becomes a true
+	// spectator. Let them keep their win count in duel.
+	if (( pPlayer->ulWins > 0 ) && ( duel == false ))
 		PLAYER_SetWins( pPlayer, 0 );
 }
 
