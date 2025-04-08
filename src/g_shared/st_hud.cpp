@@ -530,7 +530,7 @@ void HUD_DrawTargetName( player_t *pPlayer )
 			// [AK] Print this actor's current health and armor.
 			if ( cl_identifytarget >= IDENTIFY_TARGET_HEALTH )
 			{
-				int healthPercentage = ( 100 * pTargetActor->health ) / ( pTargetActor->player ? pTargetActor->player->mo->GetMaxHealth( ) : pTargetActor->SpawnHealth( ));
+				int healthPercentage = ( 100 * pTargetActor->health ) / ( pTargetActor->player && pTargetActor->player->mo ? pTargetActor->player->mo->GetMaxHealth( ) : pTargetActor->SpawnHealth( ));
 				targetInfoMsg += '\n';
 
 				if ( healthPercentage <= 25 )
