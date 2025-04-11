@@ -130,6 +130,7 @@ Column "Damage"
 
 Column "Handicap"
 {
+	AddFlag NOINTERMISSION
 	AddFlag NOSPECTATORS
 	AddFlag ALWAYSUSESHORTESTWIDTH
 	AddFlag DISABLEIFEMPTY
