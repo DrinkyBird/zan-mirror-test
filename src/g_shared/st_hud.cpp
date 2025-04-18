@@ -1646,7 +1646,7 @@ FString HUD_BuildPointString( void )
 	// Build the score message.
 	if ( ulNumAvailableTeams == ulNumTeamsWithHighestScore )
 	{
-		text.Format( "Teams are tied at %d %s", static_cast<int>( lHighestScore ), scoreName.GetChars() );
+		text.Format( "Teams %s tied at %d %s", gamestate == GS_LEVEL ? "are" : "have", static_cast<int>( lHighestScore ), scoreName.GetChars( ));
 	}
 	else
 	{
