@@ -908,6 +908,10 @@ void CLIENTDEMO_SetSkippingToNextMap( bool bSkipToNextMap )
 //
 bool CLIENTDEMO_IsInFreeSpectateMode( void )
 {
+	// [AK] Free spectate mode can't be used when skipping to the next map.
+	if ( CLIENTDEMO_IsSkippingToNextMap( ))
+		return false;
+
 	const AActor *pCamera = players[consoleplayer].camera;
 	return ( pCamera && ( pCamera == g_demoCameraPlayer.mo ) );
 }
@@ -1178,7 +1182,8 @@ CCMD( demo_ticsplayed )
 CCMD( demo_spectatefreely )
 {
 	// [Spleen] This command shouldn't do anything if a demo isn't playing.
-	if ( CLIENTDEMO_IsPlaying( ) == false )
+	// [AK] ...or when skipping to the next map.
+	if (( CLIENTDEMO_IsPlaying( ) == false ) || ( CLIENTDEMO_IsSkippingToNextMap( )))
 		return;
 
 	if ( players[consoleplayer].camera != g_demoCameraPlayer.mo )
