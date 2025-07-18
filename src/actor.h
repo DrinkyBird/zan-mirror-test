@@ -833,10 +833,12 @@ public:
 	}
 
 	// Adds one item of a particular type. Returns NULL if it could not be added.
-	AInventory *GiveInventoryType (const PClass *type);
+	// [AK] Added the optional checkNoLMSFlag parameter.
+	AInventory *GiveInventoryType (const PClass *type, bool checkNoLMSFlag = false);
 
 	// [BB] Adds one item of a particular type or its replacement. Returns NULL if it could not be added.
-	AInventory *GiveInventoryTypeRespectingReplacements (const PClass *type);
+	// [AK] Added the optional checkNoLMSFlag parameter.
+	AInventory *GiveInventoryTypeRespectingReplacements (const PClass *type, bool checkNoLMSFlag = false);
 
 	// Returns the first item held with IF_INVBAR set.
 	AInventory *FirstInv ();
