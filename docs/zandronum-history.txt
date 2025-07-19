@@ -17,6 +17,7 @@
 
 -	- Fixed: some of the sounds that a skin was using weren't playing correctly. [AKMDM]
 -	- Fixed: spectators were unable to pass through teleporters while using the unrestricted spectator mode. [AKMDM]
+-	- Fixed: a player that morphed into a class with the NOMORPHLIMITATIONS flag and no morph weapon would spawn with any weapon they previously owned already selected in online games. [AKMDM]
 
 
 3.2

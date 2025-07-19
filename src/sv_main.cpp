@@ -4231,7 +4231,15 @@ void SERVER_ResetInventory( ULONG ulClient, const bool bChangeClientWeapon, bool
 	// [BB]: After giving back the inventory, inform the player about which weapon he is using.
 	// This at least partly fixes the "Using unknown weapon type" bug.
 	if ( bChangeClientWeapon )
+	{
+		// [AK] After clearing the player's inventory, any weapons that we gave them
+		// could've made them select it unintentionally. This is especially true if
+		// they just morphed with NOMORPHLIMITATIONS enabled and they were carrying
+		// other weapons, but they don't have a morph weapon. If we're going to tell
+		// them which weapon they're using, then clear the weapon on their end first.
+		SERVERCOMMANDS_ClearConsoleplayerWeapon( ulClient );
 		SERVERCOMMANDS_WeaponChange( ulClient, ulClient, SVCF_ONLYTHISCLIENT );
+	}
 
 	// [Dusk] Also inform the client about his Hexen armor values as
 	// SERVERCOMMANDS_DestroyAllInventory clears it from the client.
