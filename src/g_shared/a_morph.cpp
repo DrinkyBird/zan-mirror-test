@@ -198,6 +198,7 @@ bool P_MorphPlayer (player_t *activator, player_t *p, const PClass *spawntype, i
 		{
 			SERVERCOMMANDS_MoveLocalPlayer( ulPlayer );
 			SERVERCOMMANDS_MovePlayer( ulPlayer, ulPlayer, SVCF_SKIPTHISCLIENT );
+			SERVERCOMMANDS_MoveThing( morphed, CM_PITCH );
 		}
 	}
 
@@ -230,6 +231,7 @@ bool P_UndoPlayerMorph (player_t *activator, player_t *player, int unmorphflag, 
 	}
 
 	bool DeliberateUnmorphIsOkay = !!(MORPH_STANDARDUNDOING & unmorphflag);
+	bool noMorphLimitations = !!(pmo->PlayerFlags & PPF_NOMORPHLIMITATIONS); // [AK]
 
     if ((pmo->flags2 & MF2_INVULNERABLE) // If the player is invulnerable
         && ((player != activator)       // and either did not decide to unmorph,
@@ -275,7 +277,7 @@ bool P_UndoPlayerMorph (player_t *activator, player_t *player, int unmorphflag, 
 	mo->reactiontime = 18;
 	mo->flags = pmo->special2 & ~MF_JUSTHIT;
 	// [Binary] Keep movement if +NOMORPHLIMITATIONS is used.
-	if (pmo->PlayerFlags & PPF_NOMORPHLIMITATIONS)
+	if (noMorphLimitations)
 	{
 		mo->velx = pmo->velx;
 		mo->vely = pmo->vely;
@@ -423,11 +425,13 @@ bool P_UndoPlayerMorph (player_t *activator, player_t *player, int unmorphflag, 
 	// [BB] Tell the clients to unmorph the player, also give back the original inventory to the player.
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 	{
-		// [BB] The clients start their reactiontime later on their end. Try to adjust for this.
-		SERVER_AdjustPlayersReactiontime ( static_cast<ULONG> ( player - players ) );
+		const unsigned int playerIndex = static_cast<unsigned>( player - players );
 
-		SERVERCOMMANDS_SpawnPlayer( ULONG( player-players ), PST_LIVE );
-		SERVER_ResetInventory( ULONG( player-players ));
+		// [BB] The clients start their reactiontime later on their end. Try to adjust for this.
+		SERVER_AdjustPlayersReactiontime( playerIndex );
+
+		SERVERCOMMANDS_SpawnPlayer( playerIndex, PST_LIVE );
+		SERVER_ResetInventory( playerIndex );
 		SERVERCOMMANDS_SetThingFlags( player->mo, FLAGSET_FLAGS );
 		SERVERCOMMANDS_SetThingFlags( player->mo, FLAGSET_FLAGS2 );
 		SERVERCOMMANDS_SetThingFlags( player->mo, FLAGSET_FLAGS3 );
@@ -435,6 +439,9 @@ bool P_UndoPlayerMorph (player_t *activator, player_t *player, int unmorphflag, 
 		SERVERCOMMANDS_SetThingFrame( player->mo, player->mo->state, MAXPLAYERS, 0, false );
 		if ( player->mo->tid != 0 )
 			SERVERCOMMANDS_SetThingTID( player->mo );
+		// [AK] Keep the player's pitch if +NOMORPHLIMITATIONS is used.
+		if ( noMorphLimitations )
+			SERVERCOMMANDS_MoveThing( player->mo, CM_PITCH );
 	}
 	return true;
 }
