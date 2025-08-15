@@ -16,6 +16,7 @@
 ---
 
 +	- Added the CVar sv_terminatorfragaward, which controls how many frags are obtained upon fragging the Terminator. [geNia, Trillster]
+!	- Cleaned up the server browser menu's column spacing and added a message when no servers are found. [auratoostronk]
 
 
 3.2.1

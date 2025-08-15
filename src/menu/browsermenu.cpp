@@ -74,6 +74,8 @@ static	int		g_sortedServerListOffest = 0;
 void M_RefreshServers( void );
 void M_BuildServerList( void );
 LONG M_CalcLastSortedIndex( void );
+// [NS] Added a function that returns the number of servers in the list
+int M_NumServers( void );
 bool M_ShouldShowServer( LONG lServer );
 
 static	void			browsermenu_SortServers( ULONG ulSortType );
@@ -126,10 +128,12 @@ bool FOptionMenuServerBrowserLine::Activate()
 int FOptionMenuServerBrowserLine::Draw(FOptionMenuDescriptor *desc, int y, int indent, bool selected)
 {
 	const int serverNum = g_iSortedServers[ mSlotNum + g_sortedServerListOffest ];
-	const int localIndent = indent - 80 * CleanXfac_1;
+	// [NS] Adjusted the positions of the columns.
+	const int localIndent = indent - 112 * CleanXfac_1;
 
 	// [AK] Predetermine the x-positions of every column.
-	int columnXPositions[NUM_COLUMNS] = { 16, 48, 160, 224, 272 };
+	// [NS] Adjusted the positions of the columns.
+	int columnXPositions[NUM_COLUMNS] = { 16, 48, 240, 296, 336 };
 	for ( unsigned int i = 0; i < NUM_COLUMNS; i++ )
 		columnXPositions[i] = columnXPositions[i] * CleanXfac_1 + localIndent;
 
@@ -141,6 +145,12 @@ int FOptionMenuServerBrowserLine::Draw(FOptionMenuDescriptor *desc, int y, int i
 
 		for ( unsigned int i = 0; i < NUM_COLUMNS; i++ )
 			screen->DrawText( SmallFont, CR_UNTRANSLATED, columnXPositions[i], headerY, columnNames[i], DTA_CleanNoMove_1, true, TAG_DONE );
+	}
+	// [NS] If no servers are found, display a message in the first server slot.
+	if ( mSlotNum == 1 && M_NumServers( ) == 0 )
+	{
+		const int headerY = y - 1 * OptionSettings.mLinespacing * CleanYfac_1;
+		screen->DrawText(SmallFont, CR_WHITE, 120 * CleanXfac_1 + localIndent, headerY, "NO SERVERS FOUND.", DTA_CleanNoMove_1, true, TAG_DONE);
 	}
 
 	if ( M_ShouldShowServer ( serverNum ) == false )
@@ -154,14 +164,18 @@ int FOptionMenuServerBrowserLine::Draw(FOptionMenuDescriptor *desc, int y, int i
 	screen->DrawText( SmallFont, color, columnXPositions[0], y, szString, DTA_CleanNoMove_1, true, TAG_DONE );
 
 	// Draw name.
-	strncpy( szString, BROWSER_GetHostName( serverNum ), 12 );
-	szString[12] = 0;
-	if ( strlen( BROWSER_GetHostName( serverNum )) > 12 )
+	// [NS] Adjusted the length of the server name that will be displayed
+	strncpy( szString, BROWSER_GetHostName( serverNum ), 20 );
+	// [NS] Make sure the server name doesn't overflow
+	szString[20] = '\0';
+	if ( strlen( BROWSER_GetHostName( serverNum )) > 20 )
 		sprintf( szString + strlen ( szString ), "..." );
 	screen->DrawText( SmallFont, color, columnXPositions[1], y, szString, DTA_CleanNoMove_1, true, TAG_DONE );
 
 	// Draw map.
 	strncpy( szString, BROWSER_GetMapname( serverNum ), 8 );
+	// [NS] Make sure the map name doesn't overflow.
+	szString[8] = '\0';
 	screen->DrawText( SmallFont, color, columnXPositions[2], y, szString, DTA_CleanNoMove_1, true, TAG_DONE );
 	/*
 	// Draw wad.
@@ -171,6 +185,8 @@ int FOptionMenuServerBrowserLine::Draw(FOptionMenuDescriptor *desc, int y, int i
 	*/
 	// Draw gametype.
 	strncpy( szString, BROWSER_GetGameModeShortName( serverNum ), 8 );
+	// [NS] Make sure the gamemode name doesn't overflow.
+	szString[8] = '\0';
 	screen->DrawText( SmallFont, color, columnXPositions[3], y, szString, DTA_CleanNoMove_1, true, TAG_DONE );
 
 	// Draw players.
@@ -384,7 +400,8 @@ public:
 		Super::Drawer();
 
 		FString str;
-		const int numServers = static_cast<int> ( M_CalcLastSortedIndex( ) );
+		// [NS] Changed to use new M_NumServers function
+		const int numServers = M_NumServers( );
 		if ( numServers > NUM_SERVER_SLOTS )
 			str.Format( "Currently showing servers %d to %d out of %d", g_sortedServerListOffest + 1, MIN ( g_sortedServerListOffest + NUM_SERVER_SLOTS, numServers ), numServers );
 		else
@@ -426,6 +443,14 @@ LONG M_CalcLastSortedIndex( void )
 	}
 
 	return ( ulIdx );
+}
+
+//*****************************************************************************
+//
+// [NS] Function that returns number of servers in the list
+int M_NumServers(void)
+{
+	return static_cast<int> ( M_CalcLastSortedIndex( ) );
 }
 
 //*****************************************************************************
