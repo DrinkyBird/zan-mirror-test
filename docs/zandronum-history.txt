@@ -34,6 +34,7 @@
 -	- Fixed: spectators were unable to pass through slopes while using the unrestricted spectator mode. [AKMDM]
 -	- Fixed: brightmaps didn't work at all on skins. [AKMDM]
 -	- Fixed: the FOV couldn't be changed while in free spectate mode. [AKMDM]
+-	- Fixed: clients didn't tell the server when their userinfo CVars were changed in clientsided ACS scripts. [AKMDM]
 !	- Spectators now travel at full speed while underwater, and those using the unrestricted spectator mode now only pass through teleporters if they can see into the sector where the teleporter is. [AKMDM]
 
 

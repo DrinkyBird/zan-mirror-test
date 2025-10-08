@@ -5761,6 +5761,15 @@ static int SetUserCVar(int playernum, const char *cvarname, int value, bool is_s
 		if (cvar != NULL)
 		{
 			DoSetCVar(cvar, value, is_string, true);
+
+			// [AK] Inform the server that our CVar was changed.
+			if (NETWORK_GetState() == NETSTATE_CLIENT)
+			{
+				UserInfoChanges userinfoChanges;
+				userinfoChanges.insert(FName(cvar->GetName()));
+
+				CLIENTCOMMANDS_UserInfo(userinfoChanges);
+			}
 		}
 	}
 
