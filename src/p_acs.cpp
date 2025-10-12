@@ -10979,7 +10979,13 @@ scriptwait:
 			if (gamestate == GS_TITLELEVEL)
 				PushToStack (GAME_TITLE_MAP);
 			else if (deathmatch)
-				PushToStack (GAME_NET_DEATHMATCH);
+			{
+				// [RK] Check if we're play a deathmatch game mode with teams.
+				if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSONTEAMS )
+					PushToStack (GAME_NET_TEAMDEATHMATCH);
+				else
+					PushToStack (GAME_NET_DEATHMATCH);
+			}
 			else if ( teamgame )
 				PushToStack( GAME_NET_TEAMGAME );
 			else if ( NETWORK_GetState( ) != NETSTATE_SINGLE )

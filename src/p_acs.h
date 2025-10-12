@@ -970,6 +970,7 @@ public:
 		GAME_NET_DEATHMATCH =	2,
 		GAME_TITLE_MAP =		3,
 		GAME_NET_TEAMGAME =		4,
+		GAME_NET_TEAMDEATHMATCH = 5 // [RK] For TDM, TLMS, Team Possession
 	};
 	enum {
 		CLASS_FIGHTER =			0,
