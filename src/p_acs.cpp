@@ -5535,6 +5535,7 @@ enum EACSFunctions
 	ASCF_SetControlPointInfo,
 	ASCF_GetSkinProperty, // [TRSR]
 	ACSF_IsPlayerContestingControlPoint,
+	ACSF_SetMapUsedStatus,
 
 	// ZDaemon
 	ACSF_GetTeamScore = 19620,	// (int team)
@@ -8855,6 +8856,29 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 						JOINQUEUE_PlayerJoinsAtPosition( joinQueuePosition );
 						return 1;
 					}
+				}
+			}
+
+			return 0;
+		}
+
+		case ACSF_SetMapUsedStatus:
+		{
+			// [AK] Don't let clients set a map's used status themselves.
+			if ( NETWORK_InClientMode( ) == false )
+			{
+				const unsigned int position = args[0] - 1;
+				const bool isUsed = !!args[1];
+
+				if (( position < MAPROTATION_GetNumEntries( )) && ( MAPROTATION_IsUsed( position ) != isUsed ))
+				{
+					MAPROTATION_SetUsed( position, isUsed );
+
+					// [AK] Inform the clients about the map's new used status.
+					if ( NETWORK_GetState( ) == NETSTATE_SERVER )
+						SERVERCOMMANDS_SetMapUsedStatus( position );
+
+					return 1;
 				}
 			}
 
