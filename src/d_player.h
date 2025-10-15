@@ -455,6 +455,8 @@ struct userinfo_t : TMap<FName,FBaseCVar *>
 	int VoiceEnableChanged(int voiceenable);
 	int VoiceListenFilterChanged(int listenfilter);
 	int VoiceTransmitFilterChanged(int transmitfilter);
+	// [RK]
+	int AutoReadyChanged(int autoready);
 
 	int GetRailColor() const 
 	{
@@ -525,6 +527,16 @@ struct userinfo_t : TMap<FName,FBaseCVar *>
 			return *static_cast<FIntCVar *>(*CheckKey(NAME_Voice_TransmitFilter));
 		else {
 			Printf( "Error: No Voice_TransmitFilter key found!\n" );
+			return 0;
+		}
+	}
+	// [RK]
+	int GetAutoReady() const
+	{
+		if ( CheckKey(NAME_CL_AutoReady) != NULL )
+			return *static_cast<FIntCVar *>(*CheckKey(NAME_CL_AutoReady));
+		else {
+			Printf ( "Error: No AutoReady key found!\n" );
 			return 0;
 		}
 	}
@@ -942,6 +954,7 @@ bool P_IsPlayerTotallyFrozen(const player_t *player);
 bool P_IsSpectatorUnrestricted(const AActor *viewActor); // [AK]
 void P_ResetPlayerPitchLimits(void); // [AK]
 void P_ResetPlayerFOVLimits(void); // [RK]
+void P_ResetPlayerReadyStatus(void); // [RK]
 
 EXTERN_CVAR( Int, cl_spectatormode ) // [AK]
 EXTERN_CVAR( Float, fov ) // [AK]

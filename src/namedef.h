@@ -611,6 +611,8 @@ xx(Voice_Enable)
 // [AK] Determines what kind of players the client can receive/send VoIP packets to/from.
 xx(Voice_ListenFilter)
 xx(Voice_TransmitFilter)
+// [RK] Determines how the player is automatically set to ready.
+xx(CL_AutoReady)
 
 // [BB] For the bot skill menu
 xx(BotSkillMenu)

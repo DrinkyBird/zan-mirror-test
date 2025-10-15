@@ -3,6 +3,8 @@ Command SpawnPlayer
 	# [AK] Send the prior state as a short byte so that the four bools can fit together into a single byte.
 	ShortByte<4> priorState
 	Bool isBot
+	# [RK] Ready status of the player
+	Bool isReady
 	Bool isSpectating
 	Bool isDeadSpectator
 	Bool isMorphed

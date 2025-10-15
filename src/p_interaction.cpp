@@ -2933,7 +2933,8 @@ void PLAYER_SetStatus( player_t *player, const int statuses, const bool enable, 
 		// this player's "ready to go on" status when everyone's ready to go on now.
 		else if (( NETWORK_GetState( ) == NETSTATE_SERVER ) && (( networkFlags & SETPLAYERSTATUS_SERVERCANTSENDUPDATE ) == false ))
 		{
-			if (( statuses != PLAYERSTATUS_READYTOGOON ) || ( SERVER_IsEveryoneReadyToGoOn( ) == false ))
+			// [RK] Only check this at the intermission screen.
+			if ( !(( statuses == PLAYERSTATUS_READYTOGOON ) && ( SERVER_IsEveryoneReadyToGoOn() ) && ( gamestate == GS_INTERMISSION )) )
 				SERVERCOMMANDS_SetPlayerStatus( player - players );
 		}
 

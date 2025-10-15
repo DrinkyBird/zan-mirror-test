@@ -49,6 +49,15 @@ OptionValue ZA_SpectatorMode
 	1.0, "No physical restrictions"
 }
 
+// [RK]
+OptionValue "Autoready"
+{
+	0, "Never"
+	1, "Always"
+	2, "Level Start"
+	3, "Intermission"
+}
+
 OptionMenu ZA_MultiplayerOptions
 {
 	Title "MULTIPLAYER OPTIONS"
@@ -81,7 +90,7 @@ OptionMenu ZA_MultiplayerOptions
 	Option		"Reset frags at join",		"cl_dontrestorefrags",		"YesNo"
 	Option		"Hide country",			"cl_hidecountry",		"YesNo"
 	Option		"Respawn using attack key",	"cl_respawnonfire",		"YesNo"
-	Option		"Intermission auto-ready",	"cl_autoready",			"YesNo"
+	Option		"Auto-ready",			"cl_autoready",			"Autoready"
 	StaticText	" "
 	Option		"Skins",			"cl_skins",			"ZA_AllowSkins"
 	Option		"Taunts",			"cl_taunts",			"OnOff"

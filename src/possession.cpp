@@ -97,6 +97,9 @@ void POSSESSION_Tick( void )
 	if (( possession == false ) && ( teampossession == false ))
 		return;
 
+	// [RK]
+	int activePlayers;
+
 	switch ( g_PSNState )
 	{
 	case PSNS_WAITINGFORPLAYERS:
@@ -107,10 +110,13 @@ void POSSESSION_Tick( void )
 			break;
 		}
 
+		// [RK] Grab the number of players in game.
+		activePlayers = GAME_CountActivePlayers();
 		if ( possession )
 		{
 			// Two players are here now, being the initial countdown!
-			if ( SERVER_CalcNumNonSpectatingPlayers( MAXPLAYERS ) >= 2 )
+			// [RK] Make sure they're ready.
+			if ( GAME_CountActivePlayers() >= 2 && GAME_PlayerReadyStatus( activePlayers ))
 			{
 				if ( sv_possessioncountdowntime > 0 )
 					POSSESSION_StartCountdown(( sv_possessioncountdowntime * TICRATE ) - 1 );

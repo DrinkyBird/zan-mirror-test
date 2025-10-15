@@ -104,7 +104,8 @@ void DUEL_Tick( void )
 		}
 
 		// Two players are here now, begin the countdown!
-		if ( GAME_CountActivePlayers( ) == 2 )
+		// [RK] Make sure they're both ready.
+		if ( GAME_CountActivePlayers( ) == 2 && GAME_PlayerReadyStatus(2) )
 		{
 			// [BB] Skip countdown and map reset if the map is supposed to be a lobby.
 			if ( GAMEMODE_IsLobbyMap( ) )

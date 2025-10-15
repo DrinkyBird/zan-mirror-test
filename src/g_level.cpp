@@ -1429,7 +1429,22 @@ void G_DoLoadLevel (int position, bool autosave)
 		MEDAL_ResetPlayerMedals( i, PLAYER_ShouldSpawnAsSpectator( &players[i] ));
 
 		// Reset "ready to go on" flag.
-		PLAYER_SetStatus( &players[i], PLAYERSTATUS_READYTOGOON, false, SETPLAYERSTATUS_SERVERCANTSENDUPDATE );
+		// [RK] First check the player's autoready setting.
+		unsigned int autoReady = players[i].userinfo.GetAutoReady();
+		if ( autoReady == 3 )
+			autoReady = 0;
+
+		// [RK] Remove the ready status if ready is disabled or the player doesn't 
+		// have autoready and sv_useready isn't set to 2 on the server.
+		if ( !sv_useready || (( sv_useready == 1 ) && ( !autoReady ) && ( !players[i].bIsBot )))
+		{
+			players[i].statuses &= ~PLAYERSTATUS_READYTOGOON;
+		}
+		// [RK] The player didn't ready up at intermission but has autoready on level load.
+		else if ( sv_useready && !( players[i].statuses & PLAYERSTATUS_READYTOGOON ) && autoReady )
+		{
+			players[i].statuses |= PLAYERSTATUS_READYTOGOON;
+		}
 
 		// Reset a bunch of other stuff too.
 		players[i].ulDeathCount = 0;

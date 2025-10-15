@@ -663,6 +663,9 @@ void INVASION_Tick( void )
 	if ( paused )
 		return;
 
+	// [RK]
+	int activePlayers;
+
 	switch ( g_InvasionState )
 	{
 	case IS_WAITINGFORPLAYERS:
@@ -673,7 +676,9 @@ void INVASION_Tick( void )
 		}
 
 		// A player is here! Begin the countdown!
-		if ( SERVER_CalcNumNonSpectatingPlayers( MAXPLAYERS ) >= 1 )
+		// [RK] Make sure they're all ready.
+		activePlayers = GAME_CountActivePlayers();
+		if ( activePlayers >= 1 && GAME_PlayerReadyStatus( activePlayers ))
 		{
 			if ( sv_invasioncountdowntime > 0 )
 				INVASION_StartFirstCountdown(( sv_invasioncountdowntime * TICRATE ) - 1 );

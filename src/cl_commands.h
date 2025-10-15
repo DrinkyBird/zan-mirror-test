@@ -96,7 +96,7 @@ void	CLIENTCOMMANDS_GenericCheat( LONG lCheat );
 void	CLIENTCOMMANDS_GiveCheat( char *pszItem, LONG lAmount );
 void	CLIENTCOMMANDS_TakeCheat( const char *item, LONG amount );
 void	CLIENTCOMMANDS_SummonCheat( const char *pszItem, LONG lType, const bool bSetAngle, const SHORT sAngle );
-void	CLIENTCOMMANDS_ReadyToGoOn( void );
+void	CLIENTCOMMANDS_ReadyToGoOn( const bool status ); // [RK] No longer void.
 void	CLIENTCOMMANDS_ChangeDisplayPlayer( LONG lDisplayPlayer );
 void	CLIENTCOMMANDS_AuthenticateLevel( void );
 void	CLIENTCOMMANDS_CallVote( LONG lVoteCommand, const char *pszArgument, const char *pszReason );

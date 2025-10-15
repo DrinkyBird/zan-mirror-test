@@ -286,6 +286,7 @@ void SERVERCOMMANDS_SpawnPlayer( ULONG ulPlayer, LONG lPlayerState, ULONG ulPlay
 	command.SetPlayer( &players[ulPlayer] );
 	command.SetPriorState( lPlayerState );
 	command.SetIsBot( players[ulPlayer].bIsBot );
+	command.SetIsReady( players[ulPlayer].statuses & PLAYERSTATUS_READYTOGOON ); // [RK]
 	command.SetIsSpectating( players[ulPlayer].bSpectating );
 	command.SetIsDeadSpectator( players[ulPlayer].bDeadSpectator );
 	command.SetIsMorphed( bMorph );
@@ -2580,6 +2581,8 @@ void SERVERCOMMANDS_SetGameModeLimits( ULONG ulPlayerExtra, ServerCommandFlags f
 	command.addFloat( sv_minfov );
 	// [RK] Send in the maximum FOV.
 	command.addFloat( sv_maxfov );
+	// [RK] Send in sv_useready.
+	command.addByte( sv_useready );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 

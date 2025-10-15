@@ -478,6 +478,25 @@ CUSTOM_CVAR( Float, sv_maxfov, 179.f, CVAR_ARCHIVE | CVAR_SERVERINFO | CVAR_GAME
 }
 
 //*****************************************************************************
+// [RK] Since we are syncing this, update the client if they can use ready.
+//
+CUSTOM_CVAR( Int, sv_useready, false, CVAR_ARCHIVE | CVAR_SERVERINFO | CVAR_GAMEPLAYSETTING )
+{
+	// Clamp the values
+	if ( self < 0 )
+		self == 0;
+	else if ( self > 2 )
+		self == 2;
+
+	// Notify the clients about the change.
+	SERVER_SettingChanged( self, false );
+
+	// If we turned it off, reset the ready status of the players.
+	if ( self == false )
+		P_ResetPlayerReadyStatus();
+}
+
+//*****************************************************************************
 //	FUNCTIONS
 
 void SERVER_Construct( void )
@@ -1758,6 +1777,16 @@ void SERVER_ConnectNewPlayer( BYTESTREAM_s *pByteStream )
 	if ( players[g_lCurrentClient].bOnTeam )
 		SERVERCOMMANDS_SetPlayerTeam( g_lCurrentClient );
 
+	// [RK] If this player is using autoready and ready is enabled, set their ready status
+	// according to the value set in cl_autoready.
+	if ( sv_useready )
+	{
+		unsigned int playerReady = players[g_lCurrentClient].userinfo.GetAutoReady();
+
+		if ( playerReady == 1 || playerReady == 2 )
+			PLAYER_SetStatus( &players[g_lCurrentClient], PLAYERSTATUS_READYTOGOON, true );
+	}
+
 	if ( g_aClients[g_lCurrentClient].State != CLS_SPAWNED )
 	{
 		// [K6/BB] Show the player's country on connect, if the GeoIP db is available.
@@ -2355,7 +2384,8 @@ bool SERVER_GetUserInfo( BYTESTREAM_s *pByteStream, bool bAllowKick, bool bEnfor
 			NAME_Name, NAME_Autoaim, NAME_Gender, NAME_Skin, NAME_RailColor,
 			NAME_CL_ConnectionType, NAME_CL_ClientFlags,
 			NAME_Handicap, NAME_CL_TicsPerUpdate, NAME_Color, NAME_ColorSet,
-			NAME_Voice_Enable, NAME_Voice_ListenFilter, NAME_Voice_TransmitFilter
+			NAME_Voice_Enable, NAME_Voice_ListenFilter, NAME_Voice_TransmitFilter,
+			NAME_CL_AutoReady
 		};
 		std::set<FName> missing;
 		std::set_difference( required.begin(), required.end(), names.begin(), names.end(),
@@ -4958,13 +4988,14 @@ bool SERVER_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 				return ( true );
 
 			const int oldStatuses = players[g_lCurrentClient].statuses;
-			const int mask = PLAYERSTATUS_CHATTING | PLAYERSTATUS_INCONSOLE | PLAYERSTATUS_INMENU;
+			const int mask = PLAYERSTATUS_CHATTING | PLAYERSTATUS_INCONSOLE | PLAYERSTATUS_INMENU | PLAYERSTATUS_READYTOGOON; // [RK] Added ready status.
 
 			// [AK] The only statuses the client needs to sync with the server are the
 			// "chatting" and "in console/menu" ones. This is intended to prevent
 			// malicious clients from changing the "lagging" or "ready to go" statuses
 			// to pretend they're lagging or unready themselves on the intermission
 			// screen. Reset these bits to zero, then set them to whatever they sent us.
+			// [RK] Now we have to sync the player's ready status.
 			players[g_lCurrentClient].statuses &= ~mask;
 			players[g_lCurrentClient].statuses |= ( statuses & mask );
 
@@ -5057,13 +5088,30 @@ bool SERVER_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 		return ( server_SummonCheat( pByteStream, lCommand ));
 	case CLC_READYTOGOON:
 
-		// Users can only toggle if they haven't yet, and we must be in intermission.
-		if ( gamestate != GS_INTERMISSION || ( players[g_lCurrentClient].statuses & PLAYERSTATUS_READYTOGOON ))
-			return ( false );
+		{
+			// [RK] Rate limit the ready command.
+			if ( server_CheckForClientMinorCommandFlood( g_lCurrentClient ) == true )
+				return ( false );
+	
+			// [RK] Read in the ready status so it can be set.
+			const bool ready = pByteStream->ReadByte();
 
-		// Toggle this player (specator)'s "ready to go on" status.
-		// [RC] Now a permanent choice.
-		PLAYER_SetStatus( &players[g_lCurrentClient], PLAYERSTATUS_READYTOGOON, true );
+			// Users can only toggle if they haven't yet, and we must be in intermission.
+			// [RK] Since ready is now a toggle, only allow for a one-time ready at intermission.
+			if ( gamestate == GS_INTERMISSION && ( players[g_lCurrentClient].statuses & PLAYERSTATUS_READYTOGOON ))
+				return ( false );
+
+			// [RK] If someone in game unreadys and we're in a countdown, set the state back to WAITING.
+			if (( ready == false ) && ( GAMEMODE_GetState() == GAMESTATE_COUNTDOWN ) && !( PLAYER_IsTrueSpectator(&players[g_lCurrentClient]) ))
+			{
+				GAMEMODE_SetState( GAMESTATE_WAITFORPLAYERS );
+			}
+		
+			// Toggle this player (specator)'s "ready to go on" status.
+			// [RC] Now a permanent choice.
+			// [RK] Not anymore.
+			PLAYER_SetStatus( &players[g_lCurrentClient], PLAYERSTATUS_READYTOGOON, ready );
+		}
 
 		return false;
 	case CLC_CHANGEDISPLAYPLAYER:

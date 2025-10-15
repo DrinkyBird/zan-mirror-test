@@ -107,6 +107,7 @@ CVAR (Int,		voice_enable,				VOICEMODE_PUSHTOTALK,	CVAR_ARCHIVE | CVAR_NOSETBYAC
 CVAR (Int,		voice_listenfilter,			VOICEFILTER_EVERYONE,	CVAR_NOSETBYACS | CVAR_USERINFO);
 // [AK] Determines what kind of players the client can send VoIP packets to.
 CVAR (Int,		voice_transmitfilter,		VOICEFILTER_EVERYONE,	CVAR_NOSETBYACS | CVAR_USERINFO);
+CVAR (Int,		cl_autoready,				0, CVAR_ARCHIVE | CVAR_USERINFO);
 
 // [TP] Userinfo changes yet to be sent.
 static UserInfoChanges PendingUserinfoChanges;
@@ -624,6 +625,8 @@ void D_SetupUserInfo ()
 			case NAME_Voice_Enable:			coninfo->VoiceEnableChanged(voice_enable); break;
 			case NAME_Voice_ListenFilter:	coninfo->VoiceListenFilterChanged(voice_listenfilter); break;
 			case NAME_Voice_TransmitFilter:	coninfo->VoiceTransmitFilterChanged(voice_transmitfilter); break;
+			// [RK]
+			case NAME_CL_AutoReady:			coninfo->AutoReadyChanged(cl_autoready); break;
 
 			// The rest do.
 			default:
@@ -870,6 +873,17 @@ int userinfo_t::VoiceTransmitFilterChanged(int transmitfilter)
 	return transmitfilter;
 }
 
+int userinfo_t::AutoReadyChanged(int autoready)
+{
+	if ( (*this)[NAME_CL_AutoReady] == nullptr )
+	{
+		Printf( "Error: No AutoReady key found!\n" );
+		return 0;
+	}
+	*static_cast<FIntCVar*>((*this)[NAME_CL_AutoReady]) = autoready;
+	return autoready;
+}
+
 void D_UserInfoChanged (FBaseCVar *cvar)
 {
 	UCVarValue val;
@@ -1001,6 +1015,20 @@ void D_UserInfoChanged (FBaseCVar *cvar)
 		{
 			val.Int = clampedValue;
 			cvar->SetGenericRep( val, CVAR_Int );
+			return;
+		}
+	}
+	// [RK]
+	else if ( cvar == &cl_autoready )
+	{
+		if ( cl_autoready < 0 )
+		{
+			cl_autoready = 0;
+			return;
+		}
+		if ( cl_autoready > 3 )
+		{
+			cl_autoready = 3;
 			return;
 		}
 	}
@@ -1500,6 +1528,11 @@ void D_ReadUserInfoStrings (int pnum, BYTE **stream, bool update)
 			// [AK]
 			case NAME_Voice_TransmitFilter:
 				info->VoiceTransmitFilterChanged ( atoi( value ) );
+				break;
+
+			// [RK]
+			case NAME_CL_AutoReady:
+				info->AutoReadyChanged ( atoi( value ) );
 				break;
 
 			default:

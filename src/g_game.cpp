@@ -2056,6 +2056,12 @@ void G_PlayerFinishLevel (int player, EFinishLevelType mode, int flags)
 	p->poisoncount = 0;
 	p->inventorytics = 0;
 
+	// [RK] Reset the player's ready state for the intermission screen.
+	if ( NETWORK_GetState() == NETSTATE_SERVER )
+		PLAYER_SetStatus(p, PLAYERSTATUS_READYTOGOON, false);
+	else if ( NETWORK_InClientMode() == false )
+		p->statuses &= ~PLAYERSTATUS_READYTOGOON;
+
 	if (mode != FINISH_SameHub)
 	{
 		// Take away flight and keys (and anything else with IF_INTERHUBSTRIP set)
@@ -4467,6 +4473,26 @@ ULONG GAME_CountActivePlayers( void )
 	}
 
 	return ( ulPlayers );
+}
+
+//*****************************************************************************
+// [RK]
+bool GAME_PlayerReadyStatus ( int numPlayers )
+{
+	if ( sv_useready == false )
+		return true;
+
+	int readyCount = 0;
+	for ( unsigned int ulIdx = 0; ulIdx < MAXPLAYERS; ulIdx++ )
+	{
+		if(( playeringame[ulIdx] ) && ( players[ulIdx].bSpectating == false ) && ( players[ulIdx].statuses & PLAYERSTATUS_READYTOGOON ))
+			readyCount++;
+	}
+
+	if ( readyCount == numPlayers )
+		return true;
+
+	return false;
 }
 
 void G_ScreenShot (char *filename)

@@ -678,6 +678,7 @@ EXTERN_CVAR( Bool, sv_limitcommands )
 EXTERN_CVAR( Int, sv_allowprivatechat )
 EXTERN_CVAR( Float, sv_minfov ); // [RK] Minimum FOV allowed
 EXTERN_CVAR( Float, sv_maxfov ); // [RK] Maximum FOV allowed
+EXTERN_CVAR( Int, sv_useready ); // [RK] Use ready system for countdown start
 
 // From sv_master.cpp
 EXTERN_CVAR( Bool, sv_updatemaster );

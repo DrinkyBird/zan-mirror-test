@@ -183,6 +183,7 @@ Column "ReadyToGoIcon"
 {
 	AddFlag INTERMISSIONONLY
 	AddFlag DONTSHOWHEADER
+	AddFlag ALWAYSUSESHORTESTWIDTH
 
 	Alignment = Center
 	ClipRectHeight = -2
@@ -242,9 +243,8 @@ Column "CountryFlag"
 	Alignment = Center
 }
 
-CompositeColumn "ReadyToGoAndStatusIcons"
+CompositeColumn "Status"
 {
-	AddFlag DONTSHOWHEADER
 	AddFlag ALWAYSUSESHORTESTWIDTH
 
 	Columns = "ReadyToGoIcon", "StatusIcon"
@@ -471,7 +471,7 @@ Scoreboard
 	HeaderHeight = -2, 11
 	RowHeight = -2, 11
 
-	ColumnOrder = "BotSkillIcon", "Index", "ReadyToGoAndStatusIcons", "ArtifactIcon", "PlayerIcon", "CountryFlag", "Player", "Vote", "Handicap", "Wins", "Points", "Frags", "Kills", "Damage", "Lives", "Secrets", "Deaths", "Time", "Ping", "ConnectionStrength"
+	ColumnOrder = "BotSkillIcon", "Index", "Status", "ArtifactIcon", "PlayerIcon", "CountryFlag", "Player", "Vote", "Handicap", "Wins", "Points", "Frags", "Kills", "Damage", "Lives", "Secrets", "Deaths", "Time", "Ping", "ConnectionStrength"
 	RankOrder = "Wins", "Points", "Frags", "Kills", "Damage", "Lives", "Secrets", "Deaths"
 
 	AddFlag UseHeaderTextColorForBorders

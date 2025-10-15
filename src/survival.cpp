@@ -91,6 +91,9 @@ void SURVIVAL_Tick( void )
 	if ( survival == false )
 		return;
 
+	// [RK]
+	int activePlayers;
+	
 	switch ( g_SurvivalState )
 	{
 	case SURVS_WAITINGFORPLAYERS:
@@ -101,7 +104,9 @@ void SURVIVAL_Tick( void )
 		}
 
 		// Someone is here! Begin the countdown.
-		if ( GAME_CountActivePlayers( ) > 0 )
+		// [RK] Make sure they're all ready.
+		activePlayers = GAME_CountActivePlayers();
+		if ( activePlayers > 0 && GAME_PlayerReadyStatus( activePlayers ))
 		{
 			if ( sv_survivalcountdowntime > 0 )
 				SURVIVAL_StartCountdown(( sv_survivalcountdowntime * TICRATE ) - 1 );

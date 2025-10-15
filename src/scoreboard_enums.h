@@ -150,7 +150,7 @@ BEGIN_ENUM( COLUMNTYPE_e )
 	ENUM_ELEMENT( COLUMNTYPE_PLAYERCOLOR ),
 	// The status of the player.
 	ENUM_ELEMENT( COLUMNTYPE_STATUSICON ),
-	// Whether or not a player is ready to go on the intermission screen.
+	// Whether or not a player is ready to start the match or to go on the intermission screen.
 	ENUM_ELEMENT( COLUMNTYPE_READYTOGOICON ),
 	// The ScoreIcon of the player's class.
 	ENUM_ELEMENT( COLUMNTYPE_PLAYERICON ),

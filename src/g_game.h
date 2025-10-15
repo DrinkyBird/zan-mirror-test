@@ -78,6 +78,9 @@ USHORT	GAME_GetLevelIntroTicks( void );
 ULONG	GAME_CountLivingAndRespawnablePlayers( void );
 ULONG	GAME_CountActivePlayers( void );
 
+// [RK] Get the ready state of players during warmup.
+bool	GAME_PlayerReadyStatus ( int numPlayers );
+
 // [BC] End changes.
 
 struct FPlayerStart *G_PickPlayerStart (int playernum, int flags = 0);

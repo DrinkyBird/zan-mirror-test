@@ -653,9 +653,10 @@ void CLIENTCOMMANDS_SummonCheat( const char *pszItem, LONG lType, const bool bSe
 
 //*****************************************************************************
 //
-void CLIENTCOMMANDS_ReadyToGoOn( void )
+void CLIENTCOMMANDS_ReadyToGoOn( const bool status )
 {
 	CLIENT_GetLocalBuffer( )->ByteStream.WriteByte( CLC_READYTOGOON );
+	CLIENT_GetLocalBuffer( )->ByteStream.WriteByte( status ); // [RK] Send status to toggle ready.
 }
 
 //*****************************************************************************

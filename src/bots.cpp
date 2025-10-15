@@ -1759,6 +1759,10 @@ CSkullBot::CSkullBot( const char *pszName, const char *pszTeamName, ULONG ulPlay
 	m_pPlayer->pSkullBot = this;
 	m_pPlayer->bIsBot = true;
 
+	// [RK] Bots are always ready to get wrecked.
+	if ( sv_useready )
+		m_pPlayer->statuses |= PLAYERSTATUS_READYTOGOON;
+
 	// [AK] Later on, PLAYER_ShouldSpawnAsSpectator gets called, which in turn
 	// calls GAMEMODE_PreventPlayersFromJoining and then DUEL_CountActiveDuelers.
 	// Thus, The bot's spectating status should be initialized to true, or else

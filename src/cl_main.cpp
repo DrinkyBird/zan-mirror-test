@@ -209,9 +209,6 @@ CVAR( Bool, cl_showpacketloss, false, CVAR_ARCHIVE )
 // [AK] Prevents the server's settings from being discard when the client disconnects.
 CVAR( Bool, cl_keepserversettings, false, CVAR_ARCHIVE | CVAR_DEBUGONLY )
 
-// [JS] Always makes us ready when we are in intermission.
-CVAR( Bool, cl_autoready, false, CVAR_ARCHIVE )
-
 // [AK] Buffers incoming movement commands so that players move more smoothly.
 CUSTOM_CVAR( Bool, cl_usemovebuffer, true, CVAR_ARCHIVE | CVAR_NOSETBYACS | CVAR_DEBUGONLY )
 {
@@ -2670,11 +2667,19 @@ void CLIENT_SendCmd( void )
 		DWORD buttons = players[consoleplayer].cmd.ucmd.buttons;
 		DWORD oldButtons = players[consoleplayer].oldbuttons;
 
+		// [RK] Grab the value for cl_autoready so we can jet past the intermission.
+		unsigned int autoReady = players[consoleplayer].userinfo.GetAutoReady();
+		if ( autoReady == 2 )
+			autoReady = 0;
+
 		// [AK] Also toggle our "ready to go" status if we have auto-ready enabled, but do this only once.
 		if ((( players[consoleplayer].statuses & PLAYERSTATUS_READYTOGOON ) == false ) &&
-			(( cl_autoready ) || (( buttons ^ oldButtons ) && ( buttons & oldButtons ) == oldButtons )))
+				(( autoReady ) || (( buttons ^ oldButtons ) && ( buttons & oldButtons ) == oldButtons )))
 		{
-			CLIENTCOMMANDS_ReadyToGoOn( );
+			CLIENTCOMMANDS_ReadyToGoOn( true );
+			// [RK] Set the status locally so the client doesn't send out this command multiple times 
+			// while the packet is traveling to the server and a status command goes back to the client.
+			players[consoleplayer].statuses |= PLAYERSTATUS_READYTOGOON;
 		}
 
 		players[consoleplayer].oldbuttons = players[consoleplayer].cmd.ucmd.buttons;
@@ -3725,6 +3730,10 @@ void ServerCommands::SpawnPlayer::Execute()
 	pPlayer->mo->NetID = netid;
 	g_ActorNetIDList.useID ( netid, pPlayer->mo );
 
+	// [RK] Set the Ready state of the player
+	if ( isReady )
+		pPlayer->statuses |= PLAYERSTATUS_READYTOGOON;
+	
 	// Set the spectator variables [after G_PlayerReborn so our data doesn't get lost] [BB] Why?.
 	// [BB] To properly handle that true spectators don't get default inventory, we need to set this
 	// before calling G_PlayerReborn (which in turn calls GiveDefaultInventory).
@@ -6243,6 +6252,10 @@ static void client_SetGameModeLimits( BYTESTREAM_s *pByteStream )
 	// [RK] Read in, and set the value for sv_maxfov.
 	Value.Float = pByteStream->ReadFloat();
 	sv_maxfov.ForceSet( Value, CVAR_Float );
+
+	// [RK] Read in, and set the value for sv_useready.
+	Value.Int = pByteStream->ReadByte();
+	sv_useready.ForceSet( Value, CVAR_Int );
 }
 
 //*****************************************************************************

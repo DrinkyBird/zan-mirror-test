@@ -2538,11 +2538,16 @@ void WI_checkForAccelerate(void)
 	// check for button presses to skip delays
 	for (i = 0, player = players; i < MAXPLAYERS; i++, player++)
 	{
+		// [RK] Grab the value for cl_autoready so we can jet past the intermission.
+		unsigned int autoReady = players[consoleplayer].userinfo.GetAutoReady();
+		if ( autoReady == 2 )
+			autoReady = 0;
+
 		if (playeringame[i])
 		{
-			if ((player->cmd.ucmd.buttons ^ player->oldbuttons) &&
+			if ((((player->cmd.ucmd.buttons ^ player->oldbuttons) &&
 				((players[i].cmd.ucmd.buttons & players[i].oldbuttons)
-					== players[i].oldbuttons) && !player->bIsBot)
+					== players[i].oldbuttons)) || (( player->statuses & PLAYERSTATUS_READYTOGOON ) || autoReady )) && !player->bIsBot)
 			{
 				// [AK] Don't skip delays if the player is only trying to
 				// see the scoreboard while the campaign stats screen is

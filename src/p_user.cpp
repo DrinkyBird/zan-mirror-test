@@ -3578,6 +3578,57 @@ CCMD( join ) {
 }
 
 //*****************************************************************************
+// [RK]
+void SetPlayerReadyStatus( player_t *player, int status )
+{
+	if ( NETWORK_GetState( ) == NETSTATE_CLIENT )
+	{
+		CLIENTCOMMANDS_ReadyToGoOn( status );
+		return;
+	}
+
+	if ( status ) 
+		player->statuses |= PLAYERSTATUS_READYTOGOON;
+	else
+		player->statuses &= ~PLAYERSTATUS_READYTOGOON;
+}
+
+// [RK] Player is setting their ready status.
+CCMD( ready )
+{
+	// Only players can be ready.
+	if (  NETWORK_GetState( ) == NETSTATE_SERVER )
+	{
+		Printf( "CCMD ready can't be used on the server.\n" );
+		return;
+	}
+
+	// Don't waste traffic if ready is off on the server
+	// unless we're at the intermission screen waiting to go.
+	if ( !sv_useready && ( gamestate != GS_INTERMISSION ))
+	{
+		Printf( "Ready is not enabled on the server.\n" );
+		return;
+	}
+
+	// Don't allow toggling during intermission either.
+	if ( gamestate == GS_INTERMISSION && ( players[consoleplayer].statuses & PLAYERSTATUS_READYTOGOON ))
+		return;
+
+	// Display the appropriate message and then set the status.
+	if ( !(players[consoleplayer].statuses & PLAYERSTATUS_READYTOGOON) )
+	{
+		Printf( "You are now ready.\n" );
+		SetPlayerReadyStatus(&players[consoleplayer], true);
+	}
+	else
+	{
+		Printf( "You are no longer ready.\n" );
+		SetPlayerReadyStatus(&players[consoleplayer], false);
+	}
+}
+
+//*****************************************************************************
 //
 bool PLAYER_Responder( event_t *pEvent )
 {
@@ -4732,5 +4783,17 @@ void P_ResetPlayerFOVLimits(void)
 			continue;
 
 		players[i].DesiredFOV = clamp<float>(players[i].FOV, sv_minfov, sv_maxfov);
+	}
+}
+
+// [RK] Resets all the valid players' Ready status when the server disables sv_useready.
+void P_ResetPlayerReadyStatus(void)
+{
+	for (unsigned int i = 0; i < MAXPLAYERS; i++)
+	{
+		if (PLAYER_IsValidPlayer(i) == false)
+			continue;
+
+		players[i].statuses &= ~PLAYERSTATUS_READYTOGOON;
 	}
 }

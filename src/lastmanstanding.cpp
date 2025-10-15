@@ -100,6 +100,9 @@ void LASTMANSTANDING_Tick( void )
 	if (( lastmanstanding == false ) && ( teamlms == false ))
 		return;
 
+	// [RK]
+	int activePlayers;
+
 	switch ( g_LMSState )
 	{
 	case LMSS_WAITINGFORPLAYERS:
@@ -110,10 +113,14 @@ void LASTMANSTANDING_Tick( void )
 			break;
 		}
 
+		// [RK] Grab the number of players in game.
+		activePlayers = GAME_CountActivePlayers();
+
 		// [AK] Set the state back to waiting for players if there's not enough
 		// players and we're in the pre-next round countdown state.
-		if ((( lastmanstanding ) && ( GAME_CountActivePlayers( ) >= 2 )) ||
-			(( teamlms ) && ( TEAM_TeamsWithPlayersOn( ) > 1 )))
+		// [RK] Make sure they're all ready.
+		if (((( lastmanstanding ) && ( activePlayers >= 2 )) ||
+			(( teamlms ) && ( TEAM_TeamsWithPlayersOn( ) > 1 ))) && GAME_PlayerReadyStatus( activePlayers ))
 		{
 			if ( sv_lmscountdowntime > 0 )
 				LASTMANSTANDING_StartCountdown(( sv_lmscountdowntime * TICRATE ) - 1 );
