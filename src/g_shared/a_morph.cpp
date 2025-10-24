@@ -407,8 +407,7 @@ bool P_UndoPlayerMorph (player_t *activator, player_t *player, int unmorphflag, 
 			}
 		}
  	}
-	// [RK] Until we get the ability to add MorphStyle flags either via DECORATE or ZScript,
-	// NOMORPHLIMITATIONS will be the only way to not have your current weapon taken away.
+	// [RK] NOMORPHLIMITATIONS will prevent the selected weapon from being taken away.
 	else if ( !noMorphLimitations )// old behaviour (not really useful now)
 	{ // Assumptions made here are no longer valid
 		if (beastweap != NULL)
