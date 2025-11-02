@@ -3411,6 +3411,19 @@ void GAME_ResetMap( bool bRunEnterScripts )
 		}
 	}
 
+	// [RK] Destroy all the pushers that weren't spawned on map load. 
+	// Pusher things placed on the map will be handled further below.
+	{
+		TThinkerIterator<DPusher>	 pIterator;
+		DPusher* pPusher;
+
+		while (( pPusher = pIterator.Next() ) != NULL )
+		{
+			if ( pPusher->bNotMapSpawned )
+				pPusher->Destroy();
+		}
+	}
+
 	// This is all we do in client mode.
 	if ( NETWORK_InClientMode() )
 	{

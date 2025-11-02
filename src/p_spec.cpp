@@ -2530,6 +2530,8 @@ DPusher::DPusher (DPusher::EPusher type, line_t *l, int magnitude, int angle,
 		m_Y = m_Source->y;
 	}
 	m_Affectee = affectee;
+	// [RK] If the level time isn't zero then this pusher was created as a result of a script or line activation.
+	bNotMapSpawned = ( level.time > 0 );
 }
 
 int DPusher::CheckForSectorMatch (EPusher type, int tag)

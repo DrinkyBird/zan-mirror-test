@@ -119,6 +119,7 @@ public:
 	DPusher (EPusher type, line_t *l, int magnitude, int angle, AActor *source, int affectee);
 	void Serialize (FArchive &arc);
 	int CheckForSectorMatch (EPusher type, int tag);
+	bool bNotMapSpawned;			// [RK] For map resets.
 	void ChangeValues (int magnitude, int angle)
 	{
 		// [BB] Save the original input angle value. This makes it easier to inform the clients about this pusher.
