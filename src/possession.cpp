@@ -448,12 +448,21 @@ void POSSESSION_ScorePossessionPoint( player_t *pPlayer )
 	// Change the game state to the score sequence.
 	POSSESSION_SetState( PSNS_HOLDERSCORED );
 
-	// Give the player holding the artifact a point.
-	PLAYER_SetPoints ( pPlayer, pPlayer->lPointCount + 1 );
-
 	// If the player's on a team in team possession mode, give the player's point a team.
+	// [RK] Then print the score message to the console.
 	if ( teampossession && pPlayer->bOnTeam )
+	{
 		TEAM_SetPointCount( pPlayer->Team, TEAM_GetPointCount( pPlayer->Team ) + 1, true );
+		TEAM_PrintScoresMessage( pPlayer->Team, static_cast<unsigned>(pPlayer - players), 1 );
+	}
+	else
+	{
+		// Give the player holding the artifact a point.
+		// [RK] Then print the score message to the console.
+		PLAYER_SetPoints( pPlayer, pPlayer->lPointCount + 1 );
+		NETWORK_Printf( "%s scores!\n", pPlayer->userinfo.GetName() );
+
+	}
 
 	// Refresh the HUD since there's bound to be changes.
 	HUD_ShouldRefreshBeforeRendering( );
