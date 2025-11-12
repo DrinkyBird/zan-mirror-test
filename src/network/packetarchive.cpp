@@ -229,7 +229,7 @@ bool OutgoingPacketBuffer::SendPacket( unsigned int packetNumber, const NETADDRE
 	TempBuffer.ByteStream.WriteLong( packetNumber );
 	if ( packetSize > 0 )
 		TempBuffer.ByteStream.WriteBuffer( packetData, packetSize );
-	NETWORK_LaunchPacket( &TempBuffer, Address );
+	NETWORK_LaunchPacket( &TempBuffer, Address, SERVER_GetClient( _clientIdx )->State >= CLS_CONNECTED );
 	TempBuffer.Free();
 	return true;
 }
