@@ -125,6 +125,7 @@ typedef enum
 	GAMEEVENT_JOINQUEUECHANGED,
 	GAMEEVENT_DOMINATION_PRECONTROL,
 	GAMEEVENT_DOMINATION_CONTEST,
+	GAMEEVENT_PLAYERJOINS,
 } GAMEEVENT_e;
 
 //*****************************************************************************
@@ -230,6 +231,7 @@ void		GAMEMODE_ResetPlayersKillCount( const bool bInformClients );
 bool		GAMEMODE_AreSpectatorsForbiddenToChatToPlayers( const bool doVoice );
 bool		GAMEMODE_IsClientForbiddenToChatToPlayers( const ULONG client, const bool doVoice );
 bool		GAMEMODE_PreventPlayersFromJoining( ULONG ulExcludePlayer = MAXPLAYERS );
+bool		GAMEMODE_CanPlayerJoin( unsigned int player, bool exclude = false );
 bool		GAMEMODE_AreLivesLimited( void );
 bool		GAMEMODE_ShouldPlayerLoseLife( void );
 bool		GAMEMODE_IsPlayerCarryingGameModeItem( player_t *player );

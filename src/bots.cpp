@@ -1974,7 +1974,13 @@ CSkullBot::CSkullBot( const char *pszName, const char *pszTeamName, ULONG ulPlay
 	}
 
 	// Check and see if this bot should spawn as a spectator.
-	m_pPlayer->bSpectating = PLAYER_ShouldSpawnAsSpectator( m_pPlayer );
+	if ( PLAYER_ShouldSpawnAsSpectator( m_pPlayer ) == false )
+	{
+		if ( GAMEMODE_CanPlayerJoin( ulPlayerNum, true ) == false )
+			JOINQUEUE_AddPlayer( ulPlayerNum, teams.Size( ));
+		else
+			m_pPlayer->bSpectating = false;
+	}
 
 	// [BB] If the bot is forced to spectate, make sure he is not on a team.
 	if ( m_pPlayer->bSpectating )

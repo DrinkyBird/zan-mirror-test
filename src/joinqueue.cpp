@@ -322,7 +322,7 @@ void JOINQUEUE_PopQueue( int slotCount )
 			break;
 
 		// Found a player waiting in line. They will now join the game!
-		if ( playeringame[g_JoinQueue[i].player] )
+		if (( playeringame[g_JoinQueue[i].player] ) && ( GAMEMODE_CanPlayerJoin( g_JoinQueue[i].player )))
 		{
 			JOINQUEUE_PlayerJoinsAtPosition( i );
 

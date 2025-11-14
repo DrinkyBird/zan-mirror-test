@@ -1021,6 +1021,19 @@ bool GAMEMODE_PreventPlayersFromJoining( ULONG ulExcludePlayer )
 
 //*****************************************************************************
 //
+bool GAMEMODE_CanPlayerJoin( unsigned int player, bool exclude )
+{
+	if (( PLAYER_IsValidPlayer( player ) == false ) || ( GAMEMODE_PreventPlayersFromJoining( exclude ? player : MAXPLAYERS )))
+		return false;
+
+	if ( GAMEMODE_HandleEvent( GAMEEVENT_PLAYERJOINS, nullptr, player, 0, true ) == 0 )
+		return false;
+
+	return true;
+}
+
+//*****************************************************************************
+//
 bool GAMEMODE_AreLivesLimited( void )
 {
 	// [BB] Invasion is a special case: If sv_maxlives == 0 in invasion, players have infinite lives.

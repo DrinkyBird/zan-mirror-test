@@ -3540,7 +3540,7 @@ void PLAYER_JoinGameFromSpectators( int iChar )
 		return;
 
 	// [BB] If players aren't allowed to join at the moment, just put the consoleplayer in line.
-	if ( GAMEMODE_PreventPlayersFromJoining() )
+	if ( GAMEMODE_CanPlayerJoin( consoleplayer ) == false )
 	{
 		JOINQUEUE_AddConsolePlayer ( teams.Size( ) );
 		return;

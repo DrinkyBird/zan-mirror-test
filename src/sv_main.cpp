@@ -1486,7 +1486,14 @@ void SERVER_ConnectNewPlayer( BYTESTREAM_s *pByteStream )
 		// [BB] Since PLAYER_ShouldSpawnAsSpectator calls GAMEMODE_PreventPlayersFromJoining which then calls DUEL_CountActiveDuelers,
 		// we need to initialize bSpectating with true, otherwise this player could prevent itself from joining.
 		players[g_lCurrentClient].bSpectating = true;
-		players[g_lCurrentClient].bSpectating = (( PLAYER_ShouldSpawnAsSpectator( &players[g_lCurrentClient] )) || ( g_aClients[g_lCurrentClient].bWantStartAsSpectator ));
+
+		if (( g_aClients[g_lCurrentClient].bWantStartAsSpectator == false ) && ( PLAYER_ShouldSpawnAsSpectator( &players[g_lCurrentClient] ) == false ))
+		{
+			if ( GAMEMODE_CanPlayerJoin( g_lCurrentClient, true ) == false )
+				JOINQUEUE_AddPlayer( g_lCurrentClient, teams.Size( ));
+			else
+				players[g_lCurrentClient].bSpectating = false;
+		}
 	}
 
 	// Don't restart the map! There's people here!
@@ -6316,7 +6323,7 @@ static bool server_RequestJoin( BYTESTREAM_s *pByteStream )
 		return ( false );
 
 	// If there aren't currently any slots available, just put the person in line.
-	if ( GAMEMODE_PreventPlayersFromJoining() )
+	if ( GAMEMODE_CanPlayerJoin( g_lCurrentClient ) == false )
 	{
 		JOINQUEUE_AddPlayer( g_lCurrentClient, teams.Size() );
 		return ( false );
@@ -6559,7 +6566,7 @@ static bool server_ChangeTeam( BYTESTREAM_s *pByteStream )
 		return ( false );
 
 	// [BB] If this is a spectator and players are not allowed to join at the moment, put him in line.
-	if ( PLAYER_IsTrueSpectator ( &players[g_lCurrentClient] ) && GAMEMODE_PreventPlayersFromJoining ( g_lCurrentClient ) )
+	if (( PLAYER_IsTrueSpectator( &players[g_lCurrentClient] )) && ( GAMEMODE_CanPlayerJoin( g_lCurrentClient, true ) == false ))
 	{
 		// [RC] If the player chose to autoselect his team, postpone that until he actually joins.
 		JOINQUEUE_AddPlayer( g_lCurrentClient, bAutoSelectTeam ? teams.Size() : lDesiredTeam );
