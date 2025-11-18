@@ -268,6 +268,31 @@ static	void			network_AddSpritesToList( std::set<AUTHENTICATELUMP_s> &list, cons
 static	void			network_ParseLumpAuthenticationMode( FScanner &sc, LumpAuthenticationMode &mode );
 
 //*****************************************************************************
+//	CONSOLE VARIABLES
+CUSTOM_CVAR( Int, net_zstd_level, 12, CVAR_ARCHIVE )
+{
+	// [SB] Clamp the value to the valid range of compression levels.
+	const int maxLevel = ZSTD_maxCLevel( );
+	if (self < 1)
+	{
+		self = 1;
+		return;
+	}
+	else if (self > maxLevel)
+	{
+		self = maxLevel;
+		return;
+	}
+
+	// [SB] The compression level is part of the CDict object, so we need to re-init Zstandard.
+	network_DestructZstd();
+	network_InitZstd();
+}
+
+CVAR( Int, net_zstd_threshold, 100, CVAR_ARCHIVE )
+CVAR( Bool, net_zstd_smart, false, CVAR_ARCHIVE )
+
+//*****************************************************************************
 //	FUNCTIONS
 
 void NETWORK_Construct( USHORT usPort, bool bAllocateLANSocket )
@@ -782,11 +807,9 @@ void network_InitZstd( void )
 			return;
 		}
 
-		g_zstdCdict = ZSTD_createCDict( lump.GetMem(), lump.GetSize(), 12 );
-		g_zstdDdict = ZSTD_createDDict( lump.GetMem(), lump.GetSize() );
 
-		ZSTD_CCtx_refCDict( g_zstdCctx, g_zstdCdict );
-		ZSTD_DCtx_refDDict( g_zstdDctx, g_zstdDdict );
+		g_zstdCdict = ZSTD_createCDict( lump.GetMem(), lump.GetSize(), net_zstd_level );
+		g_zstdDdict = ZSTD_createDDict( lump.GetMem(), lump.GetSize() );
 
 		DPrintf( "Using Zstandard dictionary with ID %08x\n", g_zstdDictId );
 	}
@@ -862,13 +885,13 @@ void NETWORK_LaunchPacket( NETBUFFER_s *buffer, NETADDRESS_s address, bool useZS
 	if ( address.Compare( NETWORK_AUTH_GetCachedServerAddress( )) == false )
 	{
 		// [AK] Choose between compressing the packet using ZStd or Huffman.
-		if ( useZStd )
+		if ( useZStd && static_cast<int>( buffer->ulCurrentSize ) >= net_zstd_threshold )
 		{
 			size_t zstdResult;
 			if ( g_zstdCdict != nullptr )
 				zstdResult = ZSTD_compress_usingCDict( g_zstdCctx, g_ucHuffmanBuffer, sizeof( g_ucHuffmanBuffer ), buffer->pbData, buffer->ulCurrentSize, g_zstdCdict );
 			else
-				zstdResult = ZSTD_compressCCtx( g_zstdCctx, g_ucHuffmanBuffer, sizeof( g_ucHuffmanBuffer ), buffer->pbData, buffer->ulCurrentSize, 12 );
+				zstdResult = ZSTD_compressCCtx( g_zstdCctx, g_ucHuffmanBuffer, sizeof( g_ucHuffmanBuffer ), buffer->pbData, buffer->ulCurrentSize, net_zstd_level );
 
 			if ( ZSTD_isError( zstdResult ))
 			{
@@ -879,7 +902,9 @@ void NETWORK_LaunchPacket( NETBUFFER_s *buffer, NETADDRESS_s address, bool useZS
 			numBytesOut = static_cast<int>( zstdResult );
 			didUseZstd = true;
 		}
-		else
+		// [SB] net_zstd_smart will cause Huffman to be used if a packet's Zstandard-compressed size
+		// is greater than its original uncompressed size.
+		if ( !didUseZstd || ( net_zstd_smart && numBytesOut >= static_cast<int>( buffer->ulCurrentSize )))
 		{
 			numBytesOut = sizeof( g_ucHuffmanBuffer );
 			HUFFMAN_Encode( static_cast<unsigned char *>( buffer->pbData ), g_ucHuffmanBuffer, buffer->ulCurrentSize, &numBytesOut );
