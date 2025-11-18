@@ -402,6 +402,7 @@ float			NETWORK_AttenuationIntToFloat ( const int iAttenuation );
 // Access functions.
 LONG			NETWORK_GetState( void );
 void			NETWORK_SetState( LONG lState );
+unsigned		NETWORK_GetZstdDictId( void );
 
 void			I_DoSelect( void );
 
