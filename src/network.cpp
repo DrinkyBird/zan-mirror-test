@@ -256,6 +256,7 @@ static const std::vector<std::string> g_FreedoomDehackedHashes = {
 //	PROTOTYPES
 
 static	void			network_InitZstd( void );
+static	void			network_DestructZstd( void );
 static	void			network_InitPWADList( void );
 static	void			network_Error( const char *pszError );
 static	SOCKET			network_AllocateSocket( void );
@@ -265,6 +266,29 @@ static	bool			network_GenerateLumpMD5HashAndWarnIfNeeded( const int LumpNum, con
 static	void			network_CheckIfDuplicateLump( const int LumpNum ); // [AK]
 static	void			network_AddSpritesToList( std::set<AUTHENTICATELUMP_s> &list, const char *name, const std::set<char> frames, const LumpAuthenticationMode mode ); // [AK]
 static	void			network_ParseLumpAuthenticationMode( FScanner &sc, LumpAuthenticationMode &mode );
+
+//*****************************************************************************
+//	CONSOLE VARIABLES
+CUSTOM_CVAR( Int, net_zstd_level, 12, CVAR_ARCHIVE )
+{
+	const int maxLevel = ZSTD_maxCLevel( );
+	if (self < 1)
+	{
+		self = 1;
+		return;
+	}
+	else if (self > maxLevel)
+	{
+		self = maxLevel;
+		return;
+	}
+
+	// [SB] The compression level is part of the CDict object, so we need to re-init Zstandard.
+	network_DestructZstd();
+	network_InitZstd();
+}
+CVAR( Int, net_zstd_threshold, 100, CVAR_ARCHIVE )
+CVAR( Bool, net_zstd_smart, false, CVAR_ARCHIVE )
 
 //*****************************************************************************
 //	FUNCTIONS
@@ -759,11 +783,7 @@ void NETWORK_Destruct( void )
 	// [BB] This needs to be cleared since we assume it to be empty during a restart.
 	g_LumpNumsToAuthenticate.Clear();
 
-	// [SB] Destroy the Zstandard contexts.
-	ZSTD_freeDDict( g_zstdDdict );
-	ZSTD_freeCDict( g_zstdCdict );
-	ZSTD_freeDCtx( g_zstdDctx );
-	ZSTD_freeCCtx( g_zstdCctx );
+	network_DestructZstd();
 }
 
 //*****************************************************************************
@@ -778,11 +798,8 @@ void network_InitZstd( void )
 	{
 		auto lump = Wads.ReadLump( lumpnum );
 		g_zstdDictId = ZSTD_getDictID_fromDict( lump.GetMem(), lump.GetSize() );
-		g_zstdCdict = ZSTD_createCDict( lump.GetMem(), lump.GetSize(), 12 );
+		g_zstdCdict = ZSTD_createCDict( lump.GetMem(), lump.GetSize(), net_zstd_level );
 		g_zstdDdict = ZSTD_createDDict( lump.GetMem(), lump.GetSize() );
-
-		ZSTD_CCtx_refCDict( g_zstdCctx, g_zstdCdict );
-		ZSTD_DCtx_refDDict( g_zstdDctx, g_zstdDdict );
 	}
 	else
 	{
@@ -790,6 +807,20 @@ void network_InitZstd( void )
 	}
 
 	Printf( "DBG zstd dict id = %u\n", g_zstdDictId );
+}
+
+//*****************************************************************************
+//
+void network_DestructZstd( void )
+{
+	ZSTD_freeDDict( g_zstdDdict );
+	g_zstdDdict = nullptr;
+	ZSTD_freeCDict( g_zstdCdict );
+	g_zstdCdict = nullptr;
+	ZSTD_freeDCtx( g_zstdDctx );
+	g_zstdDctx = nullptr;
+	ZSTD_freeCCtx( g_zstdCctx );
+	g_zstdCctx = nullptr;
 }
 
 //*****************************************************************************
@@ -844,13 +875,14 @@ void NETWORK_LaunchPacket( NETBUFFER_s *buffer, NETADDRESS_s address, bool useZS
 	if ( address.Compare( NETWORK_AUTH_GetCachedServerAddress( )) == false )
 	{
 		// [AK] Choose between compressing the packet using ZStd or Huffman.
+		useZStd = useZStd && static_cast<int>(buffer->ulCurrentSize) >= net_zstd_threshold;
 		if ( useZStd )
 		{
 			size_t zstdResult;
 			if ( g_zstdCdict != nullptr )
 				zstdResult = ZSTD_compress_usingCDict( g_zstdCctx, g_ucHuffmanBuffer, sizeof( g_ucHuffmanBuffer ), buffer->pbData, buffer->ulCurrentSize, g_zstdCdict );
 			else
-				zstdResult = ZSTD_compressCCtx( g_zstdCctx, g_ucHuffmanBuffer, sizeof( g_ucHuffmanBuffer ), buffer->pbData, buffer->ulCurrentSize, 12 );
+				zstdResult = ZSTD_compressCCtx( g_zstdCctx, g_ucHuffmanBuffer, sizeof( g_ucHuffmanBuffer ), buffer->pbData, buffer->ulCurrentSize, net_zstd_level );
 
 			if ( ZSTD_isError( zstdResult ))
 			{
@@ -860,15 +892,12 @@ void NETWORK_LaunchPacket( NETBUFFER_s *buffer, NETADDRESS_s address, bool useZS
 
 			numBytesOut = static_cast<int>( zstdResult );
 			didUseZstd = true;
-
-			//Printf("DBG sent %d bytes using zstd\n", numBytesOut);
 		}
-		if ( !useZStd || numBytesOut >= buffer->ulCurrentSize )
+		if ( !useZStd || ( net_zstd_smart && numBytesOut >= static_cast<int>(buffer->ulCurrentSize) ) )
 		{
 			numBytesOut = sizeof( g_ucHuffmanBuffer );
 			HUFFMAN_Encode( static_cast<unsigned char *>( buffer->pbData ), g_ucHuffmanBuffer, buffer->ulCurrentSize, &numBytesOut );
 			didUseZstd = false;
-			//Printf("DBG sent %d bytes using huffman\n", numBytesOut);
 		}
 	}
 	else
