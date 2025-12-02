@@ -856,6 +856,8 @@ void NETWORK_LaunchPacket( NETBUFFER_s *buffer, NETADDRESS_s address, bool useZS
 	struct sockaddr_in socketAddress;
 	address.ToSocketAddress( reinterpret_cast<sockaddr &>( socketAddress ));
 
+	bool didUseZstd = false; // [SB]
+
 	// [BB] Communication with the auth server is not Huffman-encoded.
 	if ( address.Compare( NETWORK_AUTH_GetCachedServerAddress( )) == false )
 	{
@@ -881,6 +883,7 @@ void NETWORK_LaunchPacket( NETBUFFER_s *buffer, NETADDRESS_s address, bool useZS
 		{
 			numBytesOut = sizeof( g_ucHuffmanBuffer );
 			HUFFMAN_Encode( static_cast<unsigned char *>( buffer->pbData ), g_ucHuffmanBuffer, buffer->ulCurrentSize, &numBytesOut );
+			didUseZstd = false;
 		}
 	}
 	else
@@ -941,7 +944,7 @@ void NETWORK_LaunchPacket( NETBUFFER_s *buffer, NETADDRESS_s address, bool useZS
 		SERVER_STATISTIC_AddToOutboundDataTransfer( numBytes );
 	// [AK] Clients add the size of this packet to the number of bytes sent.
 	else if (( NETWORK_GetState( ) == NETSTATE_CLIENT ) && ( address.Compare( CLIENT_GetServerAddress( ))))
-		CLIENTSTATISTICS_AddToBytesSent( buffer->ulCurrentSize, numBytes );
+		CLIENTSTATISTICS_AddToBytesSent( buffer->ulCurrentSize, numBytes, didUseZstd );
 }
 
 //*****************************************************************************
@@ -1878,7 +1881,7 @@ static int network_ReadPacketsFromSocket( SOCKET &socket )
 
 	// [AK] Clients add the size of the packet to the number of bytes received.
 	if (( NETWORK_GetState( ) == NETSTATE_CLIENT ) && ( g_AddressFrom.Compare( CLIENT_GetServerAddress( ))))
-		CLIENTSTATISTICS_AddToBytesReceived( g_NetworkMessage.ulCurrentSize, numBytes );
+		CLIENTSTATISTICS_AddToBytesReceived( g_NetworkMessage.ulCurrentSize, numBytes, g_LatestPacketUsedZStd );
 
 	return g_NetworkMessage.ulCurrentSize;
 }
