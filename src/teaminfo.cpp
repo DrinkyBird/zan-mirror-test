@@ -57,6 +57,8 @@
 
 void TEAMINFO_Init ();
 void TEAMINFO_ParseTeam (FScanner &sc);
+// [BOF]
+void TEAMINFO_ParseMusic(FScanner& sc, FString& name, int& order);
 
 // [CW] See 'TEAM_CheckIfValid' in 'team.cpp'.
 
@@ -221,13 +223,11 @@ void TEAMINFO_ParseTeam (FScanner &sc)
 			break;
 
 		case 13:
-			sc.MustGetString( );
-			team.WinnerTheme = sc.String;
+			TEAMINFO_ParseMusic(sc, team.WinnerTheme, team.winnerthemeorder);	// [BOF] Parse music similarly to MAPINFO for track postiion.
 			break;
 
 		case 14:
-			sc.MustGetString( );
-			team.LoserTheme = sc.String;
+			TEAMINFO_ParseMusic(sc, team.LoserTheme, team.loserthemeorder);		// [BOF] Parse music similarly to MAPINFO for track postiion.
 			break;
 
 		case 15:
@@ -241,6 +241,25 @@ void TEAMINFO_ParseTeam (FScanner &sc)
 	}
 
 	teams.Push (team);
+}
+
+// [BOF] Parse Winning and Losing themes.
+void TEAMINFO_ParseMusic(FScanner &sc, FString &name, int &order)
+{
+	sc.MustGetString();
+
+	order = 0;
+	char *colon = strchr (sc.String, ':');
+	if (colon)
+	{
+		order = atoi(colon+1);
+		*colon = 0;
+	}
+	name = sc.String;
+	if (!colon && sc.CheckNumber())
+	{
+		order = sc.Number;
+	}
 }
 
 /*
