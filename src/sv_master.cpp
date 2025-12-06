@@ -357,19 +357,21 @@ static void server_master_WriteTeamInfoScore( const LauncherResponseContext &ctx
 }
 
 //*****************************************************************************
-// [BB] Testing server and what's the binary name?
-static void server_master_WriteTestingServer( const LauncherResponseContext &ctx )
+// [BB/TRSR] Testing server and what's the binary name?
+static void server_master_WriteServerBinary( const LauncherResponseContext &ctx )
 {
-#if ( BUILD_ID == BUILD_RELEASE )
-	ctx.pByteStream->WriteByte( 0 );
-	ctx.pByteStream->WriteString( "" );
-#else
-	ctx.pByteStream->WriteByte( 1 );
-	// [BB] Name of the testing binary archive found in http://zandronum.com/
-	FString testingBinary;
-	testingBinary.Format ( "downloads/testing/%s/ZandroDev%s-%swindows.zip", GAMEVER_STRING, GAMEVER_STRING, GetGitTime() );
-	ctx.pByteStream->WriteString( testingBinary.GetChars() );
-#endif
+	const bool stable = BUILD_ID == BUILD_RELEASE;
+
+	ctx.pByteStream->WriteByte( static_cast<int>( !stable ) );
+
+	// [BB/TRSR] Name of the binary archive found in https://zandronum.com/
+	FString binary;
+	if ( stable )
+		binary.Format ( "downloads/zandronum%s-win32-base.zip", GAMEVER_STRING );
+	else
+		binary.Format ( "downloads/testing/%s/ZandroDev%s-%swindows.zip", GAMEVER_STRING, GAMEVER_STRING, GetGitTime() );
+
+	ctx.pByteStream->WriteString( binary.GetChars() );
 }
 
 //*****************************************************************************
@@ -521,7 +523,7 @@ static const std::map<ULONG, LauncherFieldFunction> ResponseFunctions[] =
 		{ SQF_TEAMINFO_NAME,		server_master_WriteTeamInfoName },
 		{ SQF_TEAMINFO_COLOR,		server_master_WriteTeamInfoColor },
 		{ SQF_TEAMINFO_SCORE,		server_master_WriteTeamInfoScore },
-		{ SQF_TESTING_SERVER,		server_master_WriteTestingServer },
+		{ SQF_SERVER_BINARY,		server_master_WriteServerBinary },
 		{ SQF_DATA_MD5SUM,			server_master_WriteDataMD5Sum },
 		{ SQF_ALL_DMFLAGS,			server_master_WriteAllDMFlags },
 		{ SQF_SECURITY_SETTINGS,	server_master_WriteSecuritySettings },

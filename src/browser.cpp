@@ -725,7 +725,7 @@ void BROWSER_ParseServerQuery( BYTESTREAM_s *pByteStream, bool bLAN )
 	}
 
 	// [BB] Testing server and what's the binary name?
-	if ( ulFlags & SQF_TESTING_SERVER )
+	if ( ulFlags & SQF_SERVER_BINARY )
 	{
 		pByteStream->ReadByte();
 		pByteStream->ReadString();
