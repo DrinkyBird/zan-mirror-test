@@ -57,8 +57,7 @@
 
 void TEAMINFO_Init ();
 void TEAMINFO_ParseTeam (FScanner &sc);
-// [BOF]
-void TEAMINFO_ParseMusic(FScanner& sc, FString& name, int& order);
+void TEAMINFO_ParseMusic (FScanner &sc, FString &name, int &order); // [BOF]
 
 // [CW] See 'TEAM_CheckIfValid' in 'team.cpp'.
 
@@ -115,7 +114,7 @@ void TEAMINFO_Init ()
 				teams.Clear ();
 			else if (sc.Compare("TEAM"))
 				TEAMINFO_ParseTeam (sc);
-			else 
+			else
 				sc.ScriptError ("Unknown command %s in TEAMINFO", sc.String);
 		}
 	}
@@ -139,8 +138,10 @@ void TEAMINFO_Init ()
 void TEAMINFO_ParseTeam (FScanner &sc)
 {
 	TEAMINFO team;
-	// [BB] Initialize some values.
+	// [BB/BOF] Initialize some values.
 	team.bCustomPlayerColorAllowed = false;
+	team.winnerthemeorder = 0;
+	team.loserthemeorder = 0;
 
 	int i;
 	char *color;
@@ -223,11 +224,13 @@ void TEAMINFO_ParseTeam (FScanner &sc)
 			break;
 
 		case 13:
-			TEAMINFO_ParseMusic(sc, team.WinnerTheme, team.winnerthemeorder);	// [BOF] Parse music similarly to MAPINFO for track postiion.
+			// [BOF] Parse music similarly to MAPINFO for track position.
+			TEAMINFO_ParseMusic( sc, team.WinnerTheme, team.winnerthemeorder );
 			break;
 
 		case 14:
-			TEAMINFO_ParseMusic(sc, team.LoserTheme, team.loserthemeorder);		// [BOF] Parse music similarly to MAPINFO for track postiion.
+			// [BOF] Parse music similarly to MAPINFO for track position.
+			TEAMINFO_ParseMusic( sc, team.LoserTheme, team.loserthemeorder );
 			break;
 
 		case 15:
@@ -243,23 +246,21 @@ void TEAMINFO_ParseTeam (FScanner &sc)
 	teams.Push (team);
 }
 
-// [BOF] Parse Winning and Losing themes.
-void TEAMINFO_ParseMusic(FScanner &sc, FString &name, int &order)
-{
-	sc.MustGetString();
+//==========================================================================
+//
+//	[BOF] TEAMINFO_ParseMusic
+//
+//	Parse Winning and Losing themes.
+//
+//==========================================================================
 
-	order = 0;
-	char *colon = strchr (sc.String, ':');
-	if (colon)
-	{
-		order = atoi(colon+1);
-		*colon = 0;
-	}
-	name = sc.String;
-	if (!colon && sc.CheckNumber())
-	{
-		order = sc.Number;
-	}
+void TEAMINFO_ParseMusic (FScanner &sc, FString &name, int &order)
+{
+	FMapInfoParser mapInfoParser;
+
+	mapInfoParser.sc = sc;
+	mapInfoParser.ParseMusic( name, order );
+	sc = mapInfoParser.sc;
 }
 
 /*

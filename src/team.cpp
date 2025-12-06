@@ -1719,7 +1719,7 @@ const char* TEAM_GetIntermissionTheme( ULONG ulTeam, bool bWin ) {
 // [BOF] Get Teams Winning/Losing music position
 int TEAM_GetIntermissionThemeOrder( ULONG ulTeam, bool bWin ) {
 	if ( !TEAM_CheckIfValid( ulTeam ) )
-		return NULL;
+		return 0;
 	if ( bWin )
 		return teams[ulTeam].winnerthemeorder;
 	else
@@ -1728,15 +1728,14 @@ int TEAM_GetIntermissionThemeOrder( ULONG ulTeam, bool bWin ) {
 
 //*****************************************************************************
 // [BOF] Select Team or Default music position for Intermission
-const int TEAM_SelectMusicOrder ( player_t *pPlayer, const FString TEAMINFO::*stringPointer, const int TEAMINFO::*intPointer, const int pszDefaultOrder )
-{
+int TEAM_SelectMusicOrder( player_t *pPlayer, const FString TEAMINFO::*teamMusic, const int TEAMINFO::*teamMusicOrder, const int defaultOrder ) {
 	if ( pPlayer == NULL )
-		return pszDefaultOrder;
+		return defaultOrder;
 
-	if ( pPlayer->bOnTeam && TEAM_HasCustomString ( pPlayer->Team, stringPointer ) )
-		return teams[pPlayer->Team].*intPointer;
+	if ( pPlayer->bOnTeam && TEAM_HasCustomString ( pPlayer->Team, teamMusic ) )
+		return teams[pPlayer->Team].*teamMusicOrder;
 	else
-		return pszDefaultOrder;
+		return defaultOrder;
 }
 
 //*****************************************************************************
