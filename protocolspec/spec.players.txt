@@ -39,17 +39,17 @@ Command MovePlayer
 	# [AK] The server should only send the player's velocity when it's not zero.
 	If ((flags & PLAYER_VISIBLE) && (flags & PLAYER_SENDVELX))
 		CheckFunction IsMovingX
-		AproxFixed velx
+		Fixed velx
 	EndIf
 
 	If ((flags & PLAYER_VISIBLE) && (flags & PLAYER_SENDVELY))
 		CheckFunction IsMovingY
-		AproxFixed vely
+		Fixed vely
 	EndIf
 
 	If ((flags & PLAYER_VISIBLE) && (flags & PLAYER_SENDVELZ))
 		CheckFunction IsMovingZ
-		AproxFixed velz
+		Fixed velz
 	EndIf
 EndCommand
 
