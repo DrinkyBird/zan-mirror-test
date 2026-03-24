@@ -933,11 +933,12 @@ void TEAM_SetPointCount( unsigned int team, int pointCount, bool doAnnouncement,
 
 //*****************************************************************************
 //
-const char *TEAM_GetSmallHUDIcon( ULONG ulTeamIdx )
+const char *TEAM_GetSmallHUDIcon( ULONG ulTeamIdx, int mode )
 {
 	if ( TEAM_CheckIfValid( ulTeamIdx ))
 	{
-		if ( GAMEMODE_GetCurrentFlags() & GMF_USEFLAGASTEAMITEM )
+		bool flag = ( mode == -1 && GAMEMODE_GetCurrentFlags() & GMF_USEFLAGASTEAMITEM ) || mode == 1;
+		if ( flag )
 			return ( teams[ulTeamIdx].SmallFlagHUDIcon.GetChars( ));
 		else
 			return ( teams[ulTeamIdx].SmallSkullHUDIcon.GetChars( ) );
@@ -961,11 +962,12 @@ void TEAM_SetSmallHUDIcon( ULONG ulTeamIdx, const char *pszName, bool bFlag )
 
 //*****************************************************************************
 //
-const char *TEAM_GetLargeHUDIcon( ULONG ulTeamIdx )
+const char *TEAM_GetLargeHUDIcon( ULONG ulTeamIdx, int mode )
 {
 	if ( ulTeamIdx < teams.Size( ))
 	{
-		if ( GAMEMODE_GetCurrentFlags() & GMF_USEFLAGASTEAMITEM )
+		bool flag = ( mode == -1 && GAMEMODE_GetCurrentFlags() & GMF_USEFLAGASTEAMITEM ) || mode == 1;
+		if ( flag )
 			return ( teams[ulTeamIdx].LargeFlagHUDIcon.GetChars( ));
 		else
 			return ( teams[ulTeamIdx].LargeSkullHUDIcon.GetChars( ) );

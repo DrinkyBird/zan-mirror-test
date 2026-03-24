@@ -116,10 +116,10 @@ void		TEAM_SetRailgunColor( ULONG ulTeamIdx, LONG lColor );
 LONG		TEAM_GetPointCount( ULONG ulTeamIdx );
 void		TEAM_SetPointCount( unsigned int team, int pointCount, bool doAnnouncement, bool showWinSequence = true );
 
-const char	*TEAM_GetSmallHUDIcon( ULONG ulTeamIdx );
+const char	*TEAM_GetSmallHUDIcon( ULONG ulTeamIdx, int mode = -1 );
 void		TEAM_SetSmallHUDIcon( ULONG ulTeamIdx, const char *pszName, bool bFlag );
 
-const char	*TEAM_GetLargeHUDIcon( ULONG ulTeamIdx );
+const char	*TEAM_GetLargeHUDIcon( ULONG ulTeamIdx, int mode = -1 );
 void		TEAM_SetLargeHUDIcon( ULONG ulTeamIdx, const char *pszName, bool bFlag );
 
 bool		TEAM_HasCustomString( ULONG ulTeamIdx, const FString TEAMINFO::*stringPointer );

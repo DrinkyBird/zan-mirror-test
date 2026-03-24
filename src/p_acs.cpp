@@ -1641,11 +1641,26 @@ static int GetTeamProperty (unsigned int team, int prop) {
 		case TPROP_WinnerThemeOrder:
 		case TPROP_LoserThemeOrder:
 			return TEAM_GetIntermissionThemeOrder (team, prop == TPROP_WinnerThemeOrder);
+		// [TRSR] Color properties manipulatable by SetTeamProperty
+		case TPROP_AllowCustomPlayerColor:
+			return TEAM_IsCustomPlayerColorAllowed (team);
+		case TPROP_RailColor:
+			return TEAM_GetRailgunColor (team);
+		case TPROP_PlayerColor:
+			return TEAM_GetColor (team);
 		// [Dusk] Now for the strings! Using dynamic strings for this.
 		case TPROP_TeamItem:
 		case TPROP_WinnerTheme:
 		case TPROP_LoserTheme:
 		case TPROP_Name:
+		// [TRSR] Extra properties from SetTeamProperty
+		case TPROP_Logo:
+		case TPROP_SmallFlagHUDIcon:
+		case TPROP_SmallSkullHUDIcon:
+		case TPROP_LargeFlagHUDIcon:
+		case TPROP_LargeSkullHUDIcon:
+		case TPROP_WinnerPic:
+		case TPROP_LoserPic:
 		{
 			FString work;
 			int res;
@@ -1661,6 +1676,24 @@ static int GetTeamProperty (unsigned int team, int prop) {
 				break;
 			case TPROP_Name:
 				work += TEAM_GetName (team);
+				break;
+			// [TRSR] Extra properties from SetTeamProperty
+			case TPROP_Logo:
+				work += TEAM_GetCustomString (team, &TEAMINFO::Logo);
+				break;
+			case TPROP_SmallFlagHUDIcon:
+			case TPROP_SmallSkullHUDIcon:
+				work += TEAM_GetSmallHUDIcon (team, prop == TPROP_SmallFlagHUDIcon ? 1 : 0 );
+				break;
+			case TPROP_LargeFlagHUDIcon:
+			case TPROP_LargeSkullHUDIcon:
+				work += TEAM_GetLargeHUDIcon (team, prop == TPROP_LargeFlagHUDIcon ? 1 : 0 );
+				break;
+			case TPROP_WinnerPic:
+				work += TEAM_GetCustomString (team, &TEAMINFO::WinnerPic);
+				break;
+			case TPROP_LoserPic:
+				work += TEAM_GetCustomString (team, &TEAMINFO::LoserPic);
 				break;
 			}
 
