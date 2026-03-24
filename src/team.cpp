@@ -79,6 +79,7 @@
 #include "v_video.h"
 #include "templates.h"
 #include "d_event.h"
+#include "domination.h"
 
 //*****************************************************************************
 //	MISC CRAP THAT SHOULDN'T BE HERE BUT HAS TO BE BECAUSE OF SLOPPY CODING
@@ -778,10 +779,16 @@ int TEAM_GetColor( ULONG ulTeamIdx )
 
 //*****************************************************************************
 //
-void TEAM_SetColor( ULONG ulTeamIdx, int r, int g, int b )
+void TEAM_SetColor( ULONG ulTeamIdx, LONG color )
 {
-	if ( TEAM_CheckIfValid( ulTeamIdx ))
-		teams[ulTeamIdx].lPlayerColor = MAKERGB (r, g, b);
+	if ( !TEAM_CheckIfValid( ulTeamIdx ))
+		return;
+
+	teams[ulTeamIdx].lPlayerColor = color;
+
+	// [TRSR] Update other modules which relied on this color
+	SCOREBOARD_UpdateTeamRowBackgroundColors();
+	DOMINATION_ResetControlPointColors();
 }
 
 //*****************************************************************************
@@ -793,6 +800,14 @@ bool TEAM_IsCustomPlayerColorAllowed( ULONG ulTeamIdx )
 	// [BB] Players on an invalid team (or not on a team) are free to choose their color
 	else
 		return true;
+}
+
+//*****************************************************************************
+//
+void TEAM_SetCustomPlayerColorAllowed( ULONG ulTeamIdx, bool allowed )
+{
+	if ( TEAM_CheckIfValid( ulTeamIdx ))
+		teams[ulTeamIdx].bCustomPlayerColorAllowed = allowed;
 }
 
 //*****************************************************************************
@@ -829,10 +844,10 @@ ULONG TEAM_GetTextColor( ULONG ulTeamIdx )
 
 //*****************************************************************************
 //
-void TEAM_SetTextColor( ULONG ulTeamIdx, ULONG ulColor )
+void TEAM_SetTextColor( ULONG ulTeamIdx, FString color )
 {
 	if ( TEAM_CheckIfValid( ulTeamIdx ))
-		teams[ulTeamIdx].ulTextColor = ulColor;
+		teams[ulTeamIdx].TextColor = color;
 }
 
 //*****************************************************************************
@@ -1003,6 +1018,27 @@ const char *TEAM_SelectCustomStringForPlayer( player_t *pPlayer, const FString T
 		return TEAM_GetCustomString ( pPlayer->Team, stringPointer );
 	else
 		return pszDefaultString;
+}
+
+//*****************************************************************************
+//
+void TEAM_SetCustomString( ULONG ulTeamIdx, FString TEAMINFO::*stringPointer, FString string )
+{
+	if ( TEAM_CheckIfValid( ulTeamIdx ))
+		teams[ulTeamIdx].*stringPointer = string;
+}
+
+//*****************************************************************************
+//
+void TEAM_SetThemeOrder( ULONG ulTeamIdx, int order, bool winner )
+{
+	if ( !TEAM_CheckIfValid( ulTeamIdx ))
+		return;
+
+	if ( winner )
+		teams[ulTeamIdx].winnerthemeorder = order;
+	else
+		teams[ulTeamIdx].loserthemeorder = order;
 }
 
 //*****************************************************************************
@@ -1740,6 +1776,62 @@ int TEAM_SelectMusicOrder( player_t *pPlayer, const FString TEAMINFO::*teamMusic
 		return teams[pPlayer->Team].*teamMusicOrder;
 	else
 		return defaultOrder;
+}
+
+//*****************************************************************************
+// [TRSR] Given TEAMINFO struct for server command, update a given team
+void TEAM_UpdateFromServerCommand( int index, const ServerCommands::TeamInfo *team )
+{
+	TEAM_SetName( index, team->name );
+
+	TEAM_SetColor( index, team->playerColor );
+	TEAM_SetTextColor( index, team->textColor );
+	TEAM_SetRailgunColor( index, team->railColor );
+	TEAM_SetCustomPlayerColorAllowed( index, team->customPlayerColorAllowed );
+
+	TEAM_SetCustomString( index, &TEAMINFO::Logo, team->logo );
+	TEAM_SetSmallHUDIcon( index, team->smallFlagHUDIcon, true );
+	TEAM_SetSmallHUDIcon( index, team->smallSkullHUDIcon, false );
+	TEAM_SetLargeHUDIcon( index, team->largeFlagHUDIcon, true );
+	TEAM_SetLargeHUDIcon( index, team->largeSkullHUDIcon, false );
+
+	TEAM_SetCustomString( index, &TEAMINFO::WinnerPic, team->winnerPic );
+	TEAM_SetCustomString( index, &TEAMINFO::WinnerPic, team->loserPic );
+
+	TEAM_SetCustomString( index, &TEAMINFO::WinnerTheme, team->winnerTheme );
+	TEAM_SetThemeOrder( index, team->winnerThemeOrder, true );
+	TEAM_SetCustomString( index, &TEAMINFO::LoserTheme, team->loserTheme );
+	TEAM_SetThemeOrder( index, team->loserThemeOrder, false );
+}
+
+//*****************************************************************************
+// [TRSR] Build a ServerCommands::TeamInfo object for server commands
+ServerCommands::TeamInfo TEAM_BuildServerCommandStruct( int index )
+{
+	ServerCommands::TeamInfo team;
+
+	team.name = teams[index].Name;
+
+	team.textColor = teams[index].TextColor;
+	team.playerColor = teams[index].lPlayerColor;
+	team.railColor = teams[index].lRailColor;
+	team.customPlayerColorAllowed = teams[index].bCustomPlayerColorAllowed;
+
+	team.logo = teams[index].Logo;
+	team.smallFlagHUDIcon = teams[index].SmallFlagHUDIcon;
+	team.smallSkullHUDIcon = teams[index].SmallSkullHUDIcon;
+	team.largeFlagHUDIcon = teams[index].LargeFlagHUDIcon;
+	team.largeSkullHUDIcon = teams[index].LargeSkullHUDIcon;
+
+	team.winnerPic = teams[index].WinnerPic;
+	team.loserPic = teams[index].LoserPic;
+
+	team.winnerTheme = teams[index].WinnerTheme;
+	team.winnerThemeOrder = teams[index].winnerthemeorder;
+	team.loserTheme = teams[index].LoserTheme;
+	team.loserThemeOrder = teams[index].loserthemeorder;
+
+	return team;
 }
 
 //*****************************************************************************

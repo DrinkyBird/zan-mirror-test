@@ -5551,6 +5551,7 @@ enum EACSFunctions
 	ACSF_GetWadInfo,
 	ACSF_SetMapUsedStatus,
 	ACSF_CheckScript,
+	ACSF_SetTeamProperty, // [TRSR]
 
 	// ZDaemon
 	ACSF_GetTeamScore = 19620,	// (int team)
@@ -9004,6 +9005,96 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 				return ACS_ExistsScript( -FName( FBehavior::StaticLookupString( args[0] )));
 			else
 				return ACS_ExistsScript( args[0] );
+		}
+
+		case ACSF_SetTeamProperty:
+		{
+			if ( !TEAM_CheckIfValid( args[0] ) )
+				return 0;
+
+			const char *value = nullptr;
+
+			// Validate string fields
+			switch( args[1] )
+			{
+				case TPROP_Name:
+				case TPROP_TextColor:
+				case TPROP_PlayerColor:
+				case TPROP_RailColor:
+				case TPROP_Logo:
+				case TPROP_SmallFlagHUDIcon:
+				case TPROP_SmallSkullHUDIcon:
+				case TPROP_LargeFlagHUDIcon:
+				case TPROP_LargeSkullHUDIcon:
+				case TPROP_WinnerPic:
+				case TPROP_LoserPic:
+				case TPROP_WinnerTheme:
+				case TPROP_LoserTheme:
+					value = FBehavior::StaticLookupString( args[2] );
+					if ( value == nullptr )
+						return 0;
+			}
+
+			switch( args[1] )
+			{
+				case TPROP_Name:
+					TEAM_SetName( args[0], value );
+					break;
+				case TPROP_TextColor:
+					{
+						FString color = '[';
+						color += value;
+						color += ']';
+						TEAM_SetTextColor( args[0], color );
+					}
+					break;
+				case TPROP_PlayerColor:
+					TEAM_SetColor( args[0], V_GetColor( NULL, value ) );
+					break;
+				case TPROP_RailColor:
+					TEAM_SetRailgunColor( args[0], V_GetColorFromString( NULL, value ) );
+					break;
+				case TPROP_Logo:
+					TEAM_SetCustomString( args[0], &TEAMINFO::Logo, value );
+					break;
+				case TPROP_SmallFlagHUDIcon:
+					TEAM_SetSmallHUDIcon( args[0], value, true );
+					break;
+				case TPROP_SmallSkullHUDIcon:
+					TEAM_SetSmallHUDIcon( args[0], value, false );
+					break;
+				case TPROP_LargeFlagHUDIcon:
+					TEAM_SetLargeHUDIcon( args[0], value, true );
+					break;
+				case TPROP_LargeSkullHUDIcon:
+					TEAM_SetLargeHUDIcon( args[0], value, false );
+					break;
+				case TPROP_WinnerPic:
+					TEAM_SetCustomString( args[0], &TEAMINFO::WinnerPic, value );
+					break;
+				case TPROP_LoserPic:
+					TEAM_SetCustomString( args[0], &TEAMINFO::LoserPic, value );
+					break;
+				case TPROP_WinnerTheme:
+					TEAM_SetCustomString( args[0], &TEAMINFO::WinnerTheme, value );
+					break;
+				case TPROP_WinnerThemeOrder:
+					TEAM_SetThemeOrder( args[0], args[2], true );
+					break;
+				case TPROP_LoserTheme:
+					TEAM_SetCustomString( args[0], &TEAMINFO::LoserTheme, value );
+					break;
+				case TPROP_LoserThemeOrder:
+					TEAM_SetThemeOrder( args[0], args[2], false );
+					break;
+				default:
+					return 0;
+			}
+
+			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
+				SERVERCOMMANDS_SyncTeamInfo( args[0] );
+
+			return 1;
 		}
 
 		case ACSF_GetActorFloorTexture:

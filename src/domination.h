@@ -71,6 +71,7 @@ void DOMINATION_Tick(void);
 void DOMINATION_SetOwnership(unsigned int point, unsigned int team, bool broadcast = true);
 void DOMINATION_SetContesting(unsigned int point, std::set<int> contesting);
 void DOMINATION_SetDisabled(unsigned int point, bool disabled);
+void DOMINATION_ResetControlPointColors(void);
 void DOMINATION_Init(void);
 void DOMINATION_Clear(void);
 

@@ -9768,6 +9768,23 @@ void ServerCommands::SetDominationPointState::Execute()
 }
 
 //*****************************************************************************
+// [TRSR]
+void ServerCommands::SyncTeamInfo::Execute()
+{
+	TEAM_UpdateFromServerCommand( index, &team );
+}
+
+//*****************************************************************************
+// [TRSR]
+void ServerCommands::SyncFullTeamInfo::Execute()
+{
+	for ( unsigned int i = 0; i < teams.Size(); i++ )
+	{
+		TEAM_UpdateFromServerCommand( i, &teams[i] );
+	}
+}
+
+//*****************************************************************************
 //
 void STACK_ARGS CLIENT_PrintWarning( const char* format, ... )
 {

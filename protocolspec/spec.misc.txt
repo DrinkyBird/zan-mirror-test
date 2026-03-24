@@ -92,3 +92,33 @@ Command SetDominationPointState
 	Bool disabled
 	Byte[] contesters
 EndCommand
+
+Struct TeamInfo
+	String name
+	String textColor
+	Long playerColor
+	Long railColor
+	Bool customPlayerColorAllowed
+	String logo
+	String smallFlagHUDIcon
+	String smallSkullHUDIcon
+	String largeFlagHUDIcon
+	String largeSkullHUDIcon
+	String winnerPic
+	String loserPic
+	String winnerTheme
+	Long winnerThemeOrder
+	String loserTheme
+	Long loserThemeOrder
+EndStruct
+
+Command SyncTeamInfo
+	ExtendedCommand
+	Byte index
+	Struct<TeamInfo> team
+EndCommand
+
+Command SyncFullTeamInfo
+	ExtendedCommand
+	Struct<TeamInfo>[] teams
+EndCommand

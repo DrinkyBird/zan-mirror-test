@@ -451,6 +451,17 @@ enum
 	// [BOF] Team Property for Winner/Loser theme Order
 	TPROP_WinnerThemeOrder,
 	TPROP_LoserThemeOrder,
+	// [TRSR] Additional constants relevant for SetTeamProperty
+	TPROP_PlayerColor,
+	TPROP_RailColor,
+	TPROP_AllowCustomPlayerColor,
+	TPROP_Logo,
+	TPROP_SmallFlagHUDIcon,
+	TPROP_SmallSkullHUDIcon,
+	TPROP_LargeFlagHUDIcon,
+	TPROP_LargeSkullHUDIcon,
+	TPROP_WinnerPic,
+	TPROP_LoserPic
 };
 
 class FBehavior

@@ -648,6 +648,7 @@ private:
 
 void			SCOREBOARD_Construct( void );
 void			SCOREBOARD_Destruct( void );
+void			SCOREBOARD_UpdateTeamRowBackgroundColors( void );
 void			SCOREBOARD_ParseFont( FScanner &sc, FFont *&font );
 void			SCOREBOARD_ParseTextColor( FScanner &sc, EColorRange &color );
 void			SCOREBOARD_Reset( void );

@@ -56,6 +56,7 @@
 //#include "keycard.h"
 #include "d_player.h"
 #include "teaminfo.h"
+#include "network/servercommands.h"
 
 //*****************************************************************************
 //	DEFINES
@@ -101,12 +102,13 @@ void		TEAM_SetName( ULONG ulTeamIdx, const char *pszName );
 ULONG		TEAM_GetTeamNumberByName( const char *pszName );
 
 int			TEAM_GetColor( ULONG ulTeamIdx );
-void		TEAM_SetColor( ULONG ulTeamIdx, int r, int g, int b );
+void		TEAM_SetColor( ULONG ulTeamIdx, LONG color );
 bool		TEAM_IsCustomPlayerColorAllowed( ULONG ulTeamIdx );
+void		TEAM_SetCustomPlayerColorAllowed( ULONG ulTeamIdx, bool allowed );
 
 const char	*TEAM_GetTextColorName( ULONG ulTeamIdx );	
 ULONG		TEAM_GetTextColor( ULONG ulTeamIdx );
-void		TEAM_SetTextColor( ULONG ulTeamIdx, USHORT usColor );
+void		TEAM_SetTextColor( ULONG ulTeamIdx, FString color );
 
 LONG		TEAM_GetRailgunColor( ULONG ulTeamIdx );
 void		TEAM_SetRailgunColor( ULONG ulTeamIdx, LONG lColor );
@@ -123,6 +125,8 @@ void		TEAM_SetLargeHUDIcon( ULONG ulTeamIdx, const char *pszName, bool bFlag );
 bool		TEAM_HasCustomString( ULONG ulTeamIdx, const FString TEAMINFO::*stringPointer );
 const char	*TEAM_GetCustomString( ULONG ulTeamIdx, const FString TEAMINFO::*stringPointer );
 const char	*TEAM_SelectCustomStringForPlayer( player_t *pPlayer, const FString TEAMINFO::*stringPointer, const char *pszDefaultString );
+void		TEAM_SetCustomString( ULONG ulTeamIdx, FString TEAMINFO::*stringPointer, FString string );
+void		TEAM_SetThemeOrder( ULONG ulTeamIdx, int order, bool winner );
 
 const PClass	*TEAM_GetItem( ULONG ulTeamIdx );
 void		TEAM_SetItem( ULONG ulTeamIdx, const PClass *pType, bool bFlag );
@@ -194,6 +198,10 @@ const char*	TEAM_GetIntermissionTheme( ULONG ulTeam, bool bWin );
 // [BOF] Functions relating to Music Position
 int			TEAM_GetIntermissionThemeOrder( ULONG ulTeam, bool bWin );
 int			TEAM_SelectMusicOrder( player_t *pPlayer, const FString TEAMINFO::*teamMusic, const int TEAMINFO::*teamMusicOrder, const int defaultOrder );
+
+// [TRSR] Functions related to networking TEAMINFO status
+void TEAM_UpdateFromServerCommand( int index, const ServerCommands::TeamInfo *team );
+ServerCommands::TeamInfo TEAM_BuildServerCommandStruct( int index );
 
 //*****************************************************************************
 //  EXTERNAL CONSOLE VARIABLES

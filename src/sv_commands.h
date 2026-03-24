@@ -258,6 +258,8 @@ void	SERVERCOMMANDS_SetTeamScore( ULONG ulTeam, ULONG ulType, bool bAnnounce, UL
 void	SERVERCOMMANDS_SetTeamReturnTicks( ULONG ulTeam, ULONG ulReturnTicks, ULONG ulPlayerExtra = MAXPLAYERS, ServerCommandFlags flags = 0 );
 void	SERVERCOMMANDS_TeamItemReturned( unsigned int player, unsigned int team, unsigned int playerExtra = MAXPLAYERS, ServerCommandFlags flags = 0 );
 void	SERVERCOMMANDS_TeamItemDropped( unsigned int player, unsigned int team, unsigned int playerExtra = MAXPLAYERS, ServerCommandFlags flags = 0 );
+void	SERVERCOMMANDS_SyncTeamInfo( int team, ULONG ulPlayerExtra = MAXPLAYERS, ServerCommandFlags flags = 0 );
+void	SERVERCOMMANDS_SyncFullTeamInfo( ULONG ulPlayerExtra = MAXPLAYERS, ServerCommandFlags flags = 0 );
 
 // Missile commands. These handle missiles in some way.
 void	SERVERCOMMANDS_SpawnMissile( AActor *pMissile, ULONG ulPlayerExtra = MAXPLAYERS, ServerCommandFlags flags = 0 );

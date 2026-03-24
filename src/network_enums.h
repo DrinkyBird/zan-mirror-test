@@ -396,6 +396,9 @@ BEGIN_ENUM( SVC2 )
 	ENUM_ELEMENT ( SVC2_RCONACCESS ),
 	// [TRSR] Command for syncing Domination point state.
 	ENUM_ELEMENT ( SVC2_SETDOMINATIONPOINTSTATE ),
+	// [TRSR] Commands for syncing team information modified by SetTeamProperty.
+	ENUM_ELEMENT ( SVC2_SYNCTEAMINFO ),
+	ENUM_ELEMENT ( SVC2_SYNCFULLTEAMINFO ),
 
 	ENUM_ELEMENT ( NUM_SVC2_COMMANDS ),
 }

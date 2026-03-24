@@ -278,6 +278,12 @@ void DOMINATION_SetOwnership(unsigned int point, unsigned int team, bool broadca
 		SERVERCOMMANDS_SetDominationPointOwner( point, team, broadcast );
 }
 
+void DOMINATION_ResetControlPointColors()
+{
+	for( unsigned int i = 0; i < level.info->SectorInfo.Points.Size(); i++ )
+		domination_SetControlPointColor( i );
+}
+
 static void domination_SetControlPointColor( unsigned int point )
 {
 	if (( !domination ) || ( point >= level.info->SectorInfo.Points.Size( )))

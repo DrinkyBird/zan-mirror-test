@@ -2784,6 +2784,9 @@ void SERVER_SendFullUpdate( ULONG ulClient )
 	if ( timelimit )
 		SERVERCOMMANDS_SetMapTime( ulClient, SVCF_ONLYTHISCLIENT );
 
+	// Send any potential TEAMINFO modifications which have occurred
+	SERVERCOMMANDS_SyncFullTeamInfo( ulClient, SVCF_ONLYTHISCLIENT );
+
 	// Go through all the items on the map, and tell the client to spawn those of which
 	// are important.
 	while (( pActor = Iterator.Next( )))

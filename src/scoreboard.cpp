@@ -3774,7 +3774,7 @@ void Scoreboard::UpdateTeamRowBackgroundColors( void )
 {
 	for ( unsigned int team = 0; team < teams.Size( ); team++ )
 	{
-		const PalEntry teamColor = teams[team].lPlayerColor;
+		const PalEntry teamColor = TEAM_GetColor( team );
 
 		for ( unsigned int i = 0; i < NUM_ROWBACKGROUND_COLORS; i++ )
 		{
@@ -4001,6 +4001,19 @@ void SCOREBOARD_Destruct( void )
 	}
 
 	g_Columns.Clear( );
+}
+
+//*****************************************************************************
+//
+// [TRSR] SCOREBOARD_UpdateTeamRowBackgroundColors
+//
+// Updates team row background colors, primarily used for SetTeamProperty.
+//
+//*****************************************************************************
+
+void SCOREBOARD_UpdateTeamRowBackgroundColors( void )
+{
+	g_Scoreboard.UpdateTeamRowBackgroundColors();
 }
 
 //*****************************************************************************

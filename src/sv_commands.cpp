@@ -2739,6 +2739,33 @@ void SERVERCOMMANDS_SetDominationPointState( ULONG ulPoint, DPOINT_s state, ULON
 
 //*****************************************************************************
 //
+void SERVERCOMMANDS_SyncTeamInfo( int team, ULONG ulPlayerExtra, ServerCommandFlags flags )
+{
+	ServerCommands::SyncTeamInfo command;
+
+	command.SetIndex(team);
+	command.SetTeam( TEAM_BuildServerCommandStruct( team ) );
+
+	command.sendCommandToClients( ulPlayerExtra, flags );
+}
+
+//*****************************************************************************
+//
+void SERVERCOMMANDS_SyncFullTeamInfo( ULONG ulPlayerExtra, ServerCommandFlags flags )
+{
+	ServerCommands::SyncFullTeamInfo command;
+
+	for ( int i = 0; i < teams.Size(); i++ )
+	{
+		ServerCommands::TeamInfo team = TEAM_BuildServerCommandStruct( i );
+		command.PushToTeams( team );
+	}
+
+	command.sendCommandToClients( ulPlayerExtra, flags );
+}
+
+//*****************************************************************************
+//
 void SERVERCOMMANDS_SetTeamScore( ULONG ulTeam, ULONG ulType, bool bAnnounce, ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
 	if ( TEAM_CheckIfValid( ulTeam ) == false )
