@@ -461,7 +461,9 @@ enum
 	TPROP_LargeFlagHUDIcon,
 	TPROP_LargeSkullHUDIcon,
 	TPROP_WinnerPic,
-	TPROP_LoserPic
+	TPROP_LoserPic,
+	// [TRSR] Alternate version of TPROP_TextColor which gets string instead
+	TPROP_TextColorName,
 };
 
 class FBehavior

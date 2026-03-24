@@ -1661,6 +1661,8 @@ static int GetTeamProperty (unsigned int team, int prop) {
 		case TPROP_LargeSkullHUDIcon:
 		case TPROP_WinnerPic:
 		case TPROP_LoserPic:
+		// [TRSR] Non-standard colors are easier to work with as strings
+		case TPROP_TextColorName:
 		{
 			FString work;
 			int res;
@@ -1694,6 +1696,10 @@ static int GetTeamProperty (unsigned int team, int prop) {
 				break;
 			case TPROP_LoserPic:
 				work += TEAM_GetCustomString (team, &TEAMINFO::LoserPic);
+				break;
+			// [TRSR] Return text color name instead of color range.
+			case TPROP_TextColorName:
+				work += TEAM_GetTextColorName (team);
 				break;
 			}
 
