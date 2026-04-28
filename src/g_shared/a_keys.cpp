@@ -427,8 +427,9 @@ bool P_CheckKeys (AActor *owner, int keynum, bool remote)
 	}
 
 	// If we get here, that means the actor isn't holding an appropriate key.
+	// [SB] Make sure that the sound actually gets played for all players in multiplayer.
 
-	if (owner == players[consoleplayer].camera)
+	if (owner == players[consoleplayer].camera || NETWORK_GetState() == NETSTATE_SERVER)
 	{
 		PrintMessage(failtext);
 
