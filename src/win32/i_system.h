@@ -159,6 +159,16 @@ FString I_GetSteamPath();
 // [RC] Lunches the path given. This was encapsulated to make wragling with #includes easier.
 void I_RunProgram( const char *szPath );
 
+// [SB] Functions for DPI scaling.
+WORD I_GetWindowDPI( void *hwnd );
+int I_ScalePixelSize( int baseSize, WORD dpi );
+bool I_SetWindowPosScaled ( void *hWnd, void *hWndInsertAfter, int x, int y, int w, int h, UINT flags, WORD dpi );
+
+// [SB] This is only defined for Windows 8.1+.
+#ifndef WM_DPICHANGED
+#define WM_DPICHANGED 0x02E0
+#endif
+
 // Damn Microsoft for doing Get/SetWindowLongPtr half-assed. Instead of
 // giving them proper prototypes under Win32, they are just macros for
 // Get/SetWindowLong, meaning they take LONGs and not LONG_PTRs.

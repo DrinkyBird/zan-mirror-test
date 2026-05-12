@@ -1969,6 +1969,62 @@ void I_RunProgram( const char *szPath )
 	ShellExecute( NULL, "open", szPath, NULL, NULL, SW_SHOW );
 }
 
+// [SB] Functions for DPI scaling.
+using GetDpiForMonitor_t = HRESULT (STDAPICALLTYPE *)(HMONITOR hmonitor, int dpiType, UINT *dpiX, UINT *dpiY);
+
+WORD I_GetWindowDPI( void *hwnd )
+{
+	// Try GetDpiForMonitor, which is only available in Windows 8.1 and newer.
+	auto shcore = LoadLibrary("shcore");
+	if (shcore)
+	{
+		auto *GetDpiForMonitor = reinterpret_cast<GetDpiForMonitor_t>(GetProcAddress(shcore, "GetDpiForMonitor"));
+		if (GetDpiForMonitor)
+		{
+			auto monitor = MonitorFromWindow(reinterpret_cast<HWND>(hwnd), MONITOR_DEFAULTTOPRIMARY);
+			UINT dpiX, dpiY;
+			// 0 is MDT_EFFECTIVE_DPI
+			auto hr = GetDpiForMonitor(monitor, 0, &dpiX, &dpiY);
+			if (SUCCEEDED(hr))
+			{
+				// "The values of *dpiX and *dpiY are identical. You only need to record one of the values to determine the DPI and respond appropriately."
+				return static_cast<WORD>(dpiY);
+			}
+		}
+	}
+	
+	// Failing that, try the DPI of the primary monitor.
+	HDC dc = GetDC(0);
+	int dpi = GetDeviceCaps(dc, LOGPIXELSX);
+	ReleaseDC(0, dc);
+
+	return static_cast<WORD>(dpi);
+}
+
+// [SB] Scales a pixel size relative to the DPI.
+int I_ScalePixelSize( int baseSize, WORD dpi )
+{
+	// 96 is the reference DPI for pixel sizes.
+	return MulDiv(baseSize, dpi, 96);
+}
+
+//*****************************************************************************
+// [SB] A version of SetWindowPos that scales the values based on the DPI of the window.
+// The DPI value is passed as a parameter instead of just using I_GetWindowDPI( hWnd ),
+// due to edge cases with hidden windows returning the wrong value if the window moved to a monitor with a different DPI,
+// like with the pages on the "no IWAD" dialog.
+bool I_SetWindowPosScaled ( void *hWnd, void *hWndInsertAfter, int x, int y, int w, int h, UINT flags, WORD dpi )
+{
+	return SetWindowPos(
+		reinterpret_cast<HWND>(hWnd), reinterpret_cast<HWND>(hWndInsertAfter),
+		I_ScalePixelSize(x, dpi),
+		I_ScalePixelSize(y, dpi),
+		I_ScalePixelSize(w, dpi),
+		I_ScalePixelSize(h, dpi),
+		flags
+	);
+}
+
 #if _MSC_VER == 1900 && defined(_USING_V110_SDK71_)
 //==========================================================================
 //
