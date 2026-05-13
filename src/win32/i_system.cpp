@@ -1367,11 +1367,13 @@ bool I_ShowDirectoryBrowser( HWND hDlg, char *pszBuffer, const char *pszDisplayT
 //
 BOOL CALLBACK NoIWADBox_Welcome_Callback (HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
+	const WORD dpi = I_GetWindowDPI( hDlg );
+
 	// "I don't have Doom!" clicked. Advance to the next screen.
 	if ( message == WM_COMMAND && LOWORD( wParam ) == IDC_NODOOM )
 	{
-		SetWindowPos( g_hDlg_NoIWAD_Welcome, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_HIDEWINDOW );			
-		SetWindowPos( g_hDlg_NoIWAD_NoDoom, NULL, 0, 55, 450, 200, SWP_NOZORDER );
+		I_SetWindowPosScaled( g_hDlg_NoIWAD_Welcome, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_HIDEWINDOW, dpi );
+		I_SetWindowPosScaled( g_hDlg_NoIWAD_NoDoom, NULL, 0, 55, 450, 200, SWP_NOZORDER, dpi );
 		return FALSE; 
 	}
 	// "Browse" button clicked.
@@ -1423,10 +1425,12 @@ BOOL CALLBACK NoIWADBox_NoDoom_Callback (HWND hDlg, UINT message, WPARAM wParam,
 			SetDlgItemText( g_hDlg_NoIWAD_Redirect, IDC_RESTART, "Done" );
 		}
 
+		const WORD dpi = I_GetWindowDPI( hDlg );
+
 		// Advance to the redirect page.
-		SendMessage( GetDlgItem( g_hDlg_NoIWAD_Redirect, IDC_REDIRECTING1 ), WM_SETFONT, (WPARAM) CreateFont( 13, 0, 0, 0, 600, 0, 0, 0, 0, 0, 0, 0, 0, "Tahoma" ), (LPARAM) 1 );
-		SetWindowPos( g_hDlg_NoIWAD_NoDoom, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_HIDEWINDOW );			
-		SetWindowPos( g_hDlg_NoIWAD_Redirect, NULL, 0, 55, 450, 200, SWP_NOZORDER );
+		SendMessage( GetDlgItem( g_hDlg_NoIWAD_Redirect, IDC_REDIRECTING1 ), WM_SETFONT, (WPARAM) CreateFont( I_ScalePixelSize( 13, dpi ), 0, 0, 0, 600, 0, 0, 0, 0, 0, 0, 0, 0, "Tahoma"), (LPARAM)1);
+		I_SetWindowPosScaled( g_hDlg_NoIWAD_NoDoom, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_HIDEWINDOW, dpi );
+		I_SetWindowPosScaled( g_hDlg_NoIWAD_Redirect, NULL, 0, 55, 450, 200, SWP_NOZORDER, dpi );
 	}
 	return FALSE; 
 }
@@ -1468,14 +1472,18 @@ BOOL CALLBACK NoIWADBoxCallback (HWND hDlg, UINT message, WPARAM wParam, LPARAM 
 		break;
 	case WM_INITDIALOG:
 		{
+			const WORD dpi = I_GetWindowDPI( hDlg );
+
 			g_hDlg_NoIWAD = hDlg;
 
 			// Format the top of the dialog.
-			SendMessage( GetDlgItem( hDlg, IDC_STTITLE ), WM_SETFONT, (WPARAM) CreateFont( 19, 0, 0, 0, 600, 0, 0, 0, 0, 0, 0, 0, 0, "Tahoma" ), (LPARAM) 1 );
+			SendMessage( GetDlgItem( hDlg, IDC_STTITLE ), WM_SETFONT, (WPARAM) CreateFont( I_ScalePixelSize( 19, dpi ), 0, 0, 0, 600, 0, 0, 0, 0, 0, 0, 0, 0, "Tahoma"), (LPARAM)1);
 			LOGBRUSH LogBrush;
 			LogBrush.lbStyle = BS_SOLID;
 			LogBrush.lbColor = RGB( 255, 255, 255 );
 			g_hWhiteBrush = CreateBrushIndirect( &LogBrush );
+			// [SB] Also resize the icon in the top-left.
+			I_SetWindowPosScaled( GetDlgItem( hDlg, IDC_STICON ), nullptr, 7, 4, 45, 42, SWP_NOZORDER, dpi );
 
 			// Create the child dialogs.
 			if ( g_hDlg_NoIWAD_Welcome == NULL )
@@ -1486,7 +1494,7 @@ BOOL CALLBACK NoIWADBoxCallback (HWND hDlg, UINT message, WPARAM wParam, LPARAM 
 				SetParent( g_hDlg_NoIWAD_Welcome, hDlg );
 				SetParent( g_hDlg_NoIWAD_NoDoom, hDlg );
 				SetParent( g_hDlg_NoIWAD_Redirect, hDlg );
-				SetWindowPos( g_hDlg_NoIWAD_Welcome, NULL, 0, 55, 450, 250, SWP_NOZORDER );
+				I_SetWindowPosScaled( g_hDlg_NoIWAD_Welcome, NULL, 0, 55, 450, 250, SWP_NOZORDER, dpi );
 			}
 		}
 		break;
@@ -1498,15 +1506,24 @@ BOOL CALLBACK NoIWADBoxCallback (HWND hDlg, UINT message, WPARAM wParam, LPARAM 
 			return NULL;
 	case WM_PAINT:
 		{
+			const WORD dpi = I_GetWindowDPI(hDlg);
+
 			// Paint the top of the form white.
 			PAINTSTRUCT Ps;
 			RECT r;
 			r.left = 0;
 			r.top = 0;
-			r.bottom = 55;
-			r.right = 500;
+			r.bottom = I_ScalePixelSize( 55, dpi );
+			r.right = I_ScalePixelSize( 500, dpi );
 			main_PaintRectangle( BeginPaint(hDlg, &Ps), &r, RGB(255, 255, 255));
 		}
+		break;
+	case WM_DPICHANGED:
+		{
+			const WORD dpi = HIWORD( wParam );
+			SendMessage( GetDlgItem( hDlg, IDC_STTITLE ), WM_SETFONT, (WPARAM) CreateFont( I_ScalePixelSize( 19, dpi ), 0, 0, 0, 600, 0, 0, 0, 0, 0, 0, 0, 0, "Tahoma"), (LPARAM)1);
+		}
+		break;
 	}
 	return FALSE;
 }

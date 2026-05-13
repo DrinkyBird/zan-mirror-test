@@ -215,6 +215,7 @@
 #define IDC_REDIRECTING1                4057
 #define IDC_REDIRECTING2	            4058
 #define IDC_RESTART		                4059
+#define IDC_STICON		                4060
 
 // [RC] Dynamic IDs.
 #define IDR_BOT_ADD                              109
