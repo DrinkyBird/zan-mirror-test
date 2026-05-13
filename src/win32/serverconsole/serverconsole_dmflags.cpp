@@ -270,6 +270,7 @@ static	void			flags_ReadNewValue( HWND hDlg, int iControlID, ULONG &ulFlags );
 static	BOOL			flags_HandleTabSwitch( HWND hDlg, LPNMHDR nmhdr );
 static	void			flags_InsertTab( char *pszTitle, int iResource, HWND hDlg, TCITEM tcitem, HWND edit, RECT tabrect, RECT tcrect, int &index );
 BOOL	CALLBACK		flags_GenericTabCallback( HWND hDlg, UINT Message, WPARAM wParam, LPARAM lParam );
+static	void			flags_UpdateFonts( HWND hDlg );
 
 //--------------------------------------------------------------------------------------------------------------------------------------------------
 //-- FUNCTIONS -------------------------------------------------------------------------------------------------------------------------------------
@@ -311,7 +312,8 @@ BOOL CALLBACK SERVERCONSOLE_DMFlagsCallback( HWND hDlg, UINT Message, WPARAM wPa
 			SendDlgItemMessage( hDlg, IDC_DMFLAGS2_VALUE, EM_SETLIMITTEXT, 12, 0 );
 			SendDlgItemMessage( hDlg, IDC_COMPATFLAGS_VALUE, EM_SETLIMITTEXT, 12, 0 );
 			SendDlgItemMessage( hDlg, IDC_COMPATFLAGS2_VALUE, EM_SETLIMITTEXT, 12, 0 );
-			SendMessage( GetDlgItem( hDlg, IDC_TITLE ), WM_SETFONT, (WPARAM) CreateFont( 24, 0, 0, 0, 900, 0, 0, 0, 0, 0, 0, 0, 0, "Tahoma" ), (LPARAM) 1);
+
+			flags_UpdateFonts( hDlg );
 
 			// Set up the tab control.
 			TCITEM		tcitem;
@@ -411,12 +413,32 @@ BOOL CALLBACK SERVERCONSOLE_DMFlagsCallback( HWND hDlg, UINT Message, WPARAM wPa
 				return flags_HandleTabSwitch( hDlg, nmhdr );
 		}
 		break;
+	case WM_DPICHANGED:
+		{
+			flags_UpdateFonts( hDlg );
+		}
+		break;
 	default:
 
 		return ( FALSE );
 	}
 
 	return ( TRUE );
+}
+
+//==========================================================================
+//
+// flags_UpdateFonts
+//
+// Updates the font sizes for the dialog.
+//
+//==========================================================================
+
+static void flags_UpdateFonts( HWND hDlg )
+{
+	const WORD dpi = I_GetWindowDPI( hDlg );
+
+	SendMessage( GetDlgItem( hDlg, IDC_TITLE ), WM_SETFONT, (WPARAM)CreateFont( I_ScalePixelSize( 24, dpi ), 0, 0, 0, 900, 0, 0, 0, 0, 0, 0, 0, 0, "Tahoma" ), (LPARAM)1 );
 }
 
 //==========================================================================

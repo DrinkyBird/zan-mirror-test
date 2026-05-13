@@ -178,7 +178,9 @@ static	ULONG			g_ulNumPWADs;
 static	HRESULT			(__stdcall *pEnableThemeDialogTexture) ( HWND hwnd, DWORD dwFlags );
 
 BOOL	CALLBACK		settings_Dialog_Callback( HWND hDlg, UINT Message, WPARAM wParam, LPARAM lParam );
+static	void			settings_Dialog_UpdateFonts( HWND hDlg );
 BOOL	CALLBACK		settings_ServerTab_Callback( HWND hDlg, UINT Message, WPARAM wParam, LPARAM lParam );
+static	void			settings_ServerTab_UpdateFonts( HWND hDlg );
 BOOL	CALLBACK		settings_GameplayTab_Callback( HWND hDlg, UINT Message, WPARAM wParam, LPARAM lParam );
 BOOL	CALLBACK		settings_AdminTab_Callback( HWND hDlg, UINT Message, WPARAM wParam, LPARAM lParam );
 BOOL	CALLBACK		settings_AccessTab_Callback( HWND hDlg, UINT Message, WPARAM wParam, LPARAM lParam );
@@ -437,7 +439,7 @@ BOOL CALLBACK settings_Dialog_Callback( HWND hDlg, UINT Message, WPARAM wParam, 
 		if ( uxtheme != NULL )
 			pEnableThemeDialogTexture = (HRESULT (__stdcall *)(HWND,DWORD))GetProcAddress (uxtheme, "EnableThemeDialogTexture");
 
-		SendMessage( GetDlgItem( hDlg, IDC_TITLE ), WM_SETFONT, (WPARAM) CreateFont( 24, 0, 0, 0, 900, 0, 0, 0, 0, 0, 0, 0, 0, "Tahoma" ), (LPARAM) 1);
+		settings_Dialog_UpdateFonts(hDlg);
 
 		// Set up the tab control.
 		tcitem.mask = TCIF_TEXT | TCIF_PARAM;
@@ -499,8 +501,27 @@ BOOL CALLBACK settings_Dialog_Callback( HWND hDlg, UINT Message, WPARAM wParam, 
 				break;
 			}
 		break;
+	case WM_DPICHANGED:
+		{
+			settings_Dialog_UpdateFonts( hDlg );
+		}
+		break;
 	}
 	return FALSE;
+}
+
+//==========================================================================
+//
+// UpdateFonts
+//
+// Updates the font sizes for the dialog.
+//
+//==========================================================================
+static void settings_Dialog_UpdateFonts( HWND hDlg )
+{
+	const WORD dpi = I_GetWindowDPI( hDlg );
+
+	SendMessage( GetDlgItem( hDlg, IDC_TITLE ), WM_SETFONT, (WPARAM)CreateFont( I_ScalePixelSize( 24, dpi ), 0, 0, 0, 900, 0, 0, 0, 0, 0, 0, 0, 0, "Tahoma" ), (LPARAM)1 );
 }
 
 //==========================================================================
@@ -618,8 +639,9 @@ BOOL CALLBACK settings_ServerTab_Callback( HWND hDlg, UINT Message, WPARAM wPara
 		SendDlgItemMessage( hDlg, IDC_BROADCAST, BM_SETCHECK, ( sv_broadcast ? BST_CHECKED : BST_UNCHECKED ), 0 );
 		g_fsMOTD = sv_motd.GetGenericRep( CVAR_String ).String;
 
+		settings_ServerTab_UpdateFonts( hDlg );
+
 		// PWADs.		
-		SendMessage( GetDlgItem( hDlg, IDC_PWADS ), WM_SETFONT, (WPARAM) CreateFont( 12, 0, 0, 0, 0, TRUE, 0, 0, 0, 0, 0, 0, 0, "Tahoma" ), (LPARAM) 1 );
 		{
 			char		szString[256];
 			
@@ -655,9 +677,28 @@ BOOL CALLBACK settings_ServerTab_Callback( HWND hDlg, UINT Message, WPARAM wPara
 		if ( LOWORD( wParam ) == IDC_STARTUPMESSAGE )
 			DialogBox( g_hInst, MAKEINTRESOURCE( IDD_EDITMOTD ), hDlg, (DLGPROC)settings_ServerTab_MOTDCallback );
 		break;
+	case WM_DPICHANGED:
+		{
+			settings_ServerTab_UpdateFonts( hDlg );
+		}
+		break;
 	}
 
 	return FALSE;
+}
+
+//==========================================================================
+//
+// ServerTab_UpdateFonts
+//
+// Updates the font sizes for the server tab.
+//
+//==========================================================================
+void settings_ServerTab_UpdateFonts( HWND hDlg )
+{
+	const WORD dpi = I_GetWindowDPI( hDlg );
+
+	SendMessage( GetDlgItem( hDlg, IDC_PWADS ), WM_SETFONT, (WPARAM)CreateFont( I_ScalePixelSize( 12, dpi ), 0, 0, 0, 0, TRUE, 0, 0, 0, 0, 0, 0, 0, "Tahoma" ), (LPARAM)1 );
 }
 
 //==========================================================================

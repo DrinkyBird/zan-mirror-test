@@ -142,6 +142,8 @@ EXTERN_CVAR( Bool, sv_markchatlines );
 static	void		serverconsole_ScoreboardRightClicked( void );
 BOOL	CALLBACK	serverconsole_BanPlayerSimpleCallback( HWND hDlg, UINT Message, WPARAM wParam, LPARAM lParam );
 BOOL	CALLBACK	serverconsole_BanPlayerAdvancedCallback( HWND hDlg, UINT Message, WPARAM wParam, LPARAM lParam );
+static	void		serverconsole_UpdateSizes( HWND hDlg );
+static	void		serverconsole_UpdateStatisticsFonts( HWND hDlg );
 
 //--------------------------------------------------------------------------------------------------------------------------------------------------
 //-- FUNCTIONS -------------------------------------------------------------------------------------------------------------------------------------
@@ -198,17 +200,6 @@ BOOL CALLBACK SERVERCONSOLE_ServerDialogBoxCallback( HWND hDlg, UINT Message, WP
 
 			// Set up the server dialog's status bar.
 			g_hDlgStatusBar = CreateStatusWindow(WS_CHILD | WS_VISIBLE, (LPCTSTR)NULL, hDlg, IDC_SERVER_STATUSBAR);
-			const int divideWidths[] = { 43, 75, 198, 298, 450 };
-			SendMessage( g_hDlgStatusBar, SB_SETPARTS, (WPARAM) 5, (LPARAM)divideWidths );
-
-			// Create and set our fonts for the titlescreen and console.
-			HFONT hTitleFont = CreateFont(14, 0, 0, 0, 600, 0, 0, 0, 0, 0, 0, 0, 0, "Tahoma"); 
-			SendMessage(GetDlgItem( g_hDlg, IDC_TITLEBOX), WM_SETFONT, (WPARAM) hTitleFont, (LPARAM) 1);
-
-			HFONT hConsoleFont = CreateFont(12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "Tahoma"); 
-			SendMessage(GetDlgItem( g_hDlg, IDC_CONSOLEBOX), WM_SETFONT, (WPARAM) hConsoleFont, (LPARAM) 1);
-
-			SendMessage( GetDlgItem( hDlg, IDC_MAPMODE ), WM_SETFONT, (WPARAM) CreateFont( 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "Tahoma" ), (LPARAM) 1 );
 
 			// Initialize the server console text.
 			SetDlgItemText( hDlg, IDC_CONSOLEBOX, "=== " GAMENAME " server ===" );
@@ -271,6 +262,9 @@ BOOL CALLBACK SERVERCONSOLE_ServerDialogBoxCallback( HWND hDlg, UINT Message, WP
 			ColumnData.cchTextMax = 64;
 			ColumnData.iSubItem = 0;
 			lIndex = SendDlgItemMessage( hDlg, IDC_PLAYERLIST, LVM_INSERTCOLUMN, SERVERCONSOLE_COLUMN_TIME, (LPARAM)&ColumnData );
+
+			// [SB] Update the sizes of dialog elements to account for DPI scaling.
+			serverconsole_UpdateSizes(hDlg);
 
 			// Initialize the player indicies array.
 			for ( ulIdx = 0; ulIdx < MAXPLAYERS; ulIdx++ )
@@ -567,6 +561,17 @@ BOOL CALLBACK SERVERCONSOLE_ServerDialogBoxCallback( HWND hDlg, UINT Message, WP
 		DefWindowProc( hDlg, Message, wParam, lParam );
 		break;
 //		return ( FALSE );
+	case WM_DPICHANGED:
+		{
+			serverconsole_UpdateSizes( hDlg );
+		}
+		break;
+	// [SB] It's necessary to relay WM_SIZE to the status bar to get it to reposition and resize itself.
+	case WM_SIZE:
+		{
+			SendMessage( g_hDlgStatusBar, WM_SIZE, wParam, lParam );
+		}
+		break;
 	case UWM_TRAY_TRAYID:
 
 		switch ( lParam )
@@ -628,6 +633,36 @@ BOOL CALLBACK SERVERCONSOLE_ServerDialogBoxCallback( HWND hDlg, UINT Message, WP
 	}
 
 	return ( TRUE );
+}
+
+//*****************************************************************************
+//
+static void serverconsole_UpdateSizes( HWND hDlg )
+{
+	const WORD dpi = I_GetWindowDPI( hDlg );
+
+	// Create and set our fonts for the titlescreen and console.
+	HFONT hTitleFont = CreateFont( I_ScalePixelSize( 14, dpi ), 0, 0, 0, 600, 0, 0, 0, 0, 0, 0, 0, 0, "Tahoma" );
+	SendMessage( GetDlgItem( hDlg, IDC_TITLEBOX ), WM_SETFONT, (WPARAM)hTitleFont, (LPARAM)1 );
+
+	HFONT hConsoleFont = CreateFont(I_ScalePixelSize(12, dpi), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "Tahoma" );
+	SendMessage( GetDlgItem( hDlg, IDC_CONSOLEBOX ), WM_SETFONT, (WPARAM)hConsoleFont, (LPARAM)1 );
+
+	SendMessage( GetDlgItem( hDlg, IDC_MAPMODE ), WM_SETFONT, (WPARAM)CreateFont( I_ScalePixelSize( 12, dpi ), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "Tahoma" ), (LPARAM)1 );
+
+	// [SB] Make sure the status bar divisions also get scaled.
+	int divideWidths[] = { 43, 75, 198, 298, 450 };
+	for ( int i = 0; i < countof( divideWidths ); i++ )
+	{
+		divideWidths[i] = I_ScalePixelSize( divideWidths[i], dpi );
+	}
+	SendMessage( g_hDlgStatusBar, SB_SETPARTS, (WPARAM)5, (LPARAM)divideWidths );
+	
+	// [SB] And the scoreboard columns.
+	SendDlgItemMessage( hDlg, IDC_PLAYERLIST, LVM_SETCOLUMNWIDTH, 0, I_ScalePixelSize( 192, dpi ) );
+	SendDlgItemMessage( hDlg, IDC_PLAYERLIST, LVM_SETCOLUMNWIDTH, 1, I_ScalePixelSize( 64, dpi ) );
+	SendDlgItemMessage( hDlg, IDC_PLAYERLIST, LVM_SETCOLUMNWIDTH, 2, I_ScalePixelSize( 64, dpi ) );
+	SendDlgItemMessage( hDlg, IDC_PLAYERLIST, LVM_SETCOLUMNWIDTH, 3, I_ScalePixelSize( 60, dpi ) );
 }
 
 //*****************************************************************************
@@ -1819,9 +1854,7 @@ BOOL CALLBACK SERVERCONSOLE_ServerStatisticsCallback( HWND hDlg, UINT Message, W
 		{
 			g_hStatisticDlg = hDlg;
 
-			// Bold some labels.			
-			SendMessage( GetDlgItem( hDlg, IDC_TRAFFICIN ), WM_SETFONT, (WPARAM) CreateFont( 13, 0, 0, 0, 600, 0, 0, 0, 0, 0, 0, 0, 0, "Tahoma" ), (LPARAM) 1 );
-			SendMessage( GetDlgItem( hDlg, IDC_TRAFFICOUT ), WM_SETFONT, (WPARAM) CreateFont( 13, 0, 0, 0, 600, 0, 0, 0, 0, 0, 0, 0, 0, "Tahoma" ), (LPARAM) 1 );		
+			serverconsole_UpdateStatisticsFonts( hDlg );
 
 			SERVERCONSOLE_UpdateStatistics( );			
 		}
@@ -1838,12 +1871,26 @@ BOOL CALLBACK SERVERCONSOLE_ServerStatisticsCallback( HWND hDlg, UINT Message, W
 			}
 		}
 		break;
+	case WM_DPICHANGED:
+		{
+			serverconsole_UpdateStatisticsFonts( hDlg );
+		}
+		break;
 	default:
 
 		return ( FALSE );
 	}
 
 	return ( TRUE );
+}
+
+void serverconsole_UpdateStatisticsFonts( HWND hDlg )
+{
+	const WORD dpi = I_GetWindowDPI( hDlg );
+
+	// Bold some labels.			
+	SendMessage( GetDlgItem( hDlg, IDC_TRAFFICIN ), WM_SETFONT, (WPARAM) CreateFont(I_ScalePixelSize( 13, dpi ), 0, 0, 0, 600, 0, 0, 0, 0, 0, 0, 0, 0, "Tahoma" ), (LPARAM) 1 );
+	SendMessage( GetDlgItem( hDlg, IDC_TRAFFICOUT), WM_SETFONT, (WPARAM) CreateFont(I_ScalePixelSize( 13, dpi ), 0, 0, 0, 600, 0, 0, 0, 0, 0, 0, 0, 0, "Tahoma" ), (LPARAM) 1 );
 }
 
 
