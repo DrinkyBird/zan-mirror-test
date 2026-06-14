@@ -35,6 +35,7 @@
 +	- Added the new MAPINFO property "noskirmish", allowing maps to be hidden from the Offline Skirmish and map vote menus. [Trillster]
 +	- Added an optional parameter to the ACS function "RemoveBot" to specify the index of the bot to remove. [AKMDM]
 +	- Added ACS function: "CheckAutomap", to check if the current client is using either fullscreen or overlay automap. [Trillster]
++	- Added ACS functions: "GetSelectedInventory" and "SetSelectedInventory", to allow getting and setting the player's current selected inventory item. [Trillster]
 -	- Fixed: A_SpawnItemEx didn't sync the TID or stencil color of spawned actors to clients in online games. [AKMDM]
 -	- Fixed: an actor's stencil color wasn't synced to newly connected clients in online games. [AKMDM]
 -	- Fixed: clients that gained RCON access erroneously told the server to change the values of compatflags and compatflags2. [AKMDM]

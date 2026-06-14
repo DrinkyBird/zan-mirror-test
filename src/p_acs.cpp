@@ -5552,6 +5552,8 @@ enum EACSFunctions
 	ACSF_SetMapUsedStatus,
 	ACSF_CheckScript,
 	ACSF_CheckAutomap,
+	ACSF_GetSelectedInventory,
+	ACSF_SetSelectedInventory,
 
 	// ZDaemon
 	ACSF_GetTeamScore = 19620,	// (int team)
@@ -9040,6 +9042,46 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 				return viewactive ? AUTOMAP_OVERLAYMAP : AUTOMAP_FULLMAP;
 			else
 				return AUTOMAP_OFF;
+		}
+
+		case ACSF_GetSelectedInventory:
+		{
+			// [TRSR] Only players have selected inventory
+			if ( activator == NULL || activator->player == NULL || activator->player->mo == NULL || activator->player->mo->InvSel == NULL )
+				return GlobalACSStrings.AddString( "" );
+
+			return GlobalACSStrings.AddString( activator->player->mo->InvSel->GetClass()->TypeName.GetChars() );
+		}
+
+		case ACSF_SetSelectedInventory:
+		{
+			// [TRSR] Only players can have selected inventory
+			if ( activator == NULL || activator->player == NULL || activator->player->mo == NULL )
+				return false;
+
+			AInventory *item = activator->player->mo->FindInventory( PClass::FindClass( FBehavior::StaticLookupString( args[0] )));
+			if ( item == NULL )
+				return false;
+
+			// Don't allow selecting non-inventory bar items
+			if ( !( item->ItemFlags & IF_INVBAR ) )
+				return false;
+
+			const bool showInventoryBar = !!args[1];
+
+			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
+			{
+				SERVERCOMMANDS_PlayerSetSelectedInventory( static_cast<const unsigned>( activator->player - players ), item, showInventoryBar );
+				return true;
+			}
+
+			activator->player->mo->InvSel = item;
+
+			// [TRSR] Raising the inventory bar should be optional
+			if ( showInventoryBar )
+				activator->player->inventorytics = 5 * TICRATE;
+
+			return true;
 		}
 
 		case ACSF_GetActorFloorTexture:

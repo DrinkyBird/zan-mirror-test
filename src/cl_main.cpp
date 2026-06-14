@@ -5056,6 +5056,27 @@ void ServerCommands::PlayerDropInventory::Execute()
 }
 
 //*****************************************************************************
+// [TRSR]
+void ServerCommands::PlayerSetSelectedInventory::Execute()
+{
+	// Try to find this object within the player's personal inventory.
+	AInventory *item = player->mo->FindInventory( itemType );
+
+	// Give up if client doesn't think it has the item.
+	if ( item == NULL )
+		return;
+
+	// Don't allow selecting non-inventory bar items
+	if ( !( item->ItemFlags & IF_INVBAR ) )
+		return;
+
+	player->mo->InvSel = item;
+
+	if ( showInventoryBar )
+		player->inventorytics = 5 * TICRATE;
+}
+
+//*****************************************************************************
 //
 void ServerCommands::GiveWeaponHolder::Execute()
 {

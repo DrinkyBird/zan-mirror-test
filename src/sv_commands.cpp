@@ -1384,6 +1384,23 @@ void SERVERCOMMANDS_PlayerDropInventory( ULONG ulPlayer, AInventory *pItem, ULON
 
 //*****************************************************************************
 //
+void SERVERCOMMANDS_PlayerSetSelectedInventory( const unsigned int player, const AInventory *item, const bool showInventoryBar, const unsigned int playerExtra, ServerCommandFlags flags )
+{
+	if (( PLAYER_IsValidPlayer( player ) == false ) ||
+		( item == nullptr ))
+	{
+		return;
+	}
+
+	ServerCommands::PlayerSetSelectedInventory command;
+	command.SetPlayer( &players[player] );
+	command.SetItemType( item->GetClass() );
+	command.SetShowInventoryBar( showInventoryBar );
+	command.sendCommandToClients( playerExtra, flags );
+}
+
+//*****************************************************************************
+//
 void SERVERCOMMANDS_PotentiallySendPlayerCommRule( const unsigned int player )
 {
 	const NETADDRESS_s address = SERVER_GetClient( player )->Address;
