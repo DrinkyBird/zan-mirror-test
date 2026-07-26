@@ -743,9 +743,6 @@ else( ZStd_FOUND )
 	)
 
 	FetchContent_MakeAvailable(zstd)
-
-	#set( ZSTD_LIBRARY libzstd_static )
-	#set( ZSTD_INCLUDE_DIR ${libzstd_SOURCE_DIR} )
 endif( ZStd_FOUND )
 
 if( NOT DYN_FLUIDSYNTH)
