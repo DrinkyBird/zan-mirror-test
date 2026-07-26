@@ -682,12 +682,40 @@ else ( NOT NO_SOUND )
 endif ( NOT NO_SOUND )
 
 # [BB] We need OpenSSL for csrp.
-FIND_PACKAGE ( OpenSSL REQUIRED )
-include_directories( ${OPENSSL_INCLUDE_DIR} )
-set ( ZDOOM_LIBS ${ZDOOM_LIBS} ${OPENSSL_LIBRARIES} )
-if( WIN32 )
-	set ( ZDOOM_LIBS ${ZDOOM_LIBS} crypt32 )
+if ( WIN32 )
+	FIND_PACKAGE ( OpenSSL )
+	# [BB] If OpenSSL is not available under Windows, download pre-built binaries.
+	if ( NOT OpenSSL_FOUND )
+		set ( USING_INTERNAL_OPENSSL ON )
+
+		include(FetchContent)
+
+		FetchContent_Declare(
+			openssl
+			URL https://www.firedaemon.com/download-firedaemon-openssl-4-0-zip
+		)
+
+		FetchContent_MakeAvailable(openssl)
+
+		if ( CMAKE_SIZEOF_VOID_P EQUAL 8 )
+			set ( OPENSSL_PLATFORM_DIR x64 )
+		else ( CMAKE_SIZEOF_VOID_P EQUAL 8 )
+			set ( OPENSSL_PLATFORM_DIR x86 )
+		endif ( CMAKE_SIZEOF_VOID_P EQUAL 8 )
+
+		set ( OPENSSL_ROOT_DIR ${openssl_SOURCE_DIR}/${OPENSSL_PLATFORM_DIR} )
+		FIND_PACKAGE ( OpenSSL REQUIRED )
+	else ( NOT OpenSSL_FOUND )
+		set ( ZDOOM_LIBS ${ZDOOM_LIBS} crypt32 )
+	endif ( NOT OpenSSL_FOUND )
+else ( WIN32 )
+	FIND_PACKAGE ( OpenSSL REQUIRED )
 endif ( WIN32 )
+if ( USING_INTERNAL_OPENSSL )
+	message( STATUS "Using internal OpenSSL library" )
+else ( USING_INTERNAL_OPENSSL )
+	message( STATUS "Using system OpenSSL library" )
+endif ( USING_INTERNAL_OPENSSL )
 
 # [AK] We need Opus for encoding/decoding VoIP audio packets, and RNNoise for noise suppression.
 if ( NOT NO_SOUND )
@@ -1501,6 +1529,17 @@ add_executable( zdoom WIN32
 # [BB] To keep the delta to ZDoom small, we keep the target name 'zdoom', but
 # change the label, so that it's displayed as 'Zandronum' in an IDE like VC++.
 SET_TARGET_PROPERTIES( zdoom PROPERTIES PROJECT_LABEL Zandronum )
+
+# [BB] Link OpenSSL. This also makes the include dir available.
+target_link_libraries( zdoom OpenSSL::Crypto )
+# [BB] If we are using the downloaded OpenSSL version, we need to copy the dll file.
+if ( USING_INTERNAL_OPENSSL )
+	add_custom_command(TARGET zdoom POST_BUILD
+		COMMAND ${CMAKE_COMMAND} -E copy_if_different
+			"${OPENSSL_INCLUDE_DIR}/../bin/libcrypto-4.dll"
+			"$<TARGET_FILE_DIR:zdoom>"
+	)
+endif ( USING_INTERNAL_OPENSSL )
 
 # [BB] If ZStd was built from source, we need to link the library like this.
 # This also makes the include dir available.
