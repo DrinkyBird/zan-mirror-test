@@ -691,9 +691,33 @@ endif ( WIN32 )
 
 # [AK] We need Opus for encoding/decoding VoIP audio packets, and RNNoise for noise suppression.
 if ( NOT NO_SOUND )
-	find_package( Opus REQUIRED )
-	include_directories( ${OPUS_INCLUDE_DIR} )
-	set( ZDOOM_LIBS ${ZDOOM_LIBS} ${OPUS_LIBRARIES} rnnoise )
+	# [BB] If Opus is not available on the system, build it from source.
+	find_package( Opus )
+	if( Opus_FOUND )
+		message( STATUS "Using system opus library" )
+		include_directories( ${OPUS_INCLUDE_DIR} )
+		set( ZDOOM_LIBS ${ZDOOM_LIBS} ${OPUS_LIBRARIES} )
+	else( Opus_FOUND )
+		message( STATUS "Using internal opus library" )
+
+		include(FetchContent)
+
+		set ( OPUS_BUILD_SHARED_LIBRARY OFF )
+		# [BB] This ancient MSVC version doesn't seem to properly support these instructions.
+		if ( MSVC AND MSVC_VERSION EQUAL 1900 )
+			set ( OPUS_X86_MAY_HAVE_AVX2 OFF )
+			set ( OPUS_X86_MAY_HAVE_SSE4_1 OFF )
+		endif()
+
+		FetchContent_Declare(
+			opus
+			GIT_REPOSITORY https://github.com/xiph/opus.git
+			GIT_TAG        v1.6.1
+		)
+
+		FetchContent_MakeAvailable(opus)
+	endif( Opus_FOUND )
+	set( ZDOOM_LIBS ${ZDOOM_LIBS} rnnoise )
 endif ( NOT NO_SOUND )
 
 # [AK] We also need ZStd for encoding/decoding network packets.
@@ -1486,6 +1510,12 @@ SET_TARGET_PROPERTIES( zdoom PROPERTIES PROJECT_LABEL Zandronum )
 if( NOT ZStd_FOUND )
 	target_link_libraries( zdoom libzstd_static )
 endif( NOT ZStd_FOUND )
+
+# [BB] If Opus was built from source, we need to link the library like this.
+# This also makes the include dir available.
+if( NOT NO_SOUND AND NOT Opus_FOUND )
+	target_link_libraries( zdoom Opus::opus )
+endif( NOT NO_SOUND AND NOT Opus_FOUND )
 
 # [BB/RC] Added CREATE_PACKET_LOG
 OPTION( CREATE_PACKET_LOG "A security debug feature to catch malicious packets." OFF )
