@@ -697,9 +697,32 @@ if ( NOT NO_SOUND )
 endif ( NOT NO_SOUND )
 
 # [AK] We also need ZStd for encoding/decoding network packets.
-find_package( ZStd REQUIRED )
-include_directories( ${ZSTD_INCLUDE_DIR} )
-set( ZDOOM_LIBS ${ZDOOM_LIBS} ${ZSTD_LIBRARY} )
+find_package( ZStd )
+# [BB] If zstd is not available, build it from source.
+if( ZStd_FOUND )
+	message( STATUS "Using system zstd library" )
+	include_directories( ${ZSTD_INCLUDE_DIR} )
+	set( ZDOOM_LIBS ${ZDOOM_LIBS} ${ZSTD_LIBRARY} )
+else( ZStd_FOUND )
+	message( STATUS "Using internal zstd library" )
+
+	include(FetchContent)
+
+	set(ZSTD_BUILD_STATIC ON)
+	set(ZSTD_BUILD_SHARED OFF)
+
+	FetchContent_Declare(
+	  ZStd
+	  GIT_REPOSITORY https://github.com/facebook/zstd.git
+	  GIT_TAG        v1.5.7
+	  SOURCE_SUBDIR build/cmake
+	)
+
+	FetchContent_MakeAvailable(zstd)
+
+	#set( ZSTD_LIBRARY libzstd_static )
+	#set( ZSTD_INCLUDE_DIR ${libzstd_SOURCE_DIR} )
+endif( ZStd_FOUND )
 
 if( NOT DYN_FLUIDSYNTH)
 	if( FLUIDSYNTH_FOUND )
@@ -1457,6 +1480,12 @@ add_executable( zdoom WIN32
 # [BB] To keep the delta to ZDoom small, we keep the target name 'zdoom', but
 # change the label, so that it's displayed as 'Zandronum' in an IDE like VC++.
 SET_TARGET_PROPERTIES( zdoom PROPERTIES PROJECT_LABEL Zandronum )
+
+# [BB] If ZStd was built from source, we need to link the library like this.
+# This also makes the include dir available.
+if( NOT ZStd_FOUND )
+	target_link_libraries( zdoom libzstd_static )
+endif( NOT ZStd_FOUND )
 
 # [BB/RC] Added CREATE_PACKET_LOG
 OPTION( CREATE_PACKET_LOG "A security debug feature to catch malicious packets." OFF )
