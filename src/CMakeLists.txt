@@ -430,6 +430,20 @@ if( NOT NO_ASM )
 				set( NO_ASM ON )
 			endif( YASM_PATH )
 		else( X64 )
+			# [BB] If nasm is not available under Windows, download it.
+			if ( WIN32 AND NOT NASM_PATH )
+				file ( DOWNLOAD
+					https://www.nasm.us/pub/nasm/releasebuilds/3.02/win32/nasm-3.02-win32.zip
+					${CMAKE_BINARY_DIR}/downloads/nasm-3.02-win32.zip
+					EXPECTED_HASH SHA256=dca7d736580aafcf88a07838bb597a4f093fa157e56ce522891e86ab0a37c949
+				)
+				file ( ARCHIVE_EXTRACT
+					INPUT "${CMAKE_BINARY_DIR}/downloads/nasm-3.02-win32.zip"
+					DESTINATION "${CMAKE_BINARY_DIR}/extracted"
+				)
+				find_program( NASM_PATH NAMES ${NASM_NAMES} PATHS "${CMAKE_BINARY_DIR}/extracted/nasm-3.02" REQUIRED )
+			endif ( WIN32 and NOT NASM_PATH )
+
 			if( NASM_PATH )
 				set( ASSEMBLER ${NASM_PATH} )
 			else( NASM_PATH )
