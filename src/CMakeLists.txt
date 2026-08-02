@@ -332,6 +332,42 @@ if( NOT FMOD_INCLUDE_DIR )
 	find_path( FMOD_INCLUDE_DIR fmod.hpp
 		PATHS ${FMOD_SEARCH_PATHS}
 		${FMOD_INC_PATH_SUFFIXES} )
+
+	# [BB] If sound is wanted and FMOD is not available under Windows, download and extract FMOD.
+	if ( NOT NO_SOUND AND WIN32 AND NOT FMOD_INCLUDE_DIR )
+		set ( FMOD_EXTRACT_DIR ${CMAKE_BINARY_DIR}/extracted )
+
+		# Extracting files from the FMOD installer needs 7z.
+		# Note: 7za.exe and 7zr.exe don't support this, that's why we use this version.
+		file ( DOWNLOAD
+			https://github.com/myfreeer/7z-build-nsis/releases/download/26.02/7z2602.7z
+			${CMAKE_BINARY_DIR}/downloads/7z2602.7z
+			EXPECTED_HASH SHA256=aabd2c759a08191eea359e5f1623b2ad001dc8ed0404d4832de9cbe7732298a7
+		)
+		file ( ARCHIVE_EXTRACT
+			INPUT "${CMAKE_BINARY_DIR}/downloads/7z2602.7z"
+			DESTINATION "${FMOD_EXTRACT_DIR}"
+		)
+		set ( SEVENZIP_EXECUTABLE "${FMOD_EXTRACT_DIR}/7-zip-x86/7z.exe" )
+
+		file ( DOWNLOAD
+			https://zdoom.org/files/fmod/fmodapi44464win-installer.exe
+			${CMAKE_BINARY_DIR}/downloads/fmodapi44464win-installer.exe
+			EXPECTED_HASH SHA256=4791a2c1bfce50b050e57f1a9f1dbf8bccbdf8628e7e28acc67916c71219c4c4
+		)
+
+		if ( NOT EXISTS "${FMOD_EXTRACT_DIR}/api" )
+			execute_process(
+				COMMAND ${SEVENZIP_EXECUTABLE} x
+						"${CMAKE_BINARY_DIR}/downloads/fmodapi44464win-installer.exe"
+						"-o${FMOD_EXTRACT_DIR}"
+				COMMAND_ERROR_IS_FATAL ANY
+			)
+		endif ( )
+		find_path( FMOD_INCLUDE_DIR fmod.hpp
+			PATHS "${FMOD_EXTRACT_DIR}/api/inc" REQUIRED )
+		set( FMOD_SEARCH_PATHS ${FMOD_SEARCH_PATHS} "${FMOD_EXTRACT_DIR}/api" )
+	endif ( )
 endif( NOT FMOD_INCLUDE_DIR )
 
 if( FMOD_INCLUDE_DIR )
