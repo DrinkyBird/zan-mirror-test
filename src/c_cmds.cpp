@@ -1013,80 +1013,6 @@ UNSAFE_CCMD (crashout)
 }
 #endif
 
-
-CCMD (dir)
-{
-	FString dir, path;
-	char curdir[256];
-	const char *match;
-	findstate_t c_file;
-	void *file;
-
-	if (!getcwd (curdir, countof(curdir)))
-	{
-		Printf ("Current path too long\n");
-		return;
-	}
-
-	if (argv.argc() > 1)
-	{
-		path = NicePath(argv[1]);
-		if (chdir(path))
-		{
-			match = path;
-			dir = ExtractFilePath(path);
-			if (dir[0] != '\0')
-			{
-				match += dir.Len();
-			}
-			else
-			{
-				dir = "./";
-			}
-			if (match[0] == '\0')
-			{
-				match = "*";
-			}
-			if (chdir (dir))
-			{
-				Printf ("%s not found\n", dir.GetChars());
-				return;
-			}
-		}
-		else
-		{
-			match = "*";
-			dir = path;
-		}
-	}
-	else
-	{
-		match = "*";
-		dir = curdir;
-	}
-	if (dir[dir.Len()-1] != '/')
-	{
-		dir += '/';
-	}
-
-	if ( (file = I_FindFirst (match, &c_file)) == ((void *)(-1)))
-		Printf ("Nothing matching %s%s\n", dir.GetChars(), match);
-	else
-	{
-		Printf ("Listing of %s%s:\n", dir.GetChars(), match);
-		do
-		{
-			if (I_FindAttr (&c_file) & FA_DIREC)
-				Printf (PRINT_BOLD, "%s <dir>\n", I_FindName (&c_file));
-			else
-				Printf ("%s\n", I_FindName (&c_file));
-		} while (I_FindNext (file, &c_file) == 0);
-		I_FindClose (file);
-	}
-
-	chdir (curdir);
-}
-
 CCMD (fov)
 {
 	player_t *player = who ? who->player : &players[consoleplayer];
@@ -1251,13 +1177,13 @@ UNSAFE_CCMD (save)
 
 //==========================================================================
 //
-// CCMD wdir
+// CCMD dir
 //
 // Lists the contents of a loaded wad file.
 //
 //==========================================================================
 
-CCMD (wdir)
+CCMD (dir)
 {
 	if (argv.argc() != 2)
 	{
