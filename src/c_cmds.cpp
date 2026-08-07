@@ -141,7 +141,7 @@ void StartLogging(const char *filename)
 	if ((filename != nullptr) && (strlen(filename) > 0))
 	{
 		logFilename.AppendFormat("-%s", filename);
-		logFilename.ReplaceChars('.', '-');
+		C_SanitizeFileName(logFilename);
 	}
 
 	// [BB] If sv_logfilenametimestamp, we append the current date/time to the logfile name.
@@ -774,7 +774,7 @@ void execLogfile(const char *fn)
 	if (fn != nullptr && strlen(fn) > 0)
 	{
 		file.AppendFormat("-%s", fn);
-		file.ReplaceChars('.', '-');
+		C_SanitizeFileName(file);
 	}
 	file.AppendFormat(".txt");
 

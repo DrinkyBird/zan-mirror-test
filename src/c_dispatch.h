@@ -88,6 +88,7 @@ void AddCommandString (char *text, int keynum=0);
 
 // Process a single console command. Does not handle wait.
 void C_DoCommand (const char *cmd, int keynum=0);
+void C_SanitizeFileName(FString& file);
 
 FExecList *C_ParseExecFile(const char *file, FExecList *source);
 void C_SearchForPullins(FExecList *exec, const char *file, class FCommandLine &args);

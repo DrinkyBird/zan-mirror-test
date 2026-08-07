@@ -230,6 +230,12 @@ static const char *KeyConfCommands[] =
 
 // CODE --------------------------------------------------------------------
 
+void C_SanitizeFileName(FString& file)
+{
+	file.ReplaceChars('.', '-');
+	file.ReplaceChars(':', '-');
+}
+
 IMPLEMENT_CLASS (DWaitingCommand)
 
 void DWaitingCommand::Serialize (FArchive &arc)
