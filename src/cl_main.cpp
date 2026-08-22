@@ -2883,9 +2883,13 @@ AActor *CLIENT_SpawnThing( const PClass *pType, fixed_t X, fixed_t Y, fixed_t Z,
 		pActor->NetID = netID;
 		g_ActorNetIDList.useID( netID, pActor );
 
-		pActor->SpawnPoint[0] = X;
-		pActor->SpawnPoint[1] = Y;
-		pActor->SpawnPoint[2] = Z;
+		// [TRSR] AActor::StaticSpawn already sets correct spawn point based on floor / ceiling height.
+		// This code sets the incorrect Z height and causes vertical height desyncs if left uncommented.
+		/*
+		pActor->SpawnPoint[0] = pActor->x;
+		pActor->SpawnPoint[1] = pActor->y;
+		pActor->SpawnPoint[2] = pActor->z;
+		*/
 
 		// [Zalewa] Bullet puffs don't do 3D floor checks server-side.
 		if (!(spawnFlags & SPAWNFLAG_PUFF))
