@@ -371,7 +371,9 @@ protected:
 	int (STACK_ARGS *fluid_settings_setnum)(fluid_settings_t *, const char *, double);
 	int (STACK_ARGS *fluid_settings_setstr)(fluid_settings_t *, const char *, const char *);
 	int (STACK_ARGS *fluid_settings_setint)(fluid_settings_t *, const char *, int);
-	int (STACK_ARGS *fluid_settings_getstr)(fluid_settings_t *, const char *, char **);
+	// [BS] getstr was removed from newer versions of fluidsynth, but copystr has always been around, so I'll just use that.
+	// int (STACK_ARGS *fluid_settings_getstr)(fluid_settings_t *, const char *, char **);
+	int (STACK_ARGS *fluid_settings_copystr)(fluid_settings_t *, const char *, char *, int);
 	int (STACK_ARGS *fluid_settings_getint)(fluid_settings_t *, const char *, int *);
 	void (STACK_ARGS *fluid_synth_set_reverb_on)(fluid_synth_t *, int);
 	void (STACK_ARGS *fluid_synth_set_chorus_on)(fluid_synth_t *, int);

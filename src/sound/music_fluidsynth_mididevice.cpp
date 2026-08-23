@@ -49,6 +49,9 @@
 #ifdef DYN_FLUIDSYNTH
 
 #ifdef _WIN32
+// [BS] New macro for fluidsynth past 2.2
+#define FLUIDSYNTHLIB2_2_X	"libfluidsynth-3.dll"	// Seems to be the agreed upon windows DLL name
+#define FLUIDSYNTHLIB2_1_X	"libfluidsynth-2.dll"	// So that it works for versions 2.1.0 through 2.1.9
 #ifndef _M_X64
 #define FLUIDSYNTHLIB1	"fluidsynth.dll"
 #define FLUIDSYNTHLIB2	"libfluidsynth.dll"
@@ -58,8 +61,10 @@
 #endif
 #else
 #include <dlfcn.h>
-
-#define FLUIDSYNTHLIB	"libfluidsynth.so.1"
+// [BS] .so.2 and .so.3 are the names used for fluidsynth past 2.0.9.
+#define FLUIDSYNTHLIB2_2_X	"libfluidsynth.so.3"
+#define FLUIDSYNTHLIB2_1_X	"libfluidsynth.so.2"
+#define FLUIDSYNTHLIB		"libfluidsynth.so.1"
 #endif
 
 #define FLUID_REVERB_DEFAULT_ROOMSIZE 0.2f
@@ -613,10 +618,16 @@ FString FluidSynthMIDIDevice::GetStats()
 	int polyphony = fluid_synth_get_polyphony(FluidSynth);
 	int voices = fluid_synth_get_active_voice_count(FluidSynth);
 	double load = fluid_synth_get_cpu_load(FluidSynth);
-	char *chorus, *reverb;
+	// [BS] chorus & reverb need to be a temporary buffer that goes from copystr to out.
+	// char *chorus, *reverb;
+	char chorus[256], reverb[256];
 	int maxpoly;
-	fluid_settings_getstr(FluidSettings, "synth.chorus.active", &chorus);
-	fluid_settings_getstr(FluidSettings, "synth.reverb.active", &reverb);
+	// [BS] Calls to fluid_settings_getstr were replaced with fluid_settings_copystr because the former is
+	// deprecated, yet the latter is supported in older and newer versions.
+	// fluid_settings_getstr(FluidSettings, "synth.chorus.active", &chorus);
+	// fluid_settings_getstr(FluidSettings, "synth.reverb.active", &reverb);
+	fluid_settings_copystr(FluidSettings, "synth.chorus.active", chorus, 255);
+	fluid_settings_copystr(FluidSettings, "synth.reverb.active", reverb, 255);
 	fluid_settings_getint(FluidSettings, "synth.polyphony", &maxpoly);
 	CritSec.Leave();
 
@@ -655,7 +666,9 @@ bool FluidSynthMIDIDevice::LoadFluidSynth()
 		{ (void **)&fluid_settings_setnum,				"fluid_settings_setnum" },
 		{ (void **)&fluid_settings_setstr,				"fluid_settings_setstr" },
 		{ (void **)&fluid_settings_setint,				"fluid_settings_setint" },
-		{ (void **)&fluid_settings_getstr,				"fluid_settings_getstr" },
+		// [BS] getstr is deprecated, replaced with copystr
+		// { (void **)&fluid_settings_getstr,			"fluid_settings_getstr" },
+		{ (void **)&fluid_settings_copystr,				"fluid_settings_copystr" },
 		{ (void **)&fluid_settings_getint,				"fluid_settings_getint" },
 		{ (void **)&fluid_synth_set_reverb_on,			"fluid_synth_set_reverb_on" },
 		{ (void **)&fluid_synth_set_chorus_on,			"fluid_synth_set_chorus_on" },
@@ -681,22 +694,39 @@ bool FluidSynthMIDIDevice::LoadFluidSynth()
 	const char *libname;
 
 #ifdef _WIN32
-	FluidSynthDLL = LoadLibrary((libname = FLUIDSYNTHLIB1));
+	// [BS] Checks for Fluidsynth libraries in descending version order, falling back to older (<2.1.0) versions.
+	FluidSynthDLL = LoadLibrary((libname = FLUIDSYNTHLIB2_2_X));
 	if (FluidSynthDLL == NULL)
 	{
-		FluidSynthDLL = LoadLibrary((libname = FLUIDSYNTHLIB2));
+		FluidSynthDLL = LoadLibrary((libname = FLUIDSYNTHLIB2_1_X));
 		if (FluidSynthDLL == NULL)
 		{
-			Printf(TEXTCOLOR_RED"Could not load " FLUIDSYNTHLIB1 " or " FLUIDSYNTHLIB2 "\n");
-			return false;
+			FluidSynthDLL = LoadLibrary((libname = FLUIDSYNTHLIB1));
+			if (FluidSynthDLL == NULL)
+			{
+				FluidSynthDLL = LoadLibrary((libname = FLUIDSYNTHLIB2));
+				if (FluidSynthDLL == NULL)
+				{
+					Printf(TEXTCOLOR_RED"Could not load " FLUIDSYNTHLIB2_2_X ", " FLUIDSYNTHLIB2_1_X ", " FLUIDSYNTHLIB1 ", or " FLUIDSYNTHLIB2 "\n");
+					return false;
+				}
+			}
 		}
 	}
-#else
-	FluidSynthSO = dlopen((libname = FLUIDSYNTHLIB), RTLD_LAZY);
+#else	// [BS] Much like before, just for POSIX.
+	FluidSynthSO = dlopen((libname = FLUIDSYNTHLIB2_2_X), RTLD_LAZY);
 	if (FluidSynthSO == NULL)
 	{
-		Printf(TEXTCOLOR_RED"Could not load " FLUIDSYNTHLIB ": %s\n", dlerror());
-		return false;
+		FluidSynthSO = dlopen((libname = FLUIDSYNTHLIB2_1_X), RTLD_LAZY);
+		if (FluidSynthSO == NULL)
+		{
+			FluidSynthSO = dlopen((libname = FLUIDSYNTHLIB), RTLD_LAZY);
+			if (FluidSynthSO == NULL)
+			{
+				Printf(TEXTCOLOR_RED"Could not load " FLUIDSYNTHLIB2_2_X ", " FLUIDSYNTHLIB2_1_X ", or " FLUIDSYNTHLIB ": %s\n", dlerror());
+				return false;
+			}
+		}
 	}
 #endif
 
