@@ -820,6 +820,10 @@ if( ZStd_FOUND )
 else( ZStd_FOUND )
 	message( STATUS "Using internal zstd library" )
 
+	# [BB] Get rid of these variables created by find_package.
+	unset ( ZSTD_INCLUDE_DIR CACHE )
+	unset ( ZSTD_LIBRARY CACHE )
+
 	include(FetchContent)
 
 	set(ZSTD_BUILD_STATIC ON)
@@ -833,6 +837,14 @@ else( ZStd_FOUND )
 	)
 
 	FetchContent_MakeAvailable(zstd)
+
+	# [BB] Hide cached variables starting with "ZSTD" 
+	get_cmake_property ( _cache_vars CACHE_VARIABLES )
+	foreach ( _var IN LISTS _cache_vars )
+		if ( _var MATCHES "^ZSTD" )
+			mark_as_advanced ( ${_var} )
+		endif ( )
+	endforeach()
 endif( ZStd_FOUND )
 
 if( NOT DYN_FLUIDSYNTH)
