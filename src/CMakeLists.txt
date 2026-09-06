@@ -778,6 +778,10 @@ if ( NOT NO_SOUND )
 	else( Opus_FOUND )
 		message( STATUS "Using internal opus library" )
 
+		# [BB] Get rid of these variables created by find_package.
+		unset ( OPUS_INCLUDE_DIR CACHE )
+		unset ( OPUS_LIBRARIES CACHE )
+
 		include(FetchContent)
 
 		set ( OPUS_BUILD_SHARED_LIBRARY OFF )
@@ -794,6 +798,14 @@ if ( NOT NO_SOUND )
 		)
 
 		FetchContent_MakeAvailable(opus)
+
+		# [BB] Hide cached variables starting with "OPUS_" 
+		get_cmake_property ( _cache_vars CACHE_VARIABLES )
+		foreach ( _var IN LISTS _cache_vars )
+			if ( _var MATCHES "^OPUS_" )
+				mark_as_advanced ( ${_var} )
+			endif ( )
+		endforeach()
 	endif( Opus_FOUND )
 	set( ZDOOM_LIBS ${ZDOOM_LIBS} rnnoise )
 endif ( NOT NO_SOUND )
