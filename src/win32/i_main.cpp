@@ -671,18 +671,21 @@ void I_SetWndProc()
 
 void RestoreConView()
 {
+	// [SB] Added DPI scaling.
+	const WORD dpi = I_GetWindowDPI (Window);
+
 	// Make sure the window has a frame in case it was fullscreened.
 	SetWindowLongPtr (Window, GWL_STYLE, WS_VISIBLE|WS_OVERLAPPEDWINDOW);
 	if (GetWindowLong (Window, GWL_EXSTYLE) & WS_EX_TOPMOST)
 	{
-		SetWindowPos (Window, HWND_BOTTOM, 0, 0, 512, 384,
-			SWP_DRAWFRAME | SWP_NOCOPYBITS | SWP_NOMOVE);
+		I_SetWindowPosScaled (Window, HWND_BOTTOM, 0, 0, 512, 384,
+			SWP_DRAWFRAME | SWP_NOCOPYBITS | SWP_NOMOVE, dpi);
 		SetWindowPos (Window, HWND_TOP, 0, 0, 0, 0, SWP_NOCOPYBITS | SWP_NOMOVE | SWP_NOSIZE);
 	}
 	else
 	{
-		SetWindowPos (Window, NULL, 0, 0, 512, 384,
-			SWP_DRAWFRAME | SWP_NOCOPYBITS | SWP_NOMOVE | SWP_NOZORDER);
+		I_SetWindowPosScaled (Window, NULL, 0, 0, 512, 384,
+			SWP_DRAWFRAME | SWP_NOCOPYBITS | SWP_NOMOVE | SWP_NOZORDER, dpi);
 	}
 
 	SetWindowLongPtr (Window, GWLP_WNDPROC, (WLONG_PTR)LConProc);
@@ -1013,6 +1016,14 @@ void DoMain (HINSTANCE hInstance)
 					}
 				}
 			}
+
+			// [SB] Scale and re-centre the window now that we can figure out the DPI of the monitor it's on.
+			const WORD dpi = I_GetWindowDPI( Window );
+			width = I_ScalePixelSize(width, dpi);
+			height = I_ScalePixelSize(height, dpi);
+			x = (displaysettings.dmPelsWidth - width) / 2;
+			y = (displaysettings.dmPelsHeight - height) / 2;
+			SetWindowPos(Window, nullptr, x, y, width, height, 0);
 
 			GetClientRect (Window, &cRect);
 
