@@ -27,7 +27,6 @@
 	chatfrequency = 75
 	revealed = true
 	script = "fatbot"
-	chatlump = "bots/chatfiles/chubbs.txt"
 }
 
 {
@@ -46,7 +45,6 @@
 	chatfrequency = 33
 	revealed = true
 	script = "humanbot"
-	chatlump = "bots/chatfiles/soldier.txt"
 }
 
 {
@@ -66,7 +64,6 @@
 	chatfrequency = 33
 	revealed = true
 	script = "humanbot"
-	chatlump = "bots/chatfiles/soldier.txt"
 }
 
 {
@@ -86,7 +83,6 @@
 	chatfrequency = 90
 	revealed = true
 	script = "crashbot"
-	chatlump = "bots/chatfiles/crash.txt"
 }
 
 {
@@ -106,7 +102,6 @@
 	chatfrequency = 33
 	revealed = true
 	script = "humanbot"
-	chatlump = "bots/chatfiles/soldier.txt"
 }
 
 {
@@ -126,7 +121,6 @@
 	chatfrequency = 33
 	revealed = true
 	script = "humanbot"
-	chatlump = "bots/chatfiles/soldier.txt"
 }
 
 {
@@ -146,7 +140,6 @@
 	chatfrequency = 33
 	revealed = true
 	script = "humanbot"
-	chatlump = "bots/chatfiles/soldier.txt"
 }
 
 {
@@ -166,7 +159,6 @@
 	chatfrequency = 50
 	revealed = true
 	script = "humanbot"
-	chatlump = "bots/chatfiles/soldier.txt"
 }
 
 {
@@ -186,7 +178,6 @@
 	chatfrequency = 33
 	revealed = true
 	script = "humanbot"
-	chatlump = "bots/chatfiles/soldier.txt"
 }
 
 {
@@ -206,7 +197,6 @@
 	chatfrequency = 15
 	revealed = true
 	script = "humanbot"
-	chatlump = "bots/chatfiles/cygnus.txt"
 }
 
 // ROBOTS ----------------------------------------------------------------------
@@ -228,7 +218,6 @@
 	chatfrequency = 20
 	revealed = true
 	script = "dfultbot"
-	chatlump = "bots/chatfiles/robot.txt"
 }
 
 {
@@ -248,7 +237,6 @@
 	chatfrequency = 20
 	revealed = true
 	script = "dfultbot"
-	chatlump = "bots/chatfiles/robot.txt"
 }
 
 {
@@ -268,7 +256,6 @@
 	chatfrequency = 20
 	revealed = true
 	script = "dfultbot"
-	chatlump = "bots/chatfiles/robot.txt"
 }
 
 {
@@ -288,7 +275,6 @@
 	chatfrequency = 20
 	revealed = true
 	script = "dfultbot"
-	chatlump = "bots/chatfiles/robot.txt"
 }
 
 {
@@ -308,7 +294,6 @@
 	chatfrequency = 20
 	revealed = true
 	script = "dfultbot"
-	chatlump = "bots/chatfiles/robot.txt"
 }
 
 {
@@ -328,7 +313,6 @@
 	chatfrequency = 20
 	revealed = true
 	script = "dfultbot"
-	chatlump = "bots/chatfiles/robot.txt"
 }
 
 {
@@ -348,7 +332,6 @@
 	chatfrequency = 20
 	revealed = true
 	script = "dfultbot"
-	chatlump = "bots/chatfiles/robot.txt"
 }
 
 {
@@ -368,7 +351,6 @@
 	chatfrequency = 20
 	revealed = true
 	script = "dfultbot"
-	chatlump = "bots/chatfiles/robot.txt"
 }
 
 {
@@ -388,7 +370,6 @@
 	chatfrequency = 20
 	revealed = true
 	script = "dfultbot"
-	chatlump = "bots/chatfiles/robot.txt"
 }
 
 {
@@ -408,7 +389,6 @@
 	chatfrequency = 20
 	revealed = true
 	script = "dfultbot"
-	chatlump = "bots/chatfiles/robot.txt"
 }
 
 // INSECT BOSSES ---------------------------------------------------------------
@@ -430,7 +410,6 @@
 	chatfrequency = 50
 	revealed = true
 	script = "dfultbot"
-	chatlump = "bots/chatfiles/insect.txt"
 }
 
 {
@@ -450,7 +429,6 @@
 	chatfrequency = 50
 	revealed = true
 	script = "dfultbot"
-	chatlump = "bots/chatfiles/insect.txt"
 }
 
 // DEMONS ----------------------------------------------------------------------
@@ -472,7 +450,6 @@
 	chatfrequency = 75
 	revealed = true
 	script = "sausgbot"
-	chatlump = "bots/chatfiles/linguica.txt"
 }
 
 {
@@ -492,7 +469,6 @@
 	chatfrequency = 10
 	revealed = true
 	script = "dfultbot"
-	chatlump = "bots/chatfiles/demon.txt"
 }
 
 {
@@ -512,7 +488,6 @@
 	chatfrequency = 10
 	revealed = true
 	script = "dfultbot"
-	chatlump = "bots/chatfiles/demon.txt"
 }
 
 {
@@ -532,7 +507,6 @@
 	chatfrequency = 10
 	revealed = true
 	script = "dfultbot"
-	chatlump = "bots/chatfiles/demon.txt"
 }
 
 {
@@ -552,7 +526,6 @@
 	chatfrequency = 10
 	revealed = true
 	script = "dfultbot"
-	chatlump = "bots/chatfiles/demon.txt"
 }
 
 {
@@ -572,7 +545,6 @@
 	chatfrequency = 10
 	revealed = true
 	script = "dfultbot"
-	chatlump = "bots/chatfiles/demon.txt"
 }
 
 {
@@ -592,7 +564,6 @@
 	chatfrequency = 10
 	revealed = true
 	script = "dfultbot"
-	chatlump = "bots/chatfiles/demon.txt"
 }
 
 {
@@ -612,7 +583,6 @@
 	chatfrequency = 10
 	revealed = true
 	script = "dfultbot"
-	chatlump = "bots/chatfiles/demon.txt"
 }
 
 // FINAL BOSSES ----------------------------------------------------------------
@@ -634,7 +604,6 @@
 	chatfrequency = 33
 	revealed = true
 	script = "humanbot"
-	chatlump = "bots/chatfiles/orion.txt"
 }
 
 {
@@ -654,7 +623,6 @@
 	chatfrequency = 25
 	revealed = true
 	script = "dfultbot"
-	chatlump = "bots/chatfiles/ultimus.txt"
 }
 
 // EXTRA BOTS ------------------------------------------------------------------
@@ -676,7 +644,6 @@
 	chatfrequency = 50
 	revealed = false
 	script = "humanbot"
-	chatlump = "bots/chatfiles/romero.txt"
 }
 
 {
@@ -696,7 +663,6 @@
 	chatfrequency = 75
 	revealed = true
 	script = "humanbot"
-	chatlump = "bots/chatfiles/1337.txt"
 }
 
 {
@@ -716,7 +682,6 @@
 	chatfrequency = 70
 	revealed = false
 	script = "humanbot"
-	chatlump = "bots/chatfiles/frad.txt"
 }
 
 {
@@ -736,7 +701,6 @@
 	chatfrequency = 75
 	revealed = false
 	script = "humanbot"
-	chatlump = "bots/chatfiles/mewse.txt"
 }
 
 {
@@ -756,7 +720,6 @@
 	chatfrequency = 65
 	revealed = true
 	script = "humanbot"
-	chatlump = "bots/chatfiles/hissy.txt"
 }
 
 {
@@ -776,7 +739,6 @@
 	chatfrequency = 65
 	revealed = true
 	script = "humanbot"
-	chatlump = "bots/chatfiles/massmouth.txt"
 }
 
 {
@@ -796,7 +758,6 @@
 	chatfrequency = 10
 	revealed = true
 	script = "dfultbot"
-	chatlump = "bots/chatfiles/doomcrate.txt"
 }
 
 {
@@ -968,7 +929,6 @@
 	chatfrequency = 80
 	revealed = false
 	script = "humanbot"
-	chatlump = "bots/chatfiles/xxenemyxx.txt"
 }
 
 {
@@ -988,7 +948,6 @@
 	chatfrequency = 65
 	revealed = false
 	script = "humanbot"
-	chatlump = "bots/chatfiles/reol.txt"
 }
 
 {
@@ -1008,7 +967,6 @@
 	chatfrequency = 33
 	revealed = false
 	script = "humanbot"
-	chatlump = "bots/chatfiles/meepy.txt"
 }
 
 {
@@ -1028,7 +986,6 @@
 	chatfrequency = 33
 	revealed = false
 	script = "dfultbot"
-	chatlump = "bots/chatfiles/chexman.txt"
 }
 
 {
@@ -1048,7 +1005,6 @@
 	chatfrequency = 50
 	revealed = false
 	script = "dfultbot"
-	chatlump = "bots/chatfiles/daisy.txt"
 }
 
 {
@@ -1068,7 +1024,6 @@
 	chatfrequency = 80
 	revealed = false
 	script = "humanbot"
-	chatlump = "bots/chatfiles/fob.txt"
 }
 
 {
@@ -1088,7 +1043,6 @@
 	chatfrequency = 33
 	revealed = false
 	script = "fatbot"
-	chatlump = "bots/chatfiles/chubbs.txt"
 }
 
 {
@@ -1108,5 +1062,4 @@
 	chatfrequency = 95
 	revealed = false
 	script = "dfultbot"
-	chatlump = "bots/chatfiles/quotebot.txt"
 }
