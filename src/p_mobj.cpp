@@ -3995,7 +3995,7 @@ void AActor::Tick ()
 	// [AK] Don't do this for players when using the client's command buffers.
 	// It's already handled when the buffers are emptied in CLIENT_TickCommandBuffers.
 	const bool usingCMDBuffers = CLIENTDEMO_IsPlaying() ? CLIENTDEMO_IsUsingCommandBuffers() : cl_buffercommands;
-	if (NETWORK_InClientMode() == false || player == nullptr || usingCMDBuffers == false)
+	if (NETWORK_InClientMode() == false || player == nullptr || player->bSpectating || usingCMDBuffers == false)
 	{
 		PrevX = x;
 		PrevY = y;
