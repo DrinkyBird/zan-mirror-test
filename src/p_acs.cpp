@@ -3935,7 +3935,8 @@ do_count:
 				if ( actor->player && (actor->player->bSpectating || actor->player->bDeadSpectator) )
 					continue;
 
-				if (tag == -1 || tagManager.SectorHasTag(actor->Sector, tag))
+				// Zero-tagged sectors must be handled differently, as they have no actual tags.
+				if (tag == -1 || (tag == 0 && !tagManager.SectorHasTags(actor->Sector)) || tagManager.SectorHasTag(actor->Sector, tag))
 				{
 					// Don't count items in somebody's inventory
 					if (!actor->IsKindOf (RUNTIME_CLASS(AInventory)) ||
@@ -3961,7 +3962,8 @@ do_count:
 				if ( actor->player && (actor->player->bSpectating || actor->player->bDeadSpectator) )
 					continue;
 
-				if (tag == -1 || tagManager.SectorHasTag(actor->Sector, tag))
+				// Zero-tagged sectors must be handled differently, as they have no actual tags.
+				if (tag == -1 || (tag == 0 && !tagManager.SectorHasTags(actor->Sector)) || tagManager.SectorHasTag(actor->Sector, tag))
 				{
 					// Don't count items in somebody's inventory
 					if (!actor->IsKindOf (RUNTIME_CLASS(AInventory)) ||

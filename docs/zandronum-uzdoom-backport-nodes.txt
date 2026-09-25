@@ -1182,3 +1182,35 @@ Reason for documentation: Zandronum doesn't have, or use, "src/fragglescript/t_f
  			lines[i].flags = (lines[i].flags & (ML_MONSTERSCANACTIVATE | ML_REPEAT_SPECIAL | ML_SPAC_MASK | ML_FIRSTSIDEONLY)) |
  				(f & ~(ML_MONSTERSCANACTIVATE | ML_REPEAT_SPECIAL | ML_SPAC_MASK | ML_FIRSTSIDEONLY));
  
+
+===============================================================================================================
+Git hash: c64d906273cea65f6412b561a658ce3f4f008c16
+Mercurial hash: b8cb2494747b9fd08ac011bb8ad89e5091014673
+Fixed an old regression in which the ThingCountSector and ThingCountNameSector ACS functions always returned zero if the tag argument was zero.
+
+Reason for documentation: "src/playsim/p_acs.cpp" doesn't exist in Zandronum yet, so the nodes were manually
+pasted into "src/p_acs.cpp".
+===============================================================================================================
+
+--- src/playsim/p_acs.cpp
++++ src/playsim/p_acs.cpp
+@@ -3672,7 +3672,8 @@
+ 			if (actor->health > 0 &&
+ 				(kind == NULL || actor->IsA (kind)))
+ 			{
+-				if (tag == -1 || Level->SectorHasTag(actor->Sector, tag))
++				// Zero-tagged sectors must be handled differently, as they have no actual tags.
++				if (tag == -1 || (tag == 0 && !Level->SectorHasTags(actor->Sector)) || Level->SectorHasTag(actor->Sector, tag))
+ 				{
+ 					// Don't count items in somebody's inventory
+ 					if (actor->IsMapActor())
+@@ -3691,7 +3692,8 @@
+ 			if (actor->health > 0 &&
+ 				(kind == NULL || actor->IsA (kind)))
+ 			{
+-				if (tag == -1 || Level->SectorHasTag(actor->Sector, tag))
++				// Zero-tagged sectors must be handled differently, as they have no actual tags.
++				if (tag == -1 || (tag == 0 && !Level->SectorHasTags(actor->Sector)) || Level->SectorHasTag(actor->Sector, tag))
+ 				{
+ 					// Don't count items in somebody's inventory
+ 					if (actor->IsMapActor())
