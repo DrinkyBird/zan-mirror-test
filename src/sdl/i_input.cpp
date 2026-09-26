@@ -41,7 +41,8 @@ EXTERN_CVAR (Bool, fullscreen)
 extern int WaitingForKey;
 extern constate_e ConsoleState;
 
-extern SDL_Surface *cursorSurface;
+class FTexture;
+extern FTexture *CursorPic;	// set by the vid_cursor callback in d_main.cpp
 extern SDL_Rect cursorBlit;
 
 static BYTE KeySymToDIK[SDLK_LAST], DownState[SDLK_LAST];
@@ -273,7 +274,7 @@ static void I_CheckNativeMouse ()
 	if (wantNative != NativeMouse)
 	{
 		NativeMouse = wantNative;
-		SDL_ShowCursor (wantNative ? cursorSurface == NULL : 0);
+		SDL_ShowCursor (wantNative ? CursorPic == NULL : 0);
 		if (wantNative)
 		{
 			SDL_WM_GrabInput (SDL_GRAB_OFF);

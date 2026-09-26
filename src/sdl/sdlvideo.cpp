@@ -75,9 +75,6 @@ struct MiniModeInfo
 // EXTERNAL DATA DECLARATIONS ----------------------------------------------
 
 extern IVideo *Video;
-extern SDL_Surface *cursorSurface;
-extern SDL_Rect cursorBlit;
-extern bool GUICapture;
 
 EXTERN_CVAR (Float, Gamma)
 EXTERN_CVAR (Int, vid_maxfps)
@@ -443,11 +440,8 @@ void SDLFB::Update ()
 	
 	SDL_UnlockSurface (Screen);
 
-	if (cursorSurface != NULL && GUICapture)
-	{
-		// SDL requires us to draw a surface to get true color cursors.
-		SDL_BlitSurface(cursorSurface, NULL, Screen, &cursorBlit);
-	}
+	// vid_cursor is now drawn from menu.cpp (M_Drawer), via screen->DrawTexture, so it
+	// renders on this backend and the GL one alike instead of only here.
 
 	SDLFlipCycles.Clock();
 	SDL_Flip (Screen);

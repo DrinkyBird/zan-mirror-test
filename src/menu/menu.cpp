@@ -866,6 +866,24 @@ void M_Drawer (void)
 		}
 		DMenu::CurrentMenu->Drawer();
 	}
+
+#ifndef _WIN32
+	// Windows shows vid_cursor through a real HCURSOR (win32/i_system.cpp), which the OS
+	// composites regardless of renderer. Neither SDL backend has an equivalent, so it's
+	// drawn here instead: this is the one place both the software and GL backends already
+	// funnel through every frame, and screen->DrawTexture dispatches correctly to either,
+	// so a single call covers both -- unlike a raw SDL_Surface blit, which only worked
+	// against the software backend's own CPU-side buffer.
+	extern bool GUICapture;
+	extern FTexture *CursorPic;
+	extern void I_GetCursorPos(int &x, int &y);
+	if (GUICapture && CursorPic != NULL)
+	{
+		int mx, my;
+		I_GetCursorPos(mx, my);
+		screen->DrawTexture(CursorPic, mx, my, DTA_TopOffset, 0, DTA_LeftOffset, 0, TAG_DONE);
+	}
+#endif
 }
 
 //=============================================================================

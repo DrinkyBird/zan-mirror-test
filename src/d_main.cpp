@@ -219,6 +219,13 @@ CVAR(Bool, testpolymost, false, 0)
 #endif
 CVAR (Int, wipetype, 1, CVAR_ARCHIVE);
 CVAR (Int, snd_drawoutput, 0, 0);
+// The texture currently selected by vid_cursor, already validated (non-null, not TEX_Null,
+// within the 32x32 limit I_SetCursor enforces) -- or NULL for "system cursor"/no custom pic.
+// On Linux/Mac (see menu.cpp, M_Drawer) this is what actually gets drawn each frame, since
+// neither SDL backend paints a texture-based cursor onto the frame by itself; Windows never
+// reads this, since its I_SetCursor installs a real HCURSOR that the OS composites for it.
+FTexture *CursorPic;
+
 CUSTOM_CVAR (String, vid_cursor, "None", CVAR_ARCHIVE | CVAR_NOINITCALL)
 {
 	// [TP/BB] The server does not use cursors.
@@ -226,19 +233,25 @@ CUSTOM_CVAR (String, vid_cursor, "None", CVAR_ARCHIVE | CVAR_NOINITCALL)
 		return;
 
 	bool res = false;
+	FTexture *pic;
 
 	if (!stricmp(self, "None" ) && gameinfo.CursorPic.IsNotEmpty())
 	{
-		res = I_SetCursor(TexMan[gameinfo.CursorPic]);
+		pic = TexMan[gameinfo.CursorPic];
 	}
 	else
 	{
-		res = I_SetCursor(TexMan[self]);
+		pic = TexMan[self];
 	}
+	res = I_SetCursor(pic);
 	if (!res)
 	{
-		I_SetCursor(TexMan["cursor"]);
+		pic = TexMan["cursor"];
+		I_SetCursor(pic);
 	}
+
+	CursorPic = (pic != NULL && pic->UseType != FTexture::TEX_Null
+		&& pic->GetWidth() <= 32 && pic->GetHeight() <= 32) ? pic : NULL;
 }
 
 bool DrawFSHUD;				// [RH] Draw fullscreen HUD?

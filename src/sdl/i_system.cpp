@@ -917,8 +917,16 @@ SDL_Cursor *CreateColorCursor(FTexture *cursorpic)
 }
 #endif
 
-SDL_Surface *cursorSurface = NULL;
 SDL_Rect cursorBlit = {0, 0, 32, 32};
+
+// Raw window-pixel mouse position, kept current by i_input.cpp on every motion event.
+// Exposed so menu.cpp can position the drawn cursor without needing any SDL type itself.
+void I_GetCursorPos(int &x, int &y)
+{
+	x = cursorBlit.x;
+	y = cursorBlit.y;
+}
+
 bool I_SetCursor(FTexture *cursorpic)
 {
 	if (cursorpic != NULL && cursorpic->UseType != FTexture::TEX_Null)
@@ -944,27 +952,15 @@ bool I_SetCursor(FTexture *cursorpic)
 			}
 		}
 #endif
-		if (cursorSurface == NULL)
-			cursorSurface = SDL_CreateRGBSurface (0, 32, 32, 32, MAKEARGB(0,255,0,0), MAKEARGB(0,0,255,0), MAKEARGB(0,0,0,255), MAKEARGB(255,0,0,0));
-
+		// No native color cursor available: hide the system pointer and let
+		// menu.cpp (M_Drawer) draw CursorPic itself via screen->DrawTexture,
+		// which works correctly on both the software and GL backends.
 		SDL_ShowCursor(0);
-		SDL_LockSurface(cursorSurface);
-		BYTE buffer[32*32*4];
-		memset(buffer, 0, 32*32*4);
-		FBitmap bmp(buffer, 32*4, 32, 32);
-		cursorpic->CopyTrueColorPixels(&bmp, 0, 0);
-		memcpy(cursorSurface->pixels, bmp.GetPixels(), 32*32*4);
-		SDL_UnlockSurface(cursorSurface);
 	}
 	else
 	{
 		SDL_ShowCursor(1);
 
-		if (cursorSurface != NULL)
-		{
-			SDL_FreeSurface(cursorSurface);
-			cursorSurface = NULL;
-		}
 #ifdef USE_XCURSOR
 		if (X11Cursor != NULL)
 		{
