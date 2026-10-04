@@ -34,6 +34,7 @@ Actor PlayerPawn : Actor native
 	Player.FlechetteType "ArtiPoisonBag3"
 	Player.AirCapacity 1
 	Player.MaxSkinSizeFactor 3.44, 1.68 // [TP]
+	Player.RejumpDelay -1 // [TDRR]
 	Obituary "$OB_MPDEFAULT"
 }
 

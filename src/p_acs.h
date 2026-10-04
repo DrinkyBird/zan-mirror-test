@@ -425,6 +425,9 @@ enum
 	APROP_ViewHeight	= 39,
 	APROP_AttackZOffset	= 40,
 	APROP_StencilColor	= 41,
+
+	// Zandronum ACS actor properties.
+	APROP_RejumpDelay	= 150,	// [TDRR] (from Q-Zandronum)
 };	
 
 // [Dusk] Enumeration for GetTeamProperty

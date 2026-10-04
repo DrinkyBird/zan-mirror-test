@@ -3064,6 +3064,9 @@ void P_ZMovement (AActor *mo, fixed_t oldfloorz)
 		// [AK] Spectators without physical restrictions are allowed to pass through the floor.
 		if (mo->z <= mo->floorz && P_IsSpectatorUnrestricted(mo) == false)
 		{
+			// [TDRR]
+			int rejumpDelay = mo->IsKindOf(RUNTIME_CLASS (APlayerPawn)) ? static_cast<APlayerPawn *>(mo)->RejumpDelay : -1;
+
 			// [BC] We need to do the sky check first, otherwise bouncy things
 			// can potentially bounce off the sky (such as grenades).
 			// [BB] But only do this for bouncy things!
@@ -3168,9 +3171,11 @@ void P_ZMovement (AActor *mo, fixed_t oldfloorz)
 				{
 					// [BB] ZDoom changed the jumping here revision 2238.
 					// The old behavior is necessary for existing jumpmaze wads.
-					if ( ( zacompatflags & ZACOMPATF_SKULLTAG_JUMPING ) || mo->player->jumpTics < 0 || mo->velz < minvel)
+					// [TDRR] Rejump delay is now configurable with an actor property.
+					// Negative values allow keeping the old, hardcoded behavior.
+					if ( ( zacompatflags & ZACOMPATF_SKULLTAG_JUMPING ) || mo->player->jumpTics < 0 || mo->velz < minvel || rejumpDelay >= 0)
 					{ // delay any jumping for a short while
-						mo->player->jumpTics = 7;
+						mo->player->jumpTics = (rejumpDelay < 0) ? 7 : rejumpDelay;
 
 						// [Leo] Inform the client of the jumpTics change.
 						if ( NETWORK_GetState() == NETSTATE_SERVER )
@@ -3185,6 +3190,12 @@ void P_ZMovement (AActor *mo, fixed_t oldfloorz)
 					}
 				}
 				mo->velz = 0;
+			}
+			// [TDRR] Added RejumpDelay to configure the previously hardcoded jump delay.
+			// Some minimum delay is required to avoid doubled jump height when jumping up a step.
+			else if (mo->velz > 0 && rejumpDelay >= 0)
+			{
+				mo->player->jumpTics = (rejumpDelay < 2) ? 2 : rejumpDelay;
 			}
 			if (mo->flags & MF_SKULLFLY)
 			{ // The skull slammed into something

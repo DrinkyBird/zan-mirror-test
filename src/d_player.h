@@ -173,6 +173,9 @@ public:
 	fixed_t		AngleDelta;
 	fixed_t		PitchDelta;
 
+	// [TDRR] Time from landing until a jump is allowed again.
+	int			RejumpDelay;
+
 	bool UpdateWaterLevel (fixed_t oldz, bool splash);
 	bool ResetAirSupply (bool playgasp = true);
 

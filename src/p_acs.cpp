@@ -4912,6 +4912,22 @@ void DLevelScript::DoSetActorProperty (AActor *actor, int property, int value)
 			SERVERCOMMANDS_SetThingProperty( actor, APROP_StencilColor );
 		break;
 
+	// [TDRR]
+	case APROP_RejumpDelay:
+		if (actor->IsKindOf (RUNTIME_CLASS (APlayerPawn)))
+		{
+			APlayerPawn *playerActor = static_cast<APlayerPawn *>(actor);
+
+			oldValue = playerActor->RejumpDelay;
+
+			playerActor->RejumpDelay = value;
+
+			// Sync to clients, but only if the value has actually changed.
+			if ( ( NETWORK_GetState( ) == NETSTATE_SERVER ) && ( oldValue != playerActor->RejumpDelay ) )
+				SERVERCOMMANDS_SetThingProperty( actor, APROP_RejumpDelay );
+		}
+		break;
+
 	default:
 		// do nothing.
 		break;
@@ -5010,6 +5026,17 @@ int DLevelScript::GetActorProperty (int tid, int property)
 	case APROP_Species:		return GlobalACSStrings.AddString(actor->GetSpecies());
 	case APROP_NameTag:		return GlobalACSStrings.AddString(actor->GetTag());
 	case APROP_StencilColor:return actor->fillcolor;
+
+	// [TDRR]
+	case APROP_RejumpDelay:
+							if (actor->IsKindOf (RUNTIME_CLASS (APlayerPawn)))
+							{
+								return static_cast<APlayerPawn *>(actor)->RejumpDelay;
+							}
+							else
+							{
+								return 0;
+							}
 
 	default:				return 0;
 	}

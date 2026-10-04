@@ -1920,6 +1920,11 @@ void SERVERCOMMANDS_SetThingProperty( AActor *pActor, ULONG ulProperty, ULONG ul
 		value = pActor->fillcolor;
 		break;
 
+	case APROP_RejumpDelay:
+		if ( pActor->IsKindOf( RUNTIME_CLASS( APlayerPawn )))
+			value = static_cast<APlayerPawn *>( pActor )->RejumpDelay;
+		break;
+
 	default:
 		return;
 	}

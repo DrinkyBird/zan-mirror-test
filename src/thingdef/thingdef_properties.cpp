@@ -2932,3 +2932,12 @@ DEFINE_CLASS_PROPERTY(viewpitchoffset, F, Weapon)
 	PROP_FIXED_PARM(i, 0);
 	defaults->ViewPitchOffset = i;
 }
+
+//==========================================================================
+// [TDRR] (from Q-Zandronum)
+//==========================================================================
+DEFINE_CLASS_PROPERTY_PREFIX(player, rejumpdelay, I, PlayerPawn)
+{
+	PROP_INT_PARM(i, 0);
+	defaults->RejumpDelay = i;
+}

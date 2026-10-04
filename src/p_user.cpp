@@ -789,6 +789,7 @@ void APlayerPawn::Serialize (FArchive &arc)
 	Super::Serialize (arc);
 
 	arc << JumpZ
+		<< RejumpDelay
 		<< MaxHealth
 		<< RunHealth
 		<< SpawnMask
@@ -3170,7 +3171,7 @@ void P_MovePlayer (player_t *player)
 		else if ((player->bSpectating || level.IsJumpingAllowed()) && player->onground && player->jumpTics == 0)
 		{
 			fixed_t	JumpVelz;
-			ULONG	ulJumpTicks;
+			ULONG	ulJumpTicks = 0;
 
 			// Set base jump velocity.
 			// [Dusk] Exported this into a function as I need it elsewhere as well.
@@ -3178,10 +3179,15 @@ void P_MovePlayer (player_t *player)
 
 			// Set base jump ticks.
 			// [BB] In ZDoom revision 2970 changed the jumping behavior.
-			if ( zacompatflags & ZACOMPATF_SKULLTAG_JUMPING )
-				ulJumpTicks = 18 * TICRATE / 35;
-			else
-				ulJumpTicks = -1;
+			// [TDRR] Rejump delay is now configurable with the RejumpDelay property.
+			// Negative values restore the original hardcoded behavior.
+			if (player->mo->RejumpDelay < 0)
+			{
+				if ( zacompatflags & ZACOMPATF_SKULLTAG_JUMPING )
+					ulJumpTicks = 18 * TICRATE / 35;
+				else
+					ulJumpTicks = -1;
+			}
 
 			// [BB] We may not play the sound while predicting, otherwise it'll stutter.
 			if ( CLIENT_PREDICT_IsPredicting( ) == false )
