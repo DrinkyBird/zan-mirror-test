@@ -251,6 +251,11 @@ struct secplane_t
 	fixed_t		unlaggedD[UNLAGGEDTICS];
 	fixed_t		restoreD;
 
+	bool isSlope() const
+	{
+		return a != 0 || b != 0;
+	}
+
 	// Returns < 0 : behind; == 0 : on; > 0 : in front
 	int PointOnSide (fixed_t x, fixed_t y, fixed_t z) const
 	{

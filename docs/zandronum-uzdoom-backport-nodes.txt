@@ -1333,3 +1333,28 @@ kind of changes were made in "botpath.cpp" instead. Zandronum also doesn't have 
  }
  
  //==========================================================================
+
+===============================================================================================================
+Git hash: 6e93264016367ef59fd517798dbaa6a0ea2cf774
+Mercurial hash: 987eb417b790104ac2efc22663b8cf20a37f3ae7
+- started floatification on p_map.cpp.
+
+Reason for documentation: needed secplane_t::isSlope to successfully backport UDMF fields for sector plane
+reflectiveness, but the commit was too large and irrelevant, and couldn't be transplanted in its entirety. So,
+the function was added in manually without a transplant.
+===============================================================================================================
+
+--- src/r_defs.h
++++ src/r_defs.h
+@@ -246,6 +246,11 @@
+ 
+ 	fixed_t a, b, c, d, ic;
+ 
++	bool isSlope() const
++	{
++		return a != 0 || b != 0;
++	}
++
+ 	DVector3 Normal() const
+ 	{
+ 		return{ FIXED2FLOAT(a), FIXED2FLOAT(b), FIXED2FLOAT(c) };
