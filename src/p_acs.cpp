@@ -7181,6 +7181,10 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 					while ((s = it.Next()) >= 0)
 					{
 						sectors[s].terrainnum[args[1]] = terrain;
+
+						// [AK] If we're the server, tell the clients that this sector's terrain changed.
+						if (NETWORK_GetState() == NETSTATE_SERVER)
+							SERVERCOMMANDS_SetSectorTerrain(s);
 					}
 				}
 			}

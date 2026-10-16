@@ -1771,6 +1771,8 @@ void P_SpawnSpecials (void)
 		sectors[i].SavedLeakyDamage = sectors[i].leakydamage;
 		sectors[i].SavedCeilingReflect = sectors[i].reflect[sector_t::ceiling];
 		sectors[i].SavedFloorReflect = sectors[i].reflect[sector_t::floor];
+		sectors[i].SavedCeilingTerrain = sectors[i].terrainnum[sector_t::ceiling];
+		sectors[i].SavedFloorTerrain = sectors[i].terrainnum[sector_t::floor];
 	}
 
 	// [RH] Start running any open scripts on this map

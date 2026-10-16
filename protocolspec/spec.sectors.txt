@@ -123,6 +123,13 @@ Command SetSectorReflection
 	Float floorReflection
 EndCommand
 
+Command SetSectorTerrain
+	Sector sector
+	# [AK] Send the terrains as signed bytes, since -1 removes a sector's terrain.
+	SByte ceilingTerrain
+	SByte floorTerrain
+EndCommand
+
 Command SetSectorLink
 	Sector sector
 	Short tag

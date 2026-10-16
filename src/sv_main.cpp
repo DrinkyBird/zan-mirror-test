@@ -3575,6 +3575,13 @@ void SERVER_UpdateSectors( ULONG ulClient )
 			SERVERCOMMANDS_SetSectorReflection( ulIdx );
 		}
 
+		// [AK] Update the sector's terrain.
+		if (( pSector->SavedCeilingTerrain != pSector->terrainnum[sector_t::ceiling] ) ||
+			( pSector->SavedFloorTerrain != pSector->terrainnum[sector_t::floor] ))
+		{
+			SERVERCOMMANDS_SetSectorTerrain( ulIdx, ulClient, SVCF_ONLYTHISCLIENT );
+		}
+
 		// Tell client to mark all discovered secret sectors.
 		if (( pSector->isSecret( ) == false ) && ( pSector->wasSecret( )))
 			SERVERCOMMANDS_SecretMarkSectorFound( pSector, ulClient, SVCF_ONLYTHISCLIENT );

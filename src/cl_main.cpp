@@ -135,6 +135,7 @@
 #include "voicechat.h"
 #include "gameconfigfile.h"
 #include "wi_stuff.h"
+#include "p_terrain.h"
 
 //*****************************************************************************
 //	MISC CRAP THAT SHOULDN'T BE HERE BUT HAS TO BE BECAUSE OF SLOPPY CODING
@@ -6971,6 +6972,19 @@ void ServerCommands::SetSectorReflection::Execute()
 {
 	sector->reflect[sector_t::ceiling] = ceilingReflection;
 	sector->reflect[sector_t::floor] = floorReflection;
+}
+
+//*****************************************************************************
+//
+void ServerCommands::SetSectorTerrain::Execute()
+{
+	// [AK] Sanity check: make sure the server sent a valid ceiling terrain.
+	if (( ceilingTerrain >= -1 ) && ( ceilingTerrain < static_cast<int>( Terrains.Size( ))))
+		sector->terrainnum[sector_t::ceiling] = ceilingTerrain;
+
+	// [AK] Do the same for the floor terrain.
+	if (( floorTerrain >= -1 ) && ( floorTerrain < static_cast<int>( Terrains.Size( ))))
+		sector->terrainnum[sector_t::floor] = floorTerrain;
 }
 
 //*****************************************************************************

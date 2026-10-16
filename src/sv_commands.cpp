@@ -3285,6 +3285,20 @@ void SERVERCOMMANDS_SetSectorReflection( ULONG ulSector, ULONG ulPlayerExtra, Se
 
 //*****************************************************************************
 //
+void SERVERCOMMANDS_SetSectorTerrain( unsigned int sector, unsigned int playerExtra, ServerCommandFlags flags )
+{
+	if ( sector >= static_cast<unsigned>( numsectors ))
+		return;
+
+	ServerCommands::SetSectorTerrain command;
+	command.SetSector( &sectors[sector] );
+	command.SetCeilingTerrain( sectors[sector].terrainnum[sector_t::ceiling] );
+	command.SetFloorTerrain( sectors[sector].terrainnum[sector_t::floor] );
+	command.sendCommandToClients( playerExtra, flags );
+}
+
+//*****************************************************************************
+//
 void SERVERCOMMANDS_StopSectorLightEffect( ULONG ulSector, ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
 	if ( ulSector >= (ULONG)numsectors )

@@ -3794,6 +3794,16 @@ void GAME_ResetMap( bool bRunEnterScripts )
 				SERVERCOMMANDS_SetSectorReflection( ulIdx );
 		}
 
+		if (( sectors[ulIdx].SavedCeilingTerrain != sectors[ulIdx].terrainnum[sector_t::ceiling] ) ||
+			( sectors[ulIdx].SavedFloorTerrain != sectors[ulIdx].terrainnum[sector_t::floor] ))
+		{
+			sectors[ulIdx].terrainnum[sector_t::ceiling] = sectors[ulIdx].SavedCeilingTerrain;
+			sectors[ulIdx].terrainnum[sector_t::floor] = sectors[ulIdx].SavedFloorTerrain;
+
+			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
+				SERVERCOMMANDS_SetSectorTerrain( ulIdx );
+		}
+
 		// [Dusk] Reset 3d midtextures
 		if ( sectors[ulIdx].e ) {
 			const extsector_t::midtex::plane* planes[2] = {

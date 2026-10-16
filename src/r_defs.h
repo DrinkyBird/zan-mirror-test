@@ -916,6 +916,8 @@ struct sector_t
 	short				SavedLeakyDamage;
 	float				SavedCeilingReflect;
 	float				SavedFloorReflect;
+	int					SavedCeilingTerrain;
+	int					SavedFloorTerrain;
 
 };
 

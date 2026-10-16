@@ -548,7 +548,9 @@ void P_SerializeWorld (FArchive &arc)
 			<< sec->SavedDamageInterval
 			<< sec->SavedLeakyDamage
 			<< sec->SavedCeilingReflect
-			<< sec->SavedFloorReflect;
+			<< sec->SavedFloorReflect
+			<< sec->SavedCeilingTerrain
+			<< sec->SavedFloorTerrain;
 	}
 
 	// do lines
