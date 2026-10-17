@@ -925,6 +925,10 @@ struct sector_t
 	float				SavedFloorReflect;
 	int					SavedCeilingTerrain;
 	int					SavedFloorTerrain;
+	PalEntry			SavedCeilingGlowColor;
+	PalEntry			SavedFloorGlowColor;
+	float				SavedCeilingGlowHeight;
+	float				SavedFloorGlowHeight;
 
 };
 

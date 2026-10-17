@@ -292,6 +292,7 @@ void	SERVERCOMMANDS_SetSectorAngleYOffset( ULONG ulSector, ULONG ulPlayerExtra =
 void	SERVERCOMMANDS_SetSectorGravity( ULONG ulSector, ULONG ulPlayerExtra = MAXPLAYERS, ServerCommandFlags flags = 0 );
 void	SERVERCOMMANDS_SetSectorReflection( ULONG ulSector, ULONG ulPlayerExtra = MAXPLAYERS, ServerCommandFlags flags = 0 );
 void	SERVERCOMMANDS_SetSectorTerrain( unsigned int sector, unsigned int playerExtra = MAXPLAYERS, ServerCommandFlags flags = 0 );
+void	SERVERCOMMANDS_SetSectorGlow( unsigned int sector, int plane, unsigned int playerExtra = MAXPLAYERS, ServerCommandFlags flags = 0 );
 void	SERVERCOMMANDS_StopSectorLightEffect( ULONG ulSector, ULONG ulPlayerExtra = MAXPLAYERS, ServerCommandFlags flags = 0 );
 void	SERVERCOMMANDS_DestroyAllSectorMovers( ULONG ulPlayerExtra = MAXPLAYERS, ServerCommandFlags flags = 0 );
 

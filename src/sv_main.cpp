@@ -3582,6 +3582,20 @@ void SERVER_UpdateSectors( ULONG ulClient )
 			SERVERCOMMANDS_SetSectorTerrain( ulIdx, ulClient, SVCF_ONLYTHISCLIENT );
 		}
 
+		// [AK] Update the sector's ceiling glow.
+		if (( sectors[ulIdx].SavedCeilingGlowColor != sectors[ulIdx].planes[sector_t::ceiling].GlowColor ) ||
+			( sectors[ulIdx].SavedCeilingGlowHeight != sectors[ulIdx].planes[sector_t::ceiling].GlowHeight ))
+		{
+			SERVERCOMMANDS_SetSectorGlow( ulIdx, sector_t::ceiling, ulClient, SVCF_ONLYTHISCLIENT );
+		}
+
+		// [AK] ...and its floor glow.
+		if (( sectors[ulIdx].SavedFloorGlowColor != sectors[ulIdx].planes[sector_t::floor].GlowColor ) ||
+			( sectors[ulIdx].SavedFloorGlowHeight != sectors[ulIdx].planes[sector_t::floor].GlowHeight ))
+		{
+			SERVERCOMMANDS_SetSectorGlow( ulIdx, sector_t::floor, ulClient, SVCF_ONLYTHISCLIENT );
+		}
+
 		// Tell client to mark all discovered secret sectors.
 		if (( pSector->isSecret( ) == false ) && ( pSector->wasSecret( )))
 			SERVERCOMMANDS_SecretMarkSectorFound( pSector, ulClient, SVCF_ONLYTHISCLIENT );

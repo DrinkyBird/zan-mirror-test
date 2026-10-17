@@ -9206,6 +9206,10 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 			{
 				sectors[s].planes[which].GlowColor = color;
 				sectors[s].planes[which].GlowHeight = height;
+
+				// [AK] If we're the server, tell the clients that this sector's floor or ceiling glow changed.
+				if (NETWORK_GetState() == NETSTATE_SERVER)
+					SERVERCOMMANDS_SetSectorGlow(s, which);
 			}
 			break;
 		}
@@ -9219,6 +9223,10 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 			{
 				auto f = sectors[s].ColorMap->Fade;
 				sectors[s].ColorMap = GetSpecialLights(sectors[s].ColorMap->Color, PalEntry(d, f.r, f.g, f.b), sectors[s].ColorMap->Desaturate);
+
+				// [AK] If we're the server, tell the clients that this sector's fade changed.
+				if (NETWORK_GetState() == NETSTATE_SERVER)
+					SERVERCOMMANDS_SetSectorFade(s);
 			}
 			break;
 		}

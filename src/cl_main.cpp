@@ -6989,6 +6989,18 @@ void ServerCommands::SetSectorTerrain::Execute()
 
 //*****************************************************************************
 //
+void ServerCommands::SetSectorGlow::Execute()
+{
+	// [AK] Sanity check: make sure the server sent a valid plane.
+	if (( plane != sector_t::floor ) && ( plane != sector_t::ceiling ))
+		return;
+
+	sector->planes[plane].GlowColor = PalEntry( red, green, blue );
+	sector->planes[plane].GlowHeight = height;
+}
+
+//*****************************************************************************
+//
 void ServerCommands::StopSectorLightEffect::Execute()
 {
 	TThinkerIterator<DLighting>		Iterator;

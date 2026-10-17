@@ -3804,6 +3804,26 @@ void GAME_ResetMap( bool bRunEnterScripts )
 				SERVERCOMMANDS_SetSectorTerrain( ulIdx );
 		}
 
+		if (( sectors[ulIdx].SavedCeilingGlowColor != sectors[ulIdx].planes[sector_t::ceiling].GlowColor ) ||
+			( sectors[ulIdx].SavedCeilingGlowHeight != sectors[ulIdx].planes[sector_t::ceiling].GlowHeight ))
+		{
+			sectors[ulIdx].planes[sector_t::ceiling].GlowColor = sectors[ulIdx].SavedCeilingGlowColor;
+			sectors[ulIdx].planes[sector_t::ceiling].GlowHeight = sectors[ulIdx].SavedCeilingGlowHeight;
+
+			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
+				SERVERCOMMANDS_SetSectorGlow( ulIdx, sector_t::ceiling );
+		}
+
+		if (( sectors[ulIdx].SavedFloorGlowColor != sectors[ulIdx].planes[sector_t::floor].GlowColor ) ||
+			( sectors[ulIdx].SavedFloorGlowHeight != sectors[ulIdx].planes[sector_t::floor].GlowHeight ))
+		{
+			sectors[ulIdx].planes[sector_t::floor].GlowColor = sectors[ulIdx].SavedFloorGlowColor;
+			sectors[ulIdx].planes[sector_t::floor].GlowHeight = sectors[ulIdx].SavedFloorGlowHeight;
+
+			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
+				SERVERCOMMANDS_SetSectorGlow( ulIdx, sector_t::floor );
+		}
+
 		// [Dusk] Reset 3d midtextures
 		if ( sectors[ulIdx].e ) {
 			const extsector_t::midtex::plane* planes[2] = {

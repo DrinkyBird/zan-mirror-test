@@ -1773,6 +1773,10 @@ void P_SpawnSpecials (void)
 		sectors[i].SavedFloorReflect = sectors[i].reflect[sector_t::floor];
 		sectors[i].SavedCeilingTerrain = sectors[i].terrainnum[sector_t::ceiling];
 		sectors[i].SavedFloorTerrain = sectors[i].terrainnum[sector_t::floor];
+		sectors[i].SavedCeilingGlowColor = sectors[i].planes[sector_t::ceiling].GlowColor;
+		sectors[i].SavedFloorGlowColor = sectors[i].planes[sector_t::floor].GlowColor;
+		sectors[i].SavedCeilingGlowHeight = sectors[i].planes[sector_t::ceiling].GlowHeight;
+		sectors[i].SavedFloorGlowHeight = sectors[i].planes[sector_t::floor].GlowHeight;
 	}
 
 	// [RH] Start running any open scripts on this map

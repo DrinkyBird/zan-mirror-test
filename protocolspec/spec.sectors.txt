@@ -130,6 +130,15 @@ Command SetSectorTerrain
 	SByte floorTerrain
 EndCommand
 
+Command SetSectorGlow
+	Sector sector
+	Byte plane
+	Byte red
+	Byte green
+	Byte blue
+	Float height
+EndCommand
+
 Command SetSectorLink
 	Sector sector
 	Short tag

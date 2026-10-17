@@ -3299,6 +3299,23 @@ void SERVERCOMMANDS_SetSectorTerrain( unsigned int sector, unsigned int playerEx
 
 //*****************************************************************************
 //
+void SERVERCOMMANDS_SetSectorGlow( unsigned int sector, int plane, unsigned int playerExtra, ServerCommandFlags flags )
+{
+	if (( sector >= static_cast<unsigned>( numsectors )) || (( plane != sector_t::floor ) && ( plane != sector_t::ceiling )))
+		return;
+
+	ServerCommands::SetSectorGlow command;
+	command.SetSector( &sectors[sector] );
+	command.SetPlane( plane );
+	command.SetRed( sectors[sector].planes[plane].GlowColor.r );
+	command.SetGreen( sectors[sector].planes[plane].GlowColor.g );
+	command.SetBlue( sectors[sector].planes[plane].GlowColor.b );
+	command.SetHeight( sectors[sector].planes[plane].GlowHeight );
+	command.sendCommandToClients( playerExtra, flags );
+}
+
+//*****************************************************************************
+//
 void SERVERCOMMANDS_StopSectorLightEffect( ULONG ulSector, ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
 	if ( ulSector >= (ULONG)numsectors )
