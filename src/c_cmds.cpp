@@ -90,10 +90,10 @@ extern FILE *Logfile;
 extern bool insave;
 
 // [BC] The user's desired name of the logfile.
-extern char g_szDesiredLogFilename[256];
+extern FString g_DesiredLogFilename;
 
 // [RC] The actual name of the logfile (most likely g_szDesiredLogFilename with a timestamp).
-extern char g_szActualLogFilename[512];
+extern FString g_ActualLogFilename;
 
 // [AK] Don't let ConsoleCommand change the value of sv_cheats.
 CVAR (Bool, sv_cheats, false, CVAR_SERVERINFO | CVAR_LATCH | CVAR_NOSETBYACS)
@@ -134,39 +134,52 @@ bool CheckCheatmode (bool printmsg)
 }
 
 // [RC] Creates the log file and starts logging to it.
-void StartLogging( const char *szFileName )
+void StartLogging(const char *filename)
 {
-	char		logfilename[512];
-	time_t		tNow;
-	// [BB] Write the current system time to tNow.
-	time (&tNow);
-	struct tm	*lt = localtime( &tNow );
+	FString logFilename = "log";
+
+	if ((filename != nullptr) && (strlen(filename) > 0))
+	{
+		logFilename.AppendFormat("-%s", filename);
+		logFilename.ReplaceChars('.', '-');
+	}
 
 	// [BB] If sv_logfilenametimestamp, we append the current date/time to the logfile name.
-	if ( lt != NULL && sv_logfilenametimestamp )
-		sprintf( logfilename, "%s__%d_%02d_%02d-%02d_%02d_%02d.log", szFileName, lt->tm_year + 1900, lt->tm_mon + 1, lt->tm_mday, lt->tm_hour, lt->tm_min, lt->tm_sec);
-	else
-		strncpy( logfilename, szFileName, 256 );
-
-	if (( Logfile = fopen( logfilename, sv_logfile_append ? "a" : "w" )))
+	if (sv_logfilenametimestamp)
 	{
-		sprintf( g_szDesiredLogFilename, "%s", szFileName );
-		sprintf( g_szActualLogFilename, "%s", logfilename );
-		Printf( "Log started: %s, %s", g_szActualLogFilename, myasctime( ));
+		// [BB] Write the current system time to tNow.
+		time_t tNow;
+		time(&tNow);
+
+		struct tm *lt = localtime(&tNow);
+
+		if (lt != nullptr)
+			logFilename.AppendFormat("__%d_%02d_%02d-%02d_%02d_%02d", lt->tm_year + 1900, lt->tm_mon + 1, lt->tm_mday, lt->tm_hour, lt->tm_min, lt->tm_sec);
+	}
+
+	logFilename.AppendFormat(".log");
+
+	if ((Logfile = fopen(logFilename.GetChars(), sv_logfile_append ? "a" : "w")))
+	{
+		g_DesiredLogFilename = filename;
+		g_ActualLogFilename = logFilename;
+		Printf("Log started: %s, %s", g_ActualLogFilename.GetChars(), myasctime());
 	}
 	else
-		Printf( "Could not start log: %s.\n", szFileName );
+	{
+		Printf("Could not start log: %s.\n", filename);
+	}
 }
 
 // Closes the log file, if there is one.
-void StopLogging( void )
+void StopLogging(void)
 {
-	if ( Logfile )
+	if (Logfile)
 	{
-		Printf( "Log stopped: %s, %s", g_szActualLogFilename, myasctime() );
-		fclose( Logfile );
-		Logfile = NULL;
-		g_szActualLogFilename[0] = 0;
+		Printf("Log stopped: %s, %s", g_ActualLogFilename.GetChars(), myasctime());
+		fclose(Logfile );
+		Logfile = nullptr;
+		g_ActualLogFilename = "";
 	}
 }
 

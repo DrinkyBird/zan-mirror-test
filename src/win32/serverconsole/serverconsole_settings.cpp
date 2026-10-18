@@ -132,10 +132,10 @@ value_t ModifierVals[3] = {
 
 // Logging.
 extern	FILE			*Logfile;
-extern	char			g_szDesiredLogFilename[MAX_PATH];
-extern	char			g_szActualLogFilename[MAX_PATH];
+extern	FString			g_DesiredLogFilename;
+extern	FString			g_ActualLogFilename;
 extern	GAMEMODE_e		g_CurrentGameMode;
-void					StartLogging( const char *szFileName );
+void					StartLogging( const char *fileName );
 void					StopLogging( void );
 EXTERN_CVAR( Bool, sv_logfilenametimestamp );
 
@@ -343,7 +343,7 @@ void settings_Dialog_SaveSettings( )
 
 	// Update logfile.
 	GetDlgItemText( hDlg, IDC_LOGFILE, szBuffer, 256 );
-	if ( stricmp( szBuffer, g_szDesiredLogFilename ) != 0 || sv_logfilenametimestamp != ( SendDlgItemMessage( hDlg, IDC_LOGFILENAME_TIMESTAMP, BM_GETCHECK, 0, 0 ) == BST_CHECKED ))
+	if ( stricmp( szBuffer, g_DesiredLogFilename.GetChars( )) != 0 || sv_logfilenametimestamp != ( SendDlgItemMessage( hDlg, IDC_LOGFILENAME_TIMESTAMP, BM_GETCHECK, 0, 0 ) == BST_CHECKED ))
 	{
 		sv_logfilenametimestamp = ( SendDlgItemMessage( hDlg, IDC_LOGFILENAME_TIMESTAMP, BM_GETCHECK, 0, 0 ) == BST_CHECKED );
 
@@ -799,7 +799,7 @@ void settings_AdminTab_ShowOrHideItems( HWND hDlg )
 	EnableWindow( GetDlgItem( hDlg, IDC_RCONPASSWORD ), ( SendDlgItemMessage( hDlg, IDC_ALLOWRCON, BM_GETCHECK, 0, 0 ) == BST_CHECKED ) );
 	EnableWindow( GetDlgItem( hDlg, IDC_LOGFILE ), ( SendDlgItemMessage( hDlg, IDC_ENABLELOGGING, BM_GETCHECK, 0, 0 ) == BST_CHECKED ) );
 	EnableWindow( GetDlgItem( hDlg, IDC_LOGFILENAME_TIMESTAMP ), ( SendDlgItemMessage( hDlg, IDC_ENABLELOGGING, BM_GETCHECK, 0, 0 ) == BST_CHECKED ) );	
-	EnableWindow( GetDlgItem( hDlg, IDC_VIEWLOGFILE ), FileExists( g_szActualLogFilename ) );
+	EnableWindow( GetDlgItem( hDlg, IDC_VIEWLOGFILE ), FileExists( g_ActualLogFilename.GetChars( ) ) );
 }
 
 //==========================================================================
@@ -828,7 +828,7 @@ BOOL CALLBACK settings_AdminTab_Callback( HWND hDlg, UINT Message, WPARAM wParam
 		// Initialize the "Enable timestamp" checkbox.		
 		SendDlgItemMessage( hDlg, IDC_LOGFILENAME_TIMESTAMP, BM_SETCHECK, ( sv_logfilenametimestamp ) ? BST_CHECKED : BST_UNCHECKED, 0 );
 		SendDlgItemMessage( hDlg, IDC_ENABLELOGGING, BM_SETCHECK, ( Logfile ) ? BST_CHECKED : BST_UNCHECKED, 0 );
-		SetDlgItemText( hDlg, IDC_LOGFILE, g_szDesiredLogFilename );		
+		SetDlgItemText( hDlg, IDC_LOGFILE, g_DesiredLogFilename.GetChars( ));		
 
 		// [BB] Initialize the "Server control" checkbox.
 		SendDlgItemMessage( hDlg, IDC_ALLOWRCON, BM_SETCHECK, ( strlen ( sv_rconpassword ) > 4 ) ? BST_CHECKED : BST_UNCHECKED, 0 );
@@ -843,8 +843,8 @@ BOOL CALLBACK settings_AdminTab_Callback( HWND hDlg, UINT Message, WPARAM wParam
 
 		if ( LOWORD( wParam ) == IDC_VIEWLOGFILE )
 		{
-			if ( FileExists( g_szActualLogFilename ))
-				I_RunProgram( g_szActualLogFilename );
+			if ( FileExists( g_ActualLogFilename.GetChars( )))
+				I_RunProgram( g_ActualLogFilename.GetChars( ));
 		}
 
 		if ( LOWORD( wParam ) == IDC_MESSAGES )

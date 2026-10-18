@@ -296,10 +296,10 @@ static void setmsgcolor (int index, int color);
 FILE *Logfile = NULL;
 
 // [BC] The user's desired name of the logfile.
-char g_szDesiredLogFilename[256];
+FString g_DesiredLogFilename;
 
 // [RC] The actual name of the logfile (most likely g_szLogFilename with a timestamp).
-char g_szActualLogFilename[512];
+FString g_ActualLogFilename;
 
 void C_AddNotifyString (int printlevel, const char *source);
 
@@ -417,10 +417,6 @@ void DequeueConsoleText ()
 
 void C_InitConback()
 {
-	// [BC] Initialize the name of the logfile.
-	g_szDesiredLogFilename[0] = 0;
-	g_szActualLogFilename[0] = 0;
-
 	// [BC] The server has no use for a console.
 	if ( Args->CheckParm( "-host" ))
 		return;
