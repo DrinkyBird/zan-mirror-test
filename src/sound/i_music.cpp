@@ -764,6 +764,7 @@ ADD_STAT(music)
 //
 //==========================================================================
 
+/* [AK] Zandronum doesn't use this command.
 UNSAFE_CCMD (writeopl)
 {
 	if (argv.argc() == 2)
@@ -791,6 +792,7 @@ UNSAFE_CCMD (writeopl)
 		Printf ("Usage: writeopl <filename>\n");
 	}
 }
+*/
 
 //==========================================================================
 //
@@ -802,6 +804,7 @@ UNSAFE_CCMD (writeopl)
 //
 //==========================================================================
 
+/* [AK] Zandronum doesn't use this command.
 UNSAFE_CCMD (writewave)
 {
 	if (argv.argc() >= 2 && argv.argc() <= 3)
@@ -829,6 +832,7 @@ UNSAFE_CCMD (writewave)
 		Printf ("Usage: writewave <filename> [sample rate]");
 	}
 }
+*/
 
 //==========================================================================
 //
@@ -840,6 +844,7 @@ UNSAFE_CCMD (writewave)
 //
 //==========================================================================
 
+/* [AK] Zandronum doesn't use this command.
 UNSAFE_CCMD (writemidi)
 {
 	if (argv.argc() != 2)
@@ -877,3 +882,4 @@ UNSAFE_CCMD (writemidi)
 		Printf("Could not write to music file.\n");
 	}
 }
+*/
