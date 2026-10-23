@@ -4771,7 +4771,7 @@ void SERVER_SettingChanged( FBaseCVar &cvar, bool bUpdateConsole, int maxDecimal
 			else if ( maxDecimals <= 0 )
 				result.Format( "%f", value );
 			else
-				result.Format( "%.*f", value );
+				result.Format( "%.*f", maxDecimals, value );
 
 			break;
 		}
