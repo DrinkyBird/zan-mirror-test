@@ -2,6 +2,8 @@
 #define SOFT_FAKE3D_H
 
 #include "p_3dfloors.h"
+// [AK] New #includes.
+#include "network.h"
 
 // special types
 
@@ -61,9 +63,12 @@ extern int CurrentSkybox;
 EXTERN_CVAR(Int, r_3dfloors);
 
 // [TP] Override r_3dfloors in the same way as gl_fogmode
+// [AK] Force r_3dfloors to be enabled for clients in online games.
+// There's very little reason for it to be disabled in an online
+// setting, and at worst, it can be used as a cheat.
 #define OVERRIDE_R_3DFLOORS_IF_NECESSARY \
 	const bool r_3dfloors_CVAR_value = !!r_3dfloors; \
-	const bool r_3dfloors = ( zadmflags & ZADF_FORCE_VIDEO_DEFAULTS ) || r_3dfloors_CVAR_value;
+	const bool r_3dfloors = (NETWORK_GetState() == NETSTATE_CLIENT || (zadmflags & ZADF_FORCE_VIDEO_DEFAULTS) || r_3dfloors_CVAR_value);
 
 // functions
 void R_3D_DeleteHeights();

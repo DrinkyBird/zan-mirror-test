@@ -5,6 +5,8 @@
 
 #include "r_defs.h"
 #include "c_cvars.h"
+// [AK] New #includes.
+#include "network.h"
 
 #ifdef _MSC_VER
 #pragma warning(disable:4244)
@@ -54,8 +56,11 @@ EXTERN_CVAR(Float, gl_mask_sprite_threshold)
 EXTERN_CVAR(Int, gl_usevbo)
 
 // [AK] Override gl_texture in the same way as gl_fogmode.
+// Force gl_texture to be enabled for clients in online games.
+// There's very little reason for it to be disabled in an online
+// setting, and at worst, it can be used as a cheat.
 #define OVERRIDE_GL_TEXTURE_IF_NECESSARY \
 	const bool gl_texture_CVAR_value = !!gl_texture; \
-	const bool gl_texture = ( zadmflags & ZADF_FORCE_VIDEO_DEFAULTS ) || gl_texture_CVAR_value;
+	const bool gl_texture = (NETWORK_GetState() == NETSTATE_CLIENT || (zadmflags & ZADF_FORCE_VIDEO_DEFAULTS) || gl_texture_CVAR_value);
 
 #endif // _GL_INTERN_H
