@@ -154,7 +154,7 @@ void StartLogging(const char *filename)
 		struct tm *lt = localtime(&tNow);
 
 		if (lt != nullptr)
-			logFilename.AppendFormat("__%d_%02d_%02d-%02d_%02d_%02d", lt->tm_year + 1900, lt->tm_mon + 1, lt->tm_mday, lt->tm_hour, lt->tm_min, lt->tm_sec);
+			logFilename.AppendFormat("-%d_%02d_%02d-%02d_%02d_%02d", lt->tm_year + 1900, lt->tm_mon + 1, lt->tm_mday, lt->tm_hour, lt->tm_min, lt->tm_sec);
 	}
 
 	logFilename.AppendFormat(".log");
