@@ -1092,9 +1092,13 @@ bool IPList::clearAndLoadFromFile( const char *Filename )
 	_filename = Filename;
 	_error = "";
 
+	// [AK] Sanitize the file name just like C_SanitizeFileName in "c_dispatch.cpp".
+	std::replace( _filename.begin( ), _filename.end( ), '.', '-' );
+	std::replace( _filename.begin( ), _filename.end( ), ':', '-' );
+
 	IPFileParser parser( 65536 );
 
-	success = parser.parseIPList( Filename, _ipVector );
+	success = parser.parseIPList( _filename.c_str( ), _ipVector );
 	if ( !success )
 		_error = parser.getErrorMessage();
 
